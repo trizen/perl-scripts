@@ -17,14 +17,13 @@ use constant {
         HW_PARAMS_FILE => '/proc/asound/card0/pcm0c/sub0/hw_params',
 };
 
-open(my $pipe_h, '-|', 'arecord', '/dev/stdout') // exit $!;
+open(my $pipe_h, '-|', 'arecord', '-t', 'raw', '/dev/stdout') // exit $!;
 sleep 0.1;    # /proc can't be instant
 
 sub parse_config {
     my ($file) = @_;
 
-    open my $fh, '<', $file
-      or return;
+    open my $fh, '<', $file or return;
 
     my %table;
     while (<$fh>) {
@@ -38,12 +37,19 @@ sub parse_config {
 }
 
 # Read the hardware parameters file
-my $hw_params = parse_config(HW_PARAMS_FILE);
+my $hw_params = parse_config(HW_PARAMS_FILE) // die "can't read config file: $!";
 
 while (read($pipe_h, (my $buffer), $hw_params->{buffer_size})) {
 
     # Here some interesting stuff needs to be written :)
     say length($buffer);
+
+    ## Recursive self-recording
+    ## WARNING: code too awesome to be executed =D
+    #open my $fh, '>:raw', '/tmp/x';
+    #print $fh $buffer;
+    #close $fh;
+    #system 'aplay', '/tmp/x';
 }
 
 __END__
