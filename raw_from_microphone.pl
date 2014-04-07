@@ -42,13 +42,15 @@ my $hw_params = parse_config(HW_PARAMS_FILE) // die "can't read config file: $!"
 while (read($pipe_h, (my $buffer), $hw_params->{buffer_size})) {
 
     # Here some interesting stuff needs to be written :)
-    say length($buffer);
+    #say length($buffer);
+
+    print "\n";
 
     my $i    = 0;
     my @data = "";
     foreach my $char (split(//, $buffer)) {
 
-        my $step = 20;             # a smaller value means greater precision
+        my $step = 20;             # a lower value means greater precision
         my $ord  = ord($char);
         my $mod  = $ord % $step;
 
@@ -67,7 +69,7 @@ while (read($pipe_h, (my $buffer), $hw_params->{buffer_size})) {
             $ord += 32;
         }
 
-        if ($ord == ord('-')) {    # '-' is for background
+        if ($ord == ord('-')) {    # '-' is for the background noise
             if ($data[-1] ne '') {
                 ++$#data;
                 $data[-1] = '';
@@ -78,7 +80,15 @@ while (read($pipe_h, (my $buffer), $hw_params->{buffer_size})) {
         $data[-1] .= chr $ord;
     }
 
-    print "@data\n";
+    my @sen;
+    foreach my $seq (@data) {
+        my $len = length($seq);
+        if ((my $i = $len - ($len % 2)) > 0) {
+            push @sen, 'x' x $i;
+        }
+    }
+
+    print "@sen\n";
 
     ## Recursive self-recording
     ## WARNING: code too awesome to be executed =D
