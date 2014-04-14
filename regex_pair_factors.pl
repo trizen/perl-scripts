@@ -7,13 +7,16 @@
 
 # Get the pair factors for a number (using a regex)
 
-my $prod = 36;
-my $half = $prod / 2;
+use 5.010;
+use strict;
+use warnings;
+
+my $prod = $ARGV[0] // 36;
 my $msg  = 'a' x $prod;
 
-for my $i (1 .. $half) {
-    for my $j ($i .. $half) {
-        if ($msg =~ /^(?>a{$i}){$j}\z/) {
+for my $i (2 .. $prod / 2) {
+    for my $j ($i .. $prod / $i) {
+        if ($msg =~ /^(?>a{$i}+){$j}+\z/) {
             print "$j * $i == $prod\n";
         }
     }
