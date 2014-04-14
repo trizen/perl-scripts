@@ -29,7 +29,7 @@ sub take_action {
             say "Starting music...";
             push @{$forks{music}}, scalar fork();
             if ($forks{music}[-1] == 0) {
-                exec 'mpv /home/swampyx/Muzica/*';
+                exec 'mpv /home/swampyx/*.webm';
             }
         }
         when ('<s> STOP MUSIC </s>') {
@@ -62,7 +62,9 @@ while (<$pipe_h>) {
         if (exists $conf{cmscore1} and exists $conf{sentence1}) {
             my @vals = split(' ', $conf{cmscore1});
             say "got: $conf{sentence1} ($conf{cmscore1})";
-            if (sum(@vals) == @vals) {    # 'cmscore1' must be: 1.000 1.000 1.000 1.000
+
+            # 'cmscore1' should be: 1.000 1.000 1.000 1.000 (with minor tolerance)
+            if (sum(@vals) >= scalar(@vals) - 0.002) {
                 take_action($conf{sentence1});
             }
         }

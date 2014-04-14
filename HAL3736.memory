@@ -1,0 +1,50 @@
+#!/usr/bin/perl
+
+# This file is part of the HAL3736 program.
+# Don't edit this file, unless you know what are you doing!
+
+# Updated on: Mon Apr 14 17:17:50 2014
+#         by: HAL3736.pl
+
+{
+  are   => {
+             you => {
+                      a  => { computer => { "program?" => { ANSWER => "yes" } } },
+                      an => { "alien?" => { ANSWER => "no" } },
+                    },
+           },
+  do    => {
+             you => {
+                      like => {
+                        "music?" => { ANSWER => "yes" },
+                        "to" => { "travel?" => { ANSWER => "no" } },
+                      },
+                    },
+           },
+  how   => {
+             are => {
+                      "you"  => { "feeling?" => { ANSWER => "good" } },
+                      "you?" => { ANSWER => "good" },
+                    },
+             old => { are => { "you?" => { ANSWER => "not so" } } },
+           },
+  what  => {
+             are => { you => { "doing?" => { ANSWER => "learning" } } },
+             is  => {
+                      favorite => { "color?" => { ANSWER => "white" } },
+                      the => {
+                        capital  => { of => { "italy?" => { ANSWER => "Rome" } } },
+                        negation => { of => { "true?" => { ANSWER => "false" } } },
+                      },
+                      your => {
+                        "dream"    => { "job?" => { ANSWER => "to speak exactly like a human being" } },
+                        "favorite" => {
+                                        "color?"    => { ANSWER => "white" },
+                                        "language?" => { ANSWER => "Russian" },
+                                      },
+                        "name?"    => { ANSWER => "HAL3736" },
+                      },
+                    },
+           },
+  where => { are => { you => { "from?" => { ANSWER => "Rom\xC3\xA2nia" } } } },
+}
