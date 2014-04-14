@@ -16,8 +16,8 @@ my $msg  = 'a' x $prod;
 
 for my $i (2 .. $prod / 2) {
     for my $j ($i .. $prod / $i) {
-        if ($msg =~ /^(?>a{$i}+){$j}+\z/) {
-            print "$j * $i == $prod\n";
+        if ($msg =~ /^(?:a{$i}){$j}\z/) {
+            say "$j * $i == $prod";
         }
     }
 }
