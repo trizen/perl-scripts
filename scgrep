@@ -27,7 +27,8 @@ getopts('hndlpcb:a:t', \%opts);
 
 our $DEBUG = $opts{d};
 
-if ($opts{h} || !@ARGV) {
+sub usage {
+    my ($code) = @_;
     print <<"HELP";
 usage: $0 [options] [types] [files]
 
@@ -53,13 +54,17 @@ types:
 usage example: $0 -l -c regex /perl/script.pl
                $0 -l -c -n -p /perl/script.pl
 HELP
-    exit !$opts{h};
+    exit $code;
 }
 
+usage(0) if $opts{h};
+
 my @types;
-while (not -f $ARGV[0]) {
+while (@ARGV and not -f $ARGV[0]) {
     push @types, map { qr{$_} } shift @ARGV;
 }
+
+@ARGV || usage(2);
 
 sub make_esc_delim {
     if ($_[0] ne '\\') {
