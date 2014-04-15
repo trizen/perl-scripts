@@ -39,8 +39,8 @@ require Term::ReadLine;
 my $term = Term::ReadLine->new(NAME);
 
 # For splitting words
-require Lingua::EN::Bigram;
-my $ngrams = Lingua::EN::Bigram->new;
+#require Lingua::EN::Bigram;
+#my $ngrams = Lingua::EN::Bigram->new;
 
 # For tagging words
 require Lingua::EN::Tagger;
@@ -68,7 +68,7 @@ HEADER
 
 # Create the memory if doesn't exist
 if (not -e MEMORY_FILE) {
-    save_mem({});
+    save_mem(scalar {});
 }
 
 # Load the memory
@@ -111,7 +111,7 @@ sub fix_word {
         return $fixed_word;
     }
 
-    return $word;
+    return $word =~ s/^i('|$)/I$1/gr;
 }
 
 # Ask for a question
@@ -131,12 +131,30 @@ sub ask_question {
         return;
     }
 
-    return contraction(lc($question));
+    return contraction($question);
 }
 
 sub not_a_question {
     say "[*] This is not a question! :-)";
     speak("This is not a question!");
+}
+
+# Split a question into words
+sub get_words {
+    my ($text) = @_;
+
+    my @words;
+    foreach my $word (split(' ', $text)) {
+
+        my @ws;
+        if ($word =~ s/([[:punct:]]+)\z//) {
+            push @ws, $1;
+        }
+
+        push @words, gb_to_us(fix_word($word)), @ws;
+    }
+
+    return @words;
 }
 
 sub INIT {
@@ -153,16 +171,17 @@ EOF
 }
 
 while (1) {
+
+    # Get a question
     my $question = ask_question() // last;
 
-    $ngrams->text($question);
-    my @words = map { gb_to_us(fix_word($_)) } $ngrams->words;
+    # Split the question into words
+    my @words = get_words($question);
 
-    @words || do {
-        warn "`$question', blah, blah, blah...\n";
-        next;
-    };
+    # On empty questions, do this:
+    @words || next;
 
+    say join('--', @words);
     my $xml = $ltag->add_tags(join(" ", @words));
 
     say $xml;
