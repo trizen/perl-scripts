@@ -6,6 +6,7 @@
 # Website: http://github.com/trizen
 
 # Voice control - take actions based on vocal commands
+# Configuration, grammar and .voca files: https://github.com/trizen/config-files/tree/master/.voxforge/julius
 
 use utf8;
 use 5.010;
@@ -25,7 +26,7 @@ sub take_action {
     my ($command) = @_;
 
     given ($command) {
-        when ('<s> START MUSIC </s>') {
+        when ('<s> PLAY MUSIC </s>') {
             say "Starting music...";
             push @{$forks{music}}, scalar fork();
             if ($forks{music}[-1] == 0) {
@@ -39,8 +40,14 @@ sub take_action {
                 pop @{$forks{music}};
             }
         }
-        when ('<s> START TERM </s>') {
+        when ('<s> RUN TERM </s>') {
             say "Opening the terminal...";
+        }
+        when ('<s> RUN EDITOR </s>') {
+            say "Running editor...";
+        }
+        when ('<s> PRESS ENTER </s>') {
+            print "\n";
         }
         default {
             warn "WARN: Invalid command `$command'!\n";
@@ -87,26 +94,3 @@ wseq1: 0 2 3 1
 phseq1: sil | y ah ng | w ah n | sil
 cmscore1: 1.000 1.000 1.000 1.000
 score1: -11499.305664
-
-#################################
-## __VOCA_FILE__ (perl.voca)
-#################################
-% NS_B
-<s>        sil
-
-% NS_E
-</s>        sil
-
-% CMD
-START      y ah ng
-
-% THING
-MUSIC     w ah n
-TERM      s eh v ax n
-
-######################################
-## __GRAMMAR_FILE__ (perl.grammar)
-######################################
-S : NS_B CMD THING_LOOP NS_E
-THING_LOOP: THING_LOOP THING
-THING_LOOP: THING

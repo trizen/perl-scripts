@@ -63,6 +63,12 @@ sub hal {
     return $ref;
 }
 
+# Speak the text (with espeak)
+sub speak {
+    my ($text) = @_;
+    `espeak \Q$text\E &> /dev/null`;    # speak the anwser
+}
+
 print <<"EOF";
 ********************************************************************************
                     Hello there! My name is ${\NAME}.
@@ -72,6 +78,8 @@ awesome world. So, please, don't hesitate and ask me anything. I'll try my best.
 ********************************************************************************
 EOF
 
+speak("Hello!");
+
 my $q = 'a';
 while (1) {
     my $question = unpack('A*', lc($term->readline("\n[?] Ask me $q question: ") // next)) =~ s/^\h+//r;
@@ -79,6 +87,7 @@ while (1) {
     last if $question eq 'q';
     if (not $question =~ /\?\z/) {
         say "[*] This is not a question! :-)";
+        speak("This is not a question!");
 
         if ($question eq '') {
             say "[!] Insert 'q' if you're bored already...";
@@ -119,6 +128,7 @@ while (1) {
     $answer =~ s/^where\b\h*//;
     $answer =~ s/\bam\h+I\b/I am/g;
     $answer =~ s/\?+\z//;
+
     #$answer =~ s/^does\b\h*//;
 
     my @input = quotewords(qr/\s+/o, 0, $question);
@@ -126,18 +136,27 @@ while (1) {
 
     my $ref = hal(\@input, $MEM);
     if (exists $ref->{ANSWER}) {
+        print "[*] ";
+        my $ans;
         if ($ref->{ANSWER} =~ /^(yes|no)[[:punct:]]?\z/i) {
-            say "[*] \u\L$1\E!";
+            $ans = "\u\L$1\E!";
         }
         else {
-            say "[*] \u$answer$q_suffix $ref->{ANSWER}$an_suffix.";
+            $ans = "\u$answer$q_suffix $ref->{ANSWER}$an_suffix.";
         }
+
+        say $ans;
+        speak($ans);
     }
     else {
         say "\n[*] I don't know... :(";
+        speak("I don't know...");
+        speak($requestion);
         my $input = $term->readline("[?] \u$requestion ");
+        speak("Are you sure?");
         if ($term->readline("[!] Are you sure? ") =~ /^y/i) {
             $ref->{ANSWER} = $input;
+            speak("Roger that!");
         }
     }
 }
