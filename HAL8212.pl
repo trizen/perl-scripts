@@ -12,14 +12,16 @@ use 5.014;
 use autodie;
 use warnings;
 
+no if $] >= 5.018, warnings => "experimental::smartmatch";
+
 # For saving the memory
 use Data::Dump qw(pp);
 
-# For transforming XML to HASH
-use XML::Fast qw(xml2hash);
-
 # For contracting the words ("I am" into "I'm")
 use Lingua::EN::Contraction qw(contraction);
+
+# Stemming of words
+use Lingua::Stem qw(stem);
 
 # For correcting common mistakes
 use Lingua::EN::CommonMistakes qw(%MISTAKES_COMMON);
@@ -38,10 +40,6 @@ use constant {
 require Term::ReadLine;
 my $term = Term::ReadLine->new(NAME);
 
-# For splitting words
-#require Lingua::EN::Bigram;
-#my $ngrams = Lingua::EN::Bigram->new;
-
 # For tagging words
 require Lingua::EN::Tagger;
 my $ltag = Lingua::EN::Tagger->new;
@@ -53,7 +51,7 @@ use File::Spec qw();
 sub save_mem {
     my ($memory) = @_;
     open my $fh, '>', MEMORY_FILE;
-    print {$fh} <<"HEADER", pp($memory), "\n";
+    print {$fh} <<"HEADER", "scalar ", pp($memory), "\n";
 #!/usr/bin/perl
 
 # This file is part of the ${\NAME} program.
@@ -131,7 +129,7 @@ sub ask_question {
         return;
     }
 
-    return contraction($question);
+    return contraction($question =~ s/[<>]+//gr);
 }
 
 sub not_a_question {
@@ -157,10 +155,90 @@ sub get_words {
     return @words;
 }
 
+sub untag_word {
+    my ($word) = @_;
+    return scalar {$word =~ /^<([^>]+)>(.*?)<[^>]+>/s};
+}
+
+sub locate {
+    my ($couple, $pairs, $pos) = @_;
+
+    foreach my $i ($pos .. $#{$pairs}) {
+        if (exists $pairs->[$i]{$couple->[0]}) {
+            if (exists $couple->[1]) {
+                if ($pairs->[$i]{$couple->[0]} eq $couple->[1]) {
+                    return $i;
+                }
+            }
+            else {
+                return $i;
+            }
+        }
+    }
+
+    return;
+}
+
+sub flip_pers {
+    my (@pairs) = @_;
+
+    my @output;
+    foreach my $pair (@pairs) {
+        my $val;
+        if (defined($val = $pair->{prps})) {
+            given (lc $val) {
+                when ('your') {
+                    push @output, 'my';
+                }
+                when ('my') {
+                    push @output, 'your';
+                }
+                default {
+                    push @output, $val;
+                }
+            }
+        }
+        elsif (defined($val = $pair->{prp})) {
+            given (lc $val) {
+                when ('mine') {
+                    push @output, 'yours';
+                }
+                when ('yours') {
+                    push @output, 'mine';
+                }
+                when ('you') {
+                    push @output, 'I';
+                }
+                when ('I') {
+                    push @output, 'you';
+                }
+                default {
+                    push @output, $val;
+                }
+            }
+        }
+        elsif (defined($val = $pair->{vbp})) {
+            given (lc $val) {
+                when (['are', "'re"]) {
+                    push @output, 'am';
+                }
+                default {
+                    push @output, $val;
+                }
+            }
+        }
+        else {
+            push @output, values %{$pair};
+        }
+    }
+
+    return @output;
+}
+
 sub INIT {
     print <<"EOF";
 ********************************************************************************
-                    Hello there! My name is ${\NAME}.
+                       Hello there! My name is ${\NAME}.
 I'm a "Heuristically programmed ALgorithmic computer", a descendant of HAL9000.
 In this training program, I'm ready to answer and learn new things about your
 awesome world. So, please, don't hesitate and ask me anything. I'll try my best.
@@ -178,15 +256,67 @@ while (1) {
     # Split the question into words
     my @words = get_words($question);
 
+    # Stem words
+    my @s_words = grep { $_ ne '' } @{stem(@words)};
+
     # On empty questions, do this:
     @words || next;
 
     say join('--', @words);
-    my $xml = $ltag->add_tags(join(" ", @words));
+    say join('==', @s_words);
 
-    say $xml;
+    #say join('~~', $ltag->get_words($question));
+    #my $xml = $ltag->add_tags(join(" ", @words));
+    my $correct_q = join(' ', @words);
+
+    my @pairs = map { untag_word($_) }
+      split(' ', $ltag->add_tags($correct_q));
+
+    pp \@pairs;
+
+    my @requestion = flip_pers(@pairs);
+    pp \@requestion;
+
+    my $answer = 'yes';    # let's just assume
+
+=cut
+    my @question;
+    if (defined(my $i = locate([wp => 'what'], \@pairs, 0))) {
+        if (defined(locate([vbz => "'s"], \@pairs, $i))) {          # what is
+            if (defined(my $j = locate(['prps'], \@pairs, $i))) {   # what is your
+
+                if ($pairs[$j]{prps} eq 'yours') {
+                push @question, "my";
+
+                while (defined(my $k = locate(['jj'], \@pairs, $j))) {
+                    push @question, $pairs[$k]{jj};
+                    $j = $k+1;
+                }
+
+                #if (defined(my $k = locate(['nn'], \@pairs,
+            }
+            }
+        }
+    }
+=cut
+
+=cut
+    if (exists $pairs[0]{wp}) {
+        if( $pairs[0]{wp} eq 'what'){
+            if (exists $pairs[1]{vbz}) {
+                if ($pairs[1]{vbz} eq "'s") {       # what is
+
+                }
+            }
+        }
+    }
+=cut
+
+    #say $xml;
+    #pp \@pairs;
+
+=cut
     my $tags = xml2hash($xml);
-
     while (my ($key, $value) = each %{$tags}) {
         if (ref $value ne 'ARRAY') {
             $tags->{$key} = [$value];
@@ -199,6 +329,7 @@ while (1) {
     }
 
     pp $tags;
+=cut
 
     ##### NEEDS WORK #####
 
