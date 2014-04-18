@@ -1,0 +1,12 @@
+#!/usr/bin/perl
+
+# This file is part of the HAL9000 program.
+# Don't edit this file, unless you know what are you doing!
+
+# Updated on: Fri Apr 18 18:45:43 2014
+#         by: HAL9000.pl
+
+scalar {
+  "how" => { are => { you => { ANSWER => "good" } } },
+  "what's" => { your => { name => { ANSWER => "HAL9000" } } },
+}
