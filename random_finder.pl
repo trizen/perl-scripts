@@ -7,13 +7,14 @@
 
 # A human-like substring finder
 # Steps:
-#  1. look at a random position in text and scan back and forward and stop if the string is found somewhere near
+#  1. look at a random position in text and scan back and forward and stop if the string is found somewhere nearby
 #  2. go back to 1, but return -1 if we tried len(text) times without success
 
 use 5.010;
 use strict;
 use warnings;
 
+my $TOTAL = 0;    # count performance
 sub DEBUG () { 1 }    # verbose mode
 
 sub random_find {
@@ -23,22 +24,28 @@ sub random_find {
     my $slen = length($substr);
 
     my $tmax = $tlen - $slen;
-    my $smax = int($slen / 1.75);    # this value influences the performance
+    my $smax = int($slen / 2);    # this value influences the performance
 
-    my $locate = sub {
+    my $counter = 0;
+    my $locate  = sub {
         my ($pos, $guess) = @_;
 
         for my $i (0 .. $smax) {
+
+            ++$counter if DEBUG;    # measure performance
+
             if (    $pos + $i <= $tmax
                 and substr($guess, $i) eq substr($substr, 0, $slen - $i)
                 and substr($text,  $pos + $i,             $slen) eq $substr) {
-                printf("RIGHT (%d):\n>  %*s\n>  %s\n", $i, $i + $slen, $substr, $guess) if DEBUG;
+                printf("RIGHT (i: %d; counter: %d):\n>  %*s\n>  %s\n", $i, $counter, $i + $slen, $substr, $guess) if DEBUG;
+                $TOTAL += $counter if DEBUG;
                 return $pos + $i;
             }
             elsif (    $pos - $i >= 0
                    and substr($substr, $i) eq substr($guess, 0, $slen - $i)
                    and substr($text,   $pos - $i,            $slen) eq $substr) {
-                printf("LEFT (%d):\n>  %s\n>  %*s\n", $i, $substr, $i + $slen, $guess) if DEBUG;
+                printf("LEFT (i: %d; counter: %d):\n>  %s\n>  %*s\n", $i, $counter, $substr, $i + $slen, $guess) if DEBUG;
+                $TOTAL += $counter if DEBUG;
                 return $pos - $i;
             }
         }
@@ -46,10 +53,11 @@ sub random_find {
         return;
     };
 
-    ## An inifinite loop might be used here for a 100%-sure match
+    # An inifinite loop might be used here for a 100%-sure match
     for (0 .. $tlen) {
-
         my $pos = int(rand($tlen));
+
+        say "POS: $pos" if DEBUG;
         if ($pos + $slen <= $tlen) {
             if (defined(my $i = $locate->($pos, substr($text, $pos, $slen)))) {
                 say "** FORWARD MATCH!" if DEBUG;
@@ -69,9 +77,16 @@ sub random_find {
 }
 
 my $text = join('', <DATA>);
-my $sstr = "by appending one character";
+my $split = 30;
 
-say "POS: ", random_find($text, $sstr);
+foreach my $str (unpack("(A$split)*", $text)) {
+    if (random_find($text, $str) == -1) {
+        die "Error!";
+    }
+    say '-' x 80 if DEBUG;
+}
+
+say "TOTAL: ", $TOTAL if DEBUG;
 
 __END__
 The data structure has one node for every prefix of every
