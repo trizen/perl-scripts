@@ -1,12 +1,12 @@
 #!/usr/bin/perl
 
-# This file is part of the HAL3736 program.
+# This file is part of the HAL9000 program.
 # Don't edit this file, unless you know what are you doing!
 
-# Updated on: Tue Apr 15 18:22:03 2014
-#         by: HAL3736.pl
+# Updated on: Fri Apr 18 21:02:51 2014
+#         by: HAL9000.pl
 
-{
+scalar {
   are   => {
              you => {
                       a  => { computer => { "program?" => { ANSWER => "yes" } } },

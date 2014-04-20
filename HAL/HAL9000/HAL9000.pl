@@ -337,6 +337,7 @@ sub decode_question {
 
     say $req;
 
+    $words[-1] .= '?';
     my $ref = hal(\@words, $MEM);
     if (exists $ref->{ANSWER}) {
         print "[*] ";
