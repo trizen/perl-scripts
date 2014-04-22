@@ -7,8 +7,8 @@
 
 # A smart human-like substring finder
 # Steps:
-#  1. loop from i=2 and count up to int(sqrt(len(text)))
-#  2. loop from pos=(i-2)*len(substr)*2 and add int(len(text)/i) to pos while pos <= len(text)
+#  1. loop from i=1 and count up to int(sqrt(len(text)))
+#  2. loop from pos=(i-1)*len(substr)*2 and add int(len(text)/i) to pos while pos <= len(text)
 #  3. jump to position pos and scan back and forward and stop if the string is found somewhere nearby
 #  4. loop #2 end
 #  5. loop #1 end
@@ -57,10 +57,10 @@ sub random_find {
         return;
     };
 
-    foreach my $i (2 .. int(sqrt($tlen))) {
+    foreach my $i (1 .. int(sqrt($tlen))) {
         my $delta = int($tlen / $i);
 
-        for (my $pos = ($i - 2) * $slen * 2 ; $pos <= $tlen ; $pos += $delta) {
+        for (my $pos = ($i - 1) * $slen * 2 ; $pos <= $tlen ; $pos += $delta) {
 
             say "POS: $pos" if DEBUG;
             if ($pos + $slen <= $tlen) {
