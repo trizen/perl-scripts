@@ -12,7 +12,8 @@ use strict;
 use autodie;
 use warnings;
 
-use Getopt::Long;
+use open IO => ':utf8', ':std';
+use Getopt::Long qw(GetOptions);
 use Term::ANSIColor qw(colored);
 
 my $min    = 4;
