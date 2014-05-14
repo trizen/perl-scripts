@@ -1,0 +1,296 @@
+#!/usr/bin/perl
+
+# Author: Daniel "Trizen" Șuteu
+# License: GPLv3
+# Created on: 21 August 2012
+# Latest edit on: 10 November 2013
+# Websites: http://trizen.googlecode.com
+
+# Find the planes' positions on a grid. (text-based game)
+
+use 5.010;
+use strict;
+use warnings;
+
+use open OUT => ':encoding(UTF-8)';
+
+use Term::ReadLine;
+use Text::ASCIITable;
+use List::Util qw(shuffle);
+
+my $DEBUG = 0;
+
+## Package variables
+my $pkgname = 'asciiplanes';
+my $version = 0.01;
+
+## Game run-time constants
+my $BOARD_SIZE = 8;
+my $PLANES_NUM = 3;
+
+my @parts = ('head', ('hit') x 7);
+my @plane_chars = (
+                   shuffle(
+                           '☗', '⛰', '♣', '★', '✠', '❂', '♜', '☂', '☀', '❤',
+                           '❆', '❃', '◕', '▣', '●', '▼', '■', '◉', '◆', '▲',
+                          )
+                  );
+
+my $wrap_plane = 0;
+my $hit_char   = q{◌};
+my $miss_char  = q{`};
+
+sub usage {
+    print <<"EOT";
+usage: $0 [options]
+
+main:
+        --size=i    : length side of the board (default: $BOARD_SIZE)
+        --planes=i  : the total number of planes (default: $PLANES_NUM)
+        --wrap!     : wrap the plane around the play board (default: $wrap_plane)
+        --hit=s     : character used when a plane is hit (default: "$hit_char")
+        --miss=s    : character used when a plane is missed (default: "$miss_char")
+        --planeN=s  : character used to draw the Nth killed plane (N=[1-99])
+
+help:
+        --help      : print this message and exit
+        --version   : print the version number and exit
+        --debug     : print some information useful in debugging
+
+example:
+        $0 --size=12 --planes=6 --hit='*'
+
+EOT
+
+    exit;
+}
+
+sub version {
+    print "$pkgname $version\n";
+    exit;
+}
+
+if (@ARGV) {
+    require Getopt::Long;
+    Getopt::Long::GetOptions(
+                             'board-size|size=i' => \$BOARD_SIZE,
+                             'planes-num=i'      => \$PLANES_NUM,
+                             'hit-char=s'        => \$hit_char,
+                             'miss-char=s'       => \$miss_char,
+                             'wrap!'             => \$wrap_plane,
+                             'help|h|?'          => \&usage,
+                             'version|v|V'       => \&version,
+                             'debug!'            => \$DEBUG,
+                             (map { ; "p$_|plane$_=s" => \$plane_chars[$_ - 1] } 1 .. 99),
+                            )
+      or die("$0: error in command line arguments!\n");
+}
+
+@plane_chars = grep { defined } @plane_chars;
+
+## The play-board of the game, and some other arrays
+#---------------------------------------------------------------
+
+my @play_board = map { [(undef) x $BOARD_SIZE] } 1 .. $BOARD_SIZE;
+my @info_board = map { [(q{ }) x $BOARD_SIZE] } 1 .. $BOARD_SIZE;
+
+my %letters;
+for (0 .. $#play_board) {
+    state $char = 'a';
+    $letters{$char++} = $_;
+}
+
+#---------------------------------------------------------------
+
+sub pointers {
+    my ($board, $x, $y, $indices) = @_;
+
+    map {
+        my ($row, $col) = ($x + $_->[0], $y + $_->[1]);
+
+        if ($row > $#{$board}) {
+            $wrap_plane || return;
+            $row %= scalar(@{$board});
+        }
+
+        if ($col > $#{$board->[$row]}) {
+            $wrap_plane || return;
+            $col %= scalar(@{$board->[$row]});
+        }
+
+        !$wrap_plane && ($row < 0 || $col < 0) && return;
+
+        \$board->[$row][$col]
+    }[0, 0], grep { ref($_) eq 'ARRAY' } @{$indices};
+}
+
+sub up {
+    my ($board, $x, $y) = @_;
+
+#<<<
+    return pointers($board, $x, $y, [
+                 '[+0, +0]',
+        [+1, -1], [+1, +0], [+1, +1],
+                  [+2, +0],
+        [+3, -1], [+3, +0], [+3, +1],
+    ]);
+#>>>
+}
+
+sub down {
+    my ($board, $x, $y) = @_;
+
+#<<<
+    return pointers($board, $x, $y, [
+        [-3, -1], [-3, +0], [-3, +1],
+                  [-2, +0],
+        [-1, -1], [-1, +0], [-1, +1],
+                 '[+0, +0]',
+    ]);
+#>>>
+}
+
+sub left {
+    my ($board, $x, $y) = @_;
+
+#<<<
+    return pointers($board, $x, $y, [
+                    [-1, +1],           [-1, +3],
+        '[+0, +0]', [+0, +1], [+0, +2], [+0, +3],
+                    [+1, +1],           [+1, +3],
+    ]);
+#>>>
+}
+
+sub right {
+    my ($board, $x, $y) = @_;
+
+#<<<
+    return pointers($board, $x, $y, [
+        [-1, -3],           [-1, -1],
+        [+0, -3], [+0, -2], [+0, -1], '[+0, +0]',
+        [+1, -3],           [+1, -1],
+    ]);
+#>>>
+}
+
+sub assign {
+    my %opt = @_;
+
+    my $plane = $opt{plane};
+    $#{$plane} == -1 && return;
+
+    if (not $opt{change}) {
+        foreach my $point (@{$plane}) {
+            defined(${$point}) && return;
+        }
+    }
+
+    foreach my $i (0 .. $#{$plane}) {
+        ${$plane->[$i]} = $opt{data}->[$i];
+    }
+
+    return 1;
+}
+
+sub print_ascii_table {
+    my $table = Text::ASCIITable->new({headingText => "$pkgname $version"});
+    $table->setCols(' ', 1 .. $BOARD_SIZE);
+
+    my $char = 'a';
+    foreach my $row (@info_board) {
+        $table->addRow([$char++, @{$row}]);
+        $table->addRowLine();
+    }
+
+    print $table;
+}
+
+my $count = 0;
+my @directions = (\&up, \&down, \&left, \&right);
+
+{
+    my $x = int rand scalar(@play_board);
+    my $y = int rand scalar(@{$play_board[0]});
+
+    my $rand = int rand scalar(@directions);
+    my $code = $directions[$rand];
+
+    assign(
+           change => 0,
+           plane  => [$code->(\@play_board, $x, $y)],
+           data => [map { "$_$rand" } @parts],
+          )
+      || redo;
+
+    if ($DEBUG) {
+        my $abc = 'a';
+        ++$abc for (1 .. $x);
+        say "$rand: ", $abc, $y + 1;
+    }
+
+    redo if ++$count < $PLANES_NUM;
+}
+
+## MAIN
+
+my $tries      = 0;
+my $start_time = time;
+my $term       = Term::ReadLine->new("ASCII Airplanes Game");
+
+print_ascii_table();
+
+while ($count > 0) {
+
+    my $input = lc $term->readline("\n=>> Your guess (ex: a4)\n> ");
+    last if $input eq 'q' or $input eq 'quit';
+
+    my ($letter, $y) = $input =~ /^\h*([a-z]+)\D*([0-9]+)/;
+
+    if (   not defined $letter
+        or not exists $letters{$letter}
+        or not defined $y
+        or $y < 1
+        or $y > $BOARD_SIZE) {
+        warn "\n[!] Invalid input!\n";
+        next;
+    }
+
+    $y -= 1;
+    ++$tries;
+
+    my $x     = $letters{$letter};
+    my $point = $play_board[$x][$y];
+
+    if (not defined $point) {
+        $info_board[$x][$y] = $miss_char;
+    }
+    elsif ($point =~ /^head(\d)$/i) {
+        my $dir  = $1;
+        my $item = $plane_chars[($PLANES_NUM - $count) % (1 + $#plane_chars)];
+        my $code = $directions[$dir];
+
+        foreach my $board (\@play_board, \@info_board) {
+            assign(
+                   change => 1,
+                   data   => [($item) x 8],
+                   plane  => [$code->($board, $x, $y)],
+                  )
+              || die "$0: unexpected error!";
+        }
+
+        --$count;
+    }
+    elsif ($point =~ /^hit\d$/i) {
+        $info_board[$x][$y] = $hit_char;
+    }
+}
+continue {
+    print_ascii_table();
+}
+
+printf "\n** Info: %d tries in %d seconds\n", $tries, time - $start_time;
+
+if ($count == 0) {
+    say "** Congratulations! All the planes are destroyed!";
+}

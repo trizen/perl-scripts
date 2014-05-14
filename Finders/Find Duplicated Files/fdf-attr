@@ -1,0 +1,77 @@
+#!/usr/bin/perl
+
+# Author: Trizen
+# License: GPLv3
+# Date: 22 January 2012
+# http://trizen.googlecode.com
+
+use 5.005;
+use strict;
+use warnings;
+
+use File::Find qw(find);
+use Getopt::Std qw(getopts);
+
+my @dirs = grep { -d } @ARGV;
+die <<"HELP" if !@dirs;
+usage: $0 [options] /my/path [...]
+
+Options:
+        -f  : keep only the first duplicated file
+        -l  : keep only the last duplicated file
+HELP
+
+my %opts;
+if (@ARGV) {
+    getopts("fl", \%opts);
+}
+
+sub find_duplicated_files (&@) {
+    my $code = shift;
+
+    my %files;
+    find {
+        no_chdir => 1,
+        wanted   => sub {
+            lstat;
+            return if ((-s _) < 4 * 1024);  # skip files smaller than 4KB
+
+            (-f _)
+              && (not -l _)
+              && push @{
+                $files{
+                    join($;,
+                         (-r _), (-w _), (-x _), (-o _), (-R _), (-W _),
+                         (-X _), (-O _), (-s _), (-u _), (-g _), (-k _),
+                        )
+                      }
+              },
+              $_;
+          }
+         } => @_;
+
+    foreach my $files (values %files) {
+        next if $#{$files} < 1;
+        $code->(@{$files});
+    }
+
+    return;
+}
+
+{
+    local $, = "\n";
+    local $\ = "\n";
+    find_duplicated_files {
+
+        print @_, "-" x 80 if @_;
+
+        foreach my $i (
+                         $opts{f} ? (1 .. $#_)
+                       : $opts{l} ? (0 .. $#_ - 1)
+                       :            ()
+          ) {
+            unlink $_[$i] or warn "[error]: Can't delete: $!\n";
+        }
+    }
+    @dirs;
+}

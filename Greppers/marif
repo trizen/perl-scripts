@@ -1,0 +1,133 @@
+#!/usr/bin/perl
+
+# Copyright (C) 2012 Trizen <echo dHJpemVueEBnbWFpbC5jb20K | base64 -d>.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#-------------------------------------------------------
+#  Author: Trizen
+#  Appname: marif
+#  Created on: 25 January 2012
+#  Latest edit on: 13 November 2012
+#  Website: http://trizen.googlecode.com
+#-------------------------------------------------------
+
+use 5.010;
+use utf8;
+use strict;
+use warnings;
+use encoding qw(UTF-8);
+
+use Getopt::Std qw(getopts);
+
+my %opts;
+getopts('tlvesr:h', \%opts);
+
+my $tree    = $opts{t};
+my $last    = $opts{l};
+my $verbose = $opts{v};
+my $exit    = $opts{e};
+my $slurp   = $opts{s};
+my $regexp  = $opts{r};
+
+sub usage {
+    print <<"USAGE";
+usage: $0 [options] <dir|files>
+
+Options:
+        -t         : search in all files from a path
+        -l         : close file after the first match
+        -e         : exit program after the first match
+        -s         : slurp the entire file into memory
+        -r <regex> : define a regex to find something in a file
+                     for insensitive mode, use: (?^i:regex)
+
+Others:
+        -v         : verbose mode\n
+USAGE
+    exit shift;
+}
+
+if ($opts{h}) {
+    usage(0);
+}
+elsif (not defined $regexp) {
+    usage(1);
+}
+
+utf8::decode($regexp);
+
+sub open_and_search {
+    my ($file) = @_;
+
+    local $/ = $slurp ? undef : "\n";
+    open my $fh, '<:encoding(UTF-8)', $file or return;
+
+    say ">Searching: $file" if $verbose;
+
+    local $SIG{__WARN__} = sub { return };
+    while (defined(my $line = <$fh>)) {
+        if ($line =~ /($regexp)/o) {
+            substr($line, $-[0],     0, "\e[1;31m");
+            substr($line, $+[0] + 7, 0, "\e[0m");
+            print <<"EOT";
+* Filename: $file
+* Line num: $.
+* Found on: $line
+EOT
+            exit 0 if $exit;
+            last   if $last;
+        }
+    }
+
+    return close $fh;
+}
+
+if ($tree) {
+    require File::Find;
+    foreach my $file (@ARGV) {
+        if (-d $file) {
+            File::Find::find(
+                {
+                 no_chdir => 1,
+                 wanted   => sub {
+                     if (-f -T and not /\.pdf\z/i) {
+                         open_and_search($_);
+                     }
+                 },
+                } => $file
+            );
+        }
+        else {
+            open_and_search($file);
+        }
+    }
+}
+else {
+    foreach my $file (@ARGV) {
+        if (-f $file) {
+            if (-T _) {
+                open_and_search($file);
+            }
+            else {
+                warn "[!] Not a text file: $file\n";
+            }
+        }
+        else {
+            warn "[!] Not a file: $file\n";
+        }
+    }
+}
+
+exit 0;

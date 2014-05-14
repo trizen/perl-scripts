@@ -1,0 +1,82 @@
+#!/usr/bin/perl
+
+# Author: Trizen
+# License: GPLv3
+# Date: 01 January 2012
+# Edit: 15 February 2013
+# http://trizen.googlecode.com
+
+# Find and list duplicted files from one or more paths
+
+use 5.005;
+use strict;
+use warnings;
+
+use File::Find qw(find);
+use File::Compare qw(compare);
+use Getopt::Std qw(getopts);
+
+my @dirs = grep { -d } @ARGV;
+die <<"HELP" if !@dirs;
+usage: $0 [options] /my/path [...]
+
+Options:
+        -f  : keep only the first duplicated file
+        -l  : keep only the last duplicated file
+HELP
+
+my %opts;
+if (@ARGV) {
+    getopts("fl", \%opts);
+}
+
+sub find_duplicated_files (&@) {
+    my $code = shift;
+
+    my %files;
+    find {
+        no_chdir => 1,
+        wanted   => sub {
+            lstat;
+            (-f _) && (not -l _) && push @{$files{-s _}}, $_;
+          }
+         } => @_;
+
+    foreach my $files (values %files) {
+
+        next if $#{$files} < 1;
+
+        my %dups;
+        foreach my $i (0 .. $#{$files} - 1) {
+            for (my $j = $i + 1 ; $j <= $#{$files} ; $j++) {
+                if (compare($files->[$i], $files->[$j]) == 0) {
+                    push @{$dups{$files->[$i]}}, splice @{$files}, $j--, 1;
+                }
+            }
+        }
+
+        while (my ($fparent, $fdups) = each %dups) {
+            $code->(sort $fparent, @{$fdups});
+        }
+    }
+
+    return;
+}
+
+{
+    local $, = "\n";
+    local $\ = "\n";
+    find_duplicated_files {
+
+        print @_, "-" x 80 if @_;
+
+        foreach my $i (
+                         $opts{f} ? (1 .. $#_)
+                       : $opts{l} ? (0 .. $#_ - 1)
+                       :            ()
+          ) {
+            unlink $_[$i] or warn "[error]: Can't delete: $!\n";
+        }
+    }
+    @dirs;
+}

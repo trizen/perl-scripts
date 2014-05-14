@@ -1,0 +1,94 @@
+#!/usr/bin/perl
+
+# Author: Trizen
+# License: GPLv3
+# Date: 10 April 2012
+# http://trizen.googlecode.com
+
+# Monitor a path for updated files, new files and deleted files.
+
+use 5.010;
+use strict;
+use warnings;
+
+use File::Find qw(find);
+use Getopt::Std qw(getopts);
+use File::Spec::Functions qw(rel2abs);
+
+sub usage {
+    print <<"USAGE";
+usage: $0 [options] [files] [dirs]
+
+options:
+        -c [i] : monitor for changes interval (in sec)
+        -n [i] : monitor for new files interval (in sec)
+        -v     : verbose mode
+USAGE
+    exit 1;
+}
+
+# Arguments
+my %opts;
+getopts('c:n:v', \%opts);
+
+my %files;
+my @files       = grep { -f } @ARGV;
+my @directories = grep { -d } @ARGV;
+
+if (!@files and !@directories) {
+    usage();
+}
+else {
+    if (@directories) {
+        populate_files(1);
+    }
+    foreach my $file (map { rel2abs($_) } @files) {
+        $files{$file} = [-M $file, 0];
+    }
+}
+
+my $monitor_for_changes_interval   = $opts{c} // 8;
+my $monitor_for_new_files_interval = $opts{n} // $monitor_for_changes_interval**2;
+
+sub populate_files {
+    my ($first_time) = @_;
+    find {
+        no_chdir => 1,
+        wanted   => sub {
+            -f or return;
+            -M _ // return;
+            $files{$_} =
+              exists $files{$_}
+              ? [$files{$_}[0] => 0]
+              : [-M _ => $first_time ? 0 : 1];
+          }
+         } => @directories;
+}
+
+my $track = 0;
+
+while (1) {
+    while (my ($file, $info) = each %files) {
+        if (not -f $file) {
+            printf "[DELETED]: %s\n", $file;
+            delete $files{$file};
+        }
+        elsif ($info->[1]) {
+            printf "[CREATED]: %s\n", $file;
+            $files{$file}[1] = 0;
+        }
+        elsif (-M _ != $info->[0]) {
+            printf "[UPDATED]: %s\n", $file;
+            $files{$file}[0] = -M _;
+        }
+    }
+
+    sleep $monitor_for_changes_interval;
+    printf STDERR "[TOTAL_F]: %d\n", scalar keys %files if $opts{v};
+
+    if (($track += $monitor_for_changes_interval) >= $monitor_for_new_files_interval) {
+        warn "[$track] Looking for new files...\n" if $opts{v};
+        populate_files(0) if @directories;
+        $track = 0;
+    }
+}

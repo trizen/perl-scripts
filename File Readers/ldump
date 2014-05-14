@@ -1,0 +1,25 @@
+#!/usr/bin/perl
+
+# Author: Trizen
+# License: GPLv3
+# Date: 26 February 2013
+# http://trizen.googlecode.com
+
+# Get the specified lines from a given file.
+
+use 5.010;
+use strict;
+use warnings;
+
+@ARGV == 2 or die <<"USAGE";
+usage: ldump [file] [lines]
+
+example: ldump /tmp/file.txt 23-40,80,105
+USAGE
+
+my @lines = map { /^(\d+)(?>-|\.\.)(\d+)\z/ ? ($1 .. $2) : $_ }
+  split /\s*,\s*/, pop;
+
+while (<>) {
+    print if $. ~~ \@lines;
+}

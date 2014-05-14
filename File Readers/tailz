@@ -1,0 +1,32 @@
+#!/usr/bin/perl
+
+# Simple program to read the last n line(s) of a file.
+# Reads from the end of the file for effeciency
+
+# Originally coded by zentara on 06 September 2002:
+#   http://www.perlmonks.org/index.pl?node_id=195768
+
+# Improved by Trizen on 11 February 2012
+
+# usage tailz  filename  numberoflines
+
+my $filename = shift or die "usage: $0 file numlines\n";
+my $numlines = shift // 10;
+my $byte;
+
+# Open the file in read mode
+open my $fh, '<', $filename or die "Couldn't open $filename: $!";
+
+# Rewind from the end of the file until count of eol 's
+seek $fh, -1, 2;    # get past last eol
+my $count = 0;
+
+while (tell($fh) > 0) {
+    seek $fh, -1, 1;
+    read $fh, $byte, 1;
+    last if $byte eq "\n" and ++$count == $numlines;
+    seek $fh, -1, 1;
+}
+
+local $/ = undef;
+print scalar <$fh>;

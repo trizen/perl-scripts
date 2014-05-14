@@ -1,0 +1,79 @@
+#!/usr/bin/perl
+
+# Author: Trizen
+# License: GPLv3
+# Date: 18 February 2012
+# Latest edit on: 08 August 2012
+# http://trizen.googlecode.com
+
+# Find installed Perl modules matching a regular expression
+
+use 5.014;
+use File::Find qw(find);
+use Getopt::Std qw(getopts);
+
+sub usage {
+    die <<"HELP";
+usage: perl $0 [options] 'REGEX'\n
+options:
+        -p  : print full path
+        -b  : both: path + name
+        -i  : case insensitive\n
+example:
+        perl $0 -b ^File:: ^Term
+HELP
+}
+
+my %opts;
+getopts('pbih', \%opts);
+
+(!@ARGV || $opts{h}) && usage();
+
+sub reduce_dirs {
+    my %substring_count;
+    @substring_count{@_} = ();
+
+    for my $x (@_) {
+        for my $y (@_) {
+            next if $x eq $y;
+            if (index($x, $y) == 0) {
+                $substring_count{$x}++;
+            }
+        }
+    }
+
+    grep !$substring_count{$_}, keys %substring_count;
+}
+
+my @dirs;
+for my $dirname (@INC) {
+    if (-d $dirname) {
+        next if chr ord $dirname eq q{.};
+        $dirname =~ tr{/}{/}s;
+        chop $dirname if substr($dirname, -1) eq '/';
+        push @dirs, $dirname;
+    }
+}
+@dirs = reduce_dirs(@dirs);
+
+my $inc_re = do {
+    local $" = q{|};
+    qr{^(?>@{[map quotemeta(s{/}{::}gr), @dirs]})::};
+};
+
+foreach my $arg (@ARGV) {
+    my $regex = $opts{i} ? qr{$arg}i : qr{$arg};
+    find {
+        wanted => sub {
+            my $name = $_;
+            say $opts{b} ? "$name\n$_\n"
+              : $opts{p} ? $_
+              : $name
+              if substr($name, -3, 3, '') eq '.pm'
+              and $name =~ s{/}{::}g
+              and $name =~ s{$inc_re}{}o
+              and $name =~ /$regex/;
+        },
+        no_chdir => 1,
+         } => @dirs;
+}
