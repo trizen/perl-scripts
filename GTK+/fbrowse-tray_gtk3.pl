@@ -36,7 +36,7 @@ use Encode qw(decode_utf8);
 use File::MimeInfo qw(mimetype);    # File::MimeInfo::Magic is better, but slower...
 
 my $pkgname = 'fbrowse-tray';
-my $version = 0.02;
+my $version = 0.03;
 
 my %opt = (
            m => 'menu',
@@ -258,7 +258,7 @@ sub add_content {
         }
 
         # Collect the files and dirs
-        push +((-d _) ? \@dirs : \@files), [$filename, $abs_path];
+        push +((-d _) ? \@dirs : \@files), [$filename =~ s/_/__/gr, $abs_path];
     }
     closedir $dir_h;
 
