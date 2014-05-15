@@ -17,6 +17,7 @@
 
 # License: GPLv3
 # Date: 15 May 2014
+# Edit: 16 May 2014
 # Website: http://github.com/trizen/fbrowse-tray
 # Generic name: A simple tray file browser.
 
@@ -35,13 +36,12 @@ use Encode qw(decode_utf8);
 use File::MimeInfo qw(mimetype);    # File::MimeInfo::Magic is better, but slower...
 
 my $pkgname = 'fbrowse-tray';
-my $version = 0.01;
+my $version = 0.02;
 
 my %opt = (
-           f => $ENV{FILEMANAGER} // 'pcmanfm',
            m => 'menu',
-           r => 0,
-           t => 0,
+           i => 'file-manager',
+           f => $ENV{FILEMANAGER} // 'pcmanfm',
           );
 
 sub usage {
@@ -50,11 +50,12 @@ sub usage {
 usage: $0 [options] [dir]
 
 options:
-        -r            : order files before directories
-        -t            : set the path of the file as tooltip
-        -f [command]  : command to open the files with (default: $opt{f})
-        -m [size]     : size of the menu icons (default: $opt{m})
-                        more: dnd, dialog, button, small-toolbar, large-toolbar
+    -r            : order files before directories
+    -t            : set the path of the file as tooltip
+    -i [name]     : change the status icon (default: $opt{i})
+    -f [command]  : command to open the files with (default: $opt{f})
+    -m [size]     : size of the menu icons (default: $opt{m})
+                    more: dnd, dialog, button, small-toolbar, large-toolbar
 
 example:
     $0 -f thunar -m dnd /my/dir
@@ -70,7 +71,7 @@ sub version {
 # Parse arguments
 if (@ARGV && chr ord $ARGV[0] eq '-') {
     require Getopt::Std;
-    Getopt::Std::getopts('tm:f:rhv', \%opt)
+    Getopt::Std::getopts('ti:m:f:rhv', \%opt)
       || die "Error in command-line arguments!";
     $opt{h} && usage(0);
     $opt{v} && version();
@@ -87,7 +88,7 @@ $opt{icon_theme} = Gtk3::IconTheme::get_default;
 {
     my $dir  = decode_utf8(shift @ARGV);
     my $icon = 'Gtk3::StatusIcon'->new;
-    $icon->set_from_icon_name('file-manager');
+    $icon->set_from_icon_name($opt{i});
     $icon->set_visible(1);
     $icon->signal_connect('button-release-event' => sub { create_main_menu($icon, $dir, $_[1]) });
     'Gtk3'->main;
