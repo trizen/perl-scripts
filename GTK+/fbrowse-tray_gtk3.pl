@@ -191,7 +191,7 @@ sub file_icon {
         }
     }
 
-    if (not is_icon_valid($mime_type)) {
+    {
         my $type = $mime_type;
         while (1) {
             $type =~ s{^application-x-\K.*?-}{} || last;
