@@ -17,7 +17,7 @@
 
 # License: GPLv3
 # Date: 15 May 2014
-# Edit: 16 May 2014
+# Edit: 17 May 2014
 # Website: http://github.com/trizen/fbrowse-tray
 # Generic name: A simple tray file browser.
 
@@ -29,11 +29,9 @@ use 5.016;
 use strict;
 use warnings;
 
-use open IO => ':utf8', ':std';
-
 use Gtk3 qw(-init);
+use File::MimeInfo qw();    # File::MimeInfo::Magic is better, but slower...
 use Encode qw(decode_utf8);
-use File::MimeInfo qw(mimetype);    # File::MimeInfo::Magic is better, but slower...
 
 my $pkgname = 'fbrowse-tray';
 my $version = 0.03;
@@ -52,6 +50,7 @@ usage: $0 [options] [dir]
 options:
     -r            : order files before directories
     -t            : set the path of the file as tooltip
+    -e            : get the mimetype by extension only (faster)
     -i [name]     : change the status icon (default: $opt{i})
     -f [command]  : command to open the files with (default: $opt{f})
     -m [size]     : size of the menu icons (default: $opt{m})
@@ -71,7 +70,7 @@ sub version {
 # Parse arguments
 if (@ARGV && chr ord $ARGV[0] eq '-') {
     require Getopt::Std;
-    Getopt::Std::getopts('ti:m:f:rhv', \%opt)
+    Getopt::Std::getopts('ti:m:f:rhve', \%opt)
       || die "Error in command-line arguments!";
     $opt{h} && usage(0);
     $opt{v} && version();
@@ -80,7 +79,7 @@ if (@ARGV && chr ord $ARGV[0] eq '-') {
 @ARGV == 1 || usage(2);
 
 # Cache the current icon theme
-$opt{icon_theme} = Gtk3::IconTheme::get_default;
+$opt{icon_theme} = Gtk3::IconTheme::get_default();
 
 #
 ## Main menu
@@ -169,11 +168,16 @@ sub is_icon_valid {
 
 # Returns a valid icon name based on file's mime-type
 sub file_icon {
-    my ($file) = @_;
+    my ($filename, $file) = @_;
 
     state %alias;
-    my $mime_type = mimetype($file) // return 'unknown';
-    $mime_type =~ tr{/}{-};
+    my $mime_type = (
+                     (
+                      $opt{e}
+                      ? File::MimeInfo::globs($filename)
+                      : File::MimeInfo::mimetype($file)
+                     ) // return 'unknown'
+                    ) =~ tr{/}{-}r;
 
     exists($alias{$mime_type})
       && return $alias{$mime_type};
