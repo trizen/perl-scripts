@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Created on: 21 May 2014
-# Latest edit on: 27 May 2014
+# Latest edit on: 28 May 2014
 # Website: http://github.com/trizen
 
 # A new type of LZ compression, featuring a very short decompression time.
@@ -119,12 +119,12 @@ sub compress {
     while ((my $len = read($fh, (my $block), BUFFER)) > 0) {
 
         my %dict;
+        my $max = int($len / 2);
 
-        # This loop might need some optimizations
-        foreach my $i (0 .. $len - MIN) {
-            foreach my $j (MIN .. $len - $i) {
-                if ((my $ind = index($block, substr($block, $i, $j), $i + $j)) != -1) {
-                    $dict{$ind}{$i} = $j;
+        foreach my $i (reverse(MIN .. $max)) {
+            foreach my $j (0 .. $len - $i * 2) {
+                if ((my $pos = index($block, substr($block, $j, $i), $j + $i)) != -1) {
+                    $dict{$pos}{$j} //= $i;
                 }
             }
         }
