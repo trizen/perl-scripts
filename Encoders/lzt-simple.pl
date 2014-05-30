@@ -24,7 +24,7 @@ use constant {
 
 use constant {
               MIN       => 4,
-              BUFFER    => 255,
+              BUFFER    => 256,
               SIGNATURE => uc(FORMAT) . chr(1),
              };
 
@@ -124,7 +124,9 @@ sub compress {
         foreach my $i (reverse(MIN .. $max)) {
             foreach my $j (0 .. $len - $i * 2) {
                 if ((my $pos = index($block, substr($block, $j, $i), $j + $i)) != -1) {
-                    $dict{$pos}{$j} //= $i;
+                    if (not exists $dict{$pos} or $i > $dict{$pos}[1]) {
+                        $dict{$pos} = [$j, $i];
+                    }
                 }
             }
         }
@@ -133,8 +135,7 @@ sub compress {
         my $uncompressed = '';
         for (my $i = 0 ; $i < $len ; $i++) {
             if (exists $dict{$i}) {
-                my ($key) = sort { $dict{$i}{$b} <=> $dict{$i}{$a} } keys %{$dict{$i}};
-                my $vlen = $dict{$i}{$key};
+                my ($key, $vlen) = @{$dict{$i}};
                 push @pairs, [$i, $key, $vlen];
                 $i += $vlen - 1;
             }
@@ -145,7 +146,7 @@ sub compress {
 
         my $uncomp_len = length($uncompressed);
         printf("%3d -> %3d (%.2f%%)\n", $len, $uncomp_len, ($len - $uncomp_len) / $len * 100);
-        print {$out_fh} chr($uncomp_len), chr(scalar @pairs), (
+        print {$out_fh} chr($uncomp_len - 1), chr(scalar @pairs), (
             map {
                 map { chr }
                   @{$_}
@@ -178,7 +179,7 @@ sub decompress {
             $dict{ord($at_byte)} = [ord($from_byte), ord($size_byte)];
         }
 
-        my $len = ord($len_byte);
+        my $len = ord($len_byte) + 1;
         read($fh, (my $block), $len);
 
         my $acc          = 0;
