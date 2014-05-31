@@ -5,7 +5,7 @@
 # License: GPLv3
 # Website: http://github.com/trizen
 
-# A variant of the LZ compression, with minimum and maximum boundaries control.
+# A visual variant of the LZ compression.
 
 use 5.010;
 use strict;
@@ -17,7 +17,6 @@ use Getopt::Long qw(GetOptions);
 use Term::ANSIColor qw(colored);
 
 my $min    = 4;
-my $max    = 32766;
 my $buffer = 1024;
 
 sub usage {
@@ -27,11 +26,10 @@ usage: $0 [options] [files]
 
 options:
         --min=i     : minimum length of a dictionary key (default: $min)
-        --max=i     : maximimum length of a dictionary key (default: $max)
         --buffer=i  : buffer size of the input stream, in bytes (default: $buffer)
         --help      : print this message and exit
 
-example: $0 --min=4 --max=32 --buffer=512 file.txt
+example: $0 --min=2 --buffer=512 file.txt
 USAGE
     exit($code // 0);
 }
@@ -39,7 +37,6 @@ USAGE
 GetOptions(
            'buffer=i' => \$buffer,
            'min=i'    => \$min,
-           'max=i'    => \$max,
            'help'     => \&usage,
           )
   or die("Error in command line arguments\n");
@@ -48,24 +45,24 @@ GetOptions(
 
 foreach my $file (@ARGV) {
     open my $fh, '<', $file;
-    while (read($fh, (my $block), $buffer) > 0) {
+    while ((my $len = read($fh, (my $block), $buffer)) > 0) {
 
         my %dict;
-        my $len = length($block);
-        foreach my $i (0 .. $len) {
-            foreach my $j ($min .. $max) {
-                last if $j > $len - $i;
-                my $sstr = substr($block, $i, $j);
-                if ((my $ind = index($block, $sstr, $i + $j)) != -1) {
-                    $dict{$ind}{$i} = $j;
+        my $limit = int($len / 2);
+
+        foreach my $i (reverse($min .. $limit)) {
+            foreach my $j (0 .. $len - $i * 2) {
+                if ((my $pos = index($block, substr($block, $j, $i), $j + $i)) != -1) {
+                    if (not exists $dict{$pos} or $i > $dict{$pos}[1]) {
+                        $dict{$pos} = [$j, $i];
+                    }
                 }
             }
         }
 
         for (my $i = 0 ; $i < $len ; $i++) {
             if (exists($dict{$i})) {
-                my ($key) = sort { $dict{$i}{$b} <=> $dict{$i}{$a} } keys %{$dict{$i}};
-                my $vlen = $dict{$i}{$key};
+                my ($key, $vlen) = @{$dict{$i}};
                 print colored("[$key,$vlen]", 'red');    # this line prints the pointer values
                 print colored(substr($block, $key, $vlen), 'blue');    # this line fetches and prints the real data
                 $i += $vlen - 1;
