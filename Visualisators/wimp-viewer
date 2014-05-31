@@ -19,11 +19,11 @@
 #  Appname: wimp-viewer
 #  License: GPLv3
 #  Created on: 24 August 2010
-#  Latest edit on: 24 April 2014
+#  Latest edit on: 31 May 2014
 #  Website: http://trizen.googlecode.com
 #-------------------------------------------------------
 
-# NOTE: requires 'youtube-viewer' and 'universal-streamer'
+# Requires 'youtube-viewer' and 'universal-streamer'
 
 use 5.010;
 use strict;
@@ -37,7 +37,7 @@ use Term::ANSIColor qw(colored);
 use Getopt::Std qw(getopts);
 
 my $appname = 'wimp-viewer';
-my $version = '0.31';
+my $version = '0.32';
 
 my $BASE_URL = 'http://www.wimp.com';
 
@@ -59,8 +59,8 @@ options:
         -f       : fullscreen mode
         -r <i>   : play i of random videos and exit
 
-        -v       : print version and exit
-        -h       : print help and exit
+        -v       : print the version number and exit
+        -h       : print this help message and exit
 HELP
 }
 
@@ -106,8 +106,8 @@ foreach my $url (@ARGV) {
 sub play {
     my ($url) = @_;
 
-    my $req     = $mech->get($url);
-    my $content = $req->decoded_content;
+    my $req = $mech->get($url);
+    my $content = $req->decoded_content // $req->content;
 
     my $real_url = $mech->uri;
 
