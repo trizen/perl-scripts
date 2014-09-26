@@ -7,7 +7,7 @@ use File::Find qw(find);
 
 find {
     wanted => sub {
-        if (not /\.mp3$/i and -f) {
+        if (not /\.mp3\z/i and -f) {
             print "[DELETING]: $_\n";
             unlink or warn "\t[ERROR]: $!";
         }

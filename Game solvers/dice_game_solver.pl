@@ -10,7 +10,8 @@ use 5.010;
 use strict;
 use warnings;
 
-my $board = [[4, 1, 3, 3, 5, 2],
+my $board = [
+             [4, 1, 3, 3, 5, 2],
              [3, 4, 1, 2, 0, 3],
              [5, 1, 5, 5, 4, 2],
              [1, 3, 2, 5, 2, 1],
@@ -49,9 +50,12 @@ while (1) {
     my %map;
     my %seen;
     my @dirs;
+    my %spos;
 
     my $current_pos = [$#{$board}, 0];
     my $current_num = $board->[$current_pos->[0]][$current_pos->[1]];
+
+    $spos{join('|', @{$current_pos})}++;
 
     foreach my $num (1 .. @{$board}**2) {
 
@@ -69,6 +73,9 @@ while (1) {
         my $col = $current_pos->[1] + $pos->[1];
 
         valid_move($row, $col) || last;
+        if (++$spos{join('|', $row, $col)} > 1) {
+            last;
+        }
 
         push @dirs, {dir => $dir, num => $current_num, pos => $current_pos};
 

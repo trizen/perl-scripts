@@ -203,12 +203,12 @@ my $match_flags          = qr{[msixpogcdual]*};
 my $substitution_flags   = qr{[msixpogcerdual]*};
 my $compiled_regex_flags = qr{[msixpodual]*};
 
-my @asigment_operators = qw( && || // ** ! % ^ & * + - = | / . << >> );
-my @lonely_operators   = qw( .. \\ ? ~~ ~ -- ++ : =~ <=> >= <= < > ->);
+my @prec_operators     = qw ( ... .. -> ++ -- =~ <=> \\ ? ~~ ~ : );
+my @asigment_operators = qw( && || // ** ! % ^ & * + - = | / . << >> < > );
 
 my $operators = do {
     local $" = '|';
-    qr{@{[map{quotemeta}@lonely_operators, @asigment_operators]}};
+    qr{@{[map{quotemeta} @prec_operators, @asigment_operators]}};
 };
 
 my $asigment_operators = do {
@@ -702,7 +702,7 @@ foreach my $file (@ARGV) {
     close $fh;
 
     state $reset_color = color('reset');
-    state $color       = color('bright_yellow on_black');
+    state $color       = color('bold red on_black');
     my $result = parse_script($script);
 
     # Collect and print the types
