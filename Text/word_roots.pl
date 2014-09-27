@@ -17,9 +17,8 @@ sub make_tree {
     my ($fh) = @_;
 
     my %table;
-    while (defined(my $word = <$fh>)) {
+    while (defined(my $word = unpack('A*', scalar(<$fh>) // last))) {
         my $ref = \%table;
-        $word = unpack('A*', $word);
         foreach my $char (split //, $word) {
             $ref = $ref->{$char} //= {};
         }
