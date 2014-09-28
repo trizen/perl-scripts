@@ -39,8 +39,7 @@ sub traverse(&$) {
             my $count = 0;
             my $ref = my $val = delete $hash->{$key};
 
-            while (1) {
-                my ($key) = each %{$ref};
+            while (my ($key) = each %{$ref}) {
                 $ref = $val = $ref->{$key // last} // ($code->(substr($key, 0, length($key) - $count)), last);
                 ++$count;
             }
