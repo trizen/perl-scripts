@@ -37,13 +37,13 @@ sub abbrev {
                 my $count = 0;
                 my $ref = my $val = delete $hash->{$key};
                 while (my ($key) = each %{$ref}) {
-                    defined($key) && $key eq $__END__
+                    $key eq $__END__
                       ? do {
                         my $arr = [@{$ref->{$key}}[0 .. $#{$ref->{$key}} - $count]];
                         $__CALL__ ? $code->($arr) : push(@abbrevs, $arr);
                         last;
                       }
-                      : ($ref = $val = $ref->{$key // last});
+                      : ($ref = $val = $ref->{$key});
                     ++$count;
                 }
             }
