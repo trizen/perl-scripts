@@ -101,7 +101,7 @@ sub find_duplicated_files (&@) {
             (-f)
               && push @{$files{$group_by_size ? (-s _) : 'key'}},
               {
-                name      => do { join(' ', split(' ', lc(decode_utf8($_) =~ s{\.\w{1,5}\z}{}r))) },
+                name      => do { join(' ', split(' ', lc(decode_utf8($_) =~ s{\.\w{1,5}\z}{}r))) },  # \
                 real_name => $File::Find::name,
               };
           }
