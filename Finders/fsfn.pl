@@ -14,31 +14,41 @@ use strict;
 use warnings;
 
 use File::Find qw(find);
-use Encode qw(decode_utf8);
 use List::Util qw(first);
+use Encode qw(decode_utf8);
 use Getopt::Long qw(GetOptions);
 
-my @dirs = grep { -d } @ARGV;
-die <<"HELP" if !@dirs;
+sub help {
+    my ($code) = @_;
+
+    print <<"HELP";
 usage: $0 [options] /my/path [...]
 
 Options:
         -f  --first!        : keep only the first file from each group
         -l  --last!         : keep only the last file from each group
         -w  --words=s,s     : group individually files which contain this words
+        -s  --size!         : group files by size (default: off)
+        -p  --percentage=i  : mark the files as similar based on this percent
         -r  --round-up!     : round up the percentange (default: off)
-        -p  --percentage=i  : mark the files as similar if they are at least i% the same
 
 Example:
     $0 --percentage=75 ~/Pictures
+
+WARNING:
+    Options '-f' and '-l' will, permanently, delete your files!
 HELP
+
+    exit($code // 0);
+}
 
 my @words;
 
-my $first      = 0;     # bool
-my $last       = 0;     # bool
-my $round_up   = 0;     # bool
-my $percentage = 50;    # int
+my $first         = 0;     # bool
+my $last          = 0;     # bool
+my $round_up      = 0;     # bool
+my $group_by_size = 0;     # bool
+my $percentage    = 50;    # int
 
 GetOptions(
            'f|first!'       => \$first,
@@ -46,6 +56,8 @@ GetOptions(
            'w|words=s{1,}'  => \@words,
            'r|round-up!'    => \$round_up,
            'p|percentage=i' => \$percentage,
+           's|size!'        => \$group_by_size,
+           'h|help'         => \&help,
           )
   or die("Error in command line arguments");
 
@@ -63,8 +75,8 @@ sub compare_strings ($$) {
 
     my $min =
       $round_up
-      ? int($percentage / 100 + $len2 / (100 / $percentage))
-      : int($len2 / (100 / $percentage));
+      ? int($percentage / 100 + $len2 * $percentage / 100)
+      : int($len2 * $percentage / 100);
 
     return -1 if $min > $len1;
 
@@ -86,13 +98,14 @@ sub find_duplicated_files (&@) {
     my %files;
     find {
         wanted => sub {
-            !(-d) && push @{$files{"key"}},    # to group files by size, change the "key" to '-s _' (unquoted)
+            (-f)
+              && push @{$files{$group_by_size ? (-s _) : 'key'}},
               {
-                name      => do { join(' ', split(' ', lc(decode_utf8($_) =~ s{\.\w+\z}{}r))) },
+                name      => do { join(' ', split(' ', lc(decode_utf8($_) =~ s{\.\w{1,5}\z}{}r))) },
                 real_name => $File::Find::name,
               };
-        }
-    } => @_;
+          }
+         } => @_;
 
     foreach my $files (values %files) {
 
@@ -123,6 +136,7 @@ sub find_duplicated_files (&@) {
 }
 
 {
+    (my @dirs = grep { -d } @ARGV) || help(1);
     local $, = "\n";
     find_duplicated_files {
 
