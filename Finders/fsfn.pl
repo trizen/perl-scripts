@@ -66,12 +66,10 @@ sub compare_strings ($$) {
 
     return 0 if $name1 eq $name2;
 
-    if (length($name1) > length($name2)) {
-        ($name2, $name1) = ($name1, $name2);
+    my ($len1, $len2) = (length($name1), length($name2));
+    if ($len1 > $len2) {
+        ($name2, $len2, $name1, $len1) = ($name1, $len1, $name2, $len2);
     }
-
-    my $len1 = length($name1);
-    my $len2 = length($name2);
 
     my $min =
       $round_up
@@ -99,13 +97,12 @@ sub find_duplicated_files (&@) {
     find {
         wanted => sub {
             (-f)
-              && push @{$files{$group_by_size ? (-s _) : 'key'}},
-              {
-                name      => do { join(' ', split(' ', lc(decode_utf8($_) =~ s{\.\w{1,5}\z}{}r))) },  # \
+              && push @{$files{$group_by_size ? (-s _) : 'key'}}, {
+                name => do { join(' ', split(' ', lc(decode_utf8($_) =~ s{\.\w{1,5}\z}{}r))) },    # \
                 real_name => $File::Find::name,
-              };
-          }
-         } => @_;
+                                                                  };
+        }
+    } => @_;
 
     foreach my $files (values %files) {
 
