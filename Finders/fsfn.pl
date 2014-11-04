@@ -4,6 +4,7 @@
 # License: GPLv3
 # Date: 22 June 2013
 # Improved: 18 October 2014
+# Latest edit on: 04 November 2014
 # http://github.com/trizen
 
 # Find files which have exactly or *ALMOST*
@@ -28,6 +29,7 @@ Options:
         -f  --first!        : keep only the first file from each group
         -l  --last!         : keep only the last file from each group
         -w  --words=s,s     : group individually files which contain this words
+        -i  --insensitive   : make all words case-insensitive
         -s  --size!         : group files by size (default: off)
         -p  --percentage=i  : mark the files as similar based on this percent
         -r  --round-up!     : round up the percentange (default: off)
@@ -48,6 +50,7 @@ my $first         = 0;     # bool
 my $last          = 0;     # bool
 my $round_up      = 0;     # bool
 my $group_by_size = 0;     # bool
+my $insensitive   = 0;     # bool
 my $percentage    = 50;    # int
 
 GetOptions(
@@ -55,11 +58,14 @@ GetOptions(
            'l|last!'        => \$last,
            'w|words=s{1,}'  => \@words,
            'r|round-up!'    => \$round_up,
+           'i|insensitive!' => \$insensitive,
            'p|percentage=i' => \$percentage,
            's|size!'        => \$group_by_size,
            'h|help'         => \&help,
           )
   or die("Error in command line arguments");
+
+@words = map { $insensitive ? qr/$_/i : qr/$_/ } (@words, '.');
 
 sub compare_strings ($$) {
     my ($name1, $name2) = @_;
@@ -101,8 +107,8 @@ sub find_duplicated_files (&@) {
                 name => do { join(' ', split(' ', lc(decode_utf8($_) =~ s{\.\w{1,5}\z}{}r))) },    # \
                 real_name => $File::Find::name,
                                                                   };
-        }
-    } => @_;
+          }
+         } => @_;
 
     foreach my $files (values %files) {
 
