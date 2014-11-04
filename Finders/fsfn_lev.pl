@@ -81,7 +81,7 @@ sub lev_cmp ($$) {
       ? int($percentage / 100 + $max * (100 - $percentage) / 100)
       : int($max * (100 - $percentage) / 100);
 
-    return -1 if abs($len1 - $len2) > $diff;
+    return -1 if ($max - $min) > $diff;
 
     my @d = ([0 .. $len2], map { [$_] } 1 .. $len1);
     foreach my $i (1 .. $len1) {
