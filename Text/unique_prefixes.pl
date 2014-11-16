@@ -31,11 +31,12 @@ sub abbrev {
         my ($hash) = @_;
 
         foreach my $key (my @keys = sort keys %{$hash}) {
-            __SUB__->($hash->{$key}) if $key ne $__END__;
+            next if $key eq $__END__;
+            __SUB__->($hash->{$key});
 
             if ($#keys > 0) {
                 my $count = 0;
-                ref(my $ref = my $val = delete $hash->{$key}) eq 'HASH' || next;
+                my $ref = my $val = delete $hash->{$key};
                 while (my ($key) = each %{$ref}) {
                     $key eq $__END__
                       ? do {
