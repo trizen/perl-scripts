@@ -35,7 +35,7 @@ sub abbrev {
 
             if ($#keys > 0) {
                 my $count = 0;
-                my $ref = my $val = delete $hash->{$key};
+                ref(my $ref = my $val = delete $hash->{$key}) eq 'HASH' || next;
                 while (my ($key) = each %{$ref}) {
                     $key eq $__END__
                       ? do {
@@ -68,4 +68,20 @@ require List::Util;
 my $unique_prefixes = abbrev([map { [split('/')] } @dirs]);
 my %table = map { $#{$_} => $_ } @{$unique_prefixes};
 my $min = List::Util::min(keys %table);
+
+say "=>> Common directory:";
 say join('/', splice(@{$table{$min}}, 0, -1));
+
+my @words = qw(
+  deodorant
+  decor
+  decorat
+  decadere
+  plecare
+  placere
+  plecat
+  jaguar
+  );
+
+say "\n=>> Unique prefixes:";
+abbrev([map { [split //] } @words], sub { say @{$_[0]} });
