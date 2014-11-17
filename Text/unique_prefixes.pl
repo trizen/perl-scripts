@@ -36,16 +36,15 @@ sub abbrev {
 
             if ($#keys > 0) {
                 my $count = 0;
-                my $ref = my $val = delete $hash->{$key};
+                my $ref   = $hash->{$key};
                 while (my ($key) = each %{$ref}) {
-                    $key eq $__END__
-                      ? do {
+                    if ($key eq $__END__) {
                         my $arr = [@{$ref->{$key}}[0 .. $#{$ref->{$key}} - $count]];
                         $__CALL__ ? $code->($arr) : push(@abbrevs, $arr);
                         last;
-                      }
-                      : ($ref = $val = $ref->{$key});
-                    ++$count;
+                    }
+                    $ref = $ref->{$key};
+                    $count++;
                 }
             }
         }
