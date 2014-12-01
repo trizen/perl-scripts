@@ -5,16 +5,7 @@
 # License: GPLv3
 # https://github.com/trizen
 
-# Match subtitles to video names across directories and rename them accordinly.
-# The match is done heuristcly, using an approximation comparation function.
-
-# When there are more subtitles and more videos inside a directory, the script
-# makes some decision based on the filename approximations and rename the file
-# if they are at lest 50% similar. (this percent is customizable)
-
-# The script also has special several cases for serials
-# and for single video files with one subtitle in the same directory.
-
+use utf8;
 use 5.014;
 use strict;
 use warnings;
@@ -33,6 +24,8 @@ sub help {
     my ($code) = @_;
 
     print <<"HELP";
+Rename subtitles to match the video files
+
 usage: $0 /my/videos [...]
 
 options:
@@ -40,8 +33,21 @@ options:
     -s --single-file    : one video and one subtitle in a dir (default: $single_file)
     -p --percentage=i   : minimum percentage of approximation (default: $min_percentage)
 
-example:
+Match subtitles to video names across directories and rename them accordingly.
+The match is done heuristically, using an approximation comparation algorithm.
+
+When there are more subtitles and more videos inside a directory, the script
+makes decisions based on the filename approximations and rename the file
+if they are at lest 50% similar. (this percent is customizable)
+
+The script has, also, several special cases for serials (S00E00)
+and for single video files with one subtitle in the same directory.
+
+Usage example:
     $0 -s -p=75 ~/Videos
+
+Copyright (C) 2014 Daniel "Trizen" Șuteu <trizenx\@gmail\.com>
+License: GPLv3 or later, at your choice. See <http://www.gnu.org/licenses/gpl>
 HELP
 
     exit($code // 0);
