@@ -38,7 +38,7 @@ The match is done heuristically, using an approximation comparation algorithm.
 
 When there are more subtitles and more videos inside a directory, the script
 makes decisions based on the filename approximations and rename the file
-if they are at lest 50% similar. (this percent is customizable)
+if they are at least 50% similar. (this percent is customizable)
 
 The script has, also, several special cases for serials (S00E00)
 and for single video files with one subtitle in the same directory.
@@ -151,6 +151,12 @@ my $subs_re = do {
 
 my $serial_re = qr/S([0-9]{2,})E([0-9]{2,})/;
 
+if (not $rename) {
+
+    warn "\n[!] To actually rename the files, execute me with option '-r'.\n\n";
+
+}
+
 my %content;
 find {
     no_chdir => 0,
@@ -200,11 +206,13 @@ foreach my $dir (sort keys %content) {
                     # A subtitle can't be shared with more videos
                     if (exists $seen{$sub}) {
                         foreach my $key (@{$seen{$sub}}) {
-                            if (@{$table{$key}} and $i > $table{$key}[-1][1]) {
-                                pop @{$table{$key}};
-                            }
-                            else {
-                                last PERCENT;
+                            if (@{$table{$key}}) {
+                                if ($i > $table{$key}[-1][1]) {
+                                    pop @{$table{$key}};
+                                }
+                                else {
+                                    last PERCENT;
+                                }
                             }
                         }
                     }
@@ -256,7 +264,7 @@ foreach my $dir (sort keys %content) {
                         next;
                     }
                 }
-                else {
+                else {    # this will not happen
                     warn "\t[!] Percentage is lower than $min_percentage%. Skipping file...\n";
                     next;
                 }
@@ -272,9 +280,6 @@ foreach my $dir (sort keys %content) {
 
                 rename($subfile, $new_name)
                   || warn "\t[!] Can't rename file: $!\n";
-            }
-            else {
-                warn "\t[!] I will rename the file if you execute me with option '-r'.\n";
             }
         }
     }
