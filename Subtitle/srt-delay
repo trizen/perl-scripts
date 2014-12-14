@@ -52,8 +52,7 @@ sub sec2time {
     my @out;
     foreach my $sec (map { sprintf '%.3f', $_ } @_) {
         push @out,
-          sprintf('%02d:%02d:%02d,%03d',
-            ($sec / 3600 % 24, $sec / 60 % 60, $sec % 60, substr($sec, index($sec, '.') + 1)));
+          sprintf('%02d:%02d:%02d,%03d', ($sec / 3600 % 24, $sec / 60 % 60, $sec % 60, substr($sec, index($sec, '.') + 1)));
     }
     return @out;
 }
@@ -79,12 +78,14 @@ foreach my $file (grep { -f $_ } @ARGV) {
                 ' --> ',
                 sec2time(
                     map ({
-                         my $sec = $_ + $addition;
-                           $sec >= 0
-                         ? $sec
-                         : !warn "[!] Time cannot be lower than zero at line $.\n";
+                            my $sec = $_ + $addition;
+                            $sec >= 0
+                              ? $sec
+                              : !warn "[!] Time cannot be lower than zero at line $.\n";
                         } time2sec(split(/\s*-->\s*/, $line, 2)))
-                )) . $1;
+                )
+              )
+              . $1;
         }
         else { push @output, $line }
     }
