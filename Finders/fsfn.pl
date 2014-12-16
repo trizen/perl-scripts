@@ -7,15 +7,15 @@
 # Latest edit on: 04 November 2014
 # http://github.com/trizen
 
-# Find files which have exactly or *ALMOST*
-# exactly the same name in a given path.
+# Find files which have exactly or *ALMOST* exactly
+# the same name in a given path (+Levenshtein distance).
 
 use 5.014;
 use strict;
 use warnings;
 
 use File::Find qw(find);
-use List::Util qw(first);
+use List::Util qw(first min max);
 use Encode qw(decode_utf8);
 use Getopt::Long qw(GetOptions);
 
@@ -33,6 +33,7 @@ Options:
         -s  --size!         : group files by size (default: off)
         -p  --percentage=i  : mark the files as similar based on this percent
         -r  --round-up!     : round up the percentange (default: off)
+        -L  --levenshtein   : use the Levenshtein distance alogorithm
 
 Example:
     $0 --percentage=75 ~/Pictures
@@ -51,6 +52,7 @@ my $last          = 0;     # bool
 my $round_up      = 0;     # bool
 my $group_by_size = 0;     # bool
 my $insensitive   = 0;     # bool
+my $levenshtein   = 0;     # bool
 my $percentage    = 50;    # int
 
 GetOptions(
@@ -60,6 +62,7 @@ GetOptions(
            'r|round-up!'    => \$round_up,
            'i|insensitive!' => \$insensitive,
            'p|percentage=i' => \$percentage,
+           'L|levenshtein!' => \$levenshtein,
            's|size!'        => \$group_by_size,
            'h|help'         => \&help,
           )
@@ -67,7 +70,10 @@ GetOptions(
 
 @words = map { $insensitive ? qr/$_/i : qr/$_/ } (@words, '.');
 
-sub compare_strings ($$) {
+# Determine what algorithm to use for comparation
+my $algorithm = $levenshtein ? \&lev_cmp : \&index_cmp;
+
+sub index_cmp ($$) {
     my ($name1, $name2) = @_;
 
     return 0 if $name1 eq $name2;
@@ -96,6 +102,35 @@ sub compare_strings ($$) {
     return 1;
 }
 
+# Levenshtein's distance function (optimized for speed)
+sub lev_cmp ($$) {
+    my ($s, $t) = @_;
+
+    my $len1 = @$s;
+    my $len2 = @$t;
+
+    my ($min, $max) = $len1 < $len2 ? ($len1, $len2) : ($len2, $len1);
+
+    my $diff =
+      $round_up
+      ? int($percentage / 100 + $max * (100 - $percentage) / 100)
+      : int($max * (100 - $percentage) / 100);
+
+    return -1 if ($max - $min) > $diff;
+
+    my @d = ([0 .. $len2], map { [$_] } 1 .. $len1);
+    foreach my $i (1 .. $len1) {
+        foreach my $j (1 .. $len2) {
+            $d[$i][$j] =
+                $$s[$i - 1] eq $$t[$j - 1]
+              ? $d[$i - 1][$j - 1]
+              : min($d[$i - 1][$j], $d[$i][$j - 1], $d[$i - 1][$j - 1]) + 1;
+        }
+    }
+
+    ($d[-1][-1] // $min) <= $diff ? 0 : 1;
+}
+
 sub find_duplicated_files (&@) {
     my $code = shift;
 
@@ -104,11 +139,14 @@ sub find_duplicated_files (&@) {
         wanted => sub {
             (-f)
               && push @{$files{$group_by_size ? (-s _) : 'key'}}, {
-                name => do { join(' ', split(' ', lc(decode_utf8($_) =~ s{\.\w{1,5}\z}{}r))) },    # \
+                name => do {
+                    my $str = join(' ', split(' ', lc(decode_utf8($_) =~ s{\.\w{1,5}\z}{}r)));
+                    $levenshtein ? [split(//, $str)] : $str;
+                },
                 real_name => $File::Find::name,
                                                                   };
-          }
-         } => @_;
+        }
+    } => @_;
 
     foreach my $files (values %files) {
 
@@ -124,7 +162,7 @@ sub find_duplicated_files (&@) {
                     }
                 }
 
-                if (compare_strings($files->[$i]{name}, $files->[$j]{name}) == 0) {
+                if ($algorithm->($files->[$i]{name}, $files->[$j]{name}) == 0) {
                     push @{$dups{$files->[$i]{real_name}}}, ${splice @{$files}, $j--, 1}{real_name};
                 }
             }
