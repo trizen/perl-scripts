@@ -3,7 +3,7 @@
 # Author: Trizen
 # License: GPLv3
 # Date: 04 February 2013
-# Latest edit on: 14 April 2014
+# Latest edit on: 17 December 2014
 # Website: http://trizen.googlecode.com
 
 # Perl source code grepper, fork of pview (the Perl-code highlighter).
@@ -23,7 +23,7 @@ use autouse 'Getopt::Std' => qw(getopts($;$));
 binmode(STDOUT, ':utf8');
 
 my %opts;
-getopts('hndlpcb:a:t', \%opts);
+getopts('hndlpcNb:a:t', \%opts);
 
 our $DEBUG = $opts{d};
 
@@ -40,6 +40,7 @@ options:
         -p      : print the name and position
         -n      : print all except of the specified types
         -t      : print the available types and exit
+        -N      : don't print a newline after the token
         -d      : debug mode
 
 types:
@@ -53,6 +54,9 @@ types:
 
 usage example: $0 -l -c regex /perl/script.pl
                $0 -l -c -n -p /perl/script.pl
+
+uncomment and unpod a perl script:
+    $0 -N -n '^(?:pod|comment)$' script.pl > clean_script.pl
 HELP
     exit $code;
 }
@@ -269,6 +273,7 @@ sub parse_script {
         {
             when ($expect_format == 1 && m{\G(?=\n)}) {
                 if (m{.*?\n\.\h*(?=\n|\z)}gsc) {
+                    push @result, {vertical_space => [$-[0], $-[0] + 1]};
                     push @result, {format => [$-[0] + 1, $+[0]]};
                     $expect_format = 0;
                     $canpod        = 1;
@@ -283,6 +288,7 @@ sub parse_script {
             when ($#heredoc_eofs >= 0 && m{\G(?=\n)}) {
                 my $token = shift @heredoc_eofs;
                 if (m{\G.*?\n\Q$token\E(?=\n|\z)}sgc) {
+                    push @result, {vertical_space => [$-[0], $-[0] + 1]};
                     push @result, {heredoc => [$-[0] + 1, $+[0]]};
                 }
                 else {
@@ -304,6 +310,7 @@ sub parse_script {
             }
             when (m{\G(?=\s)}) {
                 when (m{\G\h+}gc) {
+                    push @result, {horizontal_space => [$-[0], $+[0]]};
                     redo;
                 }
                 when (m{\G\v+}gc) {
@@ -722,7 +729,7 @@ foreach my $file (@ARGV) {
 
   LOOP_1: foreach my $hash_ref (@{$result}) {
         while (my ($key, $val) = each %{$hash_ref}) {
-            if (($opts{n} && not $key ~~ \@types) || $key ~~ \@types) {
+            if ($opts{n} ? (not $key ~~ \@types) : ($key ~~ \@types)) {
 
                 if ($opts{p}) {
                     print "[$key] pos($val->[0], $val->[1]): ";
@@ -749,7 +756,7 @@ foreach my $file (@ARGV) {
                         print substr($script, $val->[1], $opts{a});
                     }
                 }
-                print "\n";
+                print "\n" unless $opts{N};
             }
         }
     }
