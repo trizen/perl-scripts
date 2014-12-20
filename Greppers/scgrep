@@ -56,7 +56,7 @@ usage example: $0 -l -c regex /perl/script.pl
                $0 -l -c -n -p /perl/script.pl
 
 uncomment and unpod a perl script:
-    $0 -N -n '^(?:pod|comment)$' script.pl > clean_script.pl
+    $0 -N -n '^(?:pod|comment)\$' script.pl > clean_script.pl
 HELP
     exit $code;
 }
