@@ -30,20 +30,20 @@ my $size = shift() // 2;
 my $img = GD::Simple->new(length($lines[0]) * $size, scalar(@lines) * $size);
 
 foreach my $i (0 .. $#lines) {
-    my $line = $lines[$i];
-    my @pixels = split(//, $line);
-
     foreach my $j ($i * $size .. $i * $size + $size) {
         $img->moveTo(0, $j);
-
-        foreach my $pixel (@pixels) {
-            if ($pixel eq ' ') {
+        my $row = $lines[$i];
+        while (1) {
+            if ($row =~ s/^(\s+)//) {
                 $img->fgcolor('black');
-                $img->line($size);
+                $img->line($size * length($1));
+            }
+            elsif ($row =~ s/^(\S+)//) {
+                $img->fgcolor('red');
+                $img->line($size * length($1));
             }
             else {
-                $img->fgcolor('red');
-                $img->line($size);
+                last;
             }
         }
     }
