@@ -83,13 +83,13 @@ while (my ($node, $depth) = $iter->()) {
 
     pp $family, $type, $node->qr;    # for debug
 
-    if ($type =~ /^close\d/) {
+    if ($type =~ /^(?:close\d|tail)/) {
         $ref = pop @stack;
     }
     elsif (exists $conv{$type}) {
         push @{$ref->[-1]}, $conv{$type} x $min;
     }
-    elsif ($family eq 'open') {
+    elsif ($family eq 'open' or $type eq 'group' or $type eq 'suspend') {
         push @stack, $ref;
         push @{$ref->[-1]}, [];
         $ref = $ref->[-1][-1];
@@ -98,7 +98,7 @@ while (my ($node, $depth) = $iter->()) {
     elsif ($type eq 'branch') {
         $#{$ref->[-1]} == -1 or push @{$ref}, [];
     }
-    elsif ($type eq 'exact') {
+    elsif ($type eq 'exact' or $type eq 'exactf') {
         push @{$ref->[-1]}, $node->data x $min;
     }
     elsif ($type eq 'anyof' and $min > 0) {
