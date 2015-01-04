@@ -790,7 +790,7 @@ foreach my $script (@ARGV) {
     my $score = (100 - ($len / @types * 100));
 
     if ($score >= 60) {
-        printf("WOW!!! We have here a score of %.2f! This is obfuscation, isn't?\n", $score);
+        printf("WOW!!! We have here a score of %.2f! This is obfuscation, isn't it?\n", $score);
     }
     elsif ($score >= 40) {
         printf("Outstanding! This code seems to be written by a true legend! Score: %.2f\n", $score);
@@ -805,9 +805,9 @@ foreach my $script (@ARGV) {
         printf("Awesome! This code is written by a Perl expert. Score: %.2f\n", $score);
     }
     elsif ($score >= 5) {
-        printf("Just OK! We have a score of %.2f! This is production code, isn't?\n", $score);
+        printf("Just OK! We have a score of %.2f! This is production code, isn't it?\n", $score);
     }
     else {
-        printf("What is this? I guess it is some baby Perl code, isn't? Score: %.2f\n", $score);
+        printf("What is this? I guess it is some baby Perl code, isn't it? Score: %.2f\n", $score);
     }
 }
