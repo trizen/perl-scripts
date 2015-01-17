@@ -174,6 +174,7 @@ find {
 
 sub ilc {
     my ($string) = @_;
+    $string =~ s/[[:punct:]]+/ /g;
     $string = join(' ', split(' ', $string));
     lc($string);
 }
