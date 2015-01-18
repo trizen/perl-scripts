@@ -1,34 +1,38 @@
 #!/usr/bin/perl
 
-# Author: Trizen
+# Author: Daniel "Trizen" Șuteu
 # Date: 29 August 2012
+# Edit: 18 January 2015
 # Email: echo dHJpemVueEBnbWFpbC5jb20K | base64 -d
-# Website: http://trizen.googlecode.com
+# Website: https://github.com/trizen
 
-# Put two or more lines together as columns.
-# Applicable on wordlists.
+# Put two or more lines together as columns. (with unicode char width support)
 
 use strict;
 use warnings;
-use encoding qw(UTF-8);
+use open IO => ':encoding(UTF-8)', ':std';
 
 use Getopt::Std qw(getopts);
 
 my %opt = (
-           l => 2,
+           c => 2,
            s => 25,
+           l => 0,
            r => 0,
+           u => 0,
           );
 
-getopts('l:s:rh', \%opt);
+getopts('c:s:l:ruh', \%opt);
 
 sub usage {
     die <<"USAGE";
 usage: $0 [options] [files]
 
 options:
-        -l <i> : number of lines (default: $opt{l})
+        -c <i> : number of columns (default: $opt{c})
         -s <i> : number of spaces between words (default: $opt{s})
+        -l <i> : number of leading spaces (default: $opt{l})
+        -u     : use the unicode char width feature
         -r     : reverse columns
 
 Example: perl $0 -l 3 -s 40 file.txt > output.txt
@@ -38,7 +42,7 @@ USAGE
 usage() if $opt{h} or not @ARGV;
 
 foreach my $file (@ARGV) {
-    open my $fh, '<:crlf:encoding(UTF-8)', $file
+    open my $fh, '<', $file
       or do { warn "$0: Can't open file '$file' for read: $!\n"; next };
 
     my @lines;
@@ -47,10 +51,23 @@ foreach my $file (@ARGV) {
         chomp;
         push @lines, $_;
 
-        if ($. % $opt{'l'} == 0 || eof $fh and @lines) {
-            my $format = ("%-$opt{s}s " x $#lines) . "%s\n";
-            printf $format, $opt{r} ? reverse splice @lines : splice @lines;
-        }
+        if ($. % $opt{c} == 0 || eof $fh and @lines) {
+            my @cols = $opt{r} ? reverse splice @lines : splice @lines;
 
+            my $format = ' ' x $opt{l};
+            if ($opt{u}) {
+                require Text::CharWidth;
+                foreach my $i (0 .. $#cols - 1) {
+                    my $diff = abs(Text::CharWidth::mbswidth($cols[$i]) - length($cols[$i]));
+                    $format .= "%-" . ($opt{s} - $diff) . 's';
+                }
+            }
+            else {
+                $format = "%-$opt{s}s " x $#cols;
+            }
+            $format .= "%s\n";
+
+            printf $format, @cols;
+        }
     }
 }
