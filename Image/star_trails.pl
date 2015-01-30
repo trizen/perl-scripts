@@ -64,6 +64,9 @@ sub intensity {
 my ($width, $height);
 
 foreach my $image (@images) {
+
+    say "** Processing file `$image'...";
+
     my $gd = GD::Image->new($image) // do {
         warn "** Can't load file `$image'. Skipping...\n";
         next;
@@ -95,6 +98,8 @@ foreach my $image (@images) {
 
 $width // die "error: No image has been processed!\n";
 
+say "** Creating the output image `$output_file'...";
+
 my $image = GD::Image->new($width, $height);
 foreach my $x (0 .. $width - 1) {
     foreach my $y (0 .. $height - 1) {
@@ -109,3 +114,5 @@ print $fh lc($file_format) =~ /png/
   ? $image->png($png_compression)
   : $image->jpeg($jpeg_quality);
 close $fh;
+
+say "** All done!";
