@@ -25,9 +25,9 @@ sub sqrt_n {
     my ($num, $pow) = @_;
 
     my $i   = int($pow) - 1;
-    my $res = sqrt($num);
+    my $res = $num;
 
-    for (2 .. $i) {
+    for (1 .. $i) {
         $res = sqrt($res);
     }
 
