@@ -12,10 +12,9 @@ use strict;
 use autodie;
 use warnings;
 
-use List::Util qw(sum);
+use GD;
 use Getopt::Long qw(GetOptions);
 
-require GD;
 GD::Image->trueColor(1);
 
 my $output_file = 'output.png';
@@ -57,12 +56,13 @@ my (@images) = @ARGV;
 my @matrix;
 
 sub intensity {
-    my ($pixels) = @_;
-    defined($pixels) ? sum(@{$pixels}) / 3 : 0;
+    ($_[0] + $_[1] + $_[2]) / 3;
 }
 
 my ($width, $height);
 
+my %color_cache;
+my %intensity_cache;
 foreach my $image (@images) {
 
     say "** Processing file `$image'...";
@@ -88,9 +88,10 @@ foreach my $image (@images) {
     foreach my $x (0 .. $width - 1) {
         foreach my $y (0 .. $height - 1) {
             my $index = $gd->getPixel($x, $y);
-            my $rgb = [$gd->rgb($index)];
-            if (intensity($matrix[$x][$y]) < intensity($rgb)) {
-                $matrix[$x][$y] = $rgb;
+            $matrix[$x][$y] //= [0, 0, 0];
+            if (intensity(@{$matrix[$x][$y]}) <
+                ($intensity_cache{$index} //= (intensity(@{$color_cache{$index} //= [$gd->rgb($index)]})))) {
+                $matrix[$x][$y] = $color_cache{$index};
             }
         }
     }
