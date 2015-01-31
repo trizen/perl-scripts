@@ -3,6 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 30 January 2015
+# Edited: 31 January 2015
 # Website: https://github.com/trizen
 
 # Merge two or more images together and keep the most intesive pixel colors
@@ -51,19 +52,14 @@ GetOptions(
            'h|help'              => \&help,
           );
 
-my (@images) = @ARGV;
-
-my @matrix;
-
 sub intensity {
     ($_[0] + $_[1] + $_[2]) / 3;
 }
 
-my ($width, $height);
-
+my @matrix;
 my %color_cache;
 my %intensity_cache;
-foreach my $image (@images) {
+foreach my $image (@ARGV) {
 
     say "** Processing file `$image'...";
 
@@ -72,7 +68,7 @@ foreach my $image (@images) {
         next;
     };
 
-    ($width, $height) = $gd->getBounds;
+    my ($width, $height) = $gd->getBounds;
 
     if ($scale_percent != 0) {
         my $scale_width  = $width + int($scale_percent / 100 * $width);
@@ -97,14 +93,12 @@ foreach my $image (@images) {
     }
 }
 
-$width // die "error: No image has been processed!\n";
-
+@matrix || die "error: No image has been processed!\n";
 say "** Creating the output image `$output_file'...";
 
-my $image = GD::Image->new($width, $height);
-foreach my $x (0 .. $width - 1) {
-    foreach my $y (0 .. $height - 1) {
-        exists($matrix[$x][$y]) or next;
+my $image = GD::Image->new($#matrix + 1, $#{$matrix[0]} + 1);
+foreach my $x (0 .. $#matrix) {
+    foreach my $y (0 .. $#{$matrix[0]}) {
         my $color = $image->colorAllocate(@{$matrix[$x][$y]});
         $image->setPixel($x, $y, $color);
     }
