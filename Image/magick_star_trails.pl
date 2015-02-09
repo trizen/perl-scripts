@@ -14,18 +14,41 @@ use autodie;
 use warnings;
 
 use Image::Magick;
+use List::Util qw(min max);
 use Getopt::Long qw(GetOptions);
 
 my $output_file   = 'output.png';
 my $scale_percent = 0;
+my $brightness_f  = 'avg';
+
+my %brightness = (
+
+    # I: http://en.wikipedia.org/wiki/HSL_and_HSV#Lightness
+    avg => sub { ($_[0] + $_[1] + $_[2]) / 3 },
+
+    # L: http://en.wikipedia.org/wiki/HSL_and_HSV#Lightness
+    hsl => sub { 0.5 * max(@_) + 0.5 * min(@_) },
+
+    # https://en.wikipedia.org/wiki/Relative_luminance
+    rl => sub { (0.2126 * $_[0] + 0.7152 * $_[1] + 0.0722 * $_[2]) },
+
+    # Y601: http://en.wikipedia.org/wiki/HSL_and_HSV#Lightness
+    luma => sub { (0.299 * $_[0] + 0.587 * $_[1] + 0.114 * $_[2]) },
+
+    # http://alienryderflex.com/hsp.html
+    hsp => sub { sqrt(0.299 * ($_[0]**2) + 0.587 * ($_[1]**2) + 0.114 * ($_[2]**2)) },
+);
 
 sub help {
+    local $" = ", ";
     print <<"HELP";
 usage: $0 [options] [files]
 
 options:
-    -o  --output          : output file (default: $output_file)
-    -s  --scale-percent   : scale image by a given percentage (default: $scale_percent)
+    -o  --output         : output file (default: $output_file)
+    -s  --scale-percent  : scale image by a given percentage (default: $scale_percent)
+    -f  --formula        : formula for the brightness of a pixel (default: $brightness_f)
+                           valid values: @{[sort keys %brightness]}
 
 example:
     $0 -o merged.png --scale -20 file1.jpg file2.jpg
@@ -36,12 +59,17 @@ HELP
 GetOptions(
            'o|output=s'        => \$output_file,
            's|scale-percent=i' => \$scale_percent,
+           'f|formula=s'       => \$brightness_f,
            'h|help'            => \&help,
           );
 
-sub intensity {
-    ($_[0] + $_[1] + $_[2]) / 3;
+if (not exists $brightness{$brightness_f}) {
+    local $" = ", ";
+    die "[!] Invalid brightness formula: `$brightness_f'.
+        Valid values are: @{[sort keys %brightness]}\n";
 }
+
+my $lightness_function = $brightness{$brightness_f};
 
 my @matrix;
 foreach my $image (@ARGV) {
@@ -76,7 +104,7 @@ foreach my $image (@ARGV) {
         my @rgb = splice(@pixels, 0, 3);
 
         $matrix[$x][$y] //= [0, 0, 0];
-        if (intensity(@{$matrix[$x][$y]}) < intensity(@rgb)) {
+        if ($lightness_function->(@{$matrix[$x][$y]}) < $lightness_function->(@rgb)) {
             $matrix[$x][$y] = \@rgb;
         }
 
