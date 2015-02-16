@@ -167,9 +167,9 @@ my $bhdoc = qr{
 }x;
 
 my $tr_flags             = qr{[rcds]*};
-my $match_flags          = qr{[msixpogcdual]*};
-my $substitution_flags   = qr{[msixpogcerdual]*};
-my $compiled_regex_flags = qr{[msixpodual]*};
+my $match_flags          = qr{[mnsixpogcdual]*};
+my $substitution_flags   = qr{[mnsixpogcerdual]*};
+my $compiled_regex_flags = qr{[mnsixpodual]*};
 
 my @prec_operators     = qw ( ... .. -> ++ -- =~ <=> \\ ? ~~ ~ : );
 my @asigment_operators = qw( && || // ** ! % ^ & * + - = | / . << >> < > );
@@ -184,7 +184,7 @@ my $asigment_operators = do {
     qr{@{[map{"\Q$_=\E"} @asigment_operators]}};
 };
 
-my @special_var_names = (qw( \\ | + / ~ ! @ $ % ^ & * ( ) } < > : ; " ` ' ? = - [ ] . ), '#', ',');
+my @special_var_names = (qw( \\ | + / ~ ! @ $ % ^ & * ( ) } < > : ; " ` ' ? = - [ ] . ), ',');
 my $special_var_names = do {
     local $" = '|';
     qr{@{[map {quotemeta} @special_var_names]}};
@@ -292,13 +292,18 @@ sub parse_script {
                     $flat     = m~\G(?=\s*\{)~ ? 1 : 0;
                     redo;
                 }
-                when ((m{\G(?<=[\$\%\@\*])} && m{\G(?!\$+$var_name)}o && m{\G(?:\^\w|$special_var_names)}gco)
-                      || m~\G\h*\{\h*[{}]\}~gc) {
+                when (
+                      (
+                       m{\G(?<=[\$\%\@\*])} && m{\G(?!\$+$var_name)}o && (m{\G(?:\^\w|#(?!\{)|$special_var_names)}gco
+                                                           || m~\G(?:\h+|#?)\{\h*(?:$var_name|$special_var_names|[#{])\h*\}~goc
+                                                           || m~\G#~gc)
+                      )
+                  ) {
                     push @result, {special_var_name => [$-[0], $+[0]]};
                     $regex    = 0;
                     $canpod   = 0;
                     $variable = 0;
-                    $flat     = m~\G(?=\s*\{)~ ? 1 : 0;
+                    $flat     = m~\G(?<!\})(?=\s*\{)~ ? 1 : 0;
                     redo;
                 }
                 continue;
