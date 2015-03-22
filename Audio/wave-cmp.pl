@@ -7,6 +7,9 @@
 
 # Find similar audio files by comparing their waveforms.
 
+# Review:
+#   http://trizenx.blogspot.ro/2015/03/similar-audio-files.html
+
 #
 ## The waveform is processed block by block:
 #  _________________________________________
@@ -15,12 +18,12 @@
 # |_____|_____|_____|_____|_____|_____|_____|
 # |_____|_____|_____|_____|_____|_____|_____|
 #
-# Each block has a distict number of white pixels, which are collected
+# Each block has a distinct number of white pixels, which are collected
 # inside an array and constitute the unique fingerprint of the waveform.
 #
-# Now, each block value is compared with the coresponding value
-# of another fingerprint. If the difference is within the allowed
-# deviation, then the audio files are marked as similar.
+# Now, each block value is compared with the corresponding value
+# of another fingerprint. If the difference from all blocks is within
+# the allowed deviation, then the audio files are marked as similar.
 #
 # In the end, the similar files are reported to the standard output.
 
