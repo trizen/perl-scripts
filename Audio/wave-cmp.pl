@@ -51,7 +51,7 @@ my $ctx = Digest::MD5->new;
 my $pkgname = 'wave-cmp';
 my $version = 0.01;
 
-my $deviation = 5;    # strict: 3 // medium: 5 // loosy: 10
+my $deviation = 5;
 
 my ($width, $height) = (1800, 300);
 my ($div_x, $div_y)  = (10,   2);
