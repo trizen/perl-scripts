@@ -22,7 +22,7 @@
 # of another fingerprint. If the difference is within the allowed
 # deviation, then the audio files are marked as similar.
 #
-# In the end, the groups are reported to the standard output.
+# In the end, the similar files are reported to the standard output.
 
 # Requirements:
 #   - sox: http://sox.sourceforge.net/
