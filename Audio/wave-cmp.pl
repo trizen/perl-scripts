@@ -7,6 +7,27 @@
 
 # Find similar audio files by comparing their waveforms.
 
+#
+## The waveform is processed block by block:
+#  _________________________________________
+# |_____|_____|_____|_____|_____|_____|_____|
+# |_____|_____|_____|_____|_____|_____|_____|
+# |_____|_____|_____|_____|_____|_____|_____|
+# |_____|_____|_____|_____|_____|_____|_____|
+#
+# Each block has a distict number of white pixels, which are collected
+# inside an array and constitute the unique fingerprint of the waveform.
+#
+# Now, each block value is compared with the coresponding value
+# of another fingerprint. If the difference is within the allowed
+# deviation, then the audio files are marked as similar.
+#
+# In the end, the groups are reported to the standard output.
+
+# Requirements:
+#   - sox: http://sox.sourceforge.net/
+#   - wav2png: https://github.com/beschulz/wav2png
+
 use utf8;
 use 5.010;
 use strict;
@@ -47,15 +68,10 @@ usage: $0 [options] [dirs|files]
 => Waveform processing
     -x  --x-div=i       : divisions along the X-axis (default: $div_x)
     -y  --y-div=i       : divisions along the Y-axis (default: $div_y)
+    -d  --deviation=i   : tolerance deviation value (default: $deviation)
 
-=> Tolerance levels
-    -s  --strict        : set deviation to a low value
-    -m  --medium        : set deviation to a medium value
-    -l  --loose         : set deviation to a high value
-    -d  --deviation=i   : set deviation to a given value (default: $deviation)
-
-    -h  --help          : print this message and exit
-    -v  --version       : print the version number and exit
+        --help          : print this message and exit
+        --version       : print the version number and exit
 
 example:
     $0 --deviation=6 ~/Music
@@ -75,11 +91,8 @@ GetOptions(
            'x|x-div=i'     => \$div_x,
            'y|y-div=i'     => \$div_y,
            'd|deviation=i' => \$deviation,
-           's|strict'      => sub { $deviation = 3 },
-           'm|medium'      => sub { $deviation = 5 },
-           'l|loose'       => sub { $deviation = 10 },
-           'h|help'    => sub { help(0) },
-           'v|version' => \&version,
+           'help'          => sub { help(0) },
+           'v|version'     => \&version,
           )
   or die("Error in command line arguments");
 
@@ -87,7 +100,7 @@ my $sq_x = int($width / $div_x);
 my $sq_y = int($height / $div_y);
 
 my $limit_x = $width - $sq_x;
-my $limit_y = int($height / 2) - $sq_y;    # check only the first half
+my $limit_y = int($height / 2) - $sq_y;    # analyze only the first half
 
 # Source: http://en.wikipedia.org/wiki/Audio_file_format#List_of_formats
 my @audio_formats = qw(
@@ -140,11 +153,17 @@ if (not -d $cache_dir) {
 
 tie my %db, 'GDBM_File', $cache_db, &GDBM_File::GDBM_WRCREAT, 0640;
 
+#
+#-- execute the sox and wave2png commands and return the waveform PNG data
+#
 sub generate_waveform {
     my ($file, $output) = @_;
-`sox \Q$file\E -q -V0 -t wav --encoding signed-integer - | wav2png -w $width -h $height -f 000000ff -b ffffff00 -o /dev/stdout /dev/stdin`;
+`sox \Q$file\E -q -V0 --multi-threaded -t wav --encoding signed-integer - | wav2png -w $width -h $height -f 000000ff -b ffffff00 -o /dev/stdout /dev/stdin`;
 }
 
+#
+#-- return the md5 hex digest of the content of a file
+#
 sub md5_file {
     my ($file) = @_;
     open my $fh, '<:raw', $file;
@@ -152,6 +171,9 @@ sub md5_file {
     $ctx->hexdigest;
 }
 
+#
+#-- take image data as input and return a fingerprint array ref
+#
 sub generate_fingerprint {
     my ($image_data) = @_;
 
@@ -179,6 +201,9 @@ sub generate_fingerprint {
     return \@fingerprint;
 }
 
+#
+#-- fetch or generate the fingerprint for a given audio file
+#
 sub fingerprint {
     my ($audio_file) = @_;
 
@@ -200,6 +225,9 @@ sub fingerprint {
     $local_cache->{$audio_file} //= [split /:/, $db{$key}];
 }
 
+#
+#-- compare two fingerprints and return true if they are alike
+#
 sub alike_fingerprints {
     my ($a1, $a2) = @_;
 
@@ -211,6 +239,9 @@ sub alike_fingerprints {
     return 1;
 }
 
+#
+#-- compare two audio files and return true if they are alike
+#
 sub alike_files {
     my ($file1, $file2) = @_;
 
@@ -220,6 +251,9 @@ sub alike_files {
     alike_fingerprints($fp1, $fp2);
 }
 
+#
+#-- find and call $code with a group of similar audio files
+#
 sub find_similar_audio_files {
     my $code = shift;
 
@@ -254,6 +288,9 @@ sub find_similar_audio_files {
     }
 }
 
+#
+#-- print a group of files followed by an horizontal line
+#
 sub print_group {
     my ($group) = @_;
 
