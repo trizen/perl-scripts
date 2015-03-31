@@ -51,6 +51,8 @@ my $mech = WWW::Mechanize->new(
               agent => 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1941.0 Safari/537.36',
 );
 
+$mech->get($BASE_URL . '/?old=1/');
+
 sub output_usage {
     print <<"HELP";
 usage: $0 [options] [url]
@@ -140,7 +142,7 @@ sub play_picked_videos {
 }
 
 sub play_random_video {
-    play("$BASE_URL/random");
+    play("$BASE_URL/random/");
     return 1;
 }
 
