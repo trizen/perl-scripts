@@ -24,7 +24,7 @@ my $n = shift(@ARGV) // 8000000;    # duration: about 45 seconds
 my $limit = int(sqrt($n) - 1);
 
 my %top;                            # count the number of primes on vertical lines
-my $top   = 10;                     # how many lines to display at the end
+my $top = 10;                       # how many lines to display at the end
 
 # create a new image
 my $img = GD::Simple->new($limit * 2, $limit + 1);
@@ -64,6 +64,6 @@ foreach my $i (sort { $top{$b}{count} <=> $top{$a}{count} } keys %top) {
     last if ++$counter == $top;
 }
 
-open my $fh, '>:raw', 'test.png';
+open my $fh, '>:raw', 'triangle_primes.png';
 print $fh $img->png;
 close $fh;
