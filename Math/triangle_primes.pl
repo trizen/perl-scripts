@@ -21,7 +21,7 @@ my $i = 1;
 my $j = 1;
 
 my $n = shift(@ARGV) // 8000000;    # duration: about 45 seconds
-my $limit = int(sqrt($n) - 1);
+my $limit = int(sqrt($n)) - 1;
 
 my %top;                            # count the number of primes on vertical lines
 my $top = 10;                       # how many lines to display at the end
@@ -32,29 +32,28 @@ $img->moveTo(0, 0);
 
 my $white = 0;
 for my $m (reverse(0 .. $limit)) {
-
-    #print " " x $m;
+    ##print " " x $m;
+    my $pos = $m;
     $img->moveTo($m, $i - 1);
-    for my $n ($j .. $i**2) {
 
-        #print $j;
+    for my $n ($j .. $i**2) {
+        ##print $j;
         if (is_prime($j)) {
             $white = 0;
             $img->fgcolor('blue');
-            my ($x) = $img->curPos;
-            $top{$x}{count}++;
-            $top{$x}{first} //= $j;
+            $top{$pos}{count}++;
+            $top{$pos}{first} //= $j;
         }
         elsif (not $white) {
             $img->fgcolor('white');
             $white = 1;
         }
         $img->line(1);
-        $j++;
+        ++$pos;
+        ++$j;
     }
     ++$i;
-
-    #print "\n";
+    ##print "\n";
 }
 
 say "=> Top vertical lines: ";
