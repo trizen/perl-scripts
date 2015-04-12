@@ -19,7 +19,7 @@ use Math::Prime::XS qw(is_prime);
 my $i = 1;
 my $j = 1;
 
-my $n = shift(@ARGV) // 10000;    # duration: about 7 seconds
+my $n = shift(@ARGV) // 8000000;    # duration: about 7 seconds
 my $limit = int(sqrt($n)) - 1;
 
 my %top;                          # store some info about primes
