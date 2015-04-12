@@ -40,7 +40,7 @@ $img->fgcolor('white');
 foreach my $i (0 .. $lim - 1) {
     $img->moveTo(0, $i);
     foreach my $j (0 .. $i) {
-        ##print $x, ' ';
+        ##print $counter, ' ';
         if (is_prime($counter)) {
             if ($white) {
                 $img->fgcolor('blue');
