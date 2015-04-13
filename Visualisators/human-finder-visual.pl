@@ -86,7 +86,7 @@ sub random_find {
                     return $i;
                 }
 
-                sleep 2;
+                sleep 1;
             }
             else {
                 die "ERROR!";
@@ -118,20 +118,7 @@ sub random_find {
 my $text = join('', <DATA>);
 my $split = 30;
 
-say "** TEXT:";
-say $text;
-say qq{** Looking in text for substring "from each node"...};
-sleep 1;
-
 random_find($text, q{the blue arcs to});
-#random_find($text, q{"dictionary suffix"});
-
-#foreach my $str (unpack("(A$split)*", $text)) {
-   # if (random_find($text, $str) == -1) {
-    #    die "Error!";
-    #}
-    #say '-' x 80 if DEBUG;
-#}
 
 say "TOTAL: ", $TOTAL if DEBUG;
 
