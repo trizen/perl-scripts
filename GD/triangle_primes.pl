@@ -28,7 +28,6 @@ my $top = 10;                       # how many lines to display at the end
 
 # create a new image
 my $img = GD::Simple->new($limit * 2, $limit + 1);
-$img->moveTo(0, 0);
 
 my $white = 0;
 for my $m (reverse(0 .. $limit)) {
@@ -45,8 +44,8 @@ for my $m (reverse(0 .. $limit)) {
             $top{$pos}{first} //= $j;
         }
         elsif (not $white) {
-            $img->fgcolor('white');
             $white = 1;
+            $img->fgcolor('white');
         }
         $img->line(1);
         ++$pos;
