@@ -132,12 +132,15 @@ sub compress {
         }
 
         my @pairs;
+        my $last_pos     = 0;
         my $uncompressed = '';
-        for (my $i = 0 ; $i < $len ; $i++) {
+
+        for (my $i = 0 ; $i < $len ; $i++, $last_pos++) {
             if (exists $dict{$i}) {
                 my ($key, $vlen) = @{$dict{$i}};
-                push @pairs, [$i, $key, $vlen];
+                push @pairs, [$last_pos, $key, $vlen];
                 $i += $vlen - 1;
+                $last_pos = 0;
             }
             else {
                 $uncompressed .= substr($block, $i, 1);
@@ -171,26 +174,25 @@ sub decompress {
     while (read($fh, (my $len_byte), 1) > 0) {
         read($fh, (my $groups_byte), 1);
 
-        my %dict;
+        my @dict;
         for my $i (1 .. ord($groups_byte)) {
             read($fh, (my $at_byte),   1);
             read($fh, (my $from_byte), 1);
             read($fh, (my $size_byte), 1);
-            $dict{ord($at_byte)} = [ord($from_byte), ord($size_byte)];
+            push @dict, [ord($at_byte), ord($from_byte), ord($size_byte)];
         }
 
         my $len = ord($len_byte) + 1;
         read($fh, (my $block), $len);
 
-        my $acc          = 0;
+        my $last_pos     = 0;
         my $decompressed = '';
 
         for (my $i = 0 ; $i <= $len ; $i++) {
-            if (exists($dict{$i + $acc})) {
-                my $pos = $dict{$i + $acc};
-                $decompressed .= substr($decompressed, $pos->[0], $pos->[1]);
-                $acc += $pos->[1];
-                $i--;
+            if (@dict and ($i - $last_pos == $dict[0][0])) {
+                $decompressed .= substr($decompressed, $dict[0][1], $dict[0][2]);
+                $last_pos = --$i;
+                shift @dict;
             }
             else {
                 $decompressed .= substr($block, $i, 1);
