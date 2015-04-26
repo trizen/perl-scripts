@@ -32,8 +32,7 @@ sub lzt_compress {
             $remember = 1;    # activate the remember mode
         }
 
-        $cache[$_] .= $c for ($k .. $i);    # create substrings
-        ++$k if (($i - $k) >= $max);        # update the minimum length
+        $cache[$_ + $k] .= $c for ($k .. $i);    # create the substrings
 
         # If remember mode is one, do some checks.
         if ($remember) {
@@ -67,6 +66,9 @@ sub lzt_compress {
             exists($dict{$item})
               || ($dict{$item} = $i - $k - length($item));
         }
+
+        # Update the minimum length
+        ++$k if (($i - $k) >= $max);
     }
 
     return \@dups;
