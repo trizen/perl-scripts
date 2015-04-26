@@ -16,7 +16,7 @@ sub lzt_compress {
 
     my $k   = 0;     # must be zero
     my $min = 4;     # the minimum length of a substring
-    my $max = 30;    # the maximum length of a substring
+    my $max = 15;    # the maximum length of a substring
 
     my $i        = 0;     # iterator (0 to length(str)-1)
     my $remember = 0;     # remember mode
@@ -32,7 +32,7 @@ sub lzt_compress {
             $remember = 1;    # activate the remember mode
         }
 
-        $cache[$_ + $k] .= $c for ($k .. $i);    # create the substrings
+        $cache[$_] .= $c for ($k .. $i);    # create the substrings
 
         # If remember mode is one, do some checks.
         if ($remember) {
@@ -64,7 +64,7 @@ sub lzt_compress {
         # Create the dictionary from the cache of substrings
         foreach my $item (@cache) {
             exists($dict{$item})
-              || ($dict{$item} = $i - $k - length($item));
+              || ($dict{$item} = $i - length($item));
         }
 
         # Update the minimum length
