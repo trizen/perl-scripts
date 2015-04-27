@@ -119,9 +119,7 @@ sub compress {
     while ((my $len = read($fh, (my $block), BUFFER)) > 0) {
 
         my %dict;
-        my $max = int($len / 2);
-
-        foreach my $i (reverse(MIN .. $max)) {
+        foreach my $i (reverse(MIN .. int($len / 2))) {
             foreach my $j (0 .. $len - $i * 2) {
                 if ((my $pos = index($block, substr($block, $j, $i), $j + $i)) != -1) {
                     if (not exists $dict{$pos} or $i > $dict{$pos}[1]) {
