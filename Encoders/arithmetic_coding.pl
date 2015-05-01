@@ -15,7 +15,7 @@ use 5.010;
 use strict;
 use warnings;
 
-use bignum try => 'GMP';
+use Math::BigInt (try => 'GMP');
 
 sub arithmethic_decoding {
     my ($enc, $freq, $pow) = @_;
@@ -24,7 +24,7 @@ sub arithmethic_decoding {
         $enc *= 10**$pow;
     }
 
-    my $base = 0;
+    my $base = Math::BigInt->new(0);
     $base += $_ for values %{$freq};
 
     my $lim = $base - 1;
@@ -32,7 +32,7 @@ sub arithmethic_decoding {
 
     # Create the cumulative frequency table
     my %cf;
-    my $total = 0;
+    my $total = Math::BigInt->new(0);
     foreach my $c (@range) {
         if (exists $freq->{$c}) {
             $cf{$c} = $total;
@@ -62,7 +62,7 @@ sub arithmethic_decoding {
 
     # Fill the gaps in the dictionary
     my $lchar;
-    foreach my $i (0 .. $lim) {
+    foreach my $i (0 .. $base) {
         if (exists $dict{$i}) {
             $lchar = $dict{$i};
         }
@@ -81,14 +81,14 @@ sub arithmethic_decoding {
 
     # Decode the input number
     my $decoded = '';
-    foreach my $i (reverse 0 .. $lim) {
-        my $div = int($enc / $base**$i);
+    for (my $i = $lim ; $i >= 0 ; $i--) {
+        my $div = ($enc / $base**$i);
 
-        my $c  = $dict{$div % $base};
+        my $c  = $dict{$div};
         my $fv = $freq->{$c};
         my $cv = $cf{$c};
 
-        my $rem = int(($enc - $base**$i * $cv) / $fv);
+        my $rem = ($enc - $base**$i * $cv) / $fv;
 
         #~ say "$enc / $base^$i = $div ($c)";
         #~ say "($enc - $base^$i * $cv) / $fv = $rem\n";
@@ -114,7 +114,7 @@ sub arithmethic_coding {
 
     # The cumulative frequency
     my %cf;
-    my $total = 0;
+    my $total = Math::BigInt->new(0);
     foreach my $c (@range) {
         if (exists $freq{$c}) {
             $cf{$c} = $total;
@@ -123,48 +123,53 @@ sub arithmethic_coding {
     }
 
     # Limit and base
-    my $lim  = $#chars;
+    my $lim  = Math::BigInt->new($#chars);
     my $base = $lim + 1;
 
     # Lower bound
-    my $L = 0;
+    my $L = Math::BigInt->new(0);
+
+    # Product of all frequencies
+    my $pf = Math::BigInt->new(1);
 
     # Each term is multiplied by the product of the
     # frequencies of all previously occurring symbols
-    foreach my $i (0 .. $lim) {
+    for (my $i = 0 ; $i < $base ; $i++) {
         my $x = $cf{$chars[$i]} * $base**($lim - $i);
-        my $y = 1;
-        foreach my $k (0 .. $i - 1) {
-            $y *= $freq{$chars[$k]};
-        }
-        $L += $x * $y;
-    }
-
-    # Product of all frequencies
-    my $pf = 1;
-    foreach my $i (0 .. $lim) {
-        $pf *= $freq{$chars[$i]};
+        $L->badd($x * $pf);
+        $pf->bmul($freq{$chars[$i]});
     }
 
     # Upper bound
     my $U = $L + $pf;
 
-    #say $L;
-    #say $U;
+    #~ say $L;
+    #~ say $U;
 
     # Pick the middle point number in the interval
-    #return (\%freq, int(($L + $U) / 2));
+    #~ return (\%freq, int(($L + $U) / 2));
 
     # Create a value with the longest possible trail
     # of zeroes, remove them and return its power of 10
-    my $pow = int(log($U - $L) / log(10));
-    return (int(($U - 1) / (10**$pow)), \%freq, $pow);
+    #~ my $pow = int(log($U - $L) / log(10));
+    #~ return (int(($U - 1) / (10**$pow)), \%freq, $pow);
+
+    my $pow = Math::BigInt->new($U - $L)->blog(10);
+    my $enc = ($U - 1)->bdiv(Math::BigInt->new(10)->bpow($pow));
+
+    return ($enc, \%freq, $pow);
 }
 
 #
 ## Run some tests
 #
-foreach my $str (qw(DABDDB DABDDBBDDBA ABBDDD ABRACADABRA CoMpReSSeD Sidef Trizen Google TOBEORNOTTOBEORTOBEORNOT)) {
+foreach my $str (
+    qw(DABDDB DABDDBBDDBA ABBDDD ABRACADABRA CoMpReSSeD Sidef Trizen Google TOBEORNOTTOBEORTOBEORNOT),
+    'In a positional numeral system the radix, or base, is numerically equal to a number of different symbols '
+    . 'used to express the number. For example, in the decimal system the number of symbols is 10, namely 0, 1, 2, '
+    . '3, 4, 5, 6, 7, 8, and 9. The radix is used to express any finite integer in a presumed multiplier in polynomial '
+    . 'form. For example, the number 457 is actually 4×102 + 5×101 + 7×100, where base 10 is presumed but not shown explicitly.'
+  ) {
     my ($enc, $freq, $pow) = arithmethic_coding($str);
     my $dec = arithmethic_decoding($enc, $freq, $pow);
 
