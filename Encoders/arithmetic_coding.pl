@@ -18,16 +18,14 @@ use warnings;
 use Math::BigInt (try => 'GMP');
 
 sub arithmethic_decoding {
-    my ($enc, $freq, $pow) = @_;
+    my ($enc, $pow, $freq) = @_;
 
-    if (defined $pow) {
-        $enc *= 10**$pow;
-    }
+    # Multiply enc by 10^pow
+    $enc *= 10**$pow;
 
     my $base = Math::BigInt->new(0);
     $base += $_ for values %{$freq};
 
-    my $lim = $base - 1;
     my @range = map { chr } 0 .. 255;
 
     # Create the cumulative frequency table
@@ -44,7 +42,7 @@ sub arithmethic_decoding {
     # my %prob;
     # my $uniq = (keys %{$freq});
     # while (my ($c, $f) = each %{$freq}) {
-    #     $prob{$c} = (($f - 1) / $uniq) * $lim;
+    #     $prob{$c} = (($f - 1) / $uniq) * ($base-1);
     # }
 
     # Create the dictionary
@@ -53,7 +51,7 @@ sub arithmethic_decoding {
     for my $i (0 .. $#range) {
         my $char = $range[$i];
         if (exists $freq->{$char}) {
-            $dict{$j} = $range[$i];
+            $dict{$j} = $char;
             $j += $freq->{$char};
         }
     }
@@ -79,14 +77,16 @@ sub arithmethic_decoding {
 
     # Decode the input number
     my $decoded = '';
-    for (my $i = $lim ; $i >= 0 ; $i--) {
-        my $div = ($enc / $base**$i);
+    for (my $i = $base - 1 ; $i >= 0 ; $i--) {
+
+        my $pow = $base**$i;
+        my $div = ($enc / $pow);
 
         my $c  = $dict{$div};
         my $fv = $freq->{$c};
         my $cv = $cf{$c};
 
-        my $rem = ($enc - $base**$i * $cv) / $fv;
+        my $rem = ($enc - $pow * $cv) / $fv;
 
         #~ say "$enc / $base^$i = $div ($c)";
         #~ say "($enc - $base^$i * $cv) / $fv = $rem\n";
@@ -155,7 +155,7 @@ sub arithmethic_coding {
     my $pow = Math::BigInt->new($U - $L)->blog(10);
     my $enc = ($U - 1)->bdiv(Math::BigInt->new(10)->bpow($pow));
 
-    return ($enc, \%freq, $pow);
+    return ($enc, $pow, \%freq);
 }
 
 #
@@ -168,8 +168,8 @@ foreach my $str (
     . '3, 4, 5, 6, 7, 8, and 9. The radix is used to express any finite integer in a presumed multiplier in polynomial '
     . 'form. For example, the number 457 is actually 4×102 + 5×101 + 7×100, where base 10 is presumed but not shown explicitly.'
   ) {
-    my ($enc, $freq, $pow) = arithmethic_coding($str);
-    my $dec = arithmethic_decoding($enc, $freq, $pow);
+    my ($enc, $pow, $freq) = arithmethic_coding($str);
+    my $dec = arithmethic_decoding($enc, $pow, $freq);
 
     say "Encoded:  $enc";
     say "Decoded:  $dec";

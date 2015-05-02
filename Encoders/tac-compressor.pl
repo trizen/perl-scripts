@@ -270,13 +270,14 @@ sub decompress {
 
     # Decode the input number
     for (my $i = $lim ; $i >= 0 ; $i--) {
-        my $div = ($enc / $base**$i);
+        my $pow = $base**$i;
+        my $div = ($enc / $pow);
 
         my $c  = $dict{$div};
         my $fv = $freq{$c};
         my $cv = $cf{$c};
 
-        $enc = ($enc - $base**$i * $cv) / $fv;
+        $enc = ($enc - $pow * $cv) / $fv;
         print {$out_fh} $c;
     }
 
