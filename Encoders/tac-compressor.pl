@@ -19,7 +19,7 @@ use warnings;
 use List::Util qw(min);
 use Getopt::Std qw(getopts);
 use File::Basename qw(basename);
-use Math::BigInt qw(try GMP);
+use Math::BigInt (try => 'GMP');
 
 use constant {
               PKGNAME => 'TAC Compressor',
@@ -201,11 +201,10 @@ sub decompress {
 
     my ($pow, $uniq, $padd) = unpack('SCC', $content);
     substr($content, 0, 4, '');
-    $uniq += 1;
 
     # Create the frequency table (char => freq)
     my %freq;
-    foreach my $i (1 .. $uniq) {
+    foreach my $i (0 .. $uniq) {
         my ($char, $f) = unpack('aS', $content);
         $freq{$char} = $f;
         substr($content, 0, 3, '');
@@ -214,7 +213,7 @@ sub decompress {
     # Decode the bits into an integer
     my $enc = Math::BigInt->new('0b' . unpack('B*', $content));
 
-    # Removed the trailing null bits (if any)
+    # Remove the trailing bits (if any)
     if ($padd != 0) {
         $enc >>= (8 - $padd);
     }
@@ -238,21 +237,19 @@ sub decompress {
         }
     }
 
-    # Calculate the probabilities
-    my %prob;
-    while (my ($c, $f) = each %freq) {
-        $prob{$c} = (($f - 1) / $uniq) * $lim;
-    }
+    ## Calculate the probabilities
+    # my %prob;
+    # while (my ($c, $f) = each %freq) {
+    #     $prob{$c} = (($f - 1) / ($uniq + 1)) * $lim;
+    # }
 
-    # Create the dictionary, based on the probabilities
+    # Create the dictionary
     my %dict;
     my $j = 0;
     for my $i (0 .. $#range) {
         my $char = $range[$i];
-        if (exists $prob{$char}) {
-            $dict{$j} = $range[$i];
-        }
         if (exists $freq{$char}) {
+            $dict{$j} = $char;
             $j += $freq{$char};
         }
     }

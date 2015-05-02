@@ -41,21 +41,19 @@ sub arithmethic_decoding {
     }
 
     # Calculate the probabilities
-    my %prob;
-    my $uniq = (keys %{$freq});
-    while (my ($c, $f) = each %{$freq}) {
-        $prob{$c} = (($f - 1) / $uniq) * $lim;
-    }
+    # my %prob;
+    # my $uniq = (keys %{$freq});
+    # while (my ($c, $f) = each %{$freq}) {
+    #     $prob{$c} = (($f - 1) / $uniq) * $lim;
+    # }
 
-    # Create the dictionary, based on the probabilities
+    # Create the dictionary
     my %dict;
     my $j = 0;
     for my $i (0 .. $#range) {
         my $char = $range[$i];
-        if (exists $prob{$char}) {
-            $dict{$j} = $range[$i];
-        }
         if (exists $freq->{$char}) {
+            $dict{$j} = $range[$i];
             $j += $freq->{$char};
         }
     }
