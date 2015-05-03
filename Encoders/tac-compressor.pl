@@ -107,6 +107,25 @@ sub valid_archive {
     return 1;
 }
 
+sub asciibet {
+    map { chr } 0 .. 255;
+}
+
+sub cumulative_freq {
+    my ($freq) = @_;
+
+    my %cf;
+    my $total = Math::BigInt->new(0);
+    foreach my $c (asciibet()) {
+        if (exists $freq->{$c}) {
+            $cf{$c} = $total;
+            $total += $freq->{$c};
+        }
+    }
+
+    return %cf;
+}
+
 sub compress {
     my ($input, $output) = @_;
 
@@ -128,22 +147,12 @@ sub compress {
 
     my @chars = split(//, $str);
 
-    # The dictionary
-    my @range = map { chr } 0 .. 255;
-
     # The frequency characters
     my %freq;
     $freq{$_}++ for @chars;
 
-    # The cumulative frequency
-    my %cf;
-    my $total = Math::BigInt->new(0);
-    foreach my $c (@range) {
-        if (exists $freq{$c}) {
-            $cf{$c} = $total;
-            $total += $freq{$c};
-        }
-    }
+    # Create the cumulative frequency table
+    my %cf = cumulative_freq(\%freq);
 
     # Limit and base
     my $lim  = Math::BigInt->new($#chars);
@@ -166,7 +175,7 @@ sub compress {
     # Upper bound
     my $U = $L + $pf;
 
-    my $pow = Math::BigInt->new($U - $L)->blog(10);
+    my $pow = Math::BigInt->new($pf)->blog(10);
     my $enc = ($U - 1)->bdiv(Math::BigInt->new(10)->bpow($pow));
 
     # Remove any other trailing zeros
@@ -224,39 +233,24 @@ sub decompress {
     my $base = Math::BigInt->new(0);
     $base += $_ for values %freq;
 
-    my $lim = $base - 1;
-    my @range = map { chr } 0 .. 255;
-
     # Create the cumulative frequency table
-    my %cf;
-    my $total = Math::BigInt->new(0);
-    foreach my $c (@range) {
-        if (exists $freq{$c}) {
-            $cf{$c} = $total;
-            $total += $freq{$c};
-        }
-    }
+    my %cf = cumulative_freq(\%freq);
 
     ## Calculate the probabilities
     # my %prob;
     # while (my ($c, $f) = each %freq) {
-    #     $prob{$c} = (($f - 1) / ($uniq + 1)) * $lim;
+    #     $prob{$c} = (($f - 1) / ($uniq + 1)) * ($base-1);
     # }
 
     # Create the dictionary
     my %dict;
-    my $j = 0;
-    for my $i (0 .. $#range) {
-        my $char = $range[$i];
-        if (exists $freq{$char}) {
-            $dict{$j} = $char;
-            $j += $freq{$char};
-        }
+    while (my ($k, $v) = each %cf) {
+        $dict{$v} = $k;
     }
 
     # Fill the gaps in the dictionary
     my $lchar;
-    foreach my $i (0 .. $base) {
+    foreach my $i (0 .. $base - 1) {
         if (exists $dict{$i}) {
             $lchar = $dict{$i};
         }
@@ -269,7 +263,7 @@ sub decompress {
     open my $out_fh, '>:raw', $output;
 
     # Decode the input number
-    for (my $i = $lim ; $i >= 0 ; $i--) {
+    for (my $i = $base - 1 ; $i >= 0 ; $i--) {
         my $pow = $base**$i;
         my $div = ($enc / $pow);
 
