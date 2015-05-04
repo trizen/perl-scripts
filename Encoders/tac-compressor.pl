@@ -175,7 +175,7 @@ sub compress {
     # Upper bound
     my $U = $L + $pf;
 
-    my $pow = Math::BigInt->new($pf)->blog(10);
+    my $pow = $pf->copy->blog(10);
     my $enc = ($U - 1)->bdiv(Math::BigInt->new(10)->bpow($pow));
 
     # Remove any other trailing zeros
@@ -185,7 +185,7 @@ sub compress {
     }
 
     my $bin = substr($enc->as_bin, 2);
-    my $encoded = pack('S', $pow);    # the power value
+    my $encoded = pack('L', $pow);    # the power value
     $encoded .= chr(scalar(keys %freq) - 1);    # number of unique chars
     $encoded .= chr(length($bin) % 8);          # padding
 
@@ -208,15 +208,15 @@ sub decompress {
     my $content = do { local $/; <$fh> };
     close $fh;
 
-    my ($pow, $uniq, $padd) = unpack('SCC', $content);
-    substr($content, 0, 4, '');
+    my ($pow, $uniq, $padd) = unpack('LCC', $content);
+    substr($content, 0, length(pack('LCC', 0, 0, 0)), '');
 
     # Create the frequency table (char => freq)
     my %freq;
     foreach my $i (0 .. $uniq) {
         my ($char, $f) = unpack('aS', $content);
         $freq{$char} = $f;
-        substr($content, 0, 3, '');
+        substr($content, 0, length(pack('aS', 0, 0)), '');
     }
 
     # Decode the bits into an integer
