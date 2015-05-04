@@ -90,7 +90,7 @@ sub length_encoder {
         my $m = $+{token};
         my $r = $+{rest};
         if (defined $r) {
-            #$enc .= ("[$dict->{$m}x" . (1 + length($r) / length($m)) . "]");
+            $enc .= ("[$dict->{$m}x" . (1 + length($r) / length($m)) . "]");
         }
         else {
             $enc .= $m;
