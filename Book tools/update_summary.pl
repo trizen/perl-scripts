@@ -22,7 +22,7 @@ sub add_section {
     my ($before, $middle, $after);
     open my $fh, '<', $file;
     while (defined(my $line = <$fh>)) {
-        if ($line =~ /^(\*\h+\Q$name\E)\h*$/ || $line =~ m{^(\[\Q$name\E\](?:\(.*\))?)\h*$}) {
+        if ($line =~ /^(\*\h+\Q$name\E)\h*$/ || $line =~ m{^(\*\h+\[\Q$name\E\](?:\(.*\))?)\h*$}) {
 
             $middle = "$1\n";
             say "** Found section: <<<$1>>>";
@@ -87,9 +87,10 @@ my $section_name = 'Programming tasks';
                 }
 
                 push @root, $file->{name};
-                $section .= make_section($file->{name}, $file->{path}, $spaces + 3);
+                $section .= make_section($file->{name}, $file->{path}, $spaces + 4);
             }
             else {
+                next if $dir eq $main_dir;
                 next if $ignored{$file->{name}};
                 my $naked_name  = $file->{name} =~ s/\.md\z//ir;
                 my $naked_title = $title =~ s/\.md\z//ir;
