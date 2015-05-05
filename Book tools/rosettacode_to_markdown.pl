@@ -357,8 +357,14 @@ my $lwp = LWP::UserAgent::Cached->new(
     },
 );
 
+my $lwp_uc = LWP::UserAgent->new(
+                                 show_progress => 1,
+                                 agent         => '',
+                                 timeout       => 60,
+                                );
+
 my $start_url = $main_url . '/wiki/' . escape_lang($lang);
-my $req       = $lwp->get($start_url);
+my $req       = $lwp_uc->get($start_url);
 $req->is_success || die $req->status_line;
 
 my $content = $req->decoded_content;
