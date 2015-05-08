@@ -89,13 +89,6 @@ sub arithmethic_decoding {
     # Create the cumulative frequency table
     my %cf = cumulative_freq($freq);
 
-    # Calculate the probabilities
-    # my %prob;
-    # my $uniq = (keys %{$freq});
-    # while (my ($c, $f) = each %{$freq}) {
-    #     $prob{$c} = (($f - 1) / $uniq) * ($base-1);
-    # }
-
     # Create the dictionary
     my %dict;
     while (my ($k, $v) = each %cf) {

@@ -6,7 +6,7 @@
 # Website: http://github.com/trizen
 
 #
-## The arithmetic coding algorithm.
+## The arithmetic coding algorithm (radix+binary)
 #
 
 # See: http://en.wikipedia.org/wiki/Arithmetic_coding#Arithmetic_coding_as_a_generalized_change_of_radix
@@ -16,16 +16,7 @@ use strict;
 use warnings;
 
 use Math::BigInt (try => 'GMP');
-use Math::BigFloat (try => 'GMP');
-
-sub mass_function {    # for later use
-    my ($freq, $total) = @_;
-
-    my %mass;
-    $mass{$_} = $freq->{$_} / $total for keys %{$freq};
-
-    return \%mass;
-}
+use Math::BigRat (try => 'GMP');
 
 sub asciibet {
     map { chr } 0 .. 255;
@@ -78,61 +69,54 @@ sub arithmethic_coding {
     # Upper bound
     my $U = $L + $pf;
 
-    my $pow = Math::BigInt->new($pf)->blog(10);
-    my $enc = ($U - 1)->bdiv(Math::BigInt->new(10)->bpow($pow));
+    my $len = $L->length;
 
-    my $a = Math::BigFloat->new("0.$L");
-    my $b = Math::BigFloat->new("0.$U");
+    $L = Math::BigRat->new("$L / " . Math::BigInt->new(10)->bpow($len));
+    $U = Math::BigRat->new("$U / " . Math::BigInt->new(10)->bpow($len));
 
-    my $n   = 0;
+    my $big_two = Math::BigInt->new(2);
+    my $two_pow = Math::BigInt->new(1);
+    my $n       = Math::BigRat->new(0);
+
     my $bin = '';
-    for (my $i = Math::BigFloat->new(1) ; ; $i++) {
-        my $m = Math::BigFloat->new(1) / (2**$i);
+    for (my $i = Math::BigInt->new(1) ; ($n < $L || $n >= $U) ; $i->binc) {
+        my $m = Math::BigRat->new(1)->bdiv($two_pow->bmul($big_two));
 
-        if ($n + $m < $b) {
+        if ($n + $m < $U) {
             $n += $m;
             $bin .= '1';
         }
         else {
             $bin .= '0';
         }
-
-        if ($n >= $a && $n < $b) {
-            last;
-        }
     }
 
     #~ say $L;
     #~ say $U;
 
-    return ($bin, scalar($L->length), \%freq);
+    return ($bin, $len, \%freq);
 }
 
 sub arithmethic_decoding {
     my ($enc, $pow, $freq) = @_;
 
+    my $two_pow = Math::BigInt->new(1);
     my $big_two = Math::BigInt->new(2);
-    my $float   = Math::BigFloat->new(0);
+
+    my $line = Math::BigRat->new(0);
 
     my @bin = split(//, $enc);
     foreach my $i (0 .. $#bin) {
-        $float->badd(Math::BigFloat->new($bin[$i]) / ($big_two->copy->bpow($i + 1)));
+        $line->badd(Math::BigRat->new($bin[$i])->bdiv($two_pow->bmul($big_two)));
     }
 
-    $enc = $float->bmul(Math::BigInt->new(10)->bpow($pow))->as_int;
+    $enc = $line->bmul(Math::BigInt->new(10)->bpow($pow))->as_int;
 
     my $base = Math::BigInt->new(0);
     $base += $_ for values %{$freq};
 
     # Create the cumulative frequency table
     my %cf = cumulative_freq($freq);
-
-    # Calculate the probabilities
-    # my %prob;
-    # my $uniq = (keys %{$freq});
-    # while (my ($c, $f) = each %{$freq}) {
-    #     $prob{$c} = (($f - 1) / $uniq) * ($base-1);
-    # }
 
     # Create the dictionary
     my %dict;
