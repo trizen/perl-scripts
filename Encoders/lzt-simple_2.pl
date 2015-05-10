@@ -23,7 +23,7 @@ use constant {
              };
 
 use constant {
-              MIN       => 4,
+              MIN       => 9,
               BUFFER    => 2**16,
               SIGNATURE => uc(FORMAT) . chr(1),
              };
@@ -150,7 +150,7 @@ sub compress {
 
         my $uncomp_len = length($uncompressed);
         printf("%3d -> %3d (%.2f%%)\n", $len, $uncomp_len, ($len - $uncomp_len) / $len * 100);
-        print {$out_fh} pack('S', $uncomp_len - 1), pack('S', scalar @pairs), (map { pack('CSC', @{$_}) } @pairs),
+        print {$out_fh} pack('S', $uncomp_len - 1), pack('S', scalar @pairs), (map { pack('SSC', @{$_}) } @pairs),
           $uncompressed;
     }
 
@@ -173,8 +173,8 @@ sub decompress {
 
         my @dict;
         for my $i (1 .. unpack('S', $groups_byte)) {
-            read($fh, (my $positions), 4);
-            push @dict, [unpack('CSC', $positions)];
+            read($fh, (my $positions), 5);
+            push @dict, [unpack('SSC', $positions)];
         }
 
         my $len = unpack('S', $len_byte) + 1;
