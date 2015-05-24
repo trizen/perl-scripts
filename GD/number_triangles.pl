@@ -14,7 +14,6 @@ use strict;
 use warnings;
 
 use GD::Simple;
-use List::Util qw(max);
 use File::Spec::Functions qw(catfile);
 
 my $num_triangles = shift(@ARGV) // 30;    # duration: about 2 minutes
@@ -23,35 +22,33 @@ sub generate {
     my ($n, $j, $data) = @_;
 
     my $sum = 0;
-
     foreach my $i (1 .. $n) {
         $sum += $j;
         $data->{$sum} = 1;
     }
 
-    return 1;
+    return $sum;
 }
 
 my $dir = "Number Triangles";
 if (not -d $dir) {
-    mkdir($dir);
+    mkdir($dir)
+      or die "Can't create dir `$dir': $!";
 }
 
 foreach my $k (1 .. $num_triangles) {
 
     my %data;
-    generate(50000, $k, \%data);
-
-    my $i = 1;
-    my $j = 1;
-
-    my $max   = max(keys %data);
+    my $max = generate(50000, $k, \%data);
     my $limit = int(sqrt($max)) - 1;
 
     say "[$k] max: $max";
 
     # create a new image
     my $img = GD::Simple->new($limit * 2, $limit + 1);
+
+    my $i = 1;
+    my $j = 1;
 
     my $white = 0;
     for my $m (reverse(0 .. $limit)) {
