@@ -6,7 +6,7 @@
 # http://github.com/trizen
 
 #
-## Generate a wavy triangle using the power of three (scaled down by a trivial constant)
+## Generate a wavy triangle using the power of 2.5 (scaled down by a trivial constant)
 #
 
 use 5.010;
@@ -18,7 +18,7 @@ sub generate {
     my ($n, $data) = @_;
 
     for my $i (0 .. $n) {
-        $data->{int(($i**3) / 12000)} = 1;
+        $data->{int(($i**2.5) / 12000)} = 1;
     }
 
     return $n;
