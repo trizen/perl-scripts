@@ -50,18 +50,18 @@ foreach my $k (1 .. $num_triangles) {
     my $i = 1;
     my $j = 1;
 
-    my $white = 0;
+    my $black = 0;
     for my $m (reverse(0 .. $limit)) {
         $img->moveTo($m, $i - 1);
 
         for my $n ($j .. $i**2) {
             if (exists $data{$j}) {
+                $black = 0;
                 $img->fgcolor('blue');
-                $white = 0;
             }
-            elsif (not $white) {
-                $white = 1;
-                $img->fgcolor('white');
+            elsif (not $black) {
+                $black = 1;
+                $img->fgcolor('black');
             }
             $img->line(1);
             ++$j;

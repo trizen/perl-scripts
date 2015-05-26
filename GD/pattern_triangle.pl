@@ -36,18 +36,18 @@ my $img = GD::Simple->new($limit * 2, $limit + 1);
 my $i = 1;
 my $j = 1;
 
-my $white = 0;
+my $black = 0;
 for my $m (reverse(0 .. $limit)) {
     $img->moveTo($m, $i - 1);
 
     for my $n ($j .. $i**2) {
         if (exists $data{$j}) {
-            $img->fgcolor('blue');
-            $white = 0;
+            $black = 0;
+            $img->fgcolor('red');
         }
-        elsif (not $white) {
-            $white = 1;
-            $img->fgcolor('white');
+        elsif (not $black) {
+            $black = 1;
+            $img->fgcolor('black');
         }
         $img->line(1);
         ++$j;
