@@ -18,7 +18,7 @@ sub generate {
     my ($n, $data) = @_;
 
     foreach my $i (0 .. $n) {
-        $data->{int(($i**2) / 12000)} = 1;
+        $data->{sprintf('%.0f', ($i**2) / 12000)} = 1;
     }
 
     return $n;

@@ -16,7 +16,7 @@ use warnings;
 use GD::Simple;
 use File::Spec::Functions qw(catfile);
 
-my $num_triangles = shift(@ARGV) // 25;    # duration: about 2 minutes
+my $num_triangles = shift(@ARGV) // 15;    # duration: about 1 minute
 
 sub generate {
     my ($n, $k, $data) = @_;
