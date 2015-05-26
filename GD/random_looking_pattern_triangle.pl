@@ -54,6 +54,6 @@ for my $m (reverse(0 .. $limit)) {
     ++$i;
 }
 
-open my $fh, '>:raw', "pattern_triangle.png";
+open my $fh, '>:raw', "random_looking_triangle.png";
 print $fh $img->png;
 close $fh;
