@@ -21,13 +21,13 @@ my $num_triangles = shift(@ARGV) // 30;    # duration: about 2 minutes
 sub generate {
     my ($n, $j, $data) = @_;
 
-    my $sum = 0;
     foreach my $i (1 .. $n) {
-        $sum += $j;
-        $data->{$sum} = 1;
+        if ($i % $j == 0) {
+            $data->{$i} = 1;
+        }
     }
 
-    return $sum;
+    return $n;
 }
 
 my $dir = "Number Triangles";
@@ -39,10 +39,10 @@ if (not -d $dir) {
 foreach my $k (1 .. $num_triangles) {
 
     my %data;
-    my $max = generate(50000, $k, \%data);
+    my $max = generate(500000, $k, \%data);
     my $limit = int(sqrt($max)) - 1;
 
-    say "[$k] max: $max";
+    say "[$k of $num_triangles] Generating...";
 
     # create a new image
     my $img = GD::Simple->new($limit * 2, $limit + 1);
