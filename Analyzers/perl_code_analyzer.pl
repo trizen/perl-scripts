@@ -100,10 +100,13 @@ if ($strict_level >= 4) {
 sub deparse {
     my ($code) = @_;
 
-    local (*CHLD_OUT, *CHLD_ERR);
-    my $pid = open3(undef, \*CHLD_OUT, \*CHLD_ERR, $^X, '-MO=Deparse', '-T', '-e', $code);
+    local (*CHLD_IN, *CHLD_OUT, *CHLD_ERR);
+    my $pid = open3(\*CHLD_IN, \*CHLD_OUT, \*CHLD_ERR, $^X, '-MO=Deparse', '-T');
 
-    waitpid($pid, 0);
+    print CHLD_IN "$code\n\cD";
+    close(CHLD_IN);
+
+    #waitpid($pid, 0);
     my $child_exit_status = $? >> 8;
     if ($child_exit_status != 0) {
         die "B::Deparse failed with code: $child_exit_status\n";
