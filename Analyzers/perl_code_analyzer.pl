@@ -103,6 +103,7 @@ sub deparse {
     local (*CHLD_IN, *CHLD_OUT, *CHLD_ERR);
     my $pid = open3(\*CHLD_IN, \*CHLD_OUT, \*CHLD_ERR, $^X, '-MO=Deparse', '-T');
 
+    binmode(CHLD_IN, ':utf8');
     print CHLD_IN "$code\n\cD";
     close(CHLD_IN);
 
