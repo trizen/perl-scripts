@@ -240,12 +240,6 @@ sub decompress {
     # Create the cumulative frequency table
     my %cf = cumulative_freq(\%freq);
 
-    ## Calculate the probabilities
-    # my %prob;
-    # while (my ($c, $f) = each %freq) {
-    #     $prob{$c} = (($f - 1) / ($uniq + 1)) * ($base-1);
-    # }
-
     # Create the dictionary
     my %dict;
     while (my ($k, $v) = each %cf) {
