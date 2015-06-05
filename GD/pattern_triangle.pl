@@ -6,7 +6,7 @@
 # http://github.com/trizen
 
 #
-## Generate a pattern triangle using the power of two (scaled down by a trivial constant)
+## Generate a pattern triangle based on square numbers (scaled down by a trivial constant)
 #
 
 use 5.010;
