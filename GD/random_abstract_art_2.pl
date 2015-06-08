@@ -13,7 +13,6 @@ use 5.010;
 use strict;
 use warnings;
 use GD::Simple;
-use List::Util qw(shuffle);
 
 my $max   = 1_000_000;
 my $limit = int(sqrt($max));
