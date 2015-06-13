@@ -10,7 +10,7 @@ use strict;
 use warnings;
 use GD::Simple;
 
-my $img = 'GD::Simple'->new(1000, 600);
+my $img = 'GD::Simple'->new(2000, 2000);
 
 sub t($) {
     $img->turn(shift);
@@ -32,12 +32,12 @@ if (not -d $dir) {
 
 chdir($dir) || die "Can't chdir `$dir': $!";
 
-for (my $i = 45 ; $i <= 180 ; $i += 1) {
+for (my $i = 1 ; $i <= 180 ; $i += 1) {
 
     say "$i degrees";
 
     $img->clear;
-    $img->moveTo(500, 300);    # hopefully, at the center of the image
+    $img->moveTo(1000, 1000);    # hopefully, at the center of the image
 
     for my $j (1 .. 360) {
         l $j;
