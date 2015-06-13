@@ -13,30 +13,31 @@ use autodie;
 use warnings;
 use GD::Simple;
 
-my $width  = 1920;
-my $height = 1080;
+my $width  = 3000;
+my $height = 3000;
 
 my $step      = 1;
-my $len       = 200;
+my $len       = 500;
 my $sides     = 360;
-my $max_angle = 180;
+my $max_angle = 160;
 
 my $dir = 'Geometric shapes';
 
 (-d $dir) || (mkdir($dir));
 chdir($dir);
 
-for (my $angle = 0 ; $angle <= $max_angle ; $angle += $step) {
+for (my $angle = 30 ; $angle <= $max_angle ; $angle += $step) {
 
     my $p = GD::Simple->new($width, $height);
-    $p->moveTo(900, 100);
+
+    $p->fgcolor('blue');
+    $p->moveTo(1500, 1000);
 
     my %seen;
     my $text  = '';
     my $valid = 0;
 
     foreach my $i (1 .. $sides) {
-
         if ($seen{join $;, $p->curPos}++) {
             $text = sprintf "%d degrees internal angle with %d sides", 180 - $angle, $i - 1;
             $valid = 1;
@@ -50,8 +51,9 @@ for (my $angle = 0 ; $angle <= $max_angle ; $angle += $step) {
     $valid || next;
 
     say $text;
-    $p->moveTo($width / 2 - length($text) * 3, $height - 100);
-    $p->string($text);
+
+    # $p->moveTo($width / 2 - length($text) * 3, $height - 100);
+    # $p->string($text);
 
     open my $fh, '>', sprintf("%05d.png", 180 - $angle);
     print {$fh} $p->png;
