@@ -170,8 +170,9 @@ sub autocrop {
                              );
 
         my $name = catfile($dir, basename($file));
+
         open my $fh, '>:raw', $name or die "Can't create file `$name': $!";
-        print $fh $cropped->png;
+        print $fh ($name =~ /\.png\z/i ? $cropped->png : $cropped->jpeg);
         close $fh;
 
         print " - ok!\n";
