@@ -13,7 +13,7 @@ use strict;
 use warnings;
 use GD::Simple;
 
-my $img = 'GD::Simple'->new(1000, 1000);
+my $img = 'GD::Simple'->new(3000, 3000);
 
 sub t($) {
     $img->turn(shift);
@@ -29,35 +29,38 @@ sub c($) {
 
 my $dirname = "Mathematical shapes";
 -d $dirname or do {
-    mkdir $dirname
+    mkdir($dirname)
       or die "Can't mkdir '$dirname': $!";
 };
 
-chdir $dirname
+chdir($dirname)
   or die "Can't chdir into '$dirname': $!";
 
-foreach my $t (1 .. 180) {    # turn from 1 to 180
-    for my $k (5 .. 10) {     # draw this many pictures for each turn
+foreach my $t (1 .. 179) {    # turn from 1 to 179
+    for my $k (5 .. 9) {      # draw this many pictures for each turn
 
         # Info to STDOUT
         say "$t:$k";
 
         $img->clear;
-        $img->moveTo(500, 500);    # hopefully, at the center of the image
+        $img->moveTo(1500, 1500);    # hopefully, at the center of the image
 
-        for my $i (1 .. $t) {      # another interesting set is from 1..$k
+        for my $i (1 .. $t) {        # another interesting set is from 1..$k
             for my $j (1 .. $k) {
-                l 30 * $j;         # the length of a given line (in pixels)
-                l -30 * $j;        # if you happen to love textiles, comment this line :)
+                $img->fgcolor('green');
+                l 40 * $j;           # the length of a given line (in pixels)
+                $img->fgcolor('blue');
+                l -40 * $j;          # if you happen to love textiles, comment this line :)
                 t $t;
             }
-            l 30;
+            $img->fgcolor('red');
+            l 40;
             ##last;              # to generate only the basic shapes, uncomment this line.
         }
 
-        my $image_name = sprintf('%02d-%03d.png', $k, $t);;
+        my $image_name = sprintf('%03d-%02d.png', $t, $k);
 
-        open my $fh, '>', $image_name or die $!;
+        open my $fh, '>:raw', $image_name or die $!;
         print {$fh} $img->png;
         close $fh;
 
