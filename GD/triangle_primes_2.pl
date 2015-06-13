@@ -17,8 +17,8 @@ use warnings;
 use GD::Simple;
 use Math::Prime::XS qw(is_prime);
 
-my $i = 1;
-my $max = 2000;         # duration: about 11 seconds
+my $i   = 1;
+my $max = 2000;    # duration: about 11 seconds
 
 # create a new image
 my $img = GD::Simple->new($max, $max);
@@ -26,11 +26,11 @@ my $img = GD::Simple->new($max, $max);
 my $white = 0;
 $img->fgcolor('blue');
 
-foreach my $x (1..$max) {
+foreach my $x (1 .. $max) {
 
-    $img->moveTo(0, $x-1);
+    $img->moveTo(0, $x - 1);
 
-    foreach my $y(1..$x) {
+    foreach my $y (1 .. $x) {
         if (is_prime($i)) {
             $white = 0;
             $img->fgcolor('blue');

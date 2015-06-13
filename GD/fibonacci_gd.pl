@@ -27,8 +27,8 @@ sub c($) {
 
 sub fib {
     my ($n) = @_;
-    my $res = $n < 2 ? $n : fib($n-2) + fib($n-1);
-    l($res*4);
+    my $res = $n < 2 ? $n : fib($n - 2) + fib($n - 1);
+    l($res * 4);
     t(90);
     $res;
 }

@@ -24,7 +24,7 @@ say "Possible combinations: $limit!";
 my $img = GD::Simple->new($limit * 3, $limit * 3);
 
 # move to right
-$img->moveTo($limit *1.5, $limit *1.5);
+$img->moveTo($limit * 1.5, $limit * 1.5);
 
 my $i = 1;
 my $j = 1;

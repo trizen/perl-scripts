@@ -63,7 +63,7 @@ foreach my $i (0 .. $rows - 1) {
     #print "\n";
 }
 
-open my $fh, '>:raw', 'test.png';
+open my $fh, '>:raw', 'triangle_primes_irregular.png';
 print $fh $img->png;
 close $fh;
 

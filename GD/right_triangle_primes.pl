@@ -57,6 +57,6 @@ foreach my $i (0 .. $lim - 1) {
     ##print "\n";
 }
 
-open my $fh, '>:raw', 'sum_triangle_primes.png';
+open my $fh, '>:raw', 'right_triangle_primes.png';
 print $fh $img->png;
 close $fh;

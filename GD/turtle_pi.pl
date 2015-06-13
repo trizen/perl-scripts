@@ -1,19 +1,64 @@
-my$pi_file='/home/pi_user/Number/PI.txt';use GD::Simple;my$pi;if(-e
-$pi_file){open(my$pi_fh,'<',$pi_file)||die$!;sysread$pi_fh,$pi,3000
-;close$pi_fh;}else{local($/);$pi=<DATA>;}$pi=~tr/0-9//dc;my$img=###
-'GD::Simple'->new(10000,6000);$img->fgcolor('blue');$img->moveTo(##
-5000,3000);sub pi{my$x=substr($pi,0,2,'');$x=~s/^0+//;pi()if!length
-($x)and length($pi);$x;}while(length($pi)){$img->fgcolor('white');#
-my$p_i=pi;$img->line($p_i*($p_i/sqrt($p_i+1))+$p_i);foreach$_(0..##
-$p_i+$p_i){$img->fgcolor('green');$img->turn($p_i);$img->line(-$p_i
-);$img->line(-$p_i);$img->line(-$p_i);$img->line(-$p_i);$img->#$_{}
-fgcolor('gray');$img->turn(-$p_i);$img->line($p_i);$img->line($p_i)
-;$img->line($p_i);$img->line($p_i);$img->fgcolor('blue');$img->turn
-(-$p_i);$img->line($p_i);$img->fgcolor('purple');$img->turn($p_i);#
-$img->line(-$p_i);$img->fgcolor('red');$img->turn($p_i);$img->line(
--$p_i);}}my$i='pi_art_turtle.png';open my $p,'>',$i;print$p $img->#
-png;close$p;grep(-x("$_/geeqie"),split/:/,$ENV{'PATH'})?`geeqie $i`
-:`xdg-open \Q$i\E`;__DATA__#$_{PI}=$pi+pi()/sqrt($pi+$pi**$pi)-$pi;
+#!/usr/bin/perl
+
+use 5.014;
+use strict;
+use warnings;
+
+use GD::Simple;
+
+my $pi = do {
+    local $/;
+    <DATA> =~ tr/0-9//dcr;
+};
+
+my $img = 'GD::Simple'->new(10000, 6000);
+$img->fgcolor('blue');
+$img->moveTo(5000, 3000);
+
+sub pi {
+    my $x = substr($pi, 0, 2, '');
+    $x =~ s/^0+//;
+    pi() if !length($x) and length($pi);
+    $x;
+}
+
+while (length($pi)) {
+    $img->fgcolor('white');
+
+    my $p_i = pi() || 0;
+    $img->line($p_i * ($p_i / sqrt($p_i + 1)) + $p_i);
+
+    foreach $_ (0 .. $p_i + $p_i) {
+        $img->fgcolor('green');
+        $img->turn($p_i);
+        $img->line(-$p_i);
+        $img->line(-$p_i);
+        $img->line(-$p_i);
+        $img->line(-$p_i);
+        $img->fgcolor('gray');
+        $img->turn(-$p_i);
+        $img->line($p_i);
+        $img->line($p_i);
+        $img->line($p_i);
+        $img->line($p_i);
+        $img->fgcolor('blue');
+        $img->turn(-$p_i);
+        $img->line($p_i);
+        $img->fgcolor('purple');
+        $img->turn($p_i);
+        $img->line(-$p_i);
+        $img->fgcolor('red');
+        $img->turn($p_i);
+        $img->line(-$p_i);
+    }
+}
+
+my $i = 'pi_art_turtle.png';
+open my $p, '>:raw', $i;
+print $p $img->png;
+close $p;
+
+__DATA__
 3.14159265358979323846264338327950288419716939937510582097494459230
 7816406286208998628034825342117067982148086513282306647093844609550
 5822317253594081284811174502841027019385211055596446229489549303819

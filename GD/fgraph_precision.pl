@@ -66,7 +66,7 @@ sub assign {
 
 # Map the function
 for (my $x = $from ; $x <= $to ; $x += $step) {
-    my $y =  eval { $f->($x) };
+    my $y = eval { $f->($x) };
 
     if ($@) {
         warn "f($x) is not defined!\n";

@@ -30,7 +30,7 @@ sub generate {
     return $n;
 }
 
-my $dir = "Number Triangles";
+my $dir = "Blue Number Triangles";
 if (not -d $dir) {
     mkdir($dir)
       or die "Can't create dir `$dir': $!";

@@ -3,7 +3,7 @@
 use GD::Simple;
 
 $img = 'GD::Simple'->new(2000, 2000);
-$img->moveTo(510,1100);
+$img->moveTo(510, 1100);
 
 my $nr = 308.5;
 

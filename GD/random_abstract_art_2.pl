@@ -37,6 +37,6 @@ for my $m (map { rand($limit) - rand($limit) } (1 .. $limit)) {
     ++$i;
 }
 
-open my $fh, '>:raw', "random_abstract_art.png";
+open my $fh, '>:raw', "random_abstract_art_2.png";
 print $fh $img->png;
 close $fh;

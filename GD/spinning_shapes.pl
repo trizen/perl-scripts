@@ -24,25 +24,29 @@ sub c($) {
     $img->fgcolor(shift);
 }
 
-for (my $loop = 45 ; $loop <= 180 ; $loop += 1) {
+my $dir = 'Spinning Shapes';
 
-    say "$loop degrees";
+if (not -d $dir) {
+    mkdir($dir) || die "Can't mkdir `$dir': $!";
+}
+
+chdir($dir) || die "Can't chdir `$dir': $!";
+
+for (my $i = 45 ; $i <= 180 ; $i += 1) {
+
+    say "$i degrees";
 
     $img->clear;
     $img->moveTo(500, 300);    # hopefully, at the center of the image
 
     for my $j (1 .. 360) {
         l $j;
-        t $loop;
+        t $i;
     }
 
-    my $image_name = "turtle.png";
+    my $image_name = sprintf("%03d.png", $i);
 
-    open my $fh, '>', $image_name or die $!;
+    open my $fh, '>:raw', $image_name or die $!;
     print {$fh} $img->png;
     close $fh;
-
-    ## View the image as soon as it is generated
-    system "gliv", $image_name;    # edit this line
-    $? == 0 or die "Non-zero exit code of the image viewer: $?";
 }

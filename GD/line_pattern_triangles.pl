@@ -22,10 +22,10 @@ sub generate {
     my ($n, $k, $data) = @_;
 
     my $acc = 1;
-    for(my $i = 1; $i <= $n; ) {
+    for (my $i = 1 ; $i <= $n ;) {
         if ($acc % $k == 0) {
-            foreach my $j(1..$acc) {
-                $data->{$i+$j} = 1;
+            foreach my $j (1 .. $acc) {
+                $data->{$i + $j} = 1;
             }
         }
         $i += $acc;

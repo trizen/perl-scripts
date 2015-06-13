@@ -17,7 +17,7 @@ use warnings;
 use GD::Simple;
 use Math::Prime::XS qw(is_prime);
 
-my $n = 1847;       # duration: about 22 seconds
+my $n = 1847;    # duration: about 22 seconds
 
 sub spiral {
     my ($n, $x, $y, $dx, $dy, @a) = (shift, 0, 0, 1, 0);

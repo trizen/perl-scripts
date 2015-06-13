@@ -23,6 +23,14 @@ sub c($) {
     $img->fgcolor(shift);
 }
 
+my $dir = 'Regular poligons';
+
+if (not -d $dir) {
+    mkdir($dir) || die "Can't mkdir `$dir': $!";
+}
+
+chdir($dir) || die "Can't chdir `$dir': $!";
+
 foreach my $i (1 .. 144) {
     if (360 % (180 - $i) == 0) {
 
@@ -34,16 +42,12 @@ foreach my $i (1 .. 144) {
 
         for (1 .. $sides) {
             l 150;
-            t 180-$i;
+            t 180 - $i;
         }
 
-        my $image_name = 'turtle.png';
-
-        open my $fh, '>', $image_name or die $!;
+        my $image_name = sprintf("%03d.png", $i);
+        open my $fh, '>:raw', $image_name or die $!;
         print {$fh} $img->png;
         close $fh;
-
-        system "gliv", $image_name;
-        $? == 0 or die "Non-zero exit code of the image viewer: $?";
     }
 }
