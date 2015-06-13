@@ -55,7 +55,7 @@ foreach my $t (1 .. 180) {    # turn from 1 to 180
             ##last;              # to generate only the basic shapes, uncomment this line.
         }
 
-        my $image_name = "$k-$t.png";
+        my $image_name = sprintf('%02d-%03d.png', $k, $t);;
 
         open my $fh, '>', $image_name or die $!;
         print {$fh} $img->png;
