@@ -11,6 +11,7 @@ use warnings;
 use GD::Simple;
 
 my $img = 'GD::Simple'->new(2000, 2000);
+$img->fgcolor('blue');
 
 sub t($) {
     $img->turn(shift);
