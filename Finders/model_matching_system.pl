@@ -42,9 +42,10 @@ sub update_model {
 
 sub find {
     my ($model, $entry) = @_;
+    $entry = lc($entry);
 
     my (@matches, @words);
-    foreach my $word (split_entry(lc($entry))) {
+    foreach my $word (split_entry($entry)) {
 
         my $ref = $model;
         foreach my $char (split(//, $word)) {
@@ -84,7 +85,7 @@ sub find {
              my $str = lc(${$_});
 
              (    # Calculate a score for each match
-                (((($str =~ s/\W+//gr)) ^ (lc($entry) =~ s/\W+//gr)) =~ /^[\0]+/ ? $+[0]**2 : 0) +
+                ((($str =~ s/\W+//gr) ^ ($entry =~ s/\W+//gr)) =~ /^[\0]+/ ? $+[0]**2 : 0) +
                   scalar(grep { $str =~ /\b\Q$_\E\b/i } @words)**2 +
                   scalar(grep { $str =~ /\b\Q$_\E/i } @words)
              );
