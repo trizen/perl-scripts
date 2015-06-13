@@ -91,6 +91,12 @@ sub autocrop {
 
     foreach my $file (@images) {
         my $img = GD::Image->new($file);
+
+        if (not defined $img) {
+            warn "[!] Can't process image `$file': $!\n";
+            next;
+        }
+
         my ($width, $height) = $img->getBounds();
 
         $width  -= 1;
@@ -172,8 +178,5 @@ sub autocrop {
     }
 }
 
-my @images = @ARGV;
-@images || die "usage: $0 [images]\n";
-
-say "** Cropping #$#images images...";
-autocrop(@images);
+@ARGV || die "usage: $0 [images]\n";
+autocrop(@ARGV);
