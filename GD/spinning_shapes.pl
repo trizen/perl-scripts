@@ -41,7 +41,7 @@ for (my $i = 1 ; $i <= 180 ; $i += 1) {
     $img->moveTo(1000, 1000);    # hopefully, at the center of the image
 
     for my $j (1 .. 360) {
-        l $j;
+        l($j * 2);
         t $i;
     }
 
