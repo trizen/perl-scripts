@@ -187,7 +187,7 @@ sub autocrop {
             }
         }
 
-        if (not defined $top or not defined $top) {
+        if (not defined $top or not defined $bottom) {
             say " - fail!";
             next;
         }
