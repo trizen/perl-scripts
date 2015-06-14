@@ -166,7 +166,7 @@ sub autocrop {
 
         my $top;
         my $bottom;
-      TB: foreach my $y (1 .. $height) {
+      TB: foreach my $y (1 .. int($height / 2)) {
             foreach my $x (1 .. $width) {
 
                 if (not defined $top) {
@@ -189,7 +189,7 @@ sub autocrop {
 
         my $left;
         my $right;
-      LR: foreach my $x (1 .. $width) {
+      LR: foreach my $x (1 .. int($width / 2)) {
             foreach my $y (1 .. $height) {
                 if (not defined $left) {
                     if (not is_background($img, $img->getPixel($x, $y), $bg_rgb)) {
