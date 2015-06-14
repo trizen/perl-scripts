@@ -157,11 +157,11 @@ sub autocrop {
 
         print "Checking: $file";
         check($img, $bg_rgb, $width, $height) || do {
-            print " - fail!\n";
+            say " - fail!";
             next;
         };
 
-        print " - ok!\n";
+        say " - ok!";
         print "Cropping: $file";
 
         my $top;
@@ -187,6 +187,11 @@ sub autocrop {
             }
         }
 
+        if (not defined $top or not defined $top) {
+            say " - fail!";
+            next;
+        }
+
         my $left;
         my $right;
       LR: foreach my $x (1 .. int($width / 2)) {
@@ -207,6 +212,11 @@ sub autocrop {
                     last LR;
                 }
             }
+        }
+
+        if (not defined $left or not defined $right) {
+            say " - fail!";
+            next;
         }
 
         my $cropped = GD::Image->new($right - $left + 1, $bottom - $top + 1);
@@ -232,7 +242,7 @@ sub autocrop {
                   );
         close $fh;
 
-        print " - ok!\n";
+        say " - ok!";
     }
 }
 
