@@ -5,7 +5,7 @@
 # Date: 30 April 2014
 # Website: http://github.com/trizen
 
-# Generate mathematical shapes (1080 images, by default)
+# Generate mathematical shapes
 # -- feel free to play with the numbers --
 
 use 5.010;

@@ -386,7 +386,7 @@ SCHEMA_FILE
 require $schema_file;    # Load the configuration files
 
 # Remove user's defined values
-my @valid_keys = grep exists $CONFIG{$_}, keys $CONFIG;
+my @valid_keys = grep exists $CONFIG{$_}, keys %{$CONFIG};
 @CONFIG{@valid_keys} = @{$CONFIG}{@valid_keys};
 
 # Keep user's defined values
