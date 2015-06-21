@@ -63,10 +63,6 @@ GetOptions(
           )
   or die("$0: error in command line arguments!\n");
 
-if (not -d $directory) {
-    mkdir($directory) || die "Can't mkdir `$directory': $!";
-}
-
 {
     my %cache;
 
@@ -92,7 +88,6 @@ sub check {
     my $w_lt_h = $width < $height;
     my $min = $w_lt_h ? $width : $height;
 
-    my $ok = 1;
     my %seen;
 
     # Spiral-in to smaller gaps
@@ -111,8 +106,7 @@ sub check {
                              sub { $img->getPixel($width, $j) },
                             )
               ) {
-                $ok = 0;
-                last;
+                return;
             }
         }
     }
@@ -120,21 +114,19 @@ sub check {
     if ($w_lt_h) {
         foreach my $y ($width + 1 .. $height) {
             if (not $check->(sub { $img->getPixel(0, $y) }, sub { $img->getPixel($width, $y) })) {
-                $ok = 0;
-                last;
+                return;
             }
         }
     }
     else {
         foreach my $x ($height + 1 .. $width) {
             if (not $check->(sub { $img->getPixel($x, 0) }, sub { $img->getPixel($x, $height) })) {
-                $ok = 0;
-                last;
+                return;
             }
         }
     }
 
-    return $ok;
+    return 1;
 }
 
 sub autocrop {
@@ -247,4 +239,9 @@ sub autocrop {
 }
 
 @ARGV || help(1);
+
+if (not -d $directory) {
+    mkdir($directory) || die "Can't mkdir `$directory': $!";
+}
+
 autocrop(@ARGV);
