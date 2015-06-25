@@ -5,8 +5,9 @@
 # Date: 25 June 2015
 # Website: https://github.com/trizen
 
-# The snake game. (with color)
+# The snake game. (colorful + Unicode)
 
+use utf8;
 use 5.010;
 use strict;
 use warnings;
@@ -14,6 +15,8 @@ use warnings;
 use Time::HiRes qw(sleep);
 use Term::ANSIColor qw(colored);
 use Term::ReadKey qw(ReadMode ReadLine);
+
+binmode(STDOUT, ':utf8');
 
 use constant {
               VOID => 0,
@@ -24,25 +27,30 @@ use constant {
              };
 
 use constant {
-    SNAKE_COLOR => 'bold green',
-    FOOD_COLOR  => 'bold red',
-
-    FG_COLOR => 'white',
-    BG_COLOR => 'on_black',
+              SNAKE_COLOR => 'bold green',
+              FOOD_COLOR  => 'red',
+              FG_COLOR    => 'white',
+              BG_COLOR    => 'on_black',
              };
 
 use constant {
-    UD_HEAD => colored('@', join(' ', SNAKE_COLOR, BG_COLOR)),
-    LR_HEAD => colored('@', join(' ', SNAKE_COLOR, BG_COLOR)),
+    U_HEAD => colored('▲', join(' ', SNAKE_COLOR, BG_COLOR)),
+    D_HEAD => colored('▼', join(' ', SNAKE_COLOR, BG_COLOR)),
+    L_HEAD => colored('◀', join(' ', SNAKE_COLOR, BG_COLOR)),
+    R_HEAD => colored('▶', join(' ', SNAKE_COLOR, BG_COLOR)),
 
-    UD_BODY => colored('+', join(' ', SNAKE_COLOR, BG_COLOR)),
-    LR_BODY => colored('+', join(' ', SNAKE_COLOR, BG_COLOR)),
+    U_BODY => colored('╹', join(' ', SNAKE_COLOR, BG_COLOR)),
+    D_BODY => colored('╻', join(' ', SNAKE_COLOR, BG_COLOR)),
+    L_BODY => colored('╴', join(' ', SNAKE_COLOR, BG_COLOR)),
+    R_BODY => colored('╶', join(' ', SNAKE_COLOR, BG_COLOR)),
 
-    UD_TAIL => colored(';', join(' ', SNAKE_COLOR, BG_COLOR)),
-    LR_TAIL => colored('~', join(' ', SNAKE_COLOR, BG_COLOR)),
+    U_TAIL => colored('╽', join(' ', SNAKE_COLOR, BG_COLOR)),
+    D_TAIL => colored('╿', join(' ', SNAKE_COLOR, BG_COLOR)),
+    L_TAIL => colored('╼', join(' ', SNAKE_COLOR, BG_COLOR)),
+    R_TAIL => colored('╾', join(' ', SNAKE_COLOR, BG_COLOR)),
 
-    VOID_A => colored(" ", join(' ', FG_COLOR,   BG_COLOR)),
-    FOOD_A => colored('#', join(' ', FOOD_COLOR, BG_COLOR)),
+    A_VOID => colored(' ', join(' ', FG_COLOR,   BG_COLOR)),
+    A_FOOD => colored('❇', join(' ', FOOD_COLOR, BG_COLOR)),
              };
 
 my $sleep    = 0.1;    # sleep duration between updates
@@ -59,10 +67,10 @@ my @grid = map {
 } 0 .. $h;
 
 my %dirs = (
-            left  => [0,  -1],
-            right => [0,  +1],
-            up    => [-1, 0],
-            down  => [+1, 0],
+            left  => [+0, -1],
+            right => [+0, +1],
+            up    => [-1, +0],
+            down  => [+1, +0],
            );
 
 my $dir = $dirs{left};
@@ -93,22 +101,25 @@ sub display {
             join(
                 "",
                 map {
+                    my $i = 0;
                     my $t = $_->[0];
-                    my $ud = (
-                              defined($_->[1])
-                              ? ($_->[1] eq $dirs{up} || $_->[1] eq $dirs{down})
-                              : 0
-                             );
 
-                        $t == HEAD ? ($ud ? UD_HEAD : LR_HEAD)
-                      : $t == BODY ? ($ud ? UD_BODY : LR_BODY)
-                      : $t == TAIL ? ($ud ? UD_TAIL : LR_TAIL)
-                      : $t == FOOD ? (FOOD_A)
-                      :              (VOID_A);
+                    if (defined $_->[1]) {
+                        $i =
+                            $_->[1] eq $dirs{up}   ? 0
+                          : $_->[1] eq $dirs{down} ? 1
+                          : $_->[1] eq $dirs{left} ? 2
+                          :                          3;
+                    }
+
+                        $t == HEAD ? (U_HEAD, D_HEAD, L_HEAD, R_HEAD)[$i]
+                      : $t == BODY ? (U_BODY, D_BODY, L_BODY, R_BODY)[$i]
+                      : $t == TAIL ? (U_TAIL, D_TAIL, L_TAIL, R_TAIL)[$i]
+                      : $t == FOOD ? (A_FOOD)
+                      :              (A_VOID);
 
                   } @{$_}
                 )
-
           } @grid
     );
 }
@@ -116,6 +127,7 @@ sub display {
 sub move {
     my $grew = 0;
 
+    # Move the head
     {
         my ($y, $x) = @{$head_pos};
 
@@ -143,6 +155,7 @@ sub move {
         @{$head_pos} = ($new_y, $new_x);
     }
 
+    # Move the tail
     if (not $grew) {
         my ($y, $x) = @{$tail_pos};
 
