@@ -27,29 +27,37 @@ use constant {
              };
 
 use constant {
-              SNAKE_COLOR => 'bold green',
-              FOOD_COLOR  => 'red',
-              BG_COLOR    => 'on_black',
+              LEFT  => [+0, -1],
+              RIGHT => [+0, +1],
+              UP    => [-1, +0],
+              DOWN  => [+1, +0],
+             };
+
+use constant {BG_COLOR => "on_black"};
+
+use constant {
+              SNAKE_COLOR => ('bold green ' . BG_COLOR),
+              FOOD_COLOR  => ('red ' . BG_COLOR),
              };
 
 use constant {
-    U_HEAD => colored('▲', join(' ', SNAKE_COLOR, BG_COLOR)),
-    D_HEAD => colored('▼', join(' ', SNAKE_COLOR, BG_COLOR)),
-    L_HEAD => colored('◀', join(' ', SNAKE_COLOR, BG_COLOR)),
-    R_HEAD => colored('▶', join(' ', SNAKE_COLOR, BG_COLOR)),
+    U_HEAD => colored('▲', SNAKE_COLOR),
+    D_HEAD => colored('▼', SNAKE_COLOR),
+    L_HEAD => colored('◀', SNAKE_COLOR),
+    R_HEAD => colored('▶', SNAKE_COLOR),
 
-    U_BODY => colored('╹', join(' ', SNAKE_COLOR, BG_COLOR)),
-    D_BODY => colored('╻', join(' ', SNAKE_COLOR, BG_COLOR)),
-    L_BODY => colored('╴', join(' ', SNAKE_COLOR, BG_COLOR)),
-    R_BODY => colored('╶', join(' ', SNAKE_COLOR, BG_COLOR)),
+    U_BODY => colored('╹', SNAKE_COLOR),
+    D_BODY => colored('╻', SNAKE_COLOR),
+    L_BODY => colored('╴', SNAKE_COLOR),
+    R_BODY => colored('╶', SNAKE_COLOR),
 
-    U_TAIL => colored('╽', join(' ', SNAKE_COLOR, BG_COLOR)),
-    D_TAIL => colored('╿', join(' ', SNAKE_COLOR, BG_COLOR)),
-    L_TAIL => colored('╼', join(' ', SNAKE_COLOR, BG_COLOR)),
-    R_TAIL => colored('╾', join(' ', SNAKE_COLOR, BG_COLOR)),
+    U_TAIL => colored('╽', SNAKE_COLOR),
+    D_TAIL => colored('╿', SNAKE_COLOR),
+    L_TAIL => colored('╼', SNAKE_COLOR),
+    R_TAIL => colored('╾', SNAKE_COLOR),
 
-    A_VOID => colored(' ', BG_COLOR),
-    A_FOOD => colored('❇', join(' ', FOOD_COLOR, BG_COLOR)),
+    A_VOID => colored(' ',   BG_COLOR),
+    A_FOOD => colored('❇', FOOD_COLOR),
              };
 
 my $sleep    = 0.1;    # sleep duration between displays
@@ -57,35 +65,27 @@ my $food_num = 10;     # number of initial food sources
 
 local $| = 1;
 
-my $w = `tput cols` - 1;
-my $h = `tput lines` - 1;
+my $w = `tput cols`;
+my $h = `tput lines`;
 my $r = "\033[H";
 
 my @grid = map {
-    [map { [VOID] } 0 .. $w]
-} 0 .. $h;
+    [map { [VOID] } 1 .. $w]
+} 1 .. $h;
 
-my %dirs = (
-            left  => [+0, -1],
-            right => [+0, +1],
-            up    => [-1, +0],
-            down  => [+1, +0],
-           );
+my $dir      = LEFT;
+my @head_pos = ($h / 2, $w / 2);
+my @tail_pos = ($head_pos[0], $head_pos[1] + 1);
 
-my $dir = $dirs{left};
-
-my $head_pos = [$h / 2, $w / 2];
-my $tail_pos = [$head_pos->[0], $head_pos->[1] + 1];
-
-$grid[$head_pos->[0]][$head_pos->[1]] = [HEAD, $dir];    # head
-$grid[$tail_pos->[0]][$tail_pos->[1]] = [TAIL, $dir];    # tail
+$grid[$head_pos[0]][$head_pos[1]] = [HEAD, $dir];    # head
+$grid[$tail_pos[0]][$tail_pos[1]] = [TAIL, $dir];    # tail
 
 sub create_food {
     my ($food_x, $food_y);
 
     do {
-        $food_x = rand($w + 1);
-        $food_y = rand($h + 1);
+        $food_x = rand($w);
+        $food_y = rand($h);
     } while ($grid[$food_y][$food_x][0] != VOID);
 
     $grid[$food_y][$food_x][0] = FOOD;
@@ -94,21 +94,23 @@ sub create_food {
 create_food() for (1 .. $food_num);
 
 sub display {
+    state $i = 0;
+
     print $r, join(
         "\n",
         map {
             join(
                 "",
                 map {
-                    my $i = 0;
                     my $t = $_->[0];
 
-                    if (defined $_->[1]) {
+                    if ($t != FOOD and $t != VOID) {
+                        my $p = $_->[1];
                         $i =
-                            $_->[1] eq $dirs{up}   ? 0
-                          : $_->[1] eq $dirs{down} ? 1
-                          : $_->[1] eq $dirs{left} ? 2
-                          :                          3;
+                            $p eq UP   ? 0
+                          : $p eq DOWN ? 1
+                          : $p eq LEFT ? 2
+                          :              3;
                     }
 
                         $t == HEAD ? (U_HEAD, D_HEAD, L_HEAD, R_HEAD)[$i]
@@ -128,10 +130,10 @@ sub move {
 
     # Move the head
     {
-        my ($y, $x) = @{$head_pos};
+        my ($y, $x) = @head_pos;
 
-        my $new_y = ($y + $dir->[0]) % ($h + 1);
-        my $new_x = ($x + $dir->[1]) % ($w + 1);
+        my $new_y = ($y + $dir->[0]) % $h;
+        my $new_x = ($x + $dir->[1]) % $w;
 
         my $cell = $grid[$new_y][$new_x];
         my $t    = $cell->[0];
@@ -148,31 +150,32 @@ sub move {
         $grid[$new_y][$new_x] = [HEAD, $dir];
 
         # Replace the current head with body
-        $grid[$y][$x][0] = BODY;
-        $grid[$y][$x][1] = $dir;
+        $grid[$y][$x] = [BODY, $dir];
 
-        @{$head_pos} = ($new_y, $new_x);
+        # Save the position of the head
+        @head_pos = ($new_y, $new_x);
     }
 
     # Move the tail
     if (not $grew) {
-        my ($y, $x) = @{$tail_pos};
+        my ($y, $x) = @tail_pos;
 
         my $pos   = $grid[$y][$x][1];
-        my $new_y = ($y + $pos->[0]) % ($h + 1);
-        my $new_x = ($x + $pos->[1]) % ($w + 1);
+        my $new_y = ($y + $pos->[0]) % $h;
+        my $new_x = ($x + $pos->[1]) % $w;
 
         $grid[$y][$x][0]         = VOID;    # erase the current tail
         $grid[$new_y][$new_x][0] = TAIL;    # create a new tail
 
-        @{$tail_pos} = ($new_y, $new_x);
+        # Save the position of the tail
+        @tail_pos = ($new_y, $new_x);
     }
 }
 
 ReadMode(3);
 while (1) {
     my $key;
-    while (not defined($key = ReadLine(-1))) {
+    until (defined($key = ReadLine(-1))) {
         move();
         display();
         sleep($sleep);
@@ -180,21 +183,21 @@ while (1) {
 
     # up
     if ($key eq "\e[A") {
-        $dir = $dirs{up};
+        $dir = UP;
     }
 
     # down
     elsif ($key eq "\e[B") {
-        $dir = $dirs{down};
+        $dir = DOWN;
     }
 
     # right
     elsif ($key eq "\e[C") {
-        $dir = $dirs{right};
+        $dir = RIGHT;
     }
 
     # left
     elsif ($key eq "\e[D") {
-        $dir = $dirs{left};
+        $dir = LEFT;
     }
 }
