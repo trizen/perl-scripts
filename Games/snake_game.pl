@@ -5,13 +5,14 @@
 # Date: 25 June 2015
 # Website: https://github.com/trizen
 
-# The snake game.
+# The snake game. (with color)
 
 use 5.010;
 use strict;
 use warnings;
 
 use Time::HiRes qw(sleep);
+use Term::ANSIColor qw(colored);
 use Term::ReadKey qw(ReadMode ReadLine);
 
 use constant {
@@ -23,24 +24,34 @@ use constant {
              };
 
 use constant {
-    UD_HEAD => '@',
-    LR_HEAD => '@',
+    SNAKE_COLOR => 'bold green',
+    FOOD_COLOR  => 'bold red',
 
-    UD_BODY => '+',
-    LR_BODY => '+',
+    FG_COLOR => 'white',
+    BG_COLOR => 'on_black',
+             };
 
-    UD_TAIL => ';',
-    LR_TAIL => '~',
+use constant {
+    UD_HEAD => colored('@', join(' ', SNAKE_COLOR, BG_COLOR)),
+    LR_HEAD => colored('@', join(' ', SNAKE_COLOR, BG_COLOR)),
 
-    VOID_A => ' ',
-    FOOD_A => '#',
+    UD_BODY => colored('+', join(' ', SNAKE_COLOR, BG_COLOR)),
+    LR_BODY => colored('+', join(' ', SNAKE_COLOR, BG_COLOR)),
+
+    UD_TAIL => colored(';', join(' ', SNAKE_COLOR, BG_COLOR)),
+    LR_TAIL => colored('~', join(' ', SNAKE_COLOR, BG_COLOR)),
+
+    VOID_A => colored(" ", join(' ', FG_COLOR,   BG_COLOR)),
+    FOOD_A => colored('#', join(' ', FOOD_COLOR, BG_COLOR)),
              };
 
 my $sleep    = 0.1;    # sleep duration between updates
 my $food_num = 10;     # number of initial food sources
 
-my $w = `tput cols` - 2;
-my $h = `tput lines` - 2;
+local $| = 1;
+
+my $w = `tput cols` - 1;
+my $h = `tput lines` - 1;
 my $r = "\033[H";
 
 my @grid = map {
@@ -75,26 +86,31 @@ sub create_food {
 
 create_food() for (1 .. $food_num);
 
-sub print_grid {
-    print $r;
-    foreach my $row (@grid) {
-        foreach my $cell (@{$row}) {
-            my $t = $cell->[0];
-            my $ud = (
-                      defined($cell->[1])
-                      ? ($cell->[1] eq $dirs{up} || $cell->[1] eq $dirs{down})
-                      : 0
-                     );
+sub display {
+    print $r, join(
+        "\n",
+        map {
+            join(
+                "",
+                map {
+                    my $t = $_->[0];
+                    my $ud = (
+                              defined($_->[1])
+                              ? ($_->[1] eq $dirs{up} || $_->[1] eq $dirs{down})
+                              : 0
+                             );
 
-            print $t == HEAD ? ($ud ? UD_HEAD : LR_HEAD)
-              : $t == BODY   ? ($ud ? UD_BODY : LR_BODY)
-              : $t == TAIL   ? ($ud ? UD_TAIL : LR_TAIL)
-              : $t == FOOD   ? (FOOD_A)
-              :                (VOID_A);
+                        $t == HEAD ? ($ud ? UD_HEAD : LR_HEAD)
+                      : $t == BODY ? ($ud ? UD_BODY : LR_BODY)
+                      : $t == TAIL ? ($ud ? UD_TAIL : LR_TAIL)
+                      : $t == FOOD ? (FOOD_A)
+                      :              (VOID_A);
 
-        }
-        print "\n";
-    }
+                  } @{$_}
+                )
+
+          } @grid
+    );
 }
 
 sub move {
@@ -145,10 +161,8 @@ ReadMode(3);
 while (1) {
     my $key;
     while (not defined($key = ReadLine(-1))) {
-
         move();
-        print_grid();
-
+        display();
         sleep($sleep);
     }
 
