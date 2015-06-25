@@ -5,7 +5,7 @@
 # Date: 25 June 2015
 # Website: https://github.com/trizen
 
-# The snake game. (colorful + Unicode)
+# The snake game. (with colors + Unicode)
 
 use utf8;
 use 5.010;
@@ -52,7 +52,7 @@ use constant {
     A_FOOD => colored('❇', join(' ', FOOD_COLOR, BG_COLOR)),
              };
 
-my $sleep    = 0.1;    # sleep duration between updates
+my $sleep    = 0.1;    # sleep duration between displays
 my $food_num = 10;     # number of initial food sources
 
 local $| = 1;
