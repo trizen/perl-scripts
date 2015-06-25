@@ -29,7 +29,6 @@ use constant {
 use constant {
               SNAKE_COLOR => 'bold green',
               FOOD_COLOR  => 'red',
-              FG_COLOR    => 'white',
               BG_COLOR    => 'on_black',
              };
 
@@ -49,7 +48,7 @@ use constant {
     L_TAIL => colored('╼', join(' ', SNAKE_COLOR, BG_COLOR)),
     R_TAIL => colored('╾', join(' ', SNAKE_COLOR, BG_COLOR)),
 
-    A_VOID => colored(' ', join(' ', FG_COLOR,   BG_COLOR)),
+    A_VOID => colored(' ', BG_COLOR),
     A_FOOD => colored('❇', join(' ', FOOD_COLOR, BG_COLOR)),
              };
 
