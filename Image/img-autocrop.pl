@@ -24,6 +24,7 @@ GD::Image->trueColor(1);
 local $| = 1;
 
 my $tolerance = 5;
+my $invisible = 0;
 
 my $jpeg_quality    = 95;
 my $png_compression = 7;
@@ -38,6 +39,9 @@ usage: $0 [options] [images]
 options:
     -t --tolerance=i    : tolerance value for the background color
                           default: $tolerance
+
+    -i --invisible!     : make the background transparent after cropping
+                          default: ${$invisible ? \'true' : \'false'}
 
     -p --png-compress=i : the compression level for PNG images
                           default: $png_compression
@@ -56,6 +60,7 @@ EOT
 
 GetOptions(
            'd|directory=s'       => \$directory,
+           'i|invisible!'        => \$invisible,
            't|tolerance=i'       => \$tolerance,
            'p|png-compression=i' => \$png_compression,
            'j|jpeg-quality=i'    => \$jpeg_quality,
@@ -127,6 +132,18 @@ sub check {
     }
 
     return 1;
+}
+
+sub make_invisible_bg {
+    my ($img, $transparent, $bg_rgb, $width, $height) = @_;
+
+    foreach my $x (0 .. $width) {
+        foreach my $y (0 .. $height) {
+            if (is_background($img, $img->getPixel($x, $y), $bg_rgb)) {
+                $img->setPixel($x, $y, $transparent);
+            }
+        }
+    }
 }
 
 sub autocrop {
@@ -212,6 +229,14 @@ sub autocrop {
         }
 
         my $cropped = GD::Image->new($right - $left + 1, $bottom - $top + 1);
+
+        my $index;
+        if ($invisible) {
+            $index = $cropped->colorAllocateAlpha(int(rand(256)), int(rand(256)), int(rand(256)), 0);
+            $cropped->filledRectangle(0, 0, $cropped->width, $cropped->height, $index);
+            $cropped->transparent($index);
+        }
+
         $cropped->copyResized(
                               $img,
                               0,          # destX
@@ -225,6 +250,11 @@ sub autocrop {
                              );
 
         my $name = catfile($directory, basename($file));
+
+        if ($invisible) {
+            make_invisible_bg($cropped, $index, $bg_rgb, $cropped->width - 1, $cropped->height - 1);
+            $name =~ s/\.\w+\z/.png/;
+        }
 
         open my $fh, '>:raw', $name or die "Can't create file `$name': $!";
         print $fh (
