@@ -190,7 +190,8 @@ my $special_var_names = do {
     qr{@{[map {quotemeta} @special_var_names]}};
 };
 
-my $perl_keywords = qr{(?>(a(?:bs|ccept|larm|nd|tan2)|b(?:in(?:mode|d)|les
+my $perl_keywords =
+qr{(?:CORE::)?(?>(a(?:bs|ccept|larm|nd|tan2)|b(?:in(?:mode|d)|les
 s|reak)|c(?:aller|h(?:dir|mod|o(?:mp|wn|p)|r(?:oot)?)|lose(?:dir)?|mp|o(?:
 n(?:nect|tinue)|s)|rypt)|d(?:bm(?:close|open)|e(?:f(?:ault|ined)|lete)|ie|
 ump|o)|e(?:ach|ls(?:if|e)|nd(?:grent|hostent|netent|p(?:rotoent|went)|serv
