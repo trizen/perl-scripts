@@ -32,10 +32,12 @@ use constant {
     UD_TAIL => ';',
     LR_TAIL => '~',
 
-    SPACE => ' ',
+    VOID_A => ' ',
+    FOOD_A => '#',
              };
 
-my $sleep = 0.1;
+my $sleep    = 0.1;    # sleep duration between updates
+my $food_num = 10;     # number of initial food sources
 
 my $w = `tput cols` - 2;
 my $h = `tput lines` - 2;
@@ -54,91 +56,88 @@ my %dirs = (
 
 my $dir = $dirs{left};
 
-$grid[$h / 2][$w / 2] = [HEAD, $dir];        # head
-$grid[$h / 2][$w / 2 + 1] = [TAIL, $dir];    # tail
-$grid[rand $h][rand $w] = [FOOD];            # food
+my $head_pos = [$h / 2, $w / 2];
+my $tail_pos = [$head_pos->[0], $head_pos->[1] + 1];
+
+$grid[$head_pos->[0]][$head_pos->[1]] = [HEAD, $dir];    # head
+$grid[$tail_pos->[0]][$tail_pos->[1]] = [TAIL, $dir];    # tail
+
+sub create_food {
+    my ($food_x, $food_y);
+
+    do {
+        $food_x = rand($w + 1);
+        $food_y = rand($h + 1);
+    } while ($grid[$food_y][$food_x][0] != VOID);
+
+    $grid[$food_y][$food_x][0] = FOOD;
+}
+
+create_food() for (1 .. $food_num);
 
 sub print_grid {
     print $r;
     foreach my $row (@grid) {
         foreach my $cell (@{$row}) {
             my $t = $cell->[0];
-            my $ud = defined($cell->[1]) ? ($cell->[1] eq $dirs{up} || $cell->[1] eq $dirs{down}) : 0;
-            print($t == HEAD
-                  ? ($ud ? UD_HEAD : LR_HEAD)
-                  : $t == FOOD ? q{#}
-                  : $t == BODY ? ($ud ? UD_BODY : LR_BODY)
-                  : $t == TAIL ? ($ud ? UD_TAIL : LR_TAIL)
-                  :              (SPACE)
-                 );
+            my $ud = (
+                      defined($cell->[1])
+                      ? ($cell->[1] eq $dirs{up} || $cell->[1] eq $dirs{down})
+                      : 0
+                     );
+
+            print $t == HEAD ? ($ud ? UD_HEAD : LR_HEAD)
+              : $t == BODY   ? ($ud ? UD_BODY : LR_BODY)
+              : $t == TAIL   ? ($ud ? UD_TAIL : LR_TAIL)
+              : $t == FOOD   ? (FOOD_A)
+              :                (VOID_A);
+
         }
         print "\n";
     }
 }
 
 sub move {
+    my $grew = 0;
 
-    my $grow = 0;
+    {
+        my ($y, $x) = @{$head_pos};
 
-  L1: foreach my $y (0 .. $h) {
-        foreach my $x (0 .. $w) {
+        my $new_y = ($y + $dir->[0]) % ($h + 1);
+        my $new_x = ($x + $dir->[1]) % ($w + 1);
 
-            # Found head
-            if ($grid[$y][$x][0] == HEAD) {
+        my $cell = $grid[$new_y][$new_x];
+        my $t    = $cell->[0];
 
-                my $new_y = ($y + $dir->[0]) % ($h + 1);
-                my $new_x = ($x + $dir->[1]) % ($w + 1);
-
-                my $cell = $grid[$new_y][$new_x];
-                my $t    = $cell->[0];
-
-                if ($t == BODY or $t == TAIL) {
-                    die "Game over!\n";
-                }
-                elsif ($t == FOOD) {
-                    my ($food_x, $food_y);
-
-                    do {
-                        $food_x = rand($w + 1);
-                        $food_y = rand($h + 1);
-                    } while ($grid[$food_y][$food_x][0] != VOID);
-
-                    $grid[$food_y][$food_x][0] = FOOD;
-                    $grow = 1;
-                }
-
-                # Make the move
-                $grid[$new_y][$new_x] = [HEAD, $dir];
-
-                $grid[$y][$x][0] = BODY;
-                $grid[$y][$x][1] = $dir;
-
-                last L1;
-            }
+        if ($t == BODY or $t == TAIL) {
+            die "Game over!\n";
         }
+        elsif ($t == FOOD) {
+            create_food();
+            $grew = 1;
+        }
+
+        # Create a new head
+        $grid[$new_y][$new_x] = [HEAD, $dir];
+
+        # Replace the current head with body
+        $grid[$y][$x][0] = BODY;
+        $grid[$y][$x][1] = $dir;
+
+        @{$head_pos} = ($new_y, $new_x);
     }
 
-  L2: foreach my $y (0 .. $h) {
-        foreach my $x (0 .. $w) {
+    if (not $grew) {
+        my ($y, $x) = @{$tail_pos};
 
-            # Found tail
-            if ($grid[$y][$x][0] == TAIL) {
-                my $pos = $grid[$y][$x][1];
+        my $pos   = $grid[$y][$x][1];
+        my $new_y = ($y + $pos->[0]) % ($h + 1);
+        my $new_x = ($x + $pos->[1]) % ($w + 1);
 
-                my $new_y = ($y + $pos->[0]) % ($h + 1);
-                my $new_x = ($x + $pos->[1]) % ($w + 1);
+        $grid[$y][$x][0]         = VOID;    # erase the current tail
+        $grid[$new_y][$new_x][0] = TAIL;    # create a new tail
 
-                if ($grow) {
-                    $grid[$new_y][$new_x][0] = BODY;
-                }
-                else {
-                    $grid[$y][$x][0]         = VOID;
-                    $grid[$new_y][$new_x][0] = TAIL;
-                }
-
-                last L2;
-            }
-        }
+        @{$tail_pos} = ($new_y, $new_x);
     }
 }
 
