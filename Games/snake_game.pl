@@ -61,7 +61,7 @@ use constant {
              };
 
 my $sleep    = 0.1;    # sleep duration between displays
-my $food_num = 10;     # number of initial food sources
+my $food_num = 1;      # number of initial food sources
 
 local $| = 1;
 
