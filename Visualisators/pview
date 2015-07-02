@@ -266,7 +266,7 @@ sub parse_script {
                 $canpod = 0;
                 redo;
             }
-            when ($canpod == 1 && m{\G(?<=\n)=[a-zA-Z]}gc) {
+            when ($canpod == 1 && m{\G^=[a-zA-Z]}mgc) {
                 m{\G.*?\n=cut\h*(?=\n|z)}sgc || m{\G.*\z}gcs;
                 push @result, {pod => [$-[0] - 2, $+[0]]};
                 redo;
