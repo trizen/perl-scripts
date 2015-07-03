@@ -2,7 +2,7 @@
 
 use GD::Simple;
 
-#use Math::Prime::XS ('is_prime');
+#use ntheory ('is_prime');
 print "** Generating image...\n";
 $img = 'GD::Simple'->new(10000, 6000);
 $img->fgcolor('blue');

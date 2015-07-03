@@ -16,7 +16,7 @@ use strict;
 use warnings;
 
 use Data::Dump qw(pp);
-use Math::Prime::XS qw(is_prime);
+use ntheory qw(is_prime);
 
 my @primes = grep { is_prime($_) } 0 .. 1000;
 

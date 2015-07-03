@@ -15,7 +15,7 @@ use strict;
 use warnings;
 
 use GD::Simple;
-use Math::Prime::XS qw(is_prime);
+use ntheory qw(is_prime);
 
 my $n = 1847;    # duration: about 22 seconds
 

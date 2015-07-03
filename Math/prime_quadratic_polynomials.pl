@@ -14,7 +14,7 @@ use 5.010;
 use strict;
 use warnings;
 
-use Math::Prime::XS qw(is_prime);
+use ntheory qw(is_prime);
 
 my $i = 1;
 my $j = 1;
