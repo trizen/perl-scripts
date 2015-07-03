@@ -17,22 +17,10 @@ my %top;
 my $n_limit = 1e4;
 my $m_limit = 1e2;
 
-foreach my $m (1 .. $m_limit) {
-
-    next if $m % 2 == 0;
-
+for (my $m = 1 ; $m <= $m_limit ; $m += 2) {
     foreach my $n (0 .. $n_limit) {
-
-        my $n1 = $n**2 - $n + $m;
-        my $n2 = $n**2 - $n - $m;
-
-        if ($n1 > 1 and is_prime($n1)) {
-            ++$top{$m};
-        }
-
-        if ($n2 > 1 and is_prime($n2)) {
-            ++$top{-$m};
-        }
+        is_prime($n**2 - $n + $m)      && ++$top{$m};
+        is_prime(abs($n**2 - $n - $m)) && ++$top{-$m};
     }
 }
 
