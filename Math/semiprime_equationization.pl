@@ -7,7 +7,7 @@
 
 # Split a semiprime into a group of equations.
 
-use 5.010;
+use 5.016;
 use strict;
 use integer;
 use warnings;
@@ -57,14 +57,20 @@ sub semiprime_equationization {
     my $end    = $xlen + $ylen + 1;
 
     my %seen;
-    foreach my $i (0 .. $end) {
-        my $expr = '(' . join(' + ', grep { $_ ne '0' } (map { $map[$_][$i] } @mrange), $mem) . ')';
-
-        while ($expr =~ /\b(xy\d+)/g) {
+    my $initializer = sub {
+        my ($str) = @_;
+        while ($str =~ /\b(xy\d+)/g) {
             if (not $seen{$1}++) {
-                push @result, "$1 = $vars{$1}";
+                my $init = "$1 = $vars{$1}";
+                __SUB__->($init);
+                push @result, $init;
             }
         }
+    };
+
+    foreach my $i (0 .. $end) {
+        my $expr = '(' . join(' + ', grep { $_ ne '0' } (map { $map[$_][$i] } @mrange), $mem) . ')';
+        $initializer->($expr);
 
         push @result, "n$i = $expr";
         my $n = "n$i";
