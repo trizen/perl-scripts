@@ -52,9 +52,7 @@ sub semiprime_equationization {
     }
 
     my @number = reverse split //, $semiprime;
-
     my @mrange = (0 .. $#map);
-    my $end    = $xlen + $ylen + 1;
 
     my %seen;
     my $initializer = sub {
@@ -68,22 +66,30 @@ sub semiprime_equationization {
         }
     };
 
-    foreach my $i (0 .. $end) {
+    foreach my $i (0 .. $#number) {
         my $expr = '(' . join(' + ', grep { $_ ne '0' } (map { $map[$_][$i] } @mrange), $mem) . ')';
         $initializer->($expr);
 
         push @result, "n$i = $expr";
         my $n = "n$i";
 
-        push @result, "$number[$i] = ($n % 10)";
-        $mem = "int($n / 10)";
+        if ($i == $#number) {
+            push @result, "$number[$i] = $n";
+        }
+        else {
+            push @result, "$number[$i] = ($n % 10)";
+            $mem = "int($n / 10)";
+        }
     }
 
     return @result;
 }
 
 # 71 * 43
-say for semiprime_equationization('3053', 2, 2);
+#say for semiprime_equationization('3053', 2, 2);
+
+# 251 * 197
+say for semiprime_equationization('49447', 3, 3);
 
 # 37975227936943673922808872755445627854565536638199 * 40094690950920881030683735292761468389214899724061
 #say for semiprime_equationization('1522605027922533360535618378132637429718068114961380688657908494580122963258952897654000350692006139', 50, 50);

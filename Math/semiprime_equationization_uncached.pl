@@ -50,12 +50,11 @@ sub semiprime_equationization {
 
     my @result;
     my @mrange = (0 .. $#map);
-    my $end    = $xlen + $ylen + 1;
 
-    foreach my $i (0 .. $end) {
+    foreach my $i (0 .. $#number) {
         my $n = '(' . join(' + ', grep { $_ ne '0' } (map { $map[$_][$i] } @mrange), $mem) . ')';
 
-        if ($i == $end) {
+        if ($i == $#number) {
             push @result, "$number[$i] = $n";
         }
         else {
@@ -68,7 +67,10 @@ sub semiprime_equationization {
 }
 
 # 71 * 43
-say for semiprime_equationization('3053', 2, 2);
+#say for semiprime_equationization('3053', 2, 2);
+
+# 251 * 197
+say for semiprime_equationization('49447', 3, 3);
 
 # 37975227936943673922808872755445627854565536638199 * 40094690950920881030683735292761468389214899724061
 #say for semiprime_equationization('1522605027922533360535618378132637429718068114961380688657908494580122963258952897654000350692006139', 50, 50);
