@@ -66,12 +66,12 @@ sub long_multiplication {
     foreach my $i (0 .. $end) {
         my $n = sum(map { $map[$_][$i] } 0 .. $mlen) + $mem;
 
-        $mem = $n / 10;
         if ($i == $end) {
             push @result, $n if $n != 0;
         }
         else {
             push @result, $n % 10;
+            $mem = $n / 10;
         }
     }
 
