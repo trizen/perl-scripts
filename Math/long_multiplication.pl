@@ -60,11 +60,11 @@ sub long_multiplication {
     }
 
     my @result;
-    my $mlen = $#map;
-    my $end  = $xlen + $ylen + 1;
+    my @mrange = (0 .. $#map);
+    my $end    = $xlen + $ylen + 1;
 
     foreach my $i (0 .. $end) {
-        my $n = sum(map { $map[$_][$i] } 0 .. $mlen) + $mem;
+        my $n = sum(map { $map[$_][$i] } @mrange) + $mem;
 
         if ($i == $end) {
             push @result, $n if $n != 0;
