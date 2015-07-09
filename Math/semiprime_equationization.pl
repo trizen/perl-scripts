@@ -25,6 +25,7 @@ sub semiprime_equationization {
     foreach my $j (0 .. $ylen) {
         foreach my $i (0 .. $xlen) {
             my $expr = '(' . join(' + ', "(x[$i] * y[$j])", grep { $_ ne '0' } $mem) . ')';
+
             push @result, "xy$i$j = $expr";
             my $n = "xy$i$j";
 
@@ -55,7 +56,10 @@ sub semiprime_equationization {
     my $end    = $xlen + $ylen + 1;
 
     foreach my $i (0 .. $end) {
-        my $n = '(' . join(' + ', grep { $_ ne '0' } (map { $map[$_][$i] } @mrange), $mem) . ')';
+        my $expr = '(' . join(' + ', grep { $_ ne '0' } (map { $map[$_][$i] } @mrange), $mem) . ')';
+
+        push @result, "n$i = $expr";
+        my $n = "n$i";
 
         if ($i == $end) {
             push @result, "$number[$i] = $n";
