@@ -26,10 +26,10 @@ sub semiprime_equationization {
     foreach my $i (0 .. $xlen) {
         my $start = $i == $xlen ? 1 : 0;
         if ($i == 0) {
-            $x_loops{"x$i"} = "for (unsigned short x$i = 1; x$i < 10; x$i += 2) {";
+            $x_loops{"x$i"} = "for (unsigned int x$i = 1; x$i < 10; x$i += 2) {";
         }
         else {
-            $x_loops{"x$i"} = "for (unsigned short x$i = $start; x$i < 10; ++x$i) {";
+            $x_loops{"x$i"} = "for (unsigned int x$i = $start; x$i < 10; ++x$i) {";
         }
     }
 
@@ -37,10 +37,10 @@ sub semiprime_equationization {
     foreach my $i (0 .. $ylen) {
         my $start = $i == $ylen ? 1 : 0;
         if ($i == 0) {
-            $y_loops{"y$i"} = "for (unsigned short y$i = 1; y$i < 10; y$i += 2) {";
+            $y_loops{"y$i"} = "for (unsigned int y$i = 1; y$i < 10; y$i += 2) {";
         }
         else {
-            $y_loops{"y$i"} = "for (unsigned short y$i = $start; y$i < 10; ++y$i) {";
+            $y_loops{"y$i"} = "for (unsigned int y$i = $start; y$i < 10; ++y$i) {";
         }
     }
 
@@ -100,7 +100,7 @@ sub semiprime_equationization {
         $loop_init->($str);
         while ($str =~ /\b(xy\d+)/g) {
             if (not $seen{$1}++) {
-                my $init = "const unsigned short $1 = $vars{$1};";
+                my $init = "const unsigned int $1 = $vars{$1};";
                 __SUB__->($init);
                 push @result, $init;
             }
@@ -111,7 +111,7 @@ sub semiprime_equationization {
         my $expr = '(' . join(' + ', grep { $_ ne '0' } (map { $map[$_][$i] } @mrange), $mem) . ')';
         $initializer->($expr);
 
-        push @result, "const unsigned short n$i = $expr;";
+        push @result, "const unsigned int n$i = $expr;";
         my $n = "n$i";
 
         if ($i == $#number) {
