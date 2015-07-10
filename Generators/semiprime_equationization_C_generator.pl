@@ -22,19 +22,32 @@ sub semiprime_equationization {
     my $mem = '0';
     my @result;
 
-    push @result, (
-        map {
-            my $start = $_ == $xlen ? 1 : 0;
-            "for (int x$_ = $start; x$_ < 10; ++x$_) {";
-          } 0 .. $xlen
-    );
+    my @x_loops;
+    foreach my $i (0 .. $xlen) {
+        my $start = $i == $xlen ? 1 : 0;
+        if ($i == 0) {
+            push @x_loops, "for (int x$i = 1; x$i < 10; x$i += 2) {";
+        }
+        else {
+            unshift @x_loops, "for (int x$i = $start; x$i < 10; ++x$i) {";
+        }
+    }
 
-    push @result, (
-        map {
-            my $start = $_ == $ylen ? 1 : 0;
-            "for (int y$_ = $start; y$_ < 10; ++y$_) {";
-          } 0 .. $ylen
-    );
+    my @y_loops;
+    foreach my $i (0 .. $ylen) {
+        my $start = $i == $ylen ? 1 : 0;
+        if ($i == 0) {
+            push @y_loops, "for (int y$i = 1; y$i < 10; y$i += 2) {";
+        }
+        else {
+            unshift @y_loops, "for (int y$i = $start; y$i < 10; ++y$i) {";
+        }
+    }
+
+    while (@x_loops || @y_loops) {
+        push @result, shift(@y_loops) if @y_loops;
+        push @result, shift(@x_loops) if @x_loops;
+    }
 
     my %vars;
     foreach my $j (0 .. $ylen) {
