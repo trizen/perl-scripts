@@ -131,7 +131,6 @@ sub semiprime_equationization {
     }
 
     unshift @result, ('use integer;', 'use strict;', 'use warnings;');
-
     push @result, "}" x (1 + $xlen + 1 + $ylen);
 
     return @result;
