@@ -5,7 +5,7 @@
 # Date: 10 July 2015
 # Website: https://github.com/trizen
 
-# Generate a C program to compute the prime factors of a semiprime number.
+# Generate a Perl program to compute the prime factors of a semiprime number.
 
 use 5.016;
 use strict;
