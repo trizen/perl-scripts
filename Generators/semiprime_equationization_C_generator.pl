@@ -22,31 +22,26 @@ sub semiprime_equationization {
     my $mem = '0';
     my @result;
 
-    my @x_loops;
+    my %x_loops;
     foreach my $i (0 .. $xlen) {
         my $start = $i == $xlen ? 1 : 0;
         if ($i == 0) {
-            push @x_loops, "for (int x$i = 1; x$i < 10; x$i += 2) {";
+            $x_loops{"x$i"} = "for (int x$i = 1; x$i < 10; x$i += 2) {";
         }
         else {
-            unshift @x_loops, "for (int x$i = $start; x$i < 10; ++x$i) {";
+            $x_loops{"x$i"} = "for (int x$i = $start; x$i < 10; ++x$i) {";
         }
     }
 
-    my @y_loops;
+    my %y_loops;
     foreach my $i (0 .. $ylen) {
         my $start = $i == $ylen ? 1 : 0;
         if ($i == 0) {
-            push @y_loops, "for (int y$i = 1; y$i < 10; y$i += 2) {";
+            $y_loops{"y$i"} = "for (int y$i = 1; y$i < 10; y$i += 2) {";
         }
         else {
-            unshift @y_loops, "for (int y$i = $start; y$i < 10; ++y$i) {";
+            $y_loops{"y$i"} = "for (int y$i = $start; y$i < 10; ++y$i) {";
         }
-    }
-
-    while (@x_loops || @y_loops) {
-        push @result, shift(@y_loops) if @y_loops;
-        push @result, shift(@x_loops) if @x_loops;
     }
 
     my %vars;
@@ -84,9 +79,25 @@ sub semiprime_equationization {
     my $end    = $xlen + $ylen + 1;
 
     my %seen;
+    my $loop_init = sub {
+        my ($str) = @_;
+        while ($str =~ /\b(y\d+)/g) {
+            if (not $seen{$1}++) {
+                my $init = $y_loops{$1};
+                push @result, $init;
+            }
+        }
+        while ($str =~ /\b(x\d+)/g) {
+            if (not $seen{$1}++) {
+                my $init = $x_loops{$1};
+                push @result, $init;
+            }
+        }
+    };
+
     my $initializer = sub {
         my ($str) = @_;
-
+        $loop_init->($str);
         while ($str =~ /\b(xy\d+)/g) {
             if (not $seen{$1}++) {
                 my $init = "int $1 = $vars{$1};";
