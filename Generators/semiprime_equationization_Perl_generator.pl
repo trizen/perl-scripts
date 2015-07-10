@@ -22,34 +22,26 @@ sub semiprime_equationization {
     my @result;
     my $mem = '0';
 
-    my @x_loops;
+    my %x_loops;
     foreach my $i (0 .. $xlen) {
         my $start = $i == $xlen ? 1 : 0;
         if ($i == 0) {
-            push @x_loops, "for (my \$x$i = 1; \$x$i < 10; \$x$i += 2) {";
+            $x_loops{"x$i"} = "for (my \$x$i = 1; \$x$i < 10; \$x$i += 2) {";
         }
         else {
-            unshift @x_loops, "for my \$x$i ($start .. 9) {";
+            $x_loops{"x$i"} = "for my \$x$i ($start .. 9) {";
         }
     }
 
-    my @y_loops;
+    my %y_loops;
     foreach my $i (0 .. $ylen) {
         my $start = $i == $ylen ? 1 : 0;
         if ($i == 0) {
-            push @y_loops, "for (my \$y$i = 1; \$y$i < 10; \$y$i += 2) {";
+            $y_loops{"y$i"} = "for (my \$y$i = 1; \$y$i < 10; \$y$i += 2) {";
         }
         else {
-            unshift @y_loops, "for my \$y$i ($start .. 9) {";
+            $y_loops{"y$i"} = "for my \$y$i ($start .. 9) {";
         }
-    }
-
-    push @result, @x_loops, @y_loops;
-
-    my $counter = ($ylen + $xlen + 1);
-    foreach my $result (@result) {
-        $result = "LOOP$counter: " . $result;
-        --$counter;
     }
 
     my %vars;
@@ -87,9 +79,25 @@ sub semiprime_equationization {
     my $end    = $xlen + $ylen + 1;
 
     my %seen;
+    my $loop_init = sub {
+        my ($str) = @_;
+        while ($str =~ /\$(y\d+)/g) {
+            if (not $seen{$1}++) {
+                my $init = $y_loops{$1};
+                push @result, $init;
+            }
+        }
+        while ($str =~ /\$(x\d+)/g) {
+            if (not $seen{$1}++) {
+                my $init = $x_loops{$1};
+                push @result, $init;
+            }
+        }
+    };
+
     my $initializer = sub {
         my ($str) = @_;
-
+        $loop_init->($str);
         while ($str =~ /\$(xy\d+)/g) {
             if (not $seen{$1}++) {
                 my $init = "my \$$1 = $vars{$1};";
@@ -117,7 +125,7 @@ sub semiprime_equationization {
               . qq/); exit 0; }/;
         }
         else {
-            push @result, "if ($number[$i] != ($n % 10)) { next LOOP$i; }";
+            push @result, "if ($number[$i] != ($n % 10)) { next }";
             $mem = "($n / 10)";
         }
     }
