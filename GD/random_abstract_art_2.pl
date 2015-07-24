@@ -20,7 +20,7 @@ my $limit = int(sqrt($max));
 # create a new image
 my $img = GD::Simple->new($limit * 3, $limit * 3);
 
-# move to right
+# move to the center
 $img->moveTo($limit * 1.5, $limit * 1.5);
 
 my $i = 1;

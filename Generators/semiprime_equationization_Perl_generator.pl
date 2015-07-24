@@ -125,13 +125,13 @@ sub semiprime_equationization {
               . qq/); exit 0; }/;
         }
         else {
-            push @result, "if ($number[$i] != ($n % 10)) { next }";
+            push @result, "if ($number[$i] == ($n % 10)) {";
             $mem = "($n / 10)";
         }
     }
 
     unshift @result, ('use integer;', 'use strict;', 'use warnings;');
-    push @result, "}" x (1 + $xlen + 1 + $ylen);
+    push @result, "}" x (1 + $xlen + 1 + $ylen + $#number);
 
     return @result;
 }
@@ -144,6 +144,9 @@ sub semiprime_equationization {
 
 # 7907 * 4999
 say for semiprime_equationization('39527093', 4, 4);
+
+# 472882049 * 472882049
+#say for semiprime_equationization('223617432266438401', 9, 9);
 
 # 37975227936943673922808872755445627854565536638199 * 40094690950920881030683735292761468389214899724061
 #say for semiprime_equationization('1522605027922533360535618378132637429718068114961380688657908494580122963258952897654000350692006139', 50, 50);

@@ -5,7 +5,7 @@
 # Date: 20 July 2014
 # Website: http://github.com/trizen
 
-# Group in distinct paragraphes all the words that look pretty much the same to one another
+# Group in distinct paragraphs all the words that look pretty much the same to one another
 
 use 5.010;
 use strict;
@@ -27,7 +27,7 @@ usage: $0 [options] [input file]
 
 options:
         -d int  : the maximum distance between two words (default: $opt{d})
-        -m      : merge similiar groups into one larger group
+        -m      : merge similar groups into one larger group
         -k      : allow a word to exist in more than one group
 
         -h      : print this message and exit

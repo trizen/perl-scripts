@@ -131,7 +131,7 @@ sub lev_cmp ($$) {
     ($d[-1][-1] // $min) <= $diff ? 0 : 1;
 }
 
-sub find_duplicated_files (&@) {
+sub find_similar_filenames (&@) {
     my $code = shift;
 
     my %files;
@@ -145,8 +145,8 @@ sub find_duplicated_files (&@) {
                 },
                 real_name => $File::Find::name,
                                                                   };
-        }
-    } => @_;
+          }
+         } => @_;
 
     foreach my $files (values %files) {
 
@@ -177,9 +177,9 @@ sub find_duplicated_files (&@) {
 }
 
 {
-    (my @dirs = grep { -d } @ARGV) || help(1);
+    @ARGV || help(1);
     local $, = "\n";
-    find_duplicated_files {
+    find_similar_filenames {
 
         say @_, "-" x 80 if @_;
 
@@ -191,5 +191,5 @@ sub find_duplicated_files (&@) {
             unlink $_[$i] or warn "[error]: Can't delete: $!\n";
         }
     }
-    @dirs;
+    @ARGV;
 }

@@ -2,11 +2,11 @@
 
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
-# Date: 08 June 2015
+# Date: 21 July 2015
 # http://github.com/trizen
 
 #
-## Generate complex random art based on simple mathematics.
+## Generate a complex machine-like art based on simple mathematics.
 #
 
 use 5.010;
@@ -33,13 +33,13 @@ for my $m (shuffle(1 .. $limit)) {
 
     for my $n ($j .. $i**2) {
         $img->line(1);
-        $img->turn($n**2 / $m);
+        $img->turn($n * $i + $m);
         ++$j;
     }
 
     ++$i;
 }
 
-open my $fh, '>:raw', "random_abstract_art.png";
+open my $fh, '>:raw', "random_machinery.png";
 print $fh $img->png;
 close $fh;

@@ -35,8 +35,6 @@ for my $i (1 .. 180) {
 
 my $image_name = 'turtle.png';
 
-open my $fh, '>', $image_name or die $!;
+open my $fh, '>:raw', $image_name or die $!;
 print {$fh} $img->png;
 close $fh;
-
-system "gliv", $image_name;

@@ -5,7 +5,7 @@
 # Date: 15 April 2015
 # Website: https://github.com/trizen
 
-# Compisite two images by using a modified matrix multiplication algorithm
+# Compose two images by using a modified matrix multiplication algorithm
 
 use 5.010;
 use strict;

@@ -12,14 +12,19 @@ use strict;
 use warnings;
 
 use Math::BigInt (only => 'GMP');
-my $prime = Math::BigInt->new(2);
-my $fact = Math::BigInt->new(1);
+my $prime = Math::BigInt->new(3);
+my $fact  = Math::BigInt->new(2);
 
-while(1) {
-     if ($prime % 2 and ($fact + 1)->bmod($prime)->is_zero) {
+say 2;    # print the first prime number
+
+while (1) {
+    if (($fact + 1)->bmod($prime)->is_zero) {
         say $prime;
     }
-    $fact->bmul($prime->binc - 1);
+
+    $fact->bmul($prime);
+    $fact->bmul($prime->binc);
+    $prime->binc;
 }
 
 __END__
