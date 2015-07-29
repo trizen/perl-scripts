@@ -11,7 +11,7 @@ my $rows = 6;
 my @arr  = ([1]);
 
 my $n = 1;
-foreach my $i (0 .. $rows) {
+foreach my $i (1 .. $rows) {
 
     foreach my $j (reverse 0 .. $#arr) {
         push @{$arr[$j]}, ++$n;
@@ -22,7 +22,7 @@ foreach my $i (0 .. $rows) {
 }
 
 foreach my $row (@arr) {
-    print " " x (3 * (1 + $rows--));
+    print " " x (3 * $rows--);
     print map { sprintf "%3d", $_ } @{$row};
     print "\n";
 }
