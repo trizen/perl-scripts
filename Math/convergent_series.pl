@@ -120,6 +120,7 @@ sub lookup {
     foreach my $key (sort { $b <=> $a } keys %found) {
         my $arrs = $found{$key};
 
+        my %seen;
         foreach my $arr (@{$arrs}) {
             foreach my $f (@{$arr->[0]}) {
 
@@ -128,6 +129,7 @@ sub lookup {
                     $func = "($func";
                 }
 
+                next if $seen{$func}++;
                 push @matches, sprintf("%-50s%s", $func, "($arr->[2])");
             }
         }
