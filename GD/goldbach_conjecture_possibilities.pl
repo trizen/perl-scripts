@@ -15,37 +15,37 @@ use strict;
 use warnings;
 
 use Imager qw();
-use ntheory qw(forprimes is_prime);
+use ntheory qw(primes is_prime);
 
 my $limit = 1e4;
 
 my $xsize = $limit;
-my $ysize = (($limit / log($limit)) + sqrt($limit) + ($limit / 10**(int(log($limit) / log(10)) - 1))) / 2;    # an approximation
+my $ysize = int((($limit / log($limit)) + sqrt($limit) + ($limit / 10**(int(log($limit) / log(10)) - 1))) / 2);    # approximation
 
 my ($x, $y) = (0, $ysize);
 my $img = Imager->new(xsize => $xsize, ysize => $ysize);
 
-my $white = Imager::Color->new('#FFFFFF');
+my $white = Imager::Color->new('#ffffff');
 my $gray  = Imager::Color->new('#5f5d5d');
 
 $img->box(filled => 1, color => $white);
 
-foreach my $i (2 .. $limit) {
-    my $n     = 2 * $i;
-    my $count = 0;
+my @primes;
+my $last_n = 2;
+foreach my $i (3 .. $limit) {
+
+    my $n = 2 * $i;
+    push @primes, @{primes($last_n, $n - 2)};
+    $last_n = $n - 2;
 
     my %seen;
-    forprimes {
-        $seen{$_} && return;
-        if (is_prime($n - $_)) {
+    my $count = 0;
+    foreach my $prime (@primes) {
+        exists($seen{$prime}) && last;
+        if (is_prime($n - $prime)) {
             ++$count;
-            ++$seen{$n - $_};
+            undef $seen{$n - $prime};
         }
-    }
-    ($n - 2);
-
-    if ($count == 0) {
-        die "The goldbach conjecture has been proved false for n=$n\n";
     }
 
     foreach my $i (1 .. $count) {
@@ -55,4 +55,4 @@ foreach my $i (2 .. $limit) {
     $x += 1;
 }
 
-$img->write(file => "goldbach.png");
+$img->write(file => "goldbach_possibilities.png");
