@@ -20,7 +20,7 @@ use ntheory qw(primes is_prime);
 my $limit = 1e4;
 
 my $xsize = $limit;
-my $ysize = int((($limit / log($limit)) + sqrt($limit) + ($limit / 10**(int(log($limit) / log(10)) - 1))) / 2);    # approximation
+my $ysize = int($limit / (1 / 5 * log($limit)**2));    # approximation
 
 my ($x, $y) = (0, $ysize);
 my $img = Imager->new(xsize => $xsize, ysize => $ysize);
