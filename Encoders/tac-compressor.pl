@@ -16,7 +16,6 @@ use strict;
 use autodie;
 use warnings;
 
-use List::Util qw(min);
 use Getopt::Std qw(getopts);
 use File::Basename qw(basename);
 use Math::BigInt (try => 'GMP');
