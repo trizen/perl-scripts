@@ -44,7 +44,7 @@ sub generate_squared_series {
                 foreach my $l (2 .. 3) {
 
                     my $sum = 0;
-                    foreach my $n (1 .. 1000000) {
+                    foreach my $n (1 .. 10000000) {
                         $sum += $i**$k / ($j * $n)**$l;
                     }
 

@@ -381,7 +381,7 @@ foreach my $task (@{$tasks}) {
     if ($req->is_success) {
 
         my $content = $req->decoded_content;
-        my $lang_data = extract_lang($content, $lang);
+        my $lang_data = extract_lang($content, $lang) // next;
 
         my $header   = "[1]: $url\n\n" . "# [$title][1]\n\n";
         my $markdown = $header . to_markdown($lang_data);
