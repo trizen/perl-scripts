@@ -64,7 +64,7 @@ package Smart::Word::Wrap {
     }
 
     # This function creates all the
-    # avaible paths, for further processing.
+    # available paths, for further processing.
     sub make_paths {
         my (@array) = @_;
 
@@ -83,7 +83,7 @@ package Smart::Word::Wrap {
     }
 
     # This function combines the
-    # the parents with the childrens.
+    # the parents with the children.
     sub combine {
         my ($root, $hash) = @_;
 
@@ -106,7 +106,7 @@ package Smart::Word::Wrap {
         \@row;
     }
 
-    # This function normalizez the combinations.
+    # This function normalize the combinations.
     # Example: [[["abc"]]] is normalized to ["abc"];
     sub normalize {
         my ($array_ref) = @_;
@@ -127,7 +127,7 @@ package Smart::Word::Wrap {
     }
 
     # This function finds the best
-    # combination avaiable and returns it.
+    # combination available and returns it.
     sub find_best {
         my ($self, @arrays) = @_;
 

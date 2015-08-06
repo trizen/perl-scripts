@@ -64,7 +64,7 @@ package Smart::Word::Wrap {
     }
 
     # This function combines the
-    # the parents with the childrens.
+    # the parents with the children.
     sub combine {
         my ($root, $hash) = @_;
 
@@ -88,7 +88,7 @@ package Smart::Word::Wrap {
     }
 
     # This function finds the best
-    # combination avaiable and returns it.
+    # combination available and returns it.
     sub find_best {
         my ($self, @arrays) = @_;
 
