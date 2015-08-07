@@ -133,7 +133,7 @@ sub semiprime_equationization {
 
         if ($i == $#number) {
             push @result,
-                qq/if ($number[$i] == ($n % 10)) { printf("Cracked: /
+                qq/if ($number[$i] == $n) { printf("Cracked: /
               . ("%d" x ($xlen + 1))
               . (" * ")
               . ("%d" x ($ylen + 1))
