@@ -27,6 +27,8 @@ say $a * $b;
 my @p = (0) x 16;    # 16-bit
 foreach my $i (@a) {
     if ($i) {
+        say @p;
+        say sprintf('%16s', join '', @b);
         my $carry = 0;
         foreach my $j (0 .. $#b) {
             my $add = $b[$#b - $j] + $p[$#p - $j] + $carry;
@@ -40,6 +42,7 @@ foreach my $i (@a) {
                 $carry = ($add / 2) || last;
             }
         }
+
     }
     push @b, '0';    # left-shift by 1
 }
