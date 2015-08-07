@@ -13,8 +13,8 @@ use strict;
 use integer;
 use warnings;
 
-my $a = 241;
-my $b = 217;
+my $a = 4253;
+my $b = 7149;
 
 my @a = reverse(split(//, sprintf("%b", $a)));
 my @b = split(//, sprintf("%b", $b));
@@ -24,7 +24,7 @@ say @b;
 
 say $a * $b;
 
-my @p = (0) x 16;    # 16-bit
+my @p = (0) x (@a + @b);
 
 my $k = 0;
 foreach my $i (@a) {
@@ -48,4 +48,4 @@ foreach my $i (@a) {
 }
 
 say @p;
-say unpack('n', pack('B*', join('', @p)));
+say unpack("N", pack("B32", substr("0" x 32 . join('', @p), -32)));
