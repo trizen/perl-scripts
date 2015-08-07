@@ -25,26 +25,26 @@ say @b;
 say $a * $b;
 
 my @p = (0) x 16;    # 16-bit
+
+my $k = 0;
 foreach my $i (@a) {
     if ($i) {
         say @p;
-        say sprintf('%16s', join '', @b);
         my $carry = 0;
         foreach my $j (0 .. $#b) {
-            my $add = $b[$#b - $j] + $p[$#p - $j] + $carry;
-            $p[$#p - $j] = $add % 2;
+            my $add = $b[$#b - $j] + $p[$#p - $j - $k] + $carry;
+            $p[$#p - $j - $k] = $add % 2;
             $carry = $add / 2;
         }
         if ($carry) {
             foreach my $j ($#b + 1 .. $#p) {
-                my $add = $carry + $p[$#p - $j];
-                $p[$#p - $j] = $add % 2;
+                my $add = $carry + $p[$#p - $j - $k];
+                $p[$#p - $j - $k] = $add % 2;
                 $carry = ($add / 2) || last;
             }
         }
-
     }
-    push @b, '0';    # left-shift by 1
+    ++$k;
 }
 
 say @p;
