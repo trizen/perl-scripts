@@ -54,8 +54,9 @@ sub semiprime_equationization {
     foreach my $i (0 .. $#number) {
         my $n = '(' . join(' + ', grep { $_ ne '0' } (map { $map[$_][$i] } @mrange), $mem) . ')';
 
-        if ($i == $#number) {
+        if ($i == 0 or $i == $#number) {
             push @result, "$number[$i] = $n";
+            $mem = '0';
         }
         else {
             push @result, "$number[$i] = ($n % 10)";

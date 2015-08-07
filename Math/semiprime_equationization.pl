@@ -73,8 +73,9 @@ sub semiprime_equationization {
         push @result, "n$i = $expr";
         my $n = "n$i";
 
-        if ($i == $#number) {
+        if ($i == 0 or $i == $#number) {
             push @result, "$number[$i] = $n";
+            $mem = '0';
         }
         else {
             push @result, "$number[$i] = ($n % 10)";

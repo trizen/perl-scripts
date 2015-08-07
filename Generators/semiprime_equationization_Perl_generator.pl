@@ -124,6 +124,10 @@ sub semiprime_equationization {
               . join(", ", (map { "\$x$_" } reverse(0 .. $xlen)), (map { "\$y$_" } reverse(0 .. $ylen)))
               . qq/); exit 0; }/;
         }
+        elsif ($i == 0) {
+            push @result, "if ($number[$i] == $n) {";
+            $mem = '0';
+        }
         else {
             push @result, "if ($number[$i] == ($n % 10)) {";
             $mem = "($n / 10)";
