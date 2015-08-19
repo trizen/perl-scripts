@@ -15,15 +15,20 @@ use 5.010;
 use strict;
 use warnings;
 
-use ntheory qw(forprimes is_prime);
+use ntheory qw(forprimes is_prime pn_primorial nth_prime);
 
-my ($n, $log, %table);
-foreach my $i (1 .. exp(10) / 2) {
-    $n   = 2 * $i;
-    $log = int(log($n));
+my $primo = 2;
+my $count = 1;
+
+my %table;
+foreach my $i (1 .. pn_primorial(5)) {
+    my $n = 2 * $i;
+    my $partition = $i <= $primo ? $primo : do {
+        $primo *= nth_prime(++$count);
+    };
     forprimes {
         is_prime($n - $_)
-          && ++$table{$log};
+          && ++$table{$partition};
     }
     ($n - 2);
 }
@@ -33,6 +38,17 @@ pp \%table;
 
 __END__
 
+Primorial partitions:
+{
+    2     => 1,
+    6     => 8,
+    30    => 149,
+    210   => 3696,
+    2310  => 218701,
+    30030 => 20096631
+}
+
+Logarithmic:
 {
   1  => 2,
   2  => 22,
