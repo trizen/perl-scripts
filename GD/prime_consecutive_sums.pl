@@ -22,10 +22,6 @@
 # There are larger and larger overlaps, which suggests that
 # the ratio between p(n+1) and p(n) get smaller and smaller.
 
-# This sum also suggests that the Goldbach conjecture is true,
-# because only some prime numbers cannot be written as the sum
-# of two primes, such as: 2, 3, 11, 17, 23, 29, 37, 41, etc...
-
 use 5.010;
 use strict;
 use integer;
