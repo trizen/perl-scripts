@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 
-# Author: Șuteu "Trizen" Daniel
+# Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 06 July 2013
-# http://trizen.googlecode.com
+# https://github.com/trizen
 
 # Get the n^th root of a number.
 # For example, sqrt_n(125, 3) == 5 because 5^3 == 125
