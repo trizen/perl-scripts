@@ -5,7 +5,7 @@
 # Date: 29 April 2012
 # http://trizen.googlecode.com
 
-# Substitute Unicode characters with ASCII characters in files
+# Substitute Unicode characters with ASCII characters in text files
 
 # WARNING! No backup files are created!
 
@@ -14,8 +14,8 @@ use strict;
 use warnings;
 
 use File::Find qw(find);
-use File::Slurp qw(read_file);
 use Text::Unidecode qw(unidecode);
+use File::Slurper qw(read_text write_text);
 
 if ((my @dirs = grep { -d } @ARGV)) {
     find {
@@ -26,9 +26,7 @@ if ((my @dirs = grep { -d } @ARGV)) {
 
 foreach my $file (grep { -T } @ARGV) {
 
-    open my $fh, '<:utf8', $file or die $!;
-    my $content = read_file($fh);
-    $content = unidecode($content);
+    my $content = unidecode(read_text($file, 'utf8'));
 
 =some substitutions
     study $content;
@@ -44,7 +42,5 @@ foreach my $file (grep { -T } @ARGV) {
     1 while $content =~ s/\n(.+)\n{2,}(.+)\n{2,}/\n$1\n$2\n/;
 =cut
 
-    open my $out_fh, '>', $file or do { warn "Can't open $file for write: $!"; next };
-    print $out_fh $content;
-    close $out_fh;
+    write_text($file, $content);
 }

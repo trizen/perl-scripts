@@ -2,13 +2,13 @@
 
 use strict;
 use warnings;
-use File::Slurp qw(read_file);
+use File::Slurper qw(read_text);
 use JavaScript::Beautifier qw(js_beautify);
 
 @ARGV && -f $ARGV[0] or die "usage: $0 <js_file>\n";
 
 print js_beautify(
-                  scalar read_file(shift) => {
+                  scalar read_text(shift) => {
                                               indent_size      => 1,
                                               indent_character => "\t",
                                              }

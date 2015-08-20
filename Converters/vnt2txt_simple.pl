@@ -11,13 +11,13 @@ use strict;
 use warnings;
 
 use Date::Parse;
-use File::Slurp;
+use File::Slurper qw(read_text write_text);
 
 my $source = shift() // die "usage: $0 [vnt file]\n";
 
-read_file($source) =~ /^BODY.*?:(.*?)\R^DCREATED:(\S+)\R^LAST-MODIFIED:(\S+)/ms;
+read_text($source) =~ /^BODY.*?:(.*?)\R^DCREATED:(\S+)\R^LAST-MODIFIED:(\S+)/ms;
 
-write_file((my $tfile =
+write_text((my $tfile =
       join('-', unpack("A4A2A2", $2))   .
 '.' . join(".", unpack("x9A2A2A2", $2)) . '.txt'), $1);
 
