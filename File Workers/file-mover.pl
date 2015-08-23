@@ -40,10 +40,16 @@ usage: $0 [options] < [input.txt]
 
 options:
     -s  --sort-by=s     : sort the files by:
-                            none, name, iname, lenght
-                            size, atime, mtime, ctime
-    -r  --reverse!      : reverse the sorting
+                            name   -> sort by filename
+                            iname  -> sort by filename case-insensitively
+                            lenght -> sort by the length of the filename
+                            size   -> sort by the size of the file
+                            atime  -> sort by file access time
+                            mtime  -> sort by file modification time
+                            ctime  -> sort by file inode change time
+                            none   -> don't do any sorting (default)
 
+    -r  --reverse!      : reverse the sorting
     -o  --out-dir=s     : move the files into this directory
     -m  --move=s        : move the files as follows:
                             first  -> moves the first n-1 files
