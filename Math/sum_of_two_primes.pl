@@ -5,7 +5,7 @@
 # Date: 20 August 2015
 # Website: https://github.com/trizen
 
-# This script shows the numbers which can be written as the sum of two primes
+# This script shows the numbers which CANNOT be written as sum of two primes
 
 ## Example:
 # 2 + 2 = 4
