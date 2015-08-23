@@ -8,6 +8,9 @@
 # Find files which have exactly or *ALMOST*
 # exactly the same name in a given path.
 
+# Improved version here:
+#   https://github.com/trizen/perl-scripts/blob/master/Finders/fsfn.pl
+
 use 5.014;
 use strict;
 use warnings;

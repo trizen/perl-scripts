@@ -5,6 +5,13 @@
 # Date: 22 January 2012
 # http://trizen.googlecode.com
 
+# Find files which have the same attributes
+
+#
+## WARNING! For strict duplicates, use the 'fdf' script:
+#   https://github.com/trizen/perl-scripts/blob/master/Finders/fdf
+#
+
 use 5.005;
 use strict;
 use warnings;

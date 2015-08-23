@@ -5,7 +5,12 @@
 # Date: 23 July 2015
 # http://github.com/trizen
 
-# Find files which have almost the same content.
+# Find files which have almost the same content (at least, mathematically).
+
+#
+## WARNING! For strict duplicates, use the 'fdf' script:
+#   https://github.com/trizen/perl-scripts/blob/master/Finders/fdf
+#
 
 use 5.014;
 use strict;

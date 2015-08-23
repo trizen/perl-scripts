@@ -5,11 +5,11 @@
 # Date: 21 June 2012
 # http://trizen.googlecode.com
 
-# Find and list duplicted files from one or more paths
+# Find and list duplicated files from one or more paths
 
 #
-## WARNING! For strict duplicates, try the 'fdf' script:
-#   https://code.google.com/p/trizen/downloads/detail?name=fdf
+## WARNING! For strict duplicates, use the 'fdf' script:
+#   https://github.com/trizen/perl-scripts/blob/master/Finders/fdf
 #
 
 use 5.005;
