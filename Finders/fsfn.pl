@@ -4,11 +4,17 @@
 # License: GPLv3
 # Date: 22 June 2013
 # Improved: 18 October 2014
-# Latest edit on: 04 November 2014
-# http://github.com/trizen
+# Latest edit on: 24 August 2015
+# Website: https://github.com/trizen
 
 # Find files which have exactly or *ALMOST* exactly
 # the same name in a given path (+Levenshtein distance).
+
+# Review:
+#    http://trizenx.blogspot.com/2013/06/finding-similar-file-names.html
+
+# To move files into another directory, please see:
+#    https://github.com/trizen/perl-scripts/blob/master/File%20Workers/file-mover.pl
 
 use 5.014;
 use strict;
@@ -17,7 +23,7 @@ use warnings;
 use File::Find qw(find);
 use List::Util qw(first min max);
 use Encode qw(decode_utf8);
-use Getopt::Long qw(GetOptions);
+use Getopt::Long qw(GetOptions :config no_ignore_case);
 
 sub help {
     my ($code) = @_;
@@ -26,17 +32,25 @@ sub help {
 usage: $0 [options] /my/path [...]
 
 Options:
-        -f  --first!        : keep only the first file from each group
-        -l  --last!         : keep only the last file from each group
-        -w  --words=s,s     : group individually files which contain this words
-        -i  --insensitive   : make all words case-insensitive
-        -s  --size!         : group files by size (default: off)
-        -p  --percentage=i  : mark the files as similar based on this percent
-        -r  --round-up!     : round up the percentange (default: off)
-        -L  --levenshtein   : use the Levenshtein distance alogorithm
+        -f  --first!         : keep only the first file from each group
+        -l  --last!          : keep only the last file from each group
+        -g  --groups=[s]     : group individually files which contain this words
+        -c  --contains=[s]   : ignore files which doesn't contain this words
+        -C  --nocontains=[s] : ignore files which contain this words
+        -i  --insensitive    : make all words case-insensitive
+        -s  --size!          : group files by size (default: off)
+        -p  --percentage=i   : mark the files as similar based on this percent
+        -r  --round-up!      : round up the percentange (default: off)
+        -L  --levenshtein    : use the Levenshtein distance alogorithm
 
-Example:
-    $0 --percentage=75 ~/Pictures
+Options '-c', '-C' and '-w' should be specified for each word they take.
+    e.g.: -w "foo" -w "bar"
+
+Usage example:
+    $0 --percentage=75 ~/Music
+
+NOTE:
+    The values for '-c', '-C' and '-w' are regular expressions.
 
 WARNING:
     Options '-f' and '-l' will, permanently, delete your files!
@@ -45,7 +59,9 @@ HELP
     exit($code // 0);
 }
 
-my @words;
+my @groups;
+my @contains;
+my @no_contains;
 
 my $first         = 0;     # bool
 my $last          = 0;     # bool
@@ -56,19 +72,23 @@ my $levenshtein   = 0;     # bool
 my $percentage    = 50;    # int
 
 GetOptions(
-           'f|first!'       => \$first,
-           'l|last!'        => \$last,
-           'w|words=s{1,}'  => \@words,
-           'r|round-up!'    => \$round_up,
-           'i|insensitive!' => \$insensitive,
-           'p|percentage=i' => \$percentage,
-           'L|levenshtein!' => \$levenshtein,
-           's|size!'        => \$group_by_size,
-           'h|help'         => \&help,
+           'f|first!'           => \$first,
+           'l|last!'            => \$last,
+           'g|groups=s{1,}'     => \@groups,
+           'c|contains=s{1,}'   => \@contains,
+           'C|nocontains=s{1,}' => \@no_contains,
+           'r|round-up!'        => \$round_up,
+           'i|insensitive!'     => \$insensitive,
+           'p|percentage=i'     => \$percentage,
+           'L|levenshtein!'     => \$levenshtein,
+           's|size!'            => \$group_by_size,
+           'h|help'             => \&help,
           )
   or die("Error in command line arguments");
 
-@words = map { $insensitive ? qr/$_/i : qr/$_/ } (@words, '.');
+@groups      = map { $insensitive ? qr/$_/i : qr/$_/ } (@groups, '.');
+@contains    = map { $insensitive ? qr/$_/i : qr/$_/ } @contains;
+@no_contains = map { $insensitive ? qr/$_/i : qr/$_/ } @no_contains;
 
 # Determine what algorithm to use for comparation
 my $algorithm = $levenshtein ? \&lev_cmp : \&index_cmp;
@@ -141,6 +161,14 @@ sub find_similar_filenames (&@) {
               && push @{$files{$group_by_size ? (-s _) : 'key'}}, {
                 name => do {
                     my $str = join(' ', split(' ', lc(decode_utf8($_) =~ s{\.\w{1,5}\z}{}r)));
+
+                    if (@contains) {
+                        defined(first { $File::Find::name =~ $_ } @contains) || return;
+                    }
+                    if (@no_contains) {
+                        defined(first { $File::Find::name =~ $_ } @no_contains) && return;
+                    }
+
                     $levenshtein ? [split(//, $str)] : $str;
                 },
                 real_name => $File::Find::name,
@@ -156,8 +184,8 @@ sub find_similar_filenames (&@) {
         foreach my $i (0 .. $#{$files} - 1) {
             for (my $j = $i + 1 ; $j <= $#{$files} ; $j++) {
 
-                if (defined(my $word1 = first { $files->[$i]{real_name} =~ $_ } @words)) {
-                    if (defined(my $word2 = first { $files->[$j]{real_name} =~ $_ } @words)) {
+                if (defined(my $word1 = first { $files->[$i]{real_name} =~ $_ } @groups)) {
+                    if (defined(my $word2 = first { $files->[$j]{real_name} =~ $_ } @groups)) {
                         next if $word1 ne $word2;
                     }
                 }
