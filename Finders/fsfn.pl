@@ -43,14 +43,14 @@ Options:
         -r  --round-up!      : round up the percentange (default: off)
         -L  --levenshtein    : use the Levenshtein distance alogorithm
 
-Options '-c', '-C' and '-w' should be specified for each word they take.
-    e.g.: -w "foo" -w "bar"
+Options '-c', '-C' and '-g' should be specified for each word they take.
+    e.g.: -c "foo" -c "bar"
 
 Usage example:
     $0 --percentage=75 ~/Music
 
 NOTE:
-    The values for '-c', '-C' and '-w' are regular expressions.
+    The values for '-c', '-C' and '-g' are regular expressions.
 
 WARNING:
     Options '-f' and '-l' will, permanently, delete your files!
