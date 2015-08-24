@@ -148,9 +148,6 @@ foreach my $script (@ARGV) {
     my @types   = get_tokens($code);
     my @d_types = get_tokens($d_code);
 
-    say "@types";
-    say "@d_types";
-
     if (@types == 0 or @d_types == 0) {
         warn "This script seems to be empty! Skipping...\n";
         next;
