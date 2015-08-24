@@ -4,7 +4,7 @@
 # License: GPLv3
 # Date: 22 June 2013
 # Improved: 18 October 2014
-# Latest edit on: 24 August 2015
+# Latest edit on: 25 August 2015
 # Website: https://github.com/trizen
 
 # Find files which have exactly or *ALMOST* exactly
@@ -35,6 +35,7 @@ Options:
         -f  --first!         : keep only the first file from each group
         -l  --last!          : keep only the last file from each group
         -g  --groups=[s]     : group individually files which contain this words
+        -G  --nogroups=[s]   : group together files which contain this words
         -c  --contains=[s]   : ignore files which doesn't contain this words
         -C  --nocontains=[s] : ignore files which contain this words
         -i  --insensitive    : make all words case-insensitive
@@ -43,14 +44,12 @@ Options:
         -r  --round-up!      : round up the percentange (default: off)
         -L  --levenshtein    : use the Levenshtein distance alogorithm
 
-Options '-c', '-C' and '-g' should be specified for each word they take.
-    e.g.: -c "foo" -c "bar"
-
 Usage example:
     $0 --percentage=75 ~/Music
 
 NOTE:
-    The values for '-c', '-C' and '-g' are regular expressions.
+    The values for -c, -C, -g and -G are regular expressions.
+    Each of the above options can be specified more than once.
 
 WARNING:
     Options '-f' and '-l' will, permanently, delete your files!
@@ -60,6 +59,8 @@ HELP
 }
 
 my @groups;
+my @no_groups;
+
 my @contains;
 my @no_contains;
 
@@ -72,25 +73,27 @@ my $levenshtein   = 0;     # bool
 my $percentage    = 50;    # int
 
 GetOptions(
-           'f|first!'           => \$first,
-           'l|last!'            => \$last,
-           'g|groups=s{1,}'     => \@groups,
-           'c|contains=s{1,}'   => \@contains,
-           'C|nocontains=s{1,}' => \@no_contains,
-           'r|round-up!'        => \$round_up,
-           'i|insensitive!'     => \$insensitive,
-           'p|percentage=i'     => \$percentage,
-           'L|levenshtein!'     => \$levenshtein,
-           's|size!'            => \$group_by_size,
-           'h|help'             => \&help,
+           'f|first!'       => \$first,
+           'l|last!'        => \$last,
+           'g|groups=s'     => \@groups,
+           'G|nogroups=s'   => \@no_groups,
+           'c|contains=s'   => \@contains,
+           'C|nocontains=s' => \@no_contains,
+           'r|round-up!'    => \$round_up,
+           'i|insensitive!' => \$insensitive,
+           'p|percentage=i' => \$percentage,
+           'L|levenshtein!' => \$levenshtein,
+           's|size!'        => \$group_by_size,
+           'h|help'         => \&help,
           )
   or die("Error in command line arguments");
 
 @groups      = map { $insensitive ? qr/$_/i : qr/$_/ } (@groups, '.');
+@no_groups   = map { $insensitive ? qr/$_/i : qr/$_/ } @no_groups;
 @contains    = map { $insensitive ? qr/$_/i : qr/$_/ } @contains;
 @no_contains = map { $insensitive ? qr/$_/i : qr/$_/ } @no_contains;
 
-# Determine what algorithm to use for comparation
+# Determine what algorithm to use for comparison
 my $algorithm = $levenshtein ? \&lev_cmp : \&index_cmp;
 
 sub index_cmp ($$) {
@@ -157,30 +160,31 @@ sub find_similar_filenames (&@) {
     my %files;
     find {
         wanted => sub {
+
+            if (@contains) {
+                defined(first { $File::Find::name =~ $_ } @contains) || return;
+            }
+            if (@no_contains) {
+                defined(first { $File::Find::name =~ $_ } @no_contains) && return;
+            }
+
             (-f)
               && push @{$files{$group_by_size ? (-s _) : 'key'}}, {
                 name => do {
                     my $str = join(' ', split(' ', lc(decode_utf8($_) =~ s{\.\w{1,5}\z}{}r)));
-
-                    if (@contains) {
-                        defined(first { $File::Find::name =~ $_ } @contains) || return;
-                    }
-                    if (@no_contains) {
-                        defined(first { $File::Find::name =~ $_ } @no_contains) && return;
-                    }
-
                     $levenshtein ? [split(//, $str)] : $str;
                 },
                 real_name => $File::Find::name,
                                                                   };
-          }
-         } => @_;
+        }
+    } => @_;
 
     foreach my $files (values %files) {
 
         next if $#{$files} < 1;
 
         my %dups;
+        my @files;
         foreach my $i (0 .. $#{$files} - 1) {
             for (my $j = $i + 1 ; $j <= $#{$files} ; $j++) {
 
@@ -191,7 +195,13 @@ sub find_similar_filenames (&@) {
                 }
 
                 if ($algorithm->($files->[$i]{name}, $files->[$j]{name}) == 0) {
-                    push @{$dups{$files->[$i]{real_name}}}, ${splice @{$files}, $j--, 1}{real_name};
+                    if (    defined(first { $files->[$i]{real_name} =~ $_ } @no_groups)
+                        and defined(first { $files->[$j]{real_name} =~ $_ } @no_groups)) {
+                        push @files, $files->[$i]{real_name}, ${splice @{$files}, $j--, 1}{real_name};
+                    }
+                    else {
+                        push @{$dups{$files->[$i]{real_name}}}, ${splice @{$files}, $j--, 1}{real_name};
+                    }
                 }
             }
         }
@@ -199,6 +209,13 @@ sub find_similar_filenames (&@) {
         while (my ($fparent, $fdups) = each %dups) {
             $code->(sort $fparent, @{$fdups});
         }
+
+        $code->(
+            do {
+                my %seen;
+                sort grep { !$seen{$_}++ } @files;
+              }
+        );
     }
 
     return 1;
