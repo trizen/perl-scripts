@@ -92,7 +92,10 @@ package Smart::Word::Wrap {
     sub find_best {
         my ($self, @arrays) = @_;
 
-        my %best = (score => 'inf');
+        my %best = (
+                    score => 'inf',
+                    value => [],
+                   );
 
         foreach my $array_ref (@arrays) {
 
@@ -107,7 +110,7 @@ package Smart::Word::Wrap {
             }
         }
 
-        exists($best{value}) ? @{$best{value}} : ();
+        @{$best{value}};
     }
 
     # This is the main function of the algorithm
