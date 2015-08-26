@@ -60,7 +60,7 @@ sub compare_strings ($$) {
     return 1;
 }
 
-sub find_duplicated_files (&@) {
+sub find_similar_filenames (&@) {
     my $code = shift;
 
     my %files;
@@ -97,7 +97,7 @@ sub find_duplicated_files (&@) {
 
 {
     local $, = "\n";
-    find_duplicated_files {
+    find_similar_filenames {
 
         say @_, "-" x 80 if @_;
 

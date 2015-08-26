@@ -55,7 +55,7 @@ WARNING:
     Options '-f' and '-l' will, permanently, delete your files!
 HELP
 
-    exit($code // 0);
+    exit($code);
 }
 
 my @groups;
@@ -84,7 +84,7 @@ GetOptions(
            'p|percentage=i' => \$percentage,
            'L|levenshtein!' => \$levenshtein,
            's|size!'        => \$group_by_size,
-           'h|help'         => \&help,
+           'h|help'         => sub { help(0) },
           )
   or die("Error in command line arguments");
 
@@ -176,8 +176,8 @@ sub find_similar_filenames (&@) {
                 },
                 real_name => $File::Find::name,
                                                                   };
-        }
-    } => @_;
+          }
+         } => @_;
 
     foreach my $files (values %files) {
 
