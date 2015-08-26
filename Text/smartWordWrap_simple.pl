@@ -60,7 +60,7 @@ package Smart::Word::Wrap {
             last if ++$len >= $self->{width};
         }
 
-        @root ? \@root : @array ? "@array" : "";
+        @root ? \@root : undef;
     }
 
     # This function combines the
@@ -78,7 +78,7 @@ package Smart::Word::Wrap {
                 }
             }
             else {
-                @row = [@{$root}, $value];
+                @row = [@{$root}];
             }
 
             pop @{$root};
@@ -145,4 +145,13 @@ say "\n=>>> GREEDY WRAP (Text::Wrap):";
 require Text::Wrap;
 $Text::Wrap::columns = $obj->{width};
 $Text::Wrap::columns += 1;
+say Text::Wrap::wrap('', '', $text);
+
+say "\n", '-'x80,"\n";
+
+say "=>>> SMART WRAP:";
+$text = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.';
+say $obj->smart_wrap(text => $text);
+
+say "\n=>>> GREEDY WRAP (Text::Wrap):";
 say Text::Wrap::wrap('', '', $text);
