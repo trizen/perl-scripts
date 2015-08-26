@@ -44,7 +44,7 @@ package Smart::Word::Wrap {
         my @root;
         my $len = 0;
 
-        for (my $i = 0 ; $i < $#array ; $i++) {
+        for (my $i = 0 ; $i <= $#array ; $i++) {
             $len += (my $wordLen = length($array[$i]));
 
             if ($len > $self->{width}) {
@@ -60,7 +60,7 @@ package Smart::Word::Wrap {
             last if ++$len >= $self->{width};
         }
 
-        @root ? \@root : @array ? "@array" : ();
+        @root ? \@root : @array ? "@array" : "";
     }
 
     # This function combines the
