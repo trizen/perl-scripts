@@ -50,7 +50,8 @@ GetOptions(
            'c|png-compression=i' => \$png_compression,
            's|scale-percent=i'   => \$scale_percent,
            'h|help'              => \&help,
-          );
+          )
+  or die "Error in command-line arguments!";
 
 sub intensity {
     ($_[0] + $_[1] + $_[2]) / 3;

@@ -61,7 +61,8 @@ GetOptions(
            's|scale-percent=i' => \$scale_percent,
            'f|formula=s'       => \$brightness_f,
            'h|help'            => \&help,
-          );
+          )
+  or die "Error in command-line arguments!";
 
 if (not exists $brightness{$brightness_f}) {
     local $" = ", ";
