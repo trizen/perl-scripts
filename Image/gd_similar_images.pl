@@ -93,8 +93,8 @@ sub fingerprint {
     my $avg = 0;
     my @averages;
 
-    foreach my $x (0 .. $width - 1) {
-        foreach my $y (0 .. $height - 1) {
+    foreach my $y (0 .. $height - 1) {
+        foreach my $x (0 .. $width - 1) {
             my $index = $img->getPixel($x, $y);
             push @averages, avg($img->rgb($index));
             $avg += $averages[-1];
