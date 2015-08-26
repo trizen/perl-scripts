@@ -125,7 +125,7 @@ package Smart::Word::Wrap {
           ? @{$self->{text}}
           : split(' ', $self->{text});
 
-        join "\n", $self->find_best(map { ref($_) eq 'HASH' ? combine([], $_) : [$_] } @{$self->prepare_words(@words)});
+        join "\n", $self->find_best(map { combine([], $_) } @{$self->prepare_words(@words)});
     }
 
 }
@@ -147,7 +147,7 @@ $Text::Wrap::columns = $obj->{width};
 $Text::Wrap::columns += 1;
 say Text::Wrap::wrap('', '', $text);
 
-say "\n", '-'x80,"\n";
+say "\n", '-' x 80, "\n";
 
 say "=>>> SMART WRAP:";
 $text = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.';
