@@ -93,7 +93,14 @@ foreach my $image (@ARGV) {
         ($width, $height) = ($scale_width, $scale_height);
     }
 
-    my @pixels = $img->GetPixels(map => 'RGB', x => 0, y => 0, width => $width, height => $height, normalize => 'true');
+    my @pixels = $img->GetPixels(
+                                 map       => 'RGB',
+                                 x         => 0,
+                                 y         => 0,
+                                 width     => $width,
+                                 height    => $height,
+                                 normalize => 1,
+                                );
 
     my $i = 0;
     while (@pixels) {
