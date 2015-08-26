@@ -1,12 +1,12 @@
 #!/usr/bin/perl
 
-# Author: Trizen
+# Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 12 September 2012
-# http://trizen.googlecode.com
+# https://github.com/trizen
 
-# Keep only one or more type of file formats in a directory and it's subdirectories.
-# List and remove the other formats.
+# Keep only one or more type of file formats in a directory and its sub-directories.
+# List and remove the other formats (when -r is specified).
 
 use 5.010;
 use strict;
@@ -15,21 +15,22 @@ use warnings;
 use File::Find qw(find);
 use Getopt::Std qw(getopts);
 
+no if $] >= 5.018, warnings => 'experimental::smartmatch';
+
 sub usage {
     die <<"USAGE";
 usage: $0 [options] <dirs>
 
 options:
         -f <formats> : the list of formats (comma separated)
-        -r           : remove the other formats (default: list them)
-        -v           : verbose mode
+        -r           : remove the other formats (default: off)
 
-example: $0 -v -f 'mp3,ogg,wma' /home/Music
+example: $0 -f 'mp3,ogg,wma' /home/Music
 USAGE
 }
 
 my %opts;
-getopts('f:rv', \%opts);
+getopts('f:r', \%opts);
 
 $opts{f} // usage();
 @ARGV || usage();
@@ -39,7 +40,7 @@ my @formats = map qr{\.\Q$_\E\z}i, split /\s*,\s*/, $opts{f};
 find {
     wanted => sub {
         if (not $_ ~~ \@formats and -f) {
-            say if $opts{v};
+            say $_;
             if ($opts{r}) {
                 unlink($_) or warn "Can't remove file '$_': $!";
             }

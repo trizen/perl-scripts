@@ -3,9 +3,9 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 10th August 2014
-# Website: http://github.com/trizen
+# Website: https://github.com/trizen
 
-# Move all files from subdirectories in the main directory (with depth control)
+# Move all the files from a directory's sub-directories into the main directory (with depth control)
 
 use 5.010;
 use strict;

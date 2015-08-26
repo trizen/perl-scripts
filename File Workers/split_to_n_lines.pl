@@ -1,8 +1,10 @@
 #!/usr/bin/perl
 
-# Coded by Trizen under the GPL
+# Author: Daniel "Trizen" Șuteu
+# License: GPLv3
+# Website: https://github.com/trizen
+
 # Split a text file into sub files of 'n' lines each other
-# http://trizen.googlecode.com
 
 use strict;
 use warnings;

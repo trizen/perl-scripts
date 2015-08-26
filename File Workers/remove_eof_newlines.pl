@@ -1,8 +1,12 @@
 #!/usr/bin/perl
 
-# Author: Trizen
+# Author: Daniel "Trizen" Șuteu
 # Remove newline characters from the end of files
 
+# WARNING: No backup files are created!
+
+use strict;
+use warnings;
 use Tie::File;
 
 foreach my $filename (grep { -f } @ARGV) {

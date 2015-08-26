@@ -1,9 +1,17 @@
 #!/usr/bin/perl
+
+# Author: Daniel "Trizen" Șuteu
+# License: GPLv3
+# https://github.com/trizen
+
 #
-# Delete files from $delete_dir if exists in $compare_dir
+# Delete files from $delete_dir if exists in $compare_dir (or its sub-directories)
 #
 # Usage: perl delete_if_exists.pl /delete/dir /compare/dir
 #
+
+use strict;
+use warnings;
 
 use File::Find qw(find);
 use File::Spec::Functions qw(rel2abs catdir);
