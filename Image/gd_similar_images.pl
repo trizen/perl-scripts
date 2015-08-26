@@ -101,7 +101,7 @@ sub fingerprint {
         }
     }
 
-    $avg /= $width * $height;
+    $avg /= $size;
     join('', map { $_ < $avg ? 1 : 0 } @averages);
 }
 
