@@ -13,10 +13,12 @@ use warnings;
 
 use experimental 'bitwise';
 
-use Image::Magick qw();
+use GD qw();
 use List::Util qw(sum);
 use File::Find qw(find);
 use Getopt::Long qw(GetOptions);
+
+GD::Image->trueColor(1);
 
 my $width      = 64;
 my $height     = 64;
@@ -58,6 +60,7 @@ GetOptions(
   or die("Error in command line arguments");
 
 ($width, $height) = split(/\h*x\h*/i, $resize_to);
+
 my $size = $width * $height;
 push @img_formats, map { quotemeta } split(/\s*,\s*/, $img_formats);
 
@@ -79,32 +82,23 @@ sub alike_percentage {
 sub fingerprint {
     my ($image) = @_;
 
-    my $img = Image::Magick->new;
-    $img->Read(filename => $image) && return;
-    $img->Resize(width => $width, height => $height) && return;
+    my $img = GD::Image->new($image) // return;
 
-    my @pixels = $img->GetPixels(
-                                 map       => 'RGB',
-                                 x         => 0,
-                                 y         => 0,
-                                 width     => $width,
-                                 height    => $height,
-                                 normalize => 1,
-                                );
+    {
+        my $resized = GD::Image->new($width, $height);
+        $resized->copyResampled($img, 0, 0, 0, 0, $width, $height, $img->getBounds());
+        $img = $resized;
+    }
 
     my $avg = 0;
     my @averages;
 
-    my $i = 0;
-    while (@pixels) {
-
-        my $x = int($i % $width);
-        my $y = int($i / $width);
-
-        push @averages, avg(splice(@pixels, 0, 3));
-        $avg += $averages[-1];
-
-        ++$i;
+    foreach my $x (0 .. $width - 1) {
+        foreach my $y (0 .. $height - 1) {
+            my $index = $img->getPixel($x, $y);
+            push @averages, avg($img->rgb($index));
+            $avg += $averages[-1];
+        }
     }
 
     $avg /= $width * $height;
