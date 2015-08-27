@@ -93,22 +93,20 @@ sub fingerprint {
                                  normalize => 1,
                                 );
 
-    my $avg = 0;
+    my $i = 0;
     my @averages;
 
-    my $i = 0;
     while (@pixels) {
 
         my $x = int($i % $width);
         my $y = int($i / $width);
 
         push @averages, avg(splice(@pixels, 0, 3));
-        $avg += $averages[-1];
 
         ++$i;
     }
 
-    $avg /= $size;
+    my $avg = sum(@averages) / @averages;
     join('', map { $_ < $avg ? 1 : 0 } @averages);
 }
 
