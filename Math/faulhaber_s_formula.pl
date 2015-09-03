@@ -15,7 +15,7 @@ use 5.010;
 use strict;
 use warnings;
 
-use bigrat (try => 'GMP');
+use bignum (try => 'GMP');
 
 # This function returns the nth Bernoulli number
 # See: https://en.wikipedia.org/wiki/Bernoulli_number
@@ -31,14 +31,14 @@ sub bernoulli_number {
         }
     }
 
-    $n % 2 ? -$A[0] : $A[0];    # B1 = -1/2
+    $A[0];
 }
 
 # The binomial coefficient
 # See: https://en.wikipedia.org/wiki/Binomial_coefficient
 sub nok {
     my ($n, $k) = @_;
-    Math::BigRat->new($n)->bnok($k);
+    Math::BigFloat->new($n)->bnok($k);
 }
 
 # The Faulhaber's formula
@@ -48,7 +48,7 @@ sub faulhaber_s_formula {
 
     my $sum = 0;
     for my $j (0 .. $p) {
-        $sum += nok($p + 1, $j) * bernoulli_number($j) * $n**($p + 1 - $j);
+        $sum += nok($p + 1, $j) * bernoulli_number($j) * ($n + 1)**($p + 1 - $j);
     }
 
     $sum / ($p + 1);
@@ -70,10 +70,11 @@ sub bernoulli_polynomials {
 
 sub faulhaber_s_formula_2 {
     my ($p, $n) = @_;
-    (bernoulli_polynomials($p + 1, $n + 1) - bernoulli_polynomials($p + 1, 1)) / ($p + 1);
+    1 + (bernoulli_polynomials($p + 1, $n + 1) - bernoulli_polynomials($p + 1, 1)) / ($p + 1);
 }
 
 # Test for 0^3 + 1^3 + 2^3 + ... + 10^3
 foreach my $i (0 .. 10) {
-    say "$i: ", faulhaber_s_formula(3, $i + 1);
+    say "$i: ", faulhaber_s_formula(4, $i)->bfround(-2);
+    say "$i: ", faulhaber_s_formula_2(4, $i)->bfround(-2);
 }
