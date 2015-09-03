@@ -35,10 +35,10 @@ sub help {
     my ($code) = @_;
     local $" = ",";
     print <<"EOT";
-$0 [options] [dir]
+usage: $0 [options] [dir]
 
 options:
-    -p  --percentage=i  : mark the images as similar based on this percent
+    -p  --percentage=i  : mark the images as similar based on this percentage
     -r  --resize-to=s   : resize images to this resolution (default: $resize_to)
     -f  --formats=s,s   : specify more image formats (default: @img_formats)
 
