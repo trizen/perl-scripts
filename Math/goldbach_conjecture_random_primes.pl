@@ -1,0 +1,51 @@
+#!/usr/bin/perl
+
+# Author: Daniel "Trizen" Șuteu
+# License: GPLv3
+# Date: 04 September 2015
+# Website: https://github.com/trizen
+
+# Compute the average of choosing a random prime number
+# in a given range such as the difference between 2n
+# and a prime number to be another prime number.
+#
+# Example:
+#   is_prime(2n - rand_prime(2, 2n-2))   # true
+#
+# This problem is related to Goldbach conjecture.
+# It shows that we have to choose, on average,
+# log(n)/2 times a random prime number to satisfy
+# the above property. This is an important outcome!
+
+use 5.010;
+use strict;
+use warnings;
+
+use List::Util qw(sum);
+use ntheory qw(random_prime is_prime);
+
+my $max = 10000;
+
+my @counts;
+foreach my $i (2 .. $max) {
+    my $n = 2 * $i;
+
+    my $count = 0;
+    while (1) {
+        my $p = random_prime(2, $n - 2);
+        ++$count;
+        last if is_prime($n - $p);
+    }
+
+    push @counts, $count;
+}
+
+say "Expected: ", log($max) / 2;
+say "Observed: ", sum(@counts) / @counts;
+
+__END__
+--------------------------
+  Example for max=300000
+--------------------------
+Expected: 6.30576887681917
+Observed: 6.3850079500265
