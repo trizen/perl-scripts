@@ -32,9 +32,8 @@ foreach my $i (2 .. $max) {
 
     my $count = 0;
     while (1) {
-        my $p = random_prime(2, $n - 2);
         ++$count;
-        last if is_prime($n - $p);
+        last if is_prime($n - random_prime(2, $n - 2));
     }
 
     push @counts, $count;
