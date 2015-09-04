@@ -161,7 +161,7 @@ tie my %db, 'GDBM_File', $cache_db, &GDBM_File::GDBM_WRCREAT, 0640;
 #
 sub generate_waveform {
     my ($file, $output) = @_;
-`sox \Q$file\E -q -V0 --multi-threaded -t wav --encoding signed-integer - | wav2png -w $width -h $height -f 000000ff -b ffffff00 -o /dev/stdout /dev/stdin`;
+`sox \Q$file\E -q --norm -V0 --multi-threaded -t wav --encoding signed-integer - | wav2png -w $width -h $height -f 000000ff -b ffffff00 -o /dev/stdout /dev/stdin`;
 }
 
 #
