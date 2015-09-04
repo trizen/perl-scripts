@@ -23,6 +23,8 @@ use bignum (try => 'GMP');
 sub bernoulli_number {
     my ($n) = @_;
 
+    return 0 if $n > 1 && $n % 2;    # Bn = 0 for all odd n > 1
+
     my @A;
     for my $m (0 .. $n) {
         $A[$m] = 1 / ($m + 1);
@@ -32,7 +34,7 @@ sub bernoulli_number {
         }
     }
 
-    $A[0];
+    return $A[0];                    # which is Bn
 }
 
 # The binomial coefficient
