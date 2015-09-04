@@ -5,8 +5,9 @@
 # Date: 03 September 2015
 # Website: https://github.com/trizen
 
-# The formula for calculating the sum of series such as:
-#    1^p + 2^p + 3^p + ... n^p
+# The formula for calculating the sum of consecutive
+# numbers raised to a given power, such as:
+#    1^p + 2^p + 3^p + ... + n^p
 # where p is a positive integer.
 
 # See also: https://en.wikipedia.org/wiki/Faulhaber%27s_formula
@@ -73,7 +74,7 @@ sub faulhaber_s_formula_2 {
     1 + (bernoulli_polynomials($p + 1, $n + 1) - bernoulli_polynomials($p + 1, 1)) / ($p + 1);
 }
 
-# Test for 0^3 + 1^3 + 2^3 + ... + 10^3
+# Test for 1^4 + 2^4 + 3^4 + ... + 10^4
 foreach my $i (0 .. 10) {
     say "$i: ", faulhaber_s_formula(4, $i)->bfround(-2);
     say "$i: ", faulhaber_s_formula_2(4, $i)->bfround(-2);

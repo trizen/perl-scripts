@@ -5,8 +5,9 @@
 # Date: 03 September 2015
 # Website: https://github.com/trizen
 
-# The script generates formulas for calculating the sum of series such as:
-#    1^p + 2^p + 3^p + ... n^p
+# The script generates formulas for calculating the sum
+# of consecutive numbers raised to a given power, such as:
+#    1^p + 2^p + 3^p + ... + n^p
 # where p is a positive integer.
 
 # See also: https://en.wikipedia.org/wiki/Faulhaber%27s_formula
