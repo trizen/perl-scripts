@@ -220,16 +220,17 @@ sub find_similar_audio_files(&@) {
 
     my @files;
     find {
-        wanted => sub {
+        no_chdir => 1,
+        wanted   => sub {
             (/$audio_formats_re/o && -f) || return;
 
             push @files,
               {
                 fingerprint => fingerprint($_) // return,
-                filename => $File::Find::name,
+                filename => $_,
               };
-        }
-    } => @_;
+          }
+         } => @_;
 
     #
     ## Populate the %alike hash
