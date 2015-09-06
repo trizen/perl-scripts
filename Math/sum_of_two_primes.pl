@@ -5,39 +5,27 @@
 # Date: 20 August 2015
 # Website: https://github.com/trizen
 
-# This script shows the numbers which CANNOT be written as sum of two primes
-
-## Example:
-# 2 + 2 = 4
-# 3 + 2 = 5
-# 3 + 3 = 6
+# This script counts the numbers which CANNOT be written as the sum of two primes
 
 use 5.010;
 use strict;
 use warnings;
 
-use ntheory qw(primes factor is_prime);
+use ntheory qw(primes);
 
-my $primes = primes(100);
+my $primes = primes(10000);
+unshift @{$primes}, 1;    # consider 1 as being prime
 
 my %seen;
-foreach my $p1 (@{$primes}) {
-    foreach my $p2 (@{$primes}) {
-        $seen{$p1 + $p2}++;
+for my $i (0 .. $#{$primes}) {
+    for my $j ($i .. $#{$primes}) {
+        undef $seen{$primes->[$i] + $primes->[$j]};
     }
 }
 
 my $count = 0;
-foreach my $n (2 .. $primes->[-1]) {
-    if (not exists $seen{$n}) {
-        if (is_prime($n)) {
-            say $n;
-        }
-        else {
-            say $n, ' (', join(' * ', factor($n)), ')';
-        }
-        ++$count;
-    }
+foreach my $n (1 .. 2 * $primes->[-1]) {
+    exists($seen{$n}) || ++$count;
 }
 
-say "\nOnly $count numbers, from a total of ", $primes->[-1], ", cannot be written as sum of two primes.\n";
+say "$count numbers, from a total of ", 2 * $primes->[-1], ", CANNOT be written as the sum of two primes.";
