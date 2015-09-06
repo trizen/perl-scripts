@@ -14,7 +14,6 @@ use warnings;
 
 use Memoize qw(memoize);
 use bigrat (try => 'GMP');
-use constant PI => bigrat->bpi;
 
 sub bernoulli_number {
     my ($n) = @_;
