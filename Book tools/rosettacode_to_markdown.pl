@@ -7,6 +7,7 @@
 
 # Extract markdown code from each task for a given programming language.
 
+use utf8;
 use 5.014;
 use strict;
 use autodie;
@@ -20,6 +21,9 @@ use LWP::UserAgent::Cached qw();
 use URI::Escape qw(uri_unescape);
 use HTML::Entities qw(decode_entities);
 use File::Spec::Functions qw(catfile catdir);
+
+binmode(STDOUT, ':utf8');
+binmode(STDERR, ':utf8');
 
 =for comment
 
@@ -267,7 +271,8 @@ sub write_to_file {
     $name =~ tr/()/[]/;
 
     # Substitute bad characters
-    $name =~ tr{-A-Za-z0-9[]'*_/}{_}c;
+    #$name =~ tr{-A-Za-z0-9[]'*_/À-ÿ}{_}c;
+    $name =~ s{[^\pL\pN\[\]_'"*/\-]+}{_}g;
 
     my $char = uc(substr($name, 0, 1));
     my $dir = catdir($base_dir, $char);
