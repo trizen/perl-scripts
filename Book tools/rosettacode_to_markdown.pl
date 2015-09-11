@@ -13,7 +13,7 @@ use autodie;
 use warnings;
 
 use Text::Tabs qw(expand);
-use Encode qw(decode_utf8 encode_utf8);
+use Encode qw(decode_utf8);
 use Getopt::Long qw(GetOptions);
 use File::Path qw(make_path);
 use LWP::UserAgent::Cached qw();
@@ -109,7 +109,7 @@ sub extract_tasks {
 
         push @tasks,
           {
-            name  => uri_unescape($task),
+            name  => decode_utf8(uri_unescape($task)),
             title => $label,
           };
     }
@@ -382,7 +382,7 @@ foreach my $task (@{$tasks}) {
     my $title = $task->{title};
     my $url   = "$main_url/wiki/$name";
 
-    my $req = $lwp->get(decode_utf8($url));
+    my $req = $lwp->get($url);
 
     if ($req->is_success) {
 
