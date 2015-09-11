@@ -13,7 +13,7 @@ use autodie;
 use warnings;
 
 use Text::Tabs qw(expand);
-use Encode qw(decode_utf8);
+use Encode qw(decode_utf8 encode_utf8);
 use Getopt::Long qw(GetOptions);
 use File::Path qw(make_path);
 use LWP::UserAgent::Cached qw();
@@ -165,6 +165,12 @@ sub extract_lang {
     $i += 5;    # past the end of the header
 
     my $part = strip_space(substr($content, $i, $j - $i));
+
+    # remove <script> tags
+    $part =~ s{<script\b.+?</script>}{}gsi;
+
+    # replace [email protected] with 'email@example.com'
+    $part =~ s{<a class="__cf_email__".+?</a>}{email\@example.com}gsi;
 
     my @data;
     until ($part =~ /\G\z/gc) {
@@ -376,12 +382,12 @@ foreach my $task (@{$tasks}) {
     my $title = $task->{title};
     my $url   = "$main_url/wiki/$name";
 
-    my $req = $lwp->get($url);
+    my $req = $lwp->get(decode_utf8($url));
 
     if ($req->is_success) {
 
         my $content = $req->decoded_content;
-        my $lang_data = extract_lang($content, $lang) // next;
+        my $lang_data = extract_lang($content, $lang) // do { $lwp->uncache; next };
 
         my $header   = "[1]: $url\n\n" . "# [$title][1]\n\n";
         my $markdown = $header . to_markdown($lang_data);

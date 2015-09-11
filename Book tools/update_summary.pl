@@ -79,7 +79,7 @@ my $section_name = 'Programming tasks';
 
                 if (-e "$file->{path}.md") {
                     my $url_path = $make_section_url->("$file->{name}.md");
-                    $section .= (' ' x $spaces) . "* [$title]($url_path)\n";
+                    $section .= (' ' x $spaces) . "* [\u$title]($url_path)\n";
                     $ignored{"$file->{name}.md"}++;    # ignore this file later
                 }
                 else {
@@ -95,7 +95,7 @@ my $section_name = 'Programming tasks';
                 my $naked_name  = $file->{name} =~ s/\.md\z//ir;
                 my $naked_title = $title =~ s/\.md\z//ir;
                 my $url_path    = $make_section_url->($file->{name});
-                $section .= (' ' x $spaces) . "* [$naked_title]($url_path)\n";
+                $section .= (' ' x $spaces) . "* [\u$naked_title]($url_path)\n";
             }
         }
 
