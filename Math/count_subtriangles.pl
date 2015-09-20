@@ -7,11 +7,20 @@
 
 # A general formula for counting the number of possible triangles inside a triangle.
 
+use strict;
+use warnings;
+
 ## The formula is:
 #
 #    Sum((2n+1)(k-n-1), {n=0, k-1})
 #
 # where "k" is the number of rows of the triangle.
+
+## Closed forms:
+#
+#   (k^3)/3 - (k^2)/2 + (k/6)
+#   (1/6)(k-1)k(2k-1)
+#
 
 # For example, the following triangle:
 #    1
@@ -36,18 +45,18 @@
 #   789
 
 sub count_subtriangles {
-    my ($height) = @_;
+    my ($k) = @_;
 
-    my $total = 0;
-    foreach my $n (0 .. $height - 1) {
-        $total += (2 * $n + 1) * ($height - $n - 1);
+    my $sum = 0;
+    foreach my $n (0 .. $k - 1) {
+        $sum += (2 * $n + 1) * ($k - $n - 1);
     }
-
-    $total;
+    $sum;
 }
 
-foreach my $i (1 .. 20) {
-    printf("%2d: %s\n", $i, count_subtriangles($i));
+foreach my $k (1 .. 20) {
+    my $closed = ($k - 1) * $k * (2 * $k - 1) / 6;
+    printf("%2d: %10s %10s\n", $k, count_subtriangles($k), $closed);
 }
 
 __END__
