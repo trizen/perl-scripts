@@ -32,7 +32,7 @@ sub bernoulli_number {
 }
 
 foreach my $i (0 .. 6) {
-    printf("B(%d) = %s\n\n", $i, bernoulli_number($i));
+    printf("B(%d) = %s\n", $i, bernoulli_number($i));
 }
 
 __END__
