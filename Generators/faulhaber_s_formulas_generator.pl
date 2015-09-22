@@ -50,7 +50,7 @@ sub nok {
 # The Faulhaber's formula
 # See: https://en.wikipedia.org/wiki/Faulhaber%27s_formula
 sub faulhaber_s_formula {
-    my ($p, $n) = @_;
+    my ($p) = @_;
 
     my @formula;
     for my $j (0 .. $p) {
