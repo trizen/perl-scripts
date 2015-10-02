@@ -17,7 +17,10 @@ use Time::HiRes qw(sleep);
 my $count = 0;
 
 ROOT: while (1) {
-    my $gd = GD::Image->new(scalar `maim --x=640 --y=150 -w 10 -h 850 --format=jpg /dev/stdout`);
+
+    my $gd = GD::Image->new(scalar `maim -x 640 -y 150 -w 10 -h 850 --format=jpg /dev/stdout`);
+    #my $gd = GD::Image->new(scalar `maim -x 555 -y 100 -w 10 -h 650 --format=jpg /dev/stdout`);      # faster, but buggy
+
     my ($width, $height) = $gd->getBounds;
 
   OUTER: foreach my $y (0 .. $height - 1) {
