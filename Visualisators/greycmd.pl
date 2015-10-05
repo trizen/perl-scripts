@@ -7,7 +7,7 @@
 
 # Colorize the output of a given command in nuances of grey.
 
-# usage example: perl greycmd.pl ls -l
+# Example: perl greycmd.pl ls -l
 
 use 5.010;
 use strict;
@@ -15,8 +15,8 @@ use warnings;
 
 use Encode qw(decode_utf8);
 use Text::Tabs qw(expand);
-use Term::ANSIColor qw(colored colorstrip);
 use List::Util qw(shuffle max);
+use Term::ANSIColor qw(colored colorstrip);
 
 @ARGV || die "usage: $0 [cmd]\n";
 
@@ -46,7 +46,7 @@ foreach my $i (0 .. $#chars) {
         ++$j;
     }
 
-    $chars[$i] eq ' ' and next;    # ignore spaces
+    $chars[$i] eq ' ' and next;             # ignore spaces
     $chars[$i] =~ /[[:print:]]/ or next;    # ignore non-printable characters
 
     $chars[$i] = colored($chars[$i], $colors[$j % @colors]);
