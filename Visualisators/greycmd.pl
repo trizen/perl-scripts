@@ -54,8 +54,11 @@ foreach my $i (0 .. $#chars) {
 
 binmode(STDOUT, ':utf8');
 
+my $str = '';
 foreach my $i (0 .. $#chars) {
-    my $char = $chars[$i];
-    print $char;
-    print "\n" if (($i + 1) % $max == 0);
+    $str .= $chars[$i];
+    if (($i + 1) % $max == 0) {
+        $str = unpack('A*', $str) . "\n";
+    }
 }
+print $str;
