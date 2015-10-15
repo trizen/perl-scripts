@@ -15,6 +15,7 @@ use warnings;
 
 use GD qw();
 use Getopt::Long qw(GetOptions);
+use HTML::Entities qw(encode_entities);
 
 GD::Image->trueColor(1);
 
@@ -27,11 +28,11 @@ sub help {
 usage: $0 [options] [files]
 
 options:
-    -w  --width=i     : width size of the ASCII image (default: $size)
+    -w  --width=i     : scale the image to this width (default: $size)
     -f  --font-size=i : HTML font size property (default: $font_size)
 
 example:
-    perl $0 --size 200 image.png
+    perl $0 --width 800 image.png
 HELP
     exit($code);
 }
@@ -69,10 +70,10 @@ sub img2html {
         }
     }
 
-    my $html = <<"EOT";
+    my $header = <<"EOT";
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<title>pl2html</title>
+<title>${\encode_entities($image)}</title>
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 <style type="text/css">
 /*<![CDATA[*/
@@ -83,6 +84,55 @@ pre {
       font-family: monospace;
     }
 
+EOT
+
+    my $footer = <<'EOT';
+</pre>
+</body>
+</html>
+EOT
+
+    my %colors;
+    my $style = '';
+
+    my @html;
+    my $name = 'A';
+
+    while (@pixels) {
+        push @html, [
+            map {
+                my $color = sprintf("%02x%02x%02x", @{$_});
+
+                if (not exists $colors{$color}) {
+                    $colors{$color} = $name;
+                    $style .= ".$name\{background-color:#$color;}\n";
+                    $name++;
+                }
+
+                $colors{$color};
+              } splice(@pixels, 0, $width)
+        ];
+    }
+
+    my $html = '';
+    foreach my $row (@html) {
+
+        while (@{$row}) {
+            my $class = shift @{$row};
+
+            my $count = 1;
+            while (@{$row} and $row->[0] eq $class) {
+                ++$count;
+                shift @{$row};
+            }
+
+            $html .= qq{<span class="$class">} . (' ' x $count) . "</span>";
+        }
+
+        $html .= '<br/>';
+    }
+
+    $style .= <<'EOT';
 -->
 /*]]>*/
 </style>
@@ -91,18 +141,7 @@ pre {
 <pre>
 EOT
 
-    while (@pixels) {
-        $html .= join('',
-                      map { sprintf(q{<span style="background-color:#%02x%02x%02x;">%s</span>}, @{$_}, ' ') }
-                        splice(@pixels, 0, $width));
-        $html .= '<br/>';
-    }
-
-    $html . <<'EOT';
-</pre>
-</body>
-</html>
-EOT
+    join('', $header, $style, $html, $footer);
 }
 
 say img2html($ARGV[0] // help(1));

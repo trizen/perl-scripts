@@ -28,7 +28,7 @@ options:
     -w  --width=i : width size of the ASCII image (default: $size)
 
 example:
-    perl $0 --size 200 image.png
+    perl $0 --width 200 image.png
 HELP
     exit($code);
 }
