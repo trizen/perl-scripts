@@ -4,7 +4,7 @@
 # License: GPLv3
 # Date: 22 June 2013
 # Improved: 18 October 2014
-# Latest edit on: 25 August 2015
+# Latest edit on: 18 October 2015
 # Website: https://github.com/trizen
 
 # Find files which have exactly or *ALMOST* exactly
@@ -40,9 +40,10 @@ Options:
         -C  --nocontains=[s] : ignore files which contain this words
         -i  --insensitive    : make all words case-insensitive
         -s  --size!          : group files by size (default: off)
-        -p  --percentage=i   : mark the files as similar based on this percent
+        -p  --percentage=f   : mark the files as similar based on this percent
         -r  --round-up!      : round up the percentange (default: off)
         -L  --levenshtein    : use the Levenshtein distance alogorithm
+        -J  --jaro           : use the Jaro distance algorithm
 
 Usage example:
     $0 --percentage=75 ~/Music
@@ -64,13 +65,14 @@ my @no_groups;
 my @contains;
 my @no_contains;
 
-my $first         = 0;     # bool
-my $last          = 0;     # bool
-my $round_up      = 0;     # bool
-my $group_by_size = 0;     # bool
-my $insensitive   = 0;     # bool
-my $levenshtein   = 0;     # bool
-my $percentage    = 50;    # int
+my $first         = 0;    # bool
+my $last          = 0;    # bool
+my $round_up      = 0;    # bool
+my $group_by_size = 0;    # bool
+my $insensitive   = 0;    # bool
+my $levenshtein   = 0;    # bool
+my $jaro_distance = 0;    # bool
+my $percentage;           # float
 
 GetOptions(
            'f|first!'       => \$first,
@@ -81,8 +83,9 @@ GetOptions(
            'C|nocontains=s' => \@no_contains,
            'r|round-up!'    => \$round_up,
            'i|insensitive!' => \$insensitive,
-           'p|percentage=i' => \$percentage,
+           'p|percentage=f' => \$percentage,
            'L|levenshtein!' => \$levenshtein,
+           'J|jaro!'        => \$jaro_distance,
            's|size!'        => \$group_by_size,
            'h|help'         => sub { help(0) },
           )
@@ -94,7 +97,10 @@ GetOptions(
 @no_contains = map { $insensitive ? qr/$_/i : qr/$_/ } @no_contains;
 
 # Determine what algorithm to use for comparison
-my $algorithm = $levenshtein ? \&lev_cmp : \&index_cmp;
+my $algorithm = $levenshtein ? \&lev_cmp : $jaro_distance ? \&jaro_cmp : \&index_cmp;
+
+# Default percentage
+$percentage //= $jaro_distance ? 70 : 50;
 
 sub index_cmp ($$) {
     my ($name1, $name2) = @_;
@@ -122,7 +128,7 @@ sub index_cmp ($$) {
         }
     }
 
-    return 1;
+    return -1;
 }
 
 # Levenshtein's distance function (optimized for speed)
@@ -151,7 +157,64 @@ sub lev_cmp ($$) {
         }
     }
 
-    ($d[-1][-1] // $min) <= $diff ? 0 : 1;
+    ($d[-1][-1] // $min) <= $diff ? 0 : -1;
+}
+
+sub jaro_cmp($$) {
+    my ($string1, $string2) = @_;
+
+    my $len1 = @{$string1};
+    my $len2 = @{$string2};
+
+    ($string1, $len1, $string2, $len2) = ($string2, $len2, $string1, $len1)
+      if $len1 > $len2;
+
+    $len1 || return -1;
+
+    my $diff =
+      $round_up
+      ? int($percentage / 100 + $len2 * (100 - $percentage) / 100)
+      : int($len2 * (100 - $percentage) / 100);
+
+    return -1 if ($len2 - $len1) > $diff;
+
+    my $match_window = $len2 > 3 ? int($len2 / 2) - 1 : 0;
+
+    my @string1_matches;
+    my @string2_matches;
+
+    my @chars1 = @{$string1};
+    my @chars2 = @{$string2};
+
+    foreach my $i (0 .. $#chars1) {
+
+        my $window_start = max(0, $i - $match_window);
+        my $window_end = min($i + $match_window + 1, $len2);
+
+        foreach my $j ($window_start .. $window_end - 1) {
+            if (not exists($string2_matches[$j]) and $chars1[$i] eq $chars2[$j]) {
+                $string1_matches[$i] = $chars1[$i];
+                $string2_matches[$j] = $chars2[$j];
+                last;
+            }
+        }
+    }
+
+    (@string1_matches = grep { defined } @string1_matches) || return -1;
+    @string2_matches = grep { defined } @string2_matches;
+
+    my $transpositions = 0;
+    foreach my $i (0 .. $#string1_matches) {
+        $string1_matches[$i] eq $string2_matches[$i] or ++$transpositions;
+    }
+
+    my $num_matches = @string1_matches;
+#<<<
+    ((($num_matches / $len1)
+    + ($num_matches / $len2)
+    + ($num_matches - int($transpositions / 2))
+    / $num_matches) / 3 * 100) >= $percentage ? 0 : -1;
+#<<<
 }
 
 sub find_similar_filenames (&@) {
@@ -171,8 +234,8 @@ sub find_similar_filenames (&@) {
             (-f)
               && push @{$files{$group_by_size ? (-s _) : 'key'}}, {
                 name => do {
-                    my $str = join(' ', split(' ', lc(decode_utf8($_) =~ s{\.\w{1,5}\z}{}r)));
-                    $levenshtein ? [split(//, $str)] : $str;
+                    my $str = join(' ', split(' ', lc(decode_utf8($_) =~ s{\.\w{1,5}\z}{}r =~ s/[^\pN\pL]+/ /gr)));
+                    ($levenshtein || $jaro_distance) ? [$str =~ /\X/g] : $str;
                 },
                 real_name => $File::Find::name,
                                                                   };
