@@ -7,9 +7,6 @@ use PDF::API2;
 
 my $main_url = 'https://projecteuler.net/problem=%d';
 
-my $page = 1;
-my $pdf  = PDF::API2->new;
-
 my $p_beg = 1;
 my $p_end = 521;
 
@@ -38,6 +35,9 @@ if ($update_p_nums) {
     }
 }
 
+my $page = 1;
+my $pdf  = PDF::API2->new;
+
 for my $i ($p_beg .. $p_end) {
     my $url = sprintf($main_url, $i);
     my $pdf_data = `wkhtmltopdf --use-xserver \Q$url\E /dev/stdout`;
@@ -52,4 +52,4 @@ for my $i ($p_beg .. $p_end) {
     }
 }
 
-$pdf->saveas('project_euler.pdf') or die "Can't save: $!";
+$pdf->saveas('project_euler.pdf');
