@@ -5,6 +5,7 @@ use strict;
 use warnings;
 
 use PDF::API2 qw();
+use Text::Unidecode qw(unidecode);
 use HTML::Entities qw(decode_entities);
 use File::Spec::Functions qw(catfile tmpdir);
 
@@ -41,7 +42,7 @@ if ($update_p_nums) {
 my $page = 1;
 my $pdf  = PDF::API2->new;
 
-my $ms_delay     = 3000;                                    # wait some milliseconds for JavaScript to finish
+my $ms_delay     = 3500;                                    # wait some milliseconds for JavaScript to finish
 my $outlines     = $pdf->outlines;
 my $cache_dir    = tmpdir();
 my $outline_file = catfile($cache_dir, "outline_$$.txt");
@@ -81,7 +82,7 @@ for my $i ($p_beg .. $p_end) {
         if (open my $fh, '<:utf8', $outline_file) {
             while (<$fh>) {
                 if (/^\h*<item title="(.*?)" page="1"/) {
-                    my $title = decode_entities($1);
+                    my $title = unidecode(decode_entities($1));
                     $outline->title("$i. $title");
                     last;
                 }
