@@ -45,6 +45,13 @@ my $outlines     = $pdf->outlines;
 my $cache_dir    = tmpdir();
 my $outline_file = catfile($cache_dir, "outline_$$.txt");
 
+sub end {
+    $pdf->preferences(-outlines => 1, -onecolumn => 1);
+    $pdf->saveas('Project Euler.pdf');
+}
+
+local $SIG{INT} = \&end;
+
 for my $i ($p_beg .. $p_end) {
 
     printf("[%3d of %3d] Processing...\n", $i, $p_end);
@@ -92,5 +99,4 @@ for my $i ($p_beg .. $p_end) {
     sleep(rand(10));
 }
 
-$pdf->preferences(-outlines => 1, -onecolumn => 1);
-$pdf->saveas('Project Euler.pdf');
+end();
