@@ -3,14 +3,17 @@
 use 5.010;
 use strict;
 use warnings;
-use PDF::API2;
+
+use PDF::API2 qw();
+use HTML::Entities qw(decode_entities);
+use File::Spec::Functions qw(catfile tmpdir);
 
 my $main_url = 'https://projecteuler.net/problem=%d';
 
 my $p_beg = 1;
 my $p_end = 521;
 
-my $update_p_nums = 1;    # retrieve the current number of problems
+my $update_p_nums = 1;    # true to retrieve the current number of problems
 
 if ($update_p_nums) {
 
@@ -38,18 +41,53 @@ if ($update_p_nums) {
 my $page = 1;
 my $pdf  = PDF::API2->new;
 
+my $outlines     = $pdf->outlines;
+my $cache_dir    = tmpdir();
+my $outline_file = catfile($cache_dir, "outline_$$.txt");
+
 for my $i ($p_beg .. $p_end) {
+
+    printf("[%3d of %3d] Processing...\n", $i, $p_end);
+
     my $url = sprintf($main_url, $i);
-    my $pdf_data = `wkhtmltopdf --use-xserver \Q$url\E /dev/stdout`;
+    my $pdf_data = `wkhtmltopdf              \\
+        --dump-outline \Q$outline_file\E     \\
+        --quiet                              \\
+        --use-xserver                        \\
+        --enable-javascript                  \\
+        --enable-smart-shrinking             \\
+        --images                             \\
+        --enable-forms                       \\
+        --enable-plugins                     \\
+        --enable-external-links              \\
+        --cache-dir \Q$cache_dir\E           \\
+        \Q$url\E                             \\
+        /dev/stdout`;
 
     if (defined $pdf_data) {
         my $pdf_obj = PDF::API2->openScalar($pdf_data);
+
+        my $outline = $outlines->outline;
+        if (open my $fh, '<:utf8', $outline_file) {
+            while (<$fh>) {
+                if (/^\h*<item title="(.*?)" page="1"/) {
+                    my $title = decode_entities($1);
+                    $outline->title("$i. $title");
+                    last;
+                }
+            }
+        }
+
+        my $start = $page;
 
         for my $i (1 .. $pdf_obj->pages) {
             $pdf->importpage($pdf_obj, $i, $page);
             ++$page;
         }
+
+        $outline->dest($pdf->openpage($start));
     }
 }
 
-$pdf->saveas('project_euler.pdf');
+$pdf->preferences(-outlines => 1, -onecolumn => 1);
+$pdf->saveas('Project Euler.pdf');
