@@ -60,6 +60,7 @@ for my $i ($p_beg .. $p_end) {
         --enable-forms                       \\
         --enable-plugins                     \\
         --enable-external-links              \\
+        --load-error-handling ignore         \\
         --cache-dir \Q$cache_dir\E           \\
         \Q$url\E                             \\
         /dev/stdout`;
@@ -87,6 +88,8 @@ for my $i ($p_beg .. $p_end) {
 
         $outline->dest($pdf->openpage($start));
     }
+
+    sleep(rand(10));
 }
 
 $pdf->preferences(-outlines => 1, -onecolumn => 1);
