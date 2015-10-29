@@ -41,6 +41,7 @@ if ($update_p_nums) {
 my $page = 1;
 my $pdf  = PDF::API2->new;
 
+my $ms_delay     = 2000;                                    # wait some milliseconds for JavaScript to finish
 my $outlines     = $pdf->outlines;
 my $cache_dir    = tmpdir();
 my $outline_file = catfile($cache_dir, "outline_$$.txt");
@@ -68,6 +69,7 @@ for my $i ($p_beg .. $p_end) {
         --enable-plugins                     \\
         --enable-external-links              \\
         --load-error-handling ignore         \\
+        --javascript-delay $ms_delay         \\
         --cache-dir \Q$cache_dir\E           \\
         \Q$url\E                             \\
         /dev/stdout`;
@@ -95,8 +97,6 @@ for my $i ($p_beg .. $p_end) {
 
         $outline->dest($pdf->openpage($start));
     }
-
-    sleep(rand(10));
 }
 
 end();
