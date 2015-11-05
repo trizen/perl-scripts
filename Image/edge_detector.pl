@@ -16,7 +16,7 @@ GD::Image->trueColor(1);
 
 use Getopt::Long qw(GetOptions);
 
-my $tolerance = 10;    # lower tolerance => more noise
+my $tolerance = 15;    # lower tolerance => more noise
 
 GetOptions('t|tolerance=f' => \$tolerance,
            'h|help'        => sub { help(0) },)
@@ -51,26 +51,35 @@ sub avg {
     ($_[0] + $_[1] + $_[2]) / 3;
 }
 
-foreach my $y (0 .. $height - 1) {
+foreach my $y (1 .. $height - 2) {
     foreach my $x (1 .. $width - 2) {
         my $left  = $img->getPixel($x - 1, $y);
         my $right = $img->getPixel($x + 1, $y);
 
-        my $avg1 = avg($img->rgb($left));
-        my $avg2 = avg($img->rgb($right));
+        my $up   = $img->getPixel($x, $y - 1);
+        my $down = $img->getPixel($x, $y + 1);
 
-        if (abs($avg1 - $avg2) / 255 * 100 > $tolerance) {
+        my $left_avg  = avg($img->rgb($left));
+        my $right_avg = avg($img->rgb($right));
+
+        my $up_avg   = avg($img->rgb($up));
+        my $down_avg = avg($img->rgb($down));
+
+        if (   abs($left_avg - $right_avg) / 255 * 100 > $tolerance
+            or abs($up_avg - $down_avg) / 255 * 100 > $tolerance) {
             $matrix[$y][$x] = 0;
         }
     }
 }
 
 my $new_img = GD::Image->new($width, $height);
-my $bg_color = $new_img->colorAllocate(255, 255, 255);
+
+my $bg_color = $new_img->colorAllocate(0,   0,   0);
+my $fg_color = $new_img->colorAllocate(255, 255, 255);
 
 for my $y (0 .. $height - 1) {
     for my $x (0 .. $width - 1) {
-        $new_img->setPixel($x, $y, $matrix[$y][$x] // $bg_color);
+        $new_img->setPixel($x, $y, defined($matrix[$y][$x]) ? $fg_color : $bg_color);
     }
 }
 
