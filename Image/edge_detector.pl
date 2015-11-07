@@ -29,8 +29,8 @@ sub help {
 usage: $0 [options] [input image] [output image]
 
 options:
-        -t  --tolerance=f : tolerance value for edge-detection
-                             (default: $tolerance)
+    -t  --tolerance=[0-100] : tolerance value for edges (default: $tolerance)
+                              lower values will generate more noise
 
 example:
     perl $0 -t=5 input.png output.png
