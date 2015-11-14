@@ -29,8 +29,8 @@ sub change {
     }
 
     (
+        change($n, $pos + 1, $solution),
         change($n, $pos, [@$solution, $denominations[$pos]]),
-        change($n, $pos + 1, $solution)
     )
 }
 
