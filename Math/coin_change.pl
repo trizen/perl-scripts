@@ -39,19 +39,11 @@ sub change {
         return;
     }
 
-    my @list;
-    foreach my $c (change($n, $pos, [@$coins_so_far, $denominations[$pos]])) {
-        push @list, $c;
-    }
-
-    foreach my $c (change($n, $pos + 1, $coins_so_far)) {
-        push @list, $c;
-    }
-
-    return @list;
+    (change($n, $pos, [@$coins_so_far, $denominations[$pos]]),
+     change($n, $pos + 1, $coins_so_far));
 }
 
-my $amount = 0.26;    # the amount of money
+my $amount = 0.26;               # the amount of money
 
 my @solutions = change($amount, 0, []);
 print("All the possible solutions for $amount, are:\n");
