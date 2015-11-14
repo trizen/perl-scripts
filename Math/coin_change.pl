@@ -11,36 +11,27 @@ use 5.010;
 use strict;
 use warnings;
 
+use List::Util qw(sum0);
 no warnings qw(recursion);
-#use bignum (try => 'GMP');         # uncomment this line for better floating-point precision
+#use bignum (try => 'GMP');         # uncomment this line for a better floating-point precision
 
 my @denominations = (.01, .05, .1, .25, .5, 1, 2, 5, 10, 20, 50, 100);
 
-sub sum {
-    my (@list) = @_;
-
-    my $sum = 0;
-    foreach my $num (@list) {
-        $sum += $num;
-    }
-
-    return $sum;
-}
-
 sub change {
-    my ($n, $pos, $coins_so_far) = @_;
-
-    my $sum = sum(@$coins_so_far);
+    my ($n, $pos, $solution) = @_;
+    my $sum = sum0(@$solution);
 
     if ($sum == $n) {
-        return $coins_so_far;    # found a solution
+        return $solution;    # found a solution
     }
     elsif ($sum > $n or $pos > $#denominations) {
         return;
     }
 
-    (change($n, $pos, [@$coins_so_far, $denominations[$pos]]),
-     change($n, $pos + 1, $coins_so_far));
+    (
+        change($n, $pos, [@$solution, $denominations[$pos]]),
+        change($n, $pos + 1, $solution)
+    )
 }
 
 my $amount = 0.26;               # the amount of money
