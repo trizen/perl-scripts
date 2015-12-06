@@ -51,9 +51,7 @@ hello world
 sub escape_markdown {
     my ($t) = @_;
 
-    $t =~ s{\*}{\\*}g;
-    $t =~ s{__}{\\_\\_}g;
-    $t =~ s/`/\\`/g;
+    $t =~ s{([*_`])}{\\$1}g;
 
     return $t;
 }
