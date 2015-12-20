@@ -27,9 +27,7 @@ binmode(STDERR, ':utf8');
 
 sub escape_markdown {
     my ($t) = @_;
-
     $t =~ s{([*_`])}{\\$1}g;
-
     return $t;
 }
 
@@ -47,17 +45,46 @@ sub _olist {
 }
 
 sub tags_to_markdown {
-    my ($t) = @_;
+    my ($t, $escape) = @_;
 
-    $t =~ s{<br\h*/\h*>}{\n}g;
-    $t =~ s{<b>(.*?)</b>}{**$1**}gs;
-    $t =~ s{<i>(.*?)</i>}{*$1*}gs;
-    $t =~ s{<code>(.*?)</code>}{`$1`}gs;
-    $t =~ s{<a\b.*? href="(.*?)">(.*?)</a>}{[$2]($1)}gs;
-    $t =~ s{<ul>(.*?)</ul>}{ _ulist($1) }egs;
-    $t =~ s{<ol>(.*?)</ol>}{ _olist($1) }egs;
+    my $out = '';
+    until ($t =~ /\G\z/gc) {
+        if ($t =~ m{\G<br\h*/\h*>}gc) {
+            $out .= "\n";
+        }
+        elsif ($t =~ m{\G<b>(.*?)</b>}gcs) {
+            $out .= "**" . tags_to_markdown($1, 1) . "**";
+        }
+        elsif ($t =~ m{\G<i>(.*?)</i>}gcs) {
+            $out .= "*" . tags_to_markdown($1, 1) . "*";
+        }
+        elsif ($t =~ m{\G<code>(.*?)</code>}gcs) {
+            $out .= "`$1`";
+        }
+        elsif ($t =~ m{\G<a\b.*? href="(.*?)".*?>(.*?)</a>}gcs) {
+            my ($url, $label) = ($1, $2);
 
-    return $t;
+            if ($url =~ m{^/}) {
+                $url = 'http://rosettacode.org' . $url;
+            }
+
+            $out .= "[$label]($url)";
+        }
+        elsif ($t =~ m{\G<ul>(.*?)</ul>}gcs) {
+            $out .= _ulist(tags_to_markdown($1, 1));
+        }
+        elsif ($t =~ m{\G<ol>(.*?)</ol>}gcs) {
+            $out .= _olist(tags_to_markdown($1, 1));
+        }
+        elsif ($t =~ /\G([^<]+)/gc) {
+            $out .= $escape ? escape_markdown($1) : $1;
+        }
+        elsif ($t =~ /\G(.)/gcs) {
+            $out .= $escape ? escape_markdown($1) : $1;
+        }
+    }
+
+    return $out;
 }
 
 sub strip_tags {
@@ -217,7 +244,7 @@ sub to_markdown {
             my $tag  = $item->{text}{tag};
 
             if ($tag eq 'p') {
-                my $t = tags_to_markdown(escape_markdown(strip_space($data)));
+                my $t = tags_to_markdown(strip_space($data), 1);
                 $text .= "\n\n" . $t . "\n\n";
             }
             elsif ($tag eq 'pre') {
