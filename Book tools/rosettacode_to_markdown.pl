@@ -232,6 +232,7 @@ sub to_markdown {
         elsif (exists $item->{code}) {
             my $code = decode_entities(strip_tags(tags_to_markdown($item->{code}{data})));
             my $lang = $item->{code}{lang};
+            $code =~ s/\[(\w+)\]\(https?:.*?\)/$1/g;
             $text .= "```$lang\n$code\n```\n";
         }
     }
