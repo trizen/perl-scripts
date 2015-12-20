@@ -25,29 +25,6 @@ use File::Spec::Functions qw(catfile catdir);
 binmode(STDOUT, ':utf8');
 binmode(STDERR, ':utf8');
 
-=for comment
-
-<h2>
-    <span class="editsection">
-    [<a href="/mw/index.php?title=String_concatenation&amp;action=edit&amp;section=105" title="Edit section: Sidef">edit</a>]
-    </span> <span class="mw-headline" id="Sidef"><a href="/wiki/Category:Sidef" title="Category:Sidef">Sidef</a></span>
-</h2>
-
-<pre class="ruby highlighted_source">var s = <span class="st0">'hello'</span>;<br/>say s<span class="sy0">+</span><span class="st0">' literal'</span>;<br/>var s1 = s<span class="sy0">+</span><span class="st0">' literal'</span>;<br/>say s1;</pre>
-<p>An example of destructive concatenation:
-</p>
-<pre class="ruby highlighted_source">s <span class="sy0">+</span>= <span class="st0">' literal'</span>;<br/>say s;</pre>
-
-<div>
-<dl><dt>Output:</div>
-</dt></dl>
-<pre>
-hello world
-hello world
-</pre>
-
-=cut
-
 sub escape_markdown {
     my ($t) = @_;
 
@@ -73,8 +50,8 @@ sub tags_to_markdown {
     my ($t) = @_;
 
     $t =~ s{<br\h*/\h*>}{\n}g;
-    $t =~ s{<b>(.*?)</b>}{*$1*}gs;
-    $t =~ s{<i>(.*?)</i>}{_$1_}gs;
+    $t =~ s{<b>(.*?)</b>}{**$1**}gs;
+    $t =~ s{<i>(.*?)</i>}{*$1*}gs;
     $t =~ s{<code>(.*?)</code>}{`$1`}gs;
     $t =~ s{<a\b.*? href="(.*?)">(.*?)</a>}{[$2]($1)}gs;
     $t =~ s{<ul>(.*?)</ul>}{ _ulist($1) }egs;
