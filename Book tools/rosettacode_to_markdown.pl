@@ -61,6 +61,9 @@ sub tags_to_markdown {
         elsif ($t =~ m{\G<code>(.*?)</code>}gcs) {
             $out .= "`$1`";
         }
+        elsif ($t =~ m{\G<tt>(.*?)</tt>}gcs) {
+            $out .= "`" . decode_entities($1) . "`";
+        }
         elsif ($t =~ m{\G<a\b.*? href="(.*?)".*?>(.*?)</a>}gcs) {
             my ($url, $label) = ($1, $2);
 
