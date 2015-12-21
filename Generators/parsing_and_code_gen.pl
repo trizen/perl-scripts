@@ -103,7 +103,7 @@ sub generate_expr {
 
     my $ref = ref($obj);
     if ($ref eq 'HASH') {
-        $code = generate($obj);
+        $code = '(' . generate($obj) . ')';
     }
     elsif ($ref eq 'Number') {
         $code = $obj->{value};
@@ -120,7 +120,6 @@ sub generate_expr {
 
     # Check for a call operator
     if (exists $expr->{call}) {
-        $code = "($code)";
         foreach my $call (@{$expr->{call}}) {
             if (exists $call->{op}) {
                 my $op = $call->{op};
@@ -134,7 +133,7 @@ sub generate_expr {
                 $code .= ' ';
             }
             if (exists $call->{arg}) {
-                $code .= '(' . generate_expr($call->{arg}) . ')';
+                $code .= generate_expr($call->{arg});
             }
         }
     }
