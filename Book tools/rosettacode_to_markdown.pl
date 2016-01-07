@@ -71,7 +71,14 @@ sub tags_to_markdown {
                 $url = 'http://rosettacode.org' . $url;
             }
 
+            $label = tags_to_markdown($label);
             $out .= "[$label]($url)";
+        }
+        elsif ($t =~ m{\G(<img\b.*? src="/mw/.*?".*?/>)}gc) {
+            my $html = $1;
+            $html =~ s{ src="\K/mw/}{http://rosettacode.org/mw/};
+            $html =~ s{ srcset=".*?"}{};
+            $out .= $html;
         }
         elsif ($t =~ m{\G<ul>(.*?)</ul>}gcs) {
             $out .= _ulist(tags_to_markdown($1, 1));
