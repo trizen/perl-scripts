@@ -293,7 +293,7 @@ sub write_to_file {
     # Remove directory paths from name (if any)
     if ($name =~ s{^(.*)/}{}) {
         my $dirname = $1;
-        $dir = catdir($dir, split(/\//, $dirname));
+        $dir = catdir($dir, map { $_ eq 'Sorting_Algorithms' ? 'Sorting_algorithms' : $_ } split(/\//, $dirname));
     }
 
     # Create directory if it doesn't exists
