@@ -22,11 +22,11 @@ use Math::BigInt (try => 'GMP');
 
 use constant {
               PKGNAME => 'TAC Compressor',
-              VERSION => '0.01',
+              VERSION => '0.02',
               FORMAT  => 'tac',
              };
 
-use constant {SIGNATURE => uc(FORMAT) . chr(1),};
+use constant {SIGNATURE => uc(FORMAT) . chr(1)};
 
 sub usage {
     my ($code) = @_;
@@ -178,13 +178,13 @@ sub compress {
     # Upper bound
     my $U = $L + $pf;
 
-    my $pow = $pf->copy->blog(10);
-    my $enc = ($U - 1)->bdiv(Math::BigInt->new(10)->bpow($pow));
+    my $pow = $pf->copy->blog(2);
+    my $enc = ($U - 1)->bdiv(Math::BigInt->new(2)->bpow($pow));
 
-    # Remove any other trailing zeros
-    while ($enc > 0 and $enc % 10 == 0) {
+    # Remove any divisibility by 2
+    while ($enc > 0 and $enc % 2 == 0) {
         $pow->binc;
-        $enc->bdiv(10);
+        $enc->brsft(1);
     }
 
     my $bin = substr($enc->as_bin, 2);
@@ -231,7 +231,7 @@ sub decompress {
     }
 
     $pow = Math::BigInt->new($pow);
-    $enc *= Math::BigInt->new(10)->bpow($pow);
+    $enc->blsft($pow);
 
     my $base = Math::BigInt->new(0);
     $base += $_ for values %freq;

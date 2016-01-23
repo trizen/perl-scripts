@@ -37,7 +37,7 @@ sub cumulative_freq {
 }
 
 sub arithmethic_coding {
-    my ($str) = @_;
+    my ($str, $radix) = @_;
     my @chars = split(//, $str);
 
     # The frequency characters
@@ -71,17 +71,17 @@ sub arithmethic_coding {
     #~ say $L;
     #~ say $U;
 
-    my $pow = Math::BigInt->new($pf)->blog(10);
-    my $enc = ($U - 1)->bdiv(Math::BigInt->new(10)->bpow($pow));
+    my $pow = Math::BigInt->new($pf)->blog($radix);
+    my $enc = ($U - 1)->bdiv(Math::BigInt->new($radix)->bpow($pow));
 
     return ($enc, $pow, \%freq);
 }
 
 sub arithmethic_decoding {
-    my ($enc, $pow, $freq) = @_;
+    my ($enc, $radix, $pow, $freq) = @_;
 
     # Multiply enc by 10^pow
-    $enc *= 10**$pow;
+    $enc *= $radix**$pow;
 
     my $base = Math::BigInt->new(0);
     $base += $_ for values %{$freq};
@@ -133,15 +133,18 @@ sub arithmethic_decoding {
 #
 ## Run some tests
 #
+
+my $radix = 10;
+
 foreach my $str (
-    qw(DABDDB DABDDBBDDBA ABBDDD ABRACADABRA CoMpReSSeD Sidef Trizen google TOBEORNOTTOBEORTOBEORNOT),
+    qw(DABDDB DABDDBBDDBA ABBDDD ABRACADABRA CoMpReSSeD Sidef Trizen google TOBEORNOTTOBEORTOBEORNOT 吹吹打打),
     'In a positional numeral system the radix, or base, is numerically equal to a number of different symbols '
     . 'used to express the number. For example, in the decimal system the number of symbols is 10, namely 0, 1, 2, '
     . '3, 4, 5, 6, 7, 8, and 9. The radix is used to express any finite integer in a presumed multiplier in polynomial '
     . 'form. For example, the number 457 is actually 4×102 + 5×101 + 7×100, where base 10 is presumed but not shown explicitly.'
   ) {
-    my ($enc, $pow, $freq) = arithmethic_coding($str);
-    my $dec = arithmethic_decoding($enc, $pow, $freq);
+    my ($enc, $pow, $freq) = arithmethic_coding($str, $radix);
+    my $dec = arithmethic_decoding($enc, $radix, $pow, $freq);
 
     say "Encoded:  $enc";
     say "Decoded:  $dec";
