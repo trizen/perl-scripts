@@ -106,20 +106,14 @@ sub valid_archive {
     return 1;
 }
 
-sub asciibet {
-    map { chr } 0 .. 255;
-}
-
 sub cumulative_freq {
     my ($freq) = @_;
 
     my %cf;
     my $total = Math::BigInt->new(0);
-    foreach my $c (asciibet()) {
-        if (exists $freq->{$c}) {
-            $cf{$c} = $total;
-            $total += $freq->{$c};
-        }
+    foreach my $c (sort keys %{$freq}) {
+        $cf{$c} = $total;
+        $total += $freq->{$c};
     }
 
     return %cf;
