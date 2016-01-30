@@ -96,7 +96,7 @@ sub arithmethic_decoding {
 
     my @bin = split(//, $enc);
     foreach my $i (0 .. $#bin) {
-        $line->badd(Math::BigRat->new($bin[$i])->bdiv($two_pow->bmul($big_two)));
+        $line->badd(scalar Math::BigRat->new($bin[$i])->bdiv($two_pow->bmul($big_two)));
     }
 
     my %p = mass_function($freq, $len);
