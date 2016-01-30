@@ -148,8 +148,7 @@ sub compress {
     my %cf = cumulative_freq(\%freq);
 
     # Limit and base
-    my $lim  = $#chars;
-    my $base = Math::BigInt->new($lim + 1);
+    my $base = Math::BigInt->new(scalar @chars);
 
     # Lower bound
     my $L = Math::BigInt->new(0);
@@ -157,16 +156,11 @@ sub compress {
     # Product of all frequencies
     my $pf = Math::BigInt->new(1);
 
-    # The base power
-    my $base_pow = $base**$lim;
-
     # Each term is multiplied by the product of the
     # frequencies of all previously occurring symbols
-    for (my $i = 0 ; $i < $base ; $i++) {
-        my $x = $cf{$chars[$i]} * $base_pow;
-        $L->badd($x * $pf);
-        $pf->bmul($freq{$chars[$i]});
-        $base_pow->bdiv($base);
+    foreach my $c (@chars) {
+        $L->bmuladd($base, $cf{$c} * $pf);
+        $pf->bmul($freq{$c});
     }
 
     # Upper bound
