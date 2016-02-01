@@ -14,62 +14,65 @@ use warnings;
 
 use List::Util qw(min max);
 
-sub jaro_distance {
-    my ($string1, $string2) = @_;
+sub jaro {
+    my ($s, $t) = @_;
 
-    my $len1 = length($string1);
-    my $len2 = length($string2);
+    my $len1 = length($s);
+    my $len2 = length($t);
 
-    ($string1, $len1, $string2, $len2) = ($string2, $len2, $string1, $len1)
+    ($s, $len1, $t, $len2) = ($t, $len2, $s, $len1)
       if $len1 > $len2;
 
     $len1 || return 0;
 
     my $match_window = $len2 > 3 ? int($len2 / 2) - 1 : 0;
 
-    my @string1_matches;
-    my @string2_matches;
+    my @s_matches;
+    my @t_matches;
 
-    my @chars1 = split(//, $string1);
-    my @chars2 = split(//, $string2);
+    my @s = split(//, $s);
+    my @t = split(//, $t);
 
-    foreach my $i (0 .. $#chars1) {
+    foreach my $i (0 .. $#s) {
 
         my $window_start = max(0, $i - $match_window);
         my $window_end = min($i + $match_window + 1, $len2);
 
         foreach my $j ($window_start .. $window_end - 1) {
-            if (not exists($string2_matches[$j]) and $chars1[$i] eq $chars2[$j]) {
-                $string1_matches[$i] = $chars1[$i];
-                $string2_matches[$j] = $chars2[$j];
+            if (not exists($t_matches[$j]) and $s[$i] eq $t[$j]) {
+                $s_matches[$i] = $s[$i];
+                $t_matches[$j] = $t[$j];
                 last;
             }
         }
     }
 
-    (@string1_matches = grep { defined } @string1_matches) || return 0;
-    @string2_matches = grep { defined } @string2_matches;
+    (@s_matches = grep { defined } @s_matches) || return 0;
+    @t_matches = grep { defined } @t_matches;
 
     my $transpositions = 0;
-    foreach my $i (0 .. $#string1_matches) {
-        $string1_matches[$i] eq $string2_matches[$i] or ++$transpositions;
+    foreach my $i (0 .. $#s_matches) {
+        $s_matches[$i] eq $t_matches[$i] or ++$transpositions;
     }
 
-    my $num_matches = @string1_matches;
-    my $jaro =
-      (($num_matches / $len1) + ($num_matches / $len2) + ($num_matches - int($transpositions / 2)) / $num_matches) / 3;
-
-    # return $jaro;     # to return the Jaro distance instead of Jaro-Winkle
-
-    my $prefix = 0;
-    foreach my $i (0 .. $#chars1) {
-        $chars1[$i] eq $chars2[$i] ? ++$prefix : last;
-    }
-
-    $jaro + min($prefix, 4) * 0.1 * (1 - $jaro);
+    my $num_matches = @s_matches;
+    (($num_matches / $len1) + ($num_matches / $len2) + ($num_matches - int($transpositions / 2)) / $num_matches) / 3;
 }
 
-say jaro_distance("DIXON",  "DICKSONX");    # 0.813333
-say jaro_distance("MARTHA", "MARHTA");      # 0.961111
-say jaro_distance("CRATE",  "TRACE");       # 0.733333
-say jaro_distance("DWAYNE", "DUANE");       # 0.84
+sub jaro_winkler {
+    my ($s, $t) = @_;
+
+    my $distance = jaro($s, $t);
+
+    my $prefix = 0;
+    foreach my $i (0 .. min(3, length($s), length($t))) {
+        substr($s, $i, 1) eq substr($t, $i, 1) ? ++$prefix : last;
+    }
+
+    $distance + min($prefix, 4) * 0.1 * (1 - $distance);
+}
+
+printf("%f\n", jaro_winkler("MARTHA",      "MARHTA"));
+printf("%f\n", jaro_winkler("DWAYNE",      "DUANE"));
+printf("%f\n", jaro_winkler("DIXON",       "DICKSONX"));
+printf("%f\n", jaro_winkler("ROSETTACODE", "ROSETTASTONE"));

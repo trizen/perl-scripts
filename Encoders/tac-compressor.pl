@@ -248,9 +248,8 @@ sub decompress {
     open my $out_fh, '>:raw', $output;
 
     # Decode the input number
-    for (my $i = $base - 1 ; $i >= 0 ; $i--) {
-        my $pow = $base**$i;
-        my $div = ($enc / $pow);
+    for (my $pow = $base**($base-1); $pow > 0 ; $pow /= $base) {
+        my $div = $enc / $pow;
 
         my $c  = $dict{$div};
         my $fv = $freq{$c};
