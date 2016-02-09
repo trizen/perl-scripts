@@ -11,6 +11,7 @@ use 5.010;
 use strict;
 use warnings;
 
+use integer;
 use List::Util qw(sum);
 
 sub long_multiplication {

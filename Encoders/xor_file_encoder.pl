@@ -5,7 +5,7 @@
 # Date: 18 Novermber 2012
 # Website: http://trizen.googlecode.com
 
-# For a stronger encription, use very long keys, but
+# For a stronger encryption, use very long keys, but
 # avoid keys which contains spaces or null byte characters.
 
 use 5.010;
