@@ -69,7 +69,7 @@ sub jaro_winkler {
         substr($s, $i, 1) eq substr($t, $i, 1) ? ++$prefix : last;
     }
 
-    $distance + min($prefix, 4) * 0.1 * (1 - $distance);
+    $distance + $prefix * 0.1 * (1 - $distance);
 }
 
 printf("%f\n", jaro_winkler("MARTHA",      "MARHTA"));
