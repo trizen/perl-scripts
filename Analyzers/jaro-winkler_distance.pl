@@ -17,15 +17,12 @@ use List::Util qw(min max);
 sub jaro {
     my ($s, $t) = @_;
 
-    my $len1 = length($s);
-    my $len2 = length($t);
+    my $s_len = length($s);
+    my $t_len = length($t);
 
-    ($s, $len1, $t, $len2) = ($t, $len2, $s, $len1)
-      if $len1 > $len2;
+    return 1 if ($s_len == 0 and $t_len == 0);
 
-    $len1 || return 0;
-
-    my $match_window = $len2 > 3 ? int($len2 / 2) - 1 : 0;
+    my $match_distance = int(max($s_len, $t_len) / 2) - 1;
 
     my @s_matches;
     my @t_matches;
@@ -33,30 +30,38 @@ sub jaro {
     my @s = split(//, $s);
     my @t = split(//, $t);
 
-    foreach my $i (0 .. $#s) {
+    my $matches = 0;
+    foreach my $i (0 .. $s_len - 1) {
 
-        my $window_start = max(0, $i - $match_window);
-        my $window_end = min($i + $match_window + 1, $len2);
+        my $start = max(0, $i - $match_distance);
+        my $end = min($i + $match_distance + 1, $t_len);
 
-        foreach my $j ($window_start .. $window_end - 1) {
-            if (not exists($t_matches[$j]) and $s[$i] eq $t[$j]) {
-                $s_matches[$i] = $s[$i];
-                $t_matches[$j] = $t[$j];
-                last;
-            }
+        foreach my $j ($start .. $end - 1) {
+            $t_matches[$j] and next;
+            $s[$i] eq $t[$j] or next;
+            $s_matches[$i] = 1;
+            $t_matches[$j] = 1;
+            $matches++;
+            last;
         }
     }
 
-    (@s_matches = grep { defined } @s_matches) || return 0;
-    @t_matches = grep { defined } @t_matches;
+    return 0 if $matches == 0;
 
-    my $transpositions = 0;
-    foreach my $i (0 .. $#s_matches) {
-        $s_matches[$i] eq $t_matches[$i] or ++$transpositions;
+    my $k     = 0;
+    my $trans = 0;
+
+    foreach my $i (0 .. $s_len - 1) {
+        $s_matches[$i] or next;
+        until ($t_matches[$k]) { ++$k }
+        $s[$i] eq $t[$k] or ++$trans;
+        ++$k;
     }
 
-    my $num_matches = @s_matches;
-    (($num_matches / $len1) + ($num_matches / $len2) + ($num_matches - int($transpositions / 2)) / $num_matches) / 3;
+#<<<
+    (($matches / $s_len) + ($matches / $t_len)
+        + (($matches - $trans / 2) / $matches)) / 3;
+#>>>
 }
 
 sub jaro_winkler {
