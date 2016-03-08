@@ -26,11 +26,13 @@ my $in  = \*ARGV;
 my $out = \*STDOUT;
 
 if (defined($opt{i})) {
-    open $in, '<', $opt{i};
+    open $in, '<', $opt{i}
+      or die "Can't open file `$opt{i}' for reading: $!";
 }
 
 if (defined($opt{o})) {
-    open $out, '>', $opt{o};
+    open $out, '>', $opt{o}
+      or die "Can't open file `$opt{o}' for writing: $!";
 }
 
 sub usage {
@@ -44,13 +46,16 @@ options:
     -o /path/to/output.csv (optional; default is stdout)
     -p print csv header row
 
+example:
+    $0 -k user.name,list.0,remote_ip -i input.json -o output.csv
+
 EOT
     exit($code);
 }
 
 $opt{k} // usage(1);
 
-my @fields = quotewords(qr/\s*,\s*/, 0, $opt{k});
+my @fields = quotewords(qr/\s*,\s*/, 1, $opt{k});
 
 say($opt{p}) if defined($opt{p});
 
@@ -63,7 +68,7 @@ sub json2csv {
     my @row;
     foreach my $field (@{$fields}) {
         my $ref = $json;
-        my @keys = split(/\./, $field);
+        my @keys = quotewords(qr/\./, 0, $field);
 
         foreach my $key (@keys) {
             if ($key =~ /^[-+]?[0-9]+\z/) {
