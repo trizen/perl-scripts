@@ -20,7 +20,7 @@ use Text::ParseWords qw(quotewords);
 use open IO => ':encoding(UTF-8)', ':std';
 
 my %opt;
-getopts('k:i:o:p:', \%opt);
+getopts('k:i:o:p:d:', \%opt);
 
 my $in  = \*ARGV;
 my $out = \*STDOUT;
@@ -44,6 +44,7 @@ options:
     -k fields.0,and,nested.fields,to,output
     -i /path/to/input.json (optional; default is stdin)
     -o /path/to/output.csv (optional; default is stdout)
+    -d delimiter separator for csv (default: ",")
     -p print csv header row
 
 example:
@@ -55,36 +56,67 @@ EOT
 
 $opt{k} // usage(1);
 
-my @fields = quotewords(qr/\s*,\s*/, 1, $opt{k});
+sub unescape {
+    my ($str) = @_;
+
+    my %esc = (
+               a => "\a",
+               t => "\t",
+               r => "\r",
+               n => "\n",
+               e => "\e",
+               b => "\b",
+               f => "\f",
+              );
+
+    $str =~ s{(?<!\\)(?:\\\\)*\\([@{[keys %esc]}])}{$esc{$1}}g;
+    $str;
+}
+
+my @fields = map { [quotewords(qr/\./, 0, $_)] } quotewords(qr/\s*,\s*/, 1, $opt{k});
 
 say($opt{p}) if defined($opt{p});
 
-my $csv = Text::CSV->new({eol => "\n"})
+my $csv = Text::CSV->new(
+                         {
+                          eol      => "\n",
+                          sep_char => defined($opt{d}) ? unescape($opt{d}) : ",",
+                         }
+                        )
   or die "Cannot use CSV: " . Text::CSV->error_diag();
 
-sub json2csv {
+sub extract {
     my ($json, $fields) = @_;
 
     my @row;
     foreach my $field (@{$fields}) {
         my $ref = $json;
-        my @keys = quotewords(qr/\./, 0, $field);
 
-        foreach my $key (@keys) {
-            if ($key =~ /^[-+]?[0-9]+\z/) {
+        foreach my $key (@{$field}) {
+            if (    ref($ref) eq 'ARRAY'
+                and $key =~ /^[-+]?[0-9]+\z/
+                and exists($ref->[$key])) {
                 $ref = $ref->[$key];
             }
-            else {
+            elsif (ref($ref) eq 'HASH'
+                   and exists($ref->{$key})) {
                 $ref = $ref->{$key};
+            }
+            else {
+                local $" = ' -> ';
+                warn "[!] Field `$key' (from `@{$field}') does not exists in JSON.\n";
+                $ref = undef;
+                last;
             }
         }
 
         push @row, $ref;
     }
 
-    $csv->print($out, \@row);
+    \@row;
 }
 
 while (defined(my $line = <$in>)) {
-    json2csv(from_json($line), \@fields);
+    my $data = extract(from_json($line), \@fields);
+    $csv->print($out, $data);
 }
