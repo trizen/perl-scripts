@@ -8,24 +8,28 @@ $img->moveTo(510, 1100);
 my $nr = 308.5;
 
 for (0 .. 280) {
+
     $img->fgcolor('green');
     $img->turn($nr);
-    $img->line(-$nr);
-    $img->line(-$nr);
-    $img->line(-$nr);
-    $img->line(-$nr);
+
+    for (1 .. 4) {
+        $img->line(-$nr);
+    }
+
     $img->fgcolor('gray');
     $img->turn(-$nr);
-    $img->line($nr);
-    $img->line($nr);
-    $img->line($nr);
-    $img->line($nr);
+
+    for (1 .. 4) {
+        $img->line($nr);
+    }
+
     $img->fgcolor('blue');
-    $img->turn(-$nr);
     $img->line($nr);
+
     $img->fgcolor('purple');
     $img->turn($nr);
     $img->line(-$nr);
+
     $img->fgcolor('red');
     $img->line(-$nr);
 }
