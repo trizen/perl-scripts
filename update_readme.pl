@@ -59,7 +59,7 @@ my $main_dir     = File::Spec->curdir;
 
         my $section = '';
         foreach my $file (@files) {
-            my $title = $file->{name} =~ s/_/ /gr;
+            my $title = $file->{name} =~ tr/_/ /r;
 
             if (-d $file->{path}) {
                 $section .= (' ' x $spaces) . "* $title\n";
@@ -68,8 +68,7 @@ my $main_dir     = File::Spec->curdir;
             }
             else {
                 next if $dir eq $main_dir;
-                my $naked_name  = $file->{name};
-                my $naked_title = $title =~ s/\.pl\z//ir;
+                my $naked_title = $title =~ s/\.pl\z//ri;
                 my $url_path    = $make_section_url->($file->{name});
                 $section .= (' ' x $spaces) . "* [\u$naked_title]($url_path)\n";
             }
