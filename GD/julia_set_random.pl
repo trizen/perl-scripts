@@ -26,7 +26,6 @@ for (1 .. 100) {
     my $maxIter = 50;
 
     #my ($cX, $cY) = (-rand(1), rand(1));
-    #my ($cX, $cY) = (1-rand(2), rand(1));          # cool
     #my ($cX, $cY) = (1-rand(2), 1-rand(2));        # cool
     my ($cX, $cY) = (1 - rand(2), rand(1));         # nice
 
