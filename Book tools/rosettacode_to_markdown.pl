@@ -80,6 +80,17 @@ sub tags_to_markdown {
             $html =~ s{ srcset=".*?"}{};
             $out .= $html;
         }
+        elsif ($t =~ m{\G<span><span class="mwe-math-mathml-inline mwe-math-mathml-a11y"}gc) {
+            $t =~ m{\G.*?</span>}gsc;
+            if ($t =~
+                m{\G<meta class="mwe-math-fallback-image-inline".*? url\(&#39;(/mw/index\.php\?(?:.*?))&#39;\).*?/></span>}gc)
+            {
+                $out .= '![image](http://rosettacode.org' . decode_entities($1) . ')';
+            }
+            else {
+                warn "[!] Failed to parse math meta class!\n";
+            }
+        }
         elsif ($t =~ m{\G<ul>(.*?)</ul>}gcs) {
             $out .= _ulist(tags_to_markdown($1, 1));
         }
