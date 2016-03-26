@@ -28,7 +28,7 @@ for (1 .. 100) {
     #my ($cX, $cY) = (-rand(1), rand(1));
     #my ($cX, $cY) = (1-rand(2), rand(1));          # cool
     #my ($cX, $cY) = (1-rand(2), 1-rand(2));        # cool
-    my ($cX, $cY) = (1 - rand(2), rand(1));    # nice
+    my ($cX, $cY) = (1 - rand(2), rand(1));         # nice
 
     my $color = Imager::Color->new('#000000');
 
@@ -49,7 +49,6 @@ for (1 .. 100) {
 __END__
 __C__
 
-//double vowel_scan(int x, int y, int w, int h, int maxIter, double cX, double cY) {
 int iterate(double zx, double zy, double cX, double cY, int i) {
     double tmp1;
     double tmp2;
