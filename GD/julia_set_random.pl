@@ -33,7 +33,6 @@ for (1 .. 100) {
 
     foreach my $x (0 .. $w - 1) {
         foreach my $y (0 .. $h - 1) {
-
             my $zx = ($x - $w / 2) / $w * 3;
             my $zy = ($y - $h / 2) / $h * 2;
             my $i  = iterate($zx, $zy, $cX, $cY, $maxIter);
