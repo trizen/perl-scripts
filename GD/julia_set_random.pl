@@ -5,7 +5,7 @@
 # Date: 26 March 2016
 # Website: https://github.com/trizen
 
-# Generate random fractals contained in the Julia set.
+# Generate 100 random Julia sets.
 # Formula: f(z) = z^2 + c
 
 # See also: https://en.wikipedia.org/wiki/Julia_set
