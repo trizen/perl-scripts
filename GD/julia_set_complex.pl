@@ -53,7 +53,7 @@ __C__
 int iterate(double zx, double zy, double cx, double cy, int i) {
     double complex z = zx + zy * I;
     double complex c = cx + cy * I;
-    while (cabs(z) < 4 && --i) {
+    while (cabs(z) < 2 && --i) {
         z = z*z + c;
         //z = z * cexp(z) + c;
         //z = ccosh(z) + c;
