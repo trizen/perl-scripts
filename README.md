@@ -142,6 +142,9 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Goldbach conjecture possibilities](./GD/goldbach_conjecture_possibilities.pl)
     * [Horsie art](./GD/horsie_art.pl)
     * [Julia set](./GD/julia_set.pl)
+    * [Julia set complex](./GD/julia_set_complex.pl)
+    * [Julia set random](./GD/julia_set_random.pl)
+    * [Julia set rperl](./GD/julia_set_rperl.pl)
     * [Langton s ant gd](./GD/langton_s_ant_gd.pl)
     * [Line pattern triangles](./GD/line_pattern_triangles.pl)
     * LSystem
