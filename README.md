@@ -324,6 +324,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Repeated substrings](./Text/repeated_substrings.pl)
     * [Sim end words](./Text/sim_end_words.pl)
     * [SmartWordWrap](./Text/smartWordWrap.pl)
+    * [SmartWordWrap lazy](./Text/smartWordWrap_lazy.pl)
     * [SmartWordWrap simple](./Text/smartWordWrap_simple.pl)
     * [Unique prefixes](./Text/unique_prefixes.pl)
     * [Word roots](./Text/word_roots.pl)
