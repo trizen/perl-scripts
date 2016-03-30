@@ -60,8 +60,8 @@ use constant {
     A_FOOD => colored('❇', FOOD_COLOR),
              };
 
-my $sleep    = 0.1;    # sleep duration between displays
-my $food_num = 1;      # number of initial food sources
+my $sleep    = 0.05;    # sleep duration between displays
+my $food_num = 1;       # number of initial food sources
 
 local $| = 1;
 
@@ -181,23 +181,8 @@ while (1) {
         sleep($sleep);
     }
 
-    # up
-    if ($key eq "\e[A") {
-        $dir = UP;
-    }
-
-    # down
-    elsif ($key eq "\e[B") {
-        $dir = DOWN;
-    }
-
-    # right
-    elsif ($key eq "\e[C") {
-        $dir = RIGHT;
-    }
-
-    # left
-    elsif ($key eq "\e[D") {
-        $dir = LEFT;
-    }
+    if    ($key eq "\e[A" and $dir ne DOWN ) { $dir = UP    }
+    elsif ($key eq "\e[B" and $dir ne UP   ) { $dir = DOWN  }
+    elsif ($key eq "\e[C" and $dir ne LEFT ) { $dir = RIGHT }
+    elsif ($key eq "\e[D" and $dir ne RIGHT) { $dir = LEFT  }
 }
