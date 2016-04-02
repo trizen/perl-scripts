@@ -31,7 +31,7 @@ sub generate {
     return 1;
 }
 
-generate(100000);
+generate(400000);
 
 my $i = 1;
 my $j = 1;
