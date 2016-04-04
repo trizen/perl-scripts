@@ -282,6 +282,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Prime zeta](./Math/prime_zeta.pl)
     * [Primes diff](./Math/primes_diff.pl)
     * [Primorial](./Math/primorial.pl)
+    * [Recursive matrix multiplication](./Math/recursive_matrix_multiplication.pl)
     * [Rest calc](./Math/rest_calc.pl)
     * [Reversed number triangle](./Math/reversed_number_triangle.pl)
     * [Reversed number triangles](./Math/reversed_number_triangles.pl)
