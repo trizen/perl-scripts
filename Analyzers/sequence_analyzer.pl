@@ -140,6 +140,12 @@ package Sequence::Report {
               ),
 
               (
+                ref($self->{harmonic_mean}) && !$self->{harmonic_mean}->is_real
+                ? ()
+                : ['Harmonic mean', $self->{harmonic_mean}]
+              ),
+
+              (
                 ref($self->{lowest_ratio}) && !$self->{lowest_ratio}->is_real
                 ? ()
                 : ['Lowest consecutive ratio', $self->{lowest_ratio}]
@@ -262,14 +268,21 @@ package Sequence::Report {
         if (    ref($self->{lowest_ratio}) && $self->{lowest_ratio}->is_real
             and ref($self->{highest_ratio}) && $self->{highest_ratio}->is_real
             and $self->{lowest_ratio} == $self->{highest_ratio}) {
-            say "\tgeometric sequence with ratio=$self->{lowest_ratio}";
+            say "\tgeometric sequence (ratio = $self->{lowest_ratio})";
         }
 
         # Arithmetic sequence
-        if (    ref($self->{lowest_diff}) && $self->{lowest_ratio}->is_real
+        if (    ref($self->{lowest_diff}) && $self->{lowest_diff}->is_real
             and ref($self->{highest_diff}) && $self->{highest_diff}->is_real
             and $self->{lowest_diff} == $self->{highest_diff}) {
-            say "\tarithmetic sequence with diff=$self->{lowest_diff}";
+            say "\tarithmetic sequence (diff = $self->{lowest_diff})";
+        }
+
+        # Homologous sequence
+        if (    ref($self->{ratios_prod}) && $self->{ratios_prod}->is_real
+            and ref($self->{max}) && $self->{max}->is_real
+            and $self->{max} % $self->{ratios_prod} == 0) {
+            printf("\thomologous increasing sequence (ratio = %.20g)\n", $self->{max} / $self->{ratios_prod});
         }
 
         $self;
@@ -334,6 +347,7 @@ package Sequence {
 
             $data{arithmetic_mean} += $n / $data{count};
             $data{geometric_mean} *= $n->root($data{count});
+            $data{harmonic_mean} += $n->inv;
 
             if ($self->{is_int}) {
 
@@ -437,6 +451,15 @@ package Sequence {
                         $data{$key} = $value->float;
                     }
                 }
+                $i = 0;
+            }
+        }
+
+        $data{harmonic_mean} = $data{count} / $data{harmonic_mean};
+
+        while (my ($key, $value) = each %data) {
+            if (ref($value) eq 'Math::BigNum') {
+                $data{$key} = $value->round(-30);
             }
         }
 
@@ -457,7 +480,9 @@ usage: $0 [options] [< sequence.txt]
 
 options:
     -m  --map=type,type : map the sequence
-    -r  --reverse       : reverse the sequence
+    -r  --reverse!      : reverse the sequence
+    -s  --sort!         : sort the sequence
+    -p  --prec=i        : number of decimals of precision
 
 valid map types:
     sum     : consecutive sums
@@ -465,12 +490,19 @@ valid map types:
     prod    : consecutive products
     diff    : consecutive differences
 
+    abs     : take the absolute value
+    int     : take the integer part
+    floor   : take the floor value
+    ceil    : take the ceil value
     log     : take the natural logartihm of each term
-    sqrt    : take the square root of each term
-    root    : take the nth root each term
+    log2    : take the base 2 logarithm of each term
+    log10   : take the base 10 logarithm of each term
+    exp     : exponential of each term (e^k)
     sqr     : square each term (k^2)
     cube    : cube each term (k^3)
     pow     : rise each term at the nth power
+    sqrt    : take the square root of each term
+    root    : take the nth root each term
 
     psum    : consecutive pair sum
     pratio  : consecutive pair ratios
@@ -485,16 +517,24 @@ EOT
 
 my $map     = '';
 my $reverse = 0;
+my $sort    = 0;
+my $uniq    = 0;
+my $prec    = 32;
 
 GetOptions(
            'm|map=s'    => \$map,
            'r|reverse!' => \$reverse,
+           's|sort!'    => \$sort,
+           'u|uniq!'    => \$uniq,
+           'p|prec=i'   => \$prec,
            'h|help'     => \&usage,
           );
 
+local $Math::BigNum::PREC = 4 * $prec;
+
 my @numbers;
 
-my $trans_re = qr/\b(log(?:2|10)?|sqrt|root|pow|cbrt|sqr|cube)\b/;
+my $trans_re = qr/\b(log(?:2|10)?|sqrt|root|pow|cbrt|sqr|cube|abs|exp|int|floor|ceil)\b/;
 
 while (<>) {
     my $num = (split(' '))[-1];
@@ -528,10 +568,34 @@ while (<>) {
         elsif ($1 eq 'sqr') {
             $numbers[-1]->bsqr;
         }
+        elsif ($1 eq 'abs') {
+            $numbers[-1]->babs;
+        }
+        elsif ($1 eq 'int') {
+            $numbers[-1]->bint;
+        }
+        elsif ($1 eq 'ceil') {
+            $numbers[-1] = $numbers[-1]->ceil;
+        }
+        elsif ($1 eq 'floor') {
+            $numbers[-1] = $numbers[-1]->floor;
+        }
+        elsif ($1 eq 'exp') {
+            $numbers[-1]->bexp;
+        }
         else {
             die "ERROR: unknown map type: `$1`";
         }
     }
+}
+
+if ($uniq) {
+    my %seen;
+    @numbers = grep { !$seen{$_->as_rat}++ } @numbers;
+}
+
+if ($sort) {
+    @numbers = sort { $a <=> $b } @numbers;
 }
 
 if ($reverse) {
