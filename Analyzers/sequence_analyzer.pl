@@ -184,34 +184,6 @@ package Sequence::Report {
                       : ['Avg. consecutive difference', $self->{avg_diff}]
                 : ()
               ),
-
-              (
-                ref($self->{log_pair_sum}) && $self->{log_pair_sum}->is_real
-                ? ['Log pair ratio sum', $self->{log_pair_sum}]
-                : ()
-              ),
-
-              (
-                ref($self->{log_pair_prod})
-                  && $self->{log_pair_prod}->is_real
-                ? ['Log pair ratio prod', $self->{log_pair_prod}]
-                : ()
-              ),
-
-              (
-                ref($self->{root_pair_sum})
-                  && $self->{root_pair_sum}->is_real
-                ? ['Root pair ratio sum', $self->{root_pair_sum}]
-                : ()
-              ),
-
-              (
-                ref($self->{root_pair_prod})
-                  && $self->{root_pair_prod}->is_real
-                ? ['Root pair ratio prod', $self->{root_pair_prod}]
-                : ()
-              ),
-
           ) {
             my ($label, $value, $extra) = @$row;
             $t->addRow($label, sprintf("%.15g", $value), defined($extra) ? $extra : ());
@@ -293,8 +265,6 @@ package Sequence {
         my $seq = $self->{sequence};
 
         my %data = (
-                    log_pair_prod  => 1,
-                    root_pair_prod => 1,
                     geometric_mean => 1,
                     lowest_ratio   => Inf,
                     highest_ratio  => -Inf,
@@ -313,6 +283,7 @@ package Sequence {
 
         my %seen;
         my $i = 0;
+
         foreach my $n (@$seq) {
 
             if ($seen{$n}++) {
@@ -403,18 +374,6 @@ package Sequence {
                     }
                 }
 
-                {
-                    my $root = $n->root($prev);
-                    $data{root_pair_prod} *= $root;
-                    $data{root_pair_sum} += $root;
-                }
-
-                {
-                    my $log = $n->log($prev);
-                    $data{log_pair_prod} *= $log;
-                    $data{log_pair_sum} += $log;
-                }
-
                 if (defined(my $cmp = $n <=> $prev)) {
                     if ($cmp > 0) {
                         ++$data{increasing_consecutive};
@@ -484,6 +443,7 @@ valid map types:
     log10   : take the base 10 logarithm of each term
     exp     : exponential of each term (e^k)
     sqr     : square each term (k^2)
+    inv     : inverse value (1/k)
     cube    : cube each term (k^3)
     pow     : rise each term at the nth power
     sqrt    : take the square root of each term
@@ -519,7 +479,7 @@ local $Math::BigNum::PREC = 4 * $prec;
 
 my @numbers;
 
-my $trans_re = qr/\b(log(?:2|10)?|sqrt|root|pow|cbrt|sqr|cube|abs|exp|int|floor|ceil)\b/;
+my $trans_re = qr/\b(log(?:2|10)?|sqrt|root|pow|cbrt|sqr|cube|abs|exp|int|floor|ceil|inv)\b/;
 
 while (<>) {
     my $num = (split(' '))[-1];
@@ -552,6 +512,9 @@ while (<>) {
         }
         elsif ($1 eq 'sqr') {
             $numbers[-1]->bsqr;
+        }
+        elsif ($1 eq 'inv') {
+            $numbers[-1]->binv;
         }
         elsif ($1 eq 'abs') {
             $numbers[-1]->babs;
