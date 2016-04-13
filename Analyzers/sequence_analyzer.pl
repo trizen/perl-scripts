@@ -186,35 +186,29 @@ package Sequence::Report {
               ),
 
               (
-                ref($self->{ratios_prod}) && !$self->{ratios_prod}->is_real
-                ? ()
-                : ['Pair ratio product', $self->{ratios_prod}]
-              ),
-
-              (
                 ref($self->{log_pair_sum}) && $self->{log_pair_sum}->is_real
-                ? ['Pair log ratio sum', $self->{log_pair_sum}]
+                ? ['Log pair ratio sum', $self->{log_pair_sum}]
                 : ()
               ),
 
               (
                 ref($self->{log_pair_prod})
                   && $self->{log_pair_prod}->is_real
-                ? ['Pair log ratio prod', $self->{log_pair_prod}]
+                ? ['Log pair ratio prod', $self->{log_pair_prod}]
                 : ()
               ),
 
               (
                 ref($self->{root_pair_sum})
                   && $self->{root_pair_sum}->is_real
-                ? ['Pair root ratio sum', $self->{root_pair_sum}]
+                ? ['Root pair ratio sum', $self->{root_pair_sum}]
                 : ()
               ),
 
               (
                 ref($self->{root_pair_prod})
                   && $self->{root_pair_prod}->is_real
-                ? ['Pair root ratio prod', $self->{root_pair_prod}]
+                ? ['Root pair ratio prod', $self->{root_pair_prod}]
                 : ()
               ),
 
@@ -278,13 +272,6 @@ package Sequence::Report {
             say "\tarithmetic sequence (diff = $self->{lowest_diff})";
         }
 
-        # Homologous sequence
-        if (    ref($self->{ratios_prod}) && $self->{ratios_prod}->is_real
-            and ref($self->{max}) && $self->{max}->is_real
-            and $self->{max} % $self->{ratios_prod} == 0) {
-            printf("\thomologous increasing sequence (ratio = %.20g)\n", $self->{max} / $self->{ratios_prod});
-        }
-
         $self;
     }
 }
@@ -306,7 +293,6 @@ package Sequence {
         my $seq = $self->{sequence};
 
         my %data = (
-                    ratios_prod    => 1,
                     log_pair_prod  => 1,
                     root_pair_prod => 1,
                     geometric_mean => 1,
@@ -407,7 +393,6 @@ package Sequence {
                     my $div = $n / $prev;
 
                     $data{ratios_sum} += $div;
-                    $data{ratios_prod} *= $div;
 
                     if ($div < $data{lowest_ratio}) {
                         $data{lowest_ratio} = $div;
