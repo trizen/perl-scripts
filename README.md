@@ -15,6 +15,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Kernel config diff](./Analyzers/kernel_config_diff.pl)
     * [Perl code analyzer](./Analyzers/perl_code_analyzer.pl)
     * [Reptop](./Analyzers/reptop)
+    * [Sequence analyzer](./Analyzers/sequence_analyzer.pl)
     * [Text stats](./Analyzers/text_stats.pl)
     * [Unidecode word top](./Analyzers/unidecode_word_top.pl)
     * [Wcer](./Analyzers/wcer)
