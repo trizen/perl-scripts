@@ -1,4 +1,4 @@
-#!/usr/bin/perl6
+#!/usr/bin/perl
 
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
