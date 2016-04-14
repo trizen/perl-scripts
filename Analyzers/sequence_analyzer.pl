@@ -219,7 +219,7 @@ package Sequence::Report {
                 printf("\tcontains about %.2f times less than a random number of primes\n", $li_dist / $self->{primes});
             }
         }
-        elsif ($self->{evens} or $self->{odds}) {
+        elsif (($self->{evens} or $self->{odds}) and not $self->{pos}) {
             say "\tcontains no primes";
         }
 
@@ -533,6 +533,7 @@ valid map types:
     pow=x   : rise each term to the i power (k^x)
     root    : take the nth root of each term (k^(1/n))
     root=x  : take the k root of each term (k^(1/x))
+    first=n : analyze only the first n terms
 
     psum    : consecutive pair sum
     pratio  : consecutive pair ratios
@@ -565,9 +566,9 @@ local $Math::BigNum::PREC = 4 * $prec;
 my @numbers;
 
 my $value_re = qr/(?:=([-+]?\d+(?:\.\d+)?+)\b)?/;
-my $trans_re = qr/\b(log|sqrt|root|pow|sqr|abs|exp|int|floor|ceil|inv|add|mul|div|sub)\b$value_re/o;
+my $trans_re = qr/\b(log|sqrt|root|pow|sqr|abs|exp|int|floor|ceil|inv|add|mul|div|sub|first)\b$value_re/o;
 
-while (<>) {
+INPUT: while (<>) {
     my $num = (split(' '))[-1];
     push @numbers, Math::BigNum->new($num);
 
@@ -630,6 +631,14 @@ while (<>) {
             defined($2)
               ? $numbers[-1]->bdiv($2)
               : $numbers[-1]->bdiv($.);
+        }
+        elsif ($1 eq 'first') {
+            if (defined($2)) {
+                last INPUT if $. == $2;
+            }
+            else {
+                die "ERROR: `first` type requires an argument";
+            }
         }
         else {
             die "ERROR: unknown map type: `$1`";
