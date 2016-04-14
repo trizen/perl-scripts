@@ -508,6 +508,7 @@ options:
     -u  --uniq!         : remove duplicated terms
     -p  --prec=i        : number of decimals of precision
     -f  --first=i       : read only the first i terms
+    -o  --output=s      : output the sequence into this file
 
 valid map types:
     sum     : consecutive sums
@@ -553,6 +554,7 @@ my $sort    = 0;
 my $uniq    = 0;
 my $prec    = 32;
 my $first   = undef;
+my $output  = undef;
 
 GetOptions(
            'm|map=s'    => \$map,
@@ -561,8 +563,10 @@ GetOptions(
            'u|uniq!'    => \$uniq,
            'p|prec=i'   => \$prec,
            'f|first=i'  => \$first,
+           'o|output=s' => \$output,
            'h|help'     => \&usage,
-          );
+          )
+  or die "Error in command-line arguments";
 
 local $Math::BigNum::PREC = 4 * $prec;
 
@@ -726,20 +730,40 @@ if ($map =~ /$pair_re/o) {
         $prev = $num;
     }
 
+    if ($uniq) {
+        my %seen;
+        @new = grep { !$seen{$_->as_rat}++ } @new;
+    }
+
+    if ($sort) {
+        @new = sort { $a <=> $b } @new;
+    }
+
     @numbers = @new;
 }
 
 use List::Util qw(all any min);
 
+# Display the first 10 terms of the sequence
 say "=> First 10 terms:";
 say for @numbers[0 .. min(9, $#numbers)];
 say '';
 
+# Output the sequence into a file
+if (defined($output)) {
+    open my $fh, '>', $output;
+    local $, = "\n";
+    say {$fh} @numbers;
+}
+
+# Generate a report for the sequence
 my $report = Sequence->new(
                            sequence => \@numbers,
                            is_int   => (all { $_->is_int } @numbers),
                            is_pos   => !(any { $_->is_neg } @numbers),
                           )->analyze;
+
+# Display the report
 $report->display;
 
 __END__
