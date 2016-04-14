@@ -244,6 +244,21 @@ package Sequence::Report {
             say "\tarithmetic sequence (diff = $self->{lowest_diff})";
         }
 
+        # Perfect power sequence
+        if ($self->{perfect_squares} && $self->{perfect_squares} == $self->{count}) {
+            say "\tsequence of perfect squares";
+        }
+        elsif (
+               $self->{perfect_powers}
+               and (
+                    $self->{perfect_powers} == $self->{count}
+                    or (    $self->{perfect_squares}
+                        and $self->{perfect_powers} + $self->{perfect_squares} == $self->{count})
+                   )
+          ) {
+            say "\tsequence of perfect powers";
+        }
+
         $self;
     }
 }
