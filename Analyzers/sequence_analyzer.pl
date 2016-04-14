@@ -194,7 +194,7 @@ package Sequence::Report {
 
         print $t;
 
-        say "=> Summary:";
+        say "\n=> Summary:";
 
         # Number of primes
         if ($self->{primes}) {
@@ -426,6 +426,7 @@ options:
     -m  --map=type,type : map the sequence
     -r  --reverse!      : reverse the sequence
     -s  --sort!         : sort the sequence
+    -u  --uniq!         : remove duplicated terms
     -p  --prec=i        : number of decimals of precision
 
 valid map types:
@@ -438,16 +439,20 @@ valid map types:
     int     : take the integer part
     floor   : take the floor value
     ceil    : take the ceil value
-    log     : take the natural logartihm of each term
-    log2    : take the base 2 logarithm of each term
-    log10   : take the base 10 logarithm of each term
+    log     : natural logarithm of each term
+    log=x   : base x logarithm of each term
+    div=x   : divide each term by x
+    mul=x   : multiply each term by x
+    add=x   : add x to each term
+    sub=x   : subtract x from each term
     exp     : exponential of each term (e^k)
-    sqr     : square each term (k^2)
     inv     : inverse value (1/k)
-    cube    : cube each term (k^3)
-    pow     : rise each term at the nth power
-    sqrt    : take the square root of each term
-    root    : take the nth root each term
+    sqr     : square each term (k^2)
+    sqrt    : take the square root of each term (k^(1/2))
+    pow     : rise each term to the nth power (k^n)
+    pow=x   : rise each term to the i power (k^x)
+    root    : take the nth root of each term (k^(1/n))
+    root=x  : take the k root of each term (k^(1/x))
 
     psum    : consecutive pair sum
     pratio  : consecutive pair ratios
@@ -455,7 +460,7 @@ valid map types:
     pdiff   : consecutive pair difference
 
 example:
-    $0 -m log,sum < FibonacciSeq.txt
+    $0 -u -m root=5,floor,sum < FibonacciSeq.txt
 EOT
     exit;
 }
@@ -479,7 +484,8 @@ local $Math::BigNum::PREC = 4 * $prec;
 
 my @numbers;
 
-my $trans_re = qr/\b(log(?:2|10)?|sqrt|root|pow|cbrt|sqr|cube|abs|exp|int|floor|ceil|inv)\b/;
+my $value_re = qr/(?:=([-+]?\d+(?:\.\d+)?+)\b)?/;
+my $trans_re = qr/\b(log|sqrt|root|pow|sqr|abs|exp|int|floor|ceil|inv|add|mul|div|sub)\b$value_re/o;
 
 while (<>) {
     my $num = (split(' '))[-1];
@@ -487,28 +493,22 @@ while (<>) {
 
     while ($map =~ /$trans_re/go) {
         if ($1 eq 'log') {
-            $numbers[-1]->blog;
-        }
-        elsif ($1 eq 'log2') {
-            $numbers[-1]->blog(2);
-        }
-        elsif ($1 eq 'log10') {
-            $numbers[-1]->blog(10);
+            defined($2)
+              ? $numbers[-1]->blog($2)
+              : $numbers[-1]->blog;
         }
         elsif ($1 eq 'sqrt') {
             $numbers[-1]->bsqrt;
         }
-        elsif ($1 eq 'cbrt') {
-            $numbers[-1]->broot(3);
-        }
         elsif ($1 eq 'root') {
-            $numbers[-1]->broot($.);
+            defined($2)
+              ? $numbers[-1]->broot($2)
+              : $numbers[-1]->broot($.);
         }
         elsif ($1 eq 'pow') {
-            $numbers[-1]->bpow($.);
-        }
-        elsif ($1 eq 'cube') {
-            $numbers[-1]->bpow(3);
+            defined($2)
+              ? $numbers[-1]->bpow($2)
+              : $numbers[-1]->bpow($.);
         }
         elsif ($1 eq 'sqr') {
             $numbers[-1]->bsqr;
@@ -531,6 +531,26 @@ while (<>) {
         elsif ($1 eq 'exp') {
             $numbers[-1]->bexp;
         }
+        elsif ($1 eq 'add') {
+            defined($2)
+              ? $numbers[-1]->badd($2)
+              : $numbers[-1]->badd($.);
+        }
+        elsif ($1 eq 'sub') {
+            defined($2)
+              ? $numbers[-1]->bsub($2)
+              : $numbers[-1]->bsub($.);
+        }
+        elsif ($1 eq 'mul') {
+            defined($2)
+              ? $numbers[-1]->bmul($2)
+              : $numbers[-1]->bmul($.);
+        }
+        elsif ($1 eq 'div') {
+            defined($2)
+              ? $numbers[-1]->bdiv($2)
+              : $numbers[-1]->bdiv($.);
+        }
         else {
             die "ERROR: unknown map type: `$1`";
         }
@@ -551,7 +571,6 @@ if ($reverse) {
 }
 
 my $consecutive_re = qr/\b(ratio|diff|sum|prod)\b/;
-my $pair_re        = qr/\b(pratio|pdiff|psum|pprod)\b/;
 
 if ($map =~ /$consecutive_re/o) {
 
@@ -581,6 +600,8 @@ if ($map =~ /$consecutive_re/o) {
 
     @numbers = @new;
 }
+
+my $pair_re = qr/\b(pratio|pdiff|psum|pprod)\b/;
 
 if ($map =~ /$pair_re/o) {
 
@@ -614,7 +635,7 @@ if ($map =~ /$pair_re/o) {
     @numbers = @new;
 }
 
-use List::Util qw(all min);
+use List::Util qw(all any min);
 
 say "=> First 10 terms:";
 say for @numbers[0 .. min(9, $#numbers)];
@@ -623,7 +644,7 @@ say '';
 my $report = Sequence->new(
                            sequence => \@numbers,
                            is_int   => (all { $_->is_int } @numbers),
-                           is_pos   => (all { $_->is_pos } @numbers),
+                           is_pos   => !(any { $_->is_neg } @numbers),
                           )->analyze;
 $report->display;
 
