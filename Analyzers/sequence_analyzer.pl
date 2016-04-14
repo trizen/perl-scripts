@@ -32,10 +32,6 @@ package Sequence::Report {
     sub display {
         my ($self) = @_;
 
-        #foreach my $key (sort keys %$self) {
-        #    printf("%-15s => %s\n", $key, $self->{$key});
-        #}
-
         my $percent = sub {
             sprintf('%.4g%%', $_[0] / $self->{count} * 100);
         };
@@ -540,10 +536,10 @@ valid map types:
     root    : take the nth root of each term (k^(1/n))
     root=x  : take the k root of each term (k^(1/x))
 
-    psum    : consecutive pair sum
-    pratio  : consecutive pair ratios
-    pprod   : consecutive pair products
-    pdiff   : consecutive pair difference
+    padd    : consecutive pair sum
+    pdiv    : consecutive pair ratio
+    pmul    : consecutive pair product
+    psub    : consecutive pair difference
 
 example:
     $0 -u -m root=5,floor,sum < FibonacciSeq.txt
@@ -699,7 +695,7 @@ if ($map =~ /$consecutive_re/o) {
     @numbers = @new;
 }
 
-my $pair_re = qr/\b(pratio|pdiff|psum|pprod)\b/;
+my $pair_re = qr/\b(pdiv|psub|padd|pmul)\b/;
 
 if ($map =~ /$pair_re/o) {
 
@@ -709,16 +705,16 @@ if ($map =~ /$pair_re/o) {
     foreach my $num (reverse(@numbers)) {
         if (defined($prev)) {
             while ($map =~ /$pair_re/go) {
-                if ($1 eq 'pratio') {
+                if ($1 eq 'pdiv') {
                     $prev /= $num;
                 }
-                elsif ($1 eq 'pprod') {
+                elsif ($1 eq 'pmul') {
                     $prev *= $num;
                 }
-                elsif ($1 eq 'pdiff') {
+                elsif ($1 eq 'psub') {
                     $prev -= $num;
                 }
-                elsif ($1 eq 'psum') {
+                elsif ($1 eq 'padd') {
                     $prev += $num;
                 }
                 else {
