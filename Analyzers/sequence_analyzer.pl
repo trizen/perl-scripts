@@ -215,7 +215,7 @@ package Sequence::Report {
                 printf("\tcontains about %.2f times less than a random number of primes\n", $li_dist / $self->{primes});
             }
         }
-        elsif (($self->{evens} or $self->{odds}) and not $self->{pos}) {
+        elsif (($self->{evens} or $self->{odds}) and not $self->{neg}) {
             say "\tcontains no primes";
         }
 
