@@ -201,7 +201,10 @@ package Sequence::Report {
             my $li_dist = LogarithmicIntegral($self->{count});
             my $log_dist = $self->{count} > 1 ? ($self->{count} / log($self->{count})) : 0;
 
-            if ($self->{primes} >= $li_dist) {
+            if ($self->{primes} == $self->{count}) {
+                say "\tall terms are prime numbers";
+            }
+            elsif ($self->{primes} >= $li_dist) {
                 if ($self->{primes} / $self->{count} * 100 > 80) {
                     say "\tcontains many primes (>80%)";
                 }
@@ -216,8 +219,19 @@ package Sequence::Report {
                 printf("\tcontains about %.2f times less than a random number of primes\n", $li_dist / $self->{primes});
             }
         }
-        else {
+        elsif ($self->{evens} or $self->{odds}) {
             say "\tcontains no primes";
+        }
+
+        # Odd or even terms
+        if ($self->{evens} and $self->{evens} == $self->{count}) {
+            say "\tall terms are even";
+        }
+        elsif ($self->{odds} and $self->{odds} == $self->{count}) {
+            say "\tall terms are odd";
+        }
+        elsif ($self->{evens} && $self->{odds} and $self->{evens} == $self->{odds}) {
+            say "\tequal number of odds and evens";
         }
 
         # Increasing sequence
