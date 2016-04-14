@@ -508,6 +508,7 @@ options:
     -s  --sort!         : sort the sequence
     -u  --uniq!         : remove duplicated terms
     -p  --prec=i        : number of decimals of precision
+    -f  --first=i       : read only the first i terms
 
 valid map types:
     sum     : consecutive sums
@@ -533,7 +534,6 @@ valid map types:
     pow=x   : rise each term to the i power (k^x)
     root    : take the nth root of each term (k^(1/n))
     root=x  : take the k root of each term (k^(1/x))
-    first=n : analyze only the first n terms
 
     psum    : consecutive pair sum
     pratio  : consecutive pair ratios
@@ -551,6 +551,7 @@ my $reverse = 0;
 my $sort    = 0;
 my $uniq    = 0;
 my $prec    = 32;
+my $first   = undef;
 
 GetOptions(
            'm|map=s'    => \$map,
@@ -558,6 +559,7 @@ GetOptions(
            's|sort!'    => \$sort,
            'u|uniq!'    => \$uniq,
            'p|prec=i'   => \$prec,
+           'f|first=i'  => \$first,
            'h|help'     => \&usage,
           );
 
@@ -566,9 +568,9 @@ local $Math::BigNum::PREC = 4 * $prec;
 my @numbers;
 
 my $value_re = qr/(?:=([-+]?\d+(?:\.\d+)?+)\b)?/;
-my $trans_re = qr/\b(log|sqrt|root|pow|sqr|abs|exp|int|floor|ceil|inv|add|mul|div|sub|first)\b$value_re/o;
+my $trans_re = qr/\b(log|sqrt|root|pow|sqr|abs|exp|int|floor|ceil|inv|add|mul|div|sub)\b$value_re/o;
 
-INPUT: while (<>) {
+while (<>) {
     my $num = (split(' '))[-1];
     push @numbers, Math::BigNum->new($num);
 
@@ -632,17 +634,13 @@ INPUT: while (<>) {
               ? $numbers[-1]->bdiv($2)
               : $numbers[-1]->bdiv($.);
         }
-        elsif ($1 eq 'first') {
-            if (defined($2)) {
-                last INPUT if $. == $2;
-            }
-            else {
-                die "ERROR: `first` type requires an argument";
-            }
-        }
         else {
             die "ERROR: unknown map type: `$1`";
         }
+    }
+
+    if (defined($first) and $. >= $first) {
+        last;
     }
 }
 
