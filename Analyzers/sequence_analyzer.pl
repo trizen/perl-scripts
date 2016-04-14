@@ -199,7 +199,7 @@ package Sequence::Report {
         # Number of primes
         if ($self->{primes}) {
             my $li_dist = LogarithmicIntegral($self->{count});
-            my $log_dist = $self->{count} > 1 ? $self->{count} / log($self->{count}) : 0;
+            my $log_dist = $self->{count} > 1 ? ($self->{count} / log($self->{count})) : 0;
 
             if ($self->{primes} >= $li_dist) {
                 if ($self->{primes} / $self->{count} * 100 > 80) {
@@ -235,21 +235,41 @@ package Sequence::Report {
             and ref($self->{highest_ratio}) && $self->{highest_ratio}->is_real
             and $self->{lowest_ratio} == $self->{highest_ratio}) {
             say "\tgeometric sequence (ratio = $self->{lowest_ratio})";
-            say "\tpossible closed-form: " . (
-                $self->{lowest_ratio} == 1 ? "n" : (
-                   $self->{min} == 1
-                   ? "$self->{lowest_ratio}^n"
-                   : (
-                      "$self->{lowest_ratio}^(n" . do {
-                          my $log = $self->{min}->log($self->{lowest_ratio});
-                          $log->is_int
-                            ? (" " . $log->sign . " " . $log->abs->round(-30))
-                            : (" + log($self->{min})/log($self->{lowest_ratio})");
-                        }
-                        . ')'
-                     )
-                )
-            );
+
+            if ($self->{increasing_consecutive} && $self->{increasing_consecutive} == $self->{count} - 1) {
+                say "\tpossible closed-form: " . (
+                    $self->{lowest_ratio} == 1 ? "n" : (
+                       $self->{min} == 1
+                       ? "$self->{lowest_ratio}^n"
+                       : (
+                          $self->{min} == $self->{lowest_ratio} ? "$self->{lowest_ratio}^n" : (
+                             "$self->{lowest_ratio}^(n" . do {
+                                 my $log = $self->{min}->log($self->{lowest_ratio})->sub(1);
+                                 $log->is_int && !$log->is_zero
+                                   ? (" " . $log->sign . " " . $log->abs->round(-30))
+                                   : (" + log($self->{min})/log($self->{lowest_ratio}) - 1");
+                               }
+                               . ')'
+                          )
+                         )
+                    )
+                );
+
+                if ($self->{min} > $self->{lowest_ratio}) {
+                    my $factor = $self->{min} / $self->{lowest_ratio};
+                    say(
+                        "\tpossible closed-form: "
+                          . (
+                             ($factor == 1 ? '' : "$factor * ")
+                             . (
+                                $self->{lowest_ratio} == 1
+                                ? "n"
+                                : "$self->{lowest_ratio}^n"
+                               )
+                            )
+                       );
+                }
+            }
         }
 
         # Arithmetic sequence
@@ -257,17 +277,21 @@ package Sequence::Report {
             and ref($self->{highest_diff}) && $self->{highest_diff}->is_real
             and $self->{lowest_diff} == $self->{highest_diff}) {
             say "\tarithmetic sequence (diff = $self->{lowest_diff})";
-            say "\tpossible closed-form: "
-              . (
-                 $self->{lowest_diff} == 0 ? $self->{min}
-                 : (
-                    "$self->{lowest_diff}n"
-                      . (
-                         $self->{min} == 0 ? ''
-                         : (" " . $self->{min}->sign . " " . $self->{min}->abs)
-                        )
-                   )
-                );
+
+            if ($self->{increasing_consecutive} && $self->{increasing_consecutive} == $self->{count} - 1) {
+                my $min = $self->{min} - $self->{lowest_diff};
+                say "\tpossible closed-form: "
+                  . (
+                     $self->{lowest_diff} == 0 ? $min
+                     : (
+                        "$self->{lowest_diff}n"
+                          . (
+                             $min == 0 ? ''
+                             : (" " . $min->sign . " " . $min->abs)
+                            )
+                       )
+                    );
+            }
         }
 
         # Perfect power sequence
@@ -691,8 +715,7 @@ $report->display;
 
 __END__
 
-=> First 10 terms:
-2
+First 10 terms:
 6
 18
 54
@@ -702,6 +725,7 @@ __END__
 4374
 13122
 39366
+118098
 
 .------------------------------------------------------------------------------------------------.
 | Label                          | Absolute                               | Percentage           |
@@ -709,25 +733,25 @@ __END__
 | Terms count                    |                                    100 |                      |
 | Evens                          |                                    100 |                 100% |
 | Positives                      |                                    100 |                 100% |
-| Primes                         |                                      1 |                   1% |
 | Cons. increasing terms         |                                    100 |                 100% |
-| Minimum value                  |                                      2 |                      |
-| Maximum value                  |                   3.43585013821341e+47 |                      |
-| Avg. number of prime factors   |                                   50.5 |                      |
-| Divisor sum average            |                   1.15959942164703e+46 |                      |
-| Arithmetic mean                |                   5.15377520732011e+45 |                      |
-| Geometric mean                 |                   8.28957192889163e+23 |                      |
-| Harmonic mean                  |                       133.333333333333 |                      |
+| Minimum value                  |                                      6 |                      |
+| Maximum value                  |                   1.03075504146402e+48 |                      |
+| Avg. number of prime factors   |                                   51.5 |                      |
+| Divisor sum average            |                   3.47879826494108e+46 |                      |
+| Arithmetic mean                |                   1.54613256219603e+46 |                      |
+| Geometric mean                 |                   2.48687157866749e+24 |                      |
+| Harmonic mean                  |                                    400 |                      |
 | Lowest consecutive ratio       |                                      3 |                      |
 | Highest consecutive ratio      |                                      3 |                      |
 | Avg. consecutive ratio         |                                      3 |                      |
-| Lowest consecutive difference  |                                      4 |                      |
-| Highest consecutive difference |                   2.29056675880894e+47 |                      |
-| Avg. consecutive difference    |                   3.47055569516506e+45 |                      |
+| Lowest consecutive difference  |                                     12 |                      |
+| Highest consecutive difference |                   6.87170027642682e+47 |                      |
+| Avg. consecutive difference    |                   1.04116670854952e+46 |                      |
 '--------------------------------+----------------------------------------+----------------------'
 
 => Summary:
-    contains about 30.13 times less than a random number of primes
+    contains no primes
     all terms are in a strictly increasing order
     geometric sequence (ratio = 3)
-    possible closed-form: 3^(n + log(2)/log(3))
+    possible closed-form: 3^(n + log(6)/log(3) - 1)
+    possible closed-form: 2 * 3^n
