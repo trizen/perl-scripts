@@ -240,13 +240,14 @@ package Sequence::Report {
                 say "\tpossible closed-form: " . (
                     $self->{lowest_ratio} == 1 ? "n" : (
                        $self->{min} == 1
-                       ? "$self->{lowest_ratio}^n"
+                       ? "$self->{lowest_ratio}^(n-1)"
                        : (
                           $self->{min} == $self->{lowest_ratio} ? "$self->{lowest_ratio}^n" : (
                              "$self->{lowest_ratio}^(n" . do {
-                                 my $log = $self->{min}->log($self->{lowest_ratio})->sub(1);
-                                 $log->is_int && !$log->is_zero
-                                   ? (" " . $log->sign . " " . $log->abs->round(-30))
+                                 my $log = $self->{min}->log($self->{lowest_ratio})->sub(1)->round(-30);
+                                 ($log->is_int && !$log->is_zero)
+                                   || length($log->as_rat) < 20 || length($self->{min}->as_rat) > 20
+                                   ? (" " . $log->sign . " " . $log->abs)
                                    : (" + log($self->{min})/log($self->{lowest_ratio}) - 1");
                                }
                                . ')'
