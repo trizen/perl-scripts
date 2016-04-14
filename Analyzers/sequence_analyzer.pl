@@ -238,7 +238,7 @@ package Sequence::Report {
 
             if ($self->{increasing_consecutive} && $self->{increasing_consecutive} == $self->{count} - 1) {
                 say "\tpossible closed-form: " . (
-                    $self->{lowest_ratio} == 1 ? "n" : (
+                    $self->{lowest_ratio} == 1 ? 'n' : (
                        $self->{min} == 1
                        ? "$self->{lowest_ratio}^(n-1)"
                        : (
@@ -247,7 +247,7 @@ package Sequence::Report {
                                  my $log = $self->{min}->log($self->{lowest_ratio})->sub(1)->round(-30);
                                  ($log->is_int && !$log->is_zero)
                                    || length($log->as_rat) < 20 || length($self->{min}->as_rat) > 20
-                                   ? (" " . $log->sign . " " . $log->abs)
+                                   ? (' ' . $log->sign . ' ' . $log->abs)
                                    : (" + log($self->{min})/log($self->{lowest_ratio}) - 1");
                                }
                                . ')'
@@ -264,7 +264,7 @@ package Sequence::Report {
                              ($factor == 1 ? '' : "$factor * ")
                              . (
                                 $self->{lowest_ratio} == 1
-                                ? "n"
+                                ? 'n'
                                 : "$self->{lowest_ratio}^n"
                                )
                             )
@@ -285,11 +285,11 @@ package Sequence::Report {
                   . (
                      $self->{lowest_diff} == 0 ? $min
                      : (
-                        "$self->{lowest_diff}n"
-                          . (
-                             $min == 0 ? ''
-                             : (" " . $min->sign . " " . $min->abs)
-                            )
+                        ($self->{lowest_diff} == 1 ? 'n' : "$self->{lowest_diff}n")
+                        . (
+                           $min == 0 ? ''
+                           : (' ' . $min->sign . ' ' . $min->abs)
+                          )
                        )
                     );
             }
