@@ -235,6 +235,21 @@ package Sequence::Report {
             and ref($self->{highest_ratio}) && $self->{highest_ratio}->is_real
             and $self->{lowest_ratio} == $self->{highest_ratio}) {
             say "\tgeometric sequence (ratio = $self->{lowest_ratio})";
+            say "\tpossible closed-form: " . (
+                $self->{lowest_ratio} == 1 ? "n" : (
+                   $self->{min} == 1
+                   ? "$self->{lowest_ratio}^n"
+                   : (
+                      "$self->{lowest_ratio}^(n" . do {
+                          my $log = $self->{min}->log($self->{lowest_ratio});
+                          $log->is_int
+                            ? (" " . $log->sign . " " . $log->abs->round(-30))
+                            : (" + log($self->{min})/log($self->{lowest_ratio})");
+                        }
+                        . ')'
+                     )
+                )
+            );
         }
 
         # Arithmetic sequence
@@ -242,6 +257,17 @@ package Sequence::Report {
             and ref($self->{highest_diff}) && $self->{highest_diff}->is_real
             and $self->{lowest_diff} == $self->{highest_diff}) {
             say "\tarithmetic sequence (diff = $self->{lowest_diff})";
+            say "\tpossible closed-form: "
+              . (
+                 $self->{lowest_diff} == 0 ? $self->{min}
+                 : (
+                    "$self->{lowest_diff}n"
+                      . (
+                         $self->{min} == 0 ? ''
+                         : (" " . $self->{min}->sign . " " . $self->{min}->abs)
+                        )
+                   )
+                );
         }
 
         # Perfect power sequence
@@ -665,33 +691,43 @@ $report->display;
 
 __END__
 
-Example: perl sequence_analyzer.pl lucasSeq.txt
+=> First 10 terms:
+2
+6
+18
+54
+162
+486
+1458
+4374
+13122
+39366
 
 .------------------------------------------------------------------------------------------------.
 | Label                          | Absolute                               | Percentage           |
 +--------------------------------+----------------------------------------+----------------------+
-| Terms count                    |                                    200 |                      |
-| Odds                           |                                    133 |                66.5% |
-| Positives                      |                                    200 |                 100% |
-| Primes                         |                                     20 |                  10% |
-| Perfect squares                |                                      2 |                   1% |
-| Cons. increasing terms         |                                    199 |                99.5% |
-| Consecutive decreasing terms   |                                      2 |                   1% |
-| Minimum value                  |                                      1 |                      |
-| Maximum value                  |                   3.87739824812222e+41 |                      |
-| Avg. number of prime factors   |                                   4.21 |                      |
-| Divisor sum average            |                   7.12545315917369e+39 |                      |
-| Arithmetic mean                |                   5.07558020075164e+39 |                      |
-| Geometric mean                 |                   6.23640784643016e+20 |                      |
-| Lowest consecutive ratio       |                                    0.5 |                      |
+| Terms count                    |                                    100 |                      |
+| Evens                          |                                    100 |                 100% |
+| Positives                      |                                    100 |                 100% |
+| Primes                         |                                      1 |                   1% |
+| Cons. increasing terms         |                                    100 |                 100% |
+| Minimum value                  |                                      2 |                      |
+| Maximum value                  |                   3.43585013821341e+47 |                      |
+| Avg. number of prime factors   |                                   50.5 |                      |
+| Divisor sum average            |                   1.15959942164703e+46 |                      |
+| Arithmetic mean                |                   5.15377520732011e+45 |                      |
+| Geometric mean                 |                   8.28957192889163e+23 |                      |
+| Harmonic mean                  |                       133.333333333333 |                      |
+| Lowest consecutive ratio       |                                      3 |                      |
 | Highest consecutive ratio      |                                      3 |                      |
-| Avg. consecutive ratio         |                       1.61842555557034 |                      |
-| Lowest consecutive difference  |                                     -1 |                      |
-| Highest consecutive difference |                   1.48103434286339e+41 |                      |
-| Avg. consecutive difference    |                   1.94844133071469e+39 |                      |
-| Pair ratio product             |                   1.93869912406111e+41 |                      |
-| Pair root ratio sum            |                       203.563569015452 |                      |
-| Pair root ratio prod           |                        25.972781795394 |                      |
+| Avg. consecutive ratio         |                                      3 |                      |
+| Lowest consecutive difference  |                                      4 |                      |
+| Highest consecutive difference |                   2.29056675880894e+47 |                      |
+| Avg. consecutive difference    |                   3.47055569516506e+45 |                      |
 '--------------------------------+----------------------------------------+----------------------'
+
 => Summary:
-    contains about 2.51 times less than a random number of primes
+    contains about 30.13 times less than a random number of primes
+    all terms are in a strictly increasing order
+    geometric sequence (ratio = 3)
+    possible closed-form: 3^(n + log(2)/log(3))
