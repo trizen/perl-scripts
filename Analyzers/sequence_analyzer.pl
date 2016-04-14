@@ -259,10 +259,13 @@ package Sequence::Report {
                           $self->{min} == $self->{lowest_ratio} ? "$self->{lowest_ratio}^n" : (
                              "$self->{lowest_ratio}^(n" . do {
                                  my $log = $self->{min}->log($self->{lowest_ratio})->sub(1)->round(-30);
-                                 ($log->is_int && !$log->is_zero)
-                                   || length($log->as_rat) < 20 || length($self->{min}->as_rat) > 20
-                                   ? (' ' . $log->sign . ' ' . $log->abs)
-                                   : (" + log($self->{min})/log($self->{lowest_ratio}) - 1");
+                                 $log->is_zero ? ''
+                                   : (
+                                      $log->is_int
+                                        || length($log->as_rat) < 20
+                                        || length($self->{min}->as_rat) > 20 ? (' ' . $log->sign . ' ' . $log->abs)
+                                      : (" + log($self->{min})/log($self->{lowest_ratio}) - 1")
+                                     );
                                }
                                . ')'
                           )
@@ -294,7 +297,7 @@ package Sequence::Report {
             say "\tarithmetic sequence (diff = $self->{lowest_diff})";
 
             if ($self->{increasing_consecutive} && $self->{increasing_consecutive} == $self->{count} - 1) {
-                my $min = $self->{min} - $self->{lowest_diff};
+                my $min = ($self->{min} - $self->{lowest_diff})->round(-20);
                 say "\tpossible closed-form: "
                   . (
                      $self->{lowest_diff} == 0 ? $min
@@ -527,6 +530,8 @@ valid map types:
     add=x   : add x to each term
     sub=x   : subtract x from each term
     exp     : exponential of each term (e^k)
+    cos     : cos() of each term
+    sin     : sin() of each term
     inv     : inverse value (1/k)
     sqr     : square each term (k^2)
     sqrt    : take the square root of each term (k^(1/2))
@@ -568,7 +573,7 @@ local $Math::BigNum::PREC = 4 * $prec;
 my @numbers;
 
 my $value_re = qr/(?:=([-+]?\d+(?:\.\d+)?+)\b)?/;
-my $trans_re = qr/\b(log|sqrt|root|pow|sqr|abs|exp|int|floor|ceil|inv|add|mul|div|sub)\b$value_re/o;
+my $trans_re = qr/\b(log|sqrt|root|pow|sqr|abs|exp|int|floor|ceil|inv|add|mul|div|sub|cos|sin)\b$value_re/o;
 
 while (<>) {
     my $num = (split(' '))[-1];
@@ -604,6 +609,12 @@ while (<>) {
         }
         elsif ($1 eq 'int') {
             $numbers[-1]->bint;
+        }
+        elsif ($1 eq 'cos') {
+            $numbers[-1] = $numbers[-1]->cos;
+        }
+        elsif ($1 eq 'sin') {
+            $numbers[-1] = $numbers[-1]->sin;
         }
         elsif ($1 eq 'ceil') {
             $numbers[-1] = $numbers[-1]->ceil;
