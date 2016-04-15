@@ -213,9 +213,11 @@ my @rules = (
     #['sub_consecutive', 'add_n'], # 'add_n'],
     #['add_constant', 'sub_consecutive'],
     ['sub_constant', 'sub_consecutive'],
+    ['sub_constant'],
 
     #['add_constant', 'div_consecutive'],
     ['sub_constant', 'add_n',],
+
     #['sub_constant'],
     #['sub_constant', 'div_consecutive',],
     ['sub_constant', 'div_consecutive'],
@@ -233,8 +235,11 @@ my @constants = (1 .. 5);    #, #exp(1), atan2(0, -'inf'));
 
 my $seq = Sequence::ClosedForm->new();
 
-#my @seq = (map { $_ * ($_ + 1) / 2 + 2 } map {Math::BigNum->new($_) }1.. 10);
-my @seq = (map { $_->fac + 2 } map { Math::BigNum->new($_) } 1 .. 9);
+my @numbers = (map { Math::BigNum->new($_) } 1 .. 9);
+
+#my @seq = map { 3 * $_  } @numbers;
+#my @seq = map { $_ * ($_ + 1) / 2 + 1 } @numbers;
+my @seq = map { $_->fac + 2 } @numbers;
 
 say "\nseq: @seq\n";
 
@@ -278,7 +283,7 @@ my %closed_forms = (
         #"($n / (2 * $data->{factor}))";
         #"($n - 1)";
 
-        $n;
+        "($n * " . ($data->{factor} - 1) . " / $data->{factor})";
     },
     div_consecutive => sub {
         my ($n) = @_;
@@ -286,11 +291,11 @@ my %closed_forms = (
     },
     add_constant => sub {
         my ($n, $data, $const) = @_;
-        "($n-$constants[$const->[1]{i}-1])";
+        "($data->{factor}*($n-$constants[$const->[1]{i}-1+$data->{offset}]))";
     },
     sub_constant => sub {
         my ($n, $data, $const) = @_;
-        "($n+$constants[$const->[1]{i}-1])";
+        "($data->{factor}*($n+$constants[$const->[1]{i}-1]+$data->{offset}))";
     },
 );
 
