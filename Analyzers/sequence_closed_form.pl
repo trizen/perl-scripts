@@ -15,7 +15,7 @@ use warnings;
 
 package Sequence::ClosedForm {
 
-    use Math::BigNum qw(:constant);
+    use Math::BigNum qw(Inf);
 
     sub new {
         my ($class, %opt) = @_;
@@ -205,30 +205,38 @@ package Sequence::ClosedForm {
     }
 }
 
-use Math::BigNum qw(:constant);
+use Math::BigNum;
+use List::Util qw(first);
 
 my @rules = (
-    ['sub_consecutive', 'add_n'],
+
+    #['sub_consecutive', 'add_n'],# 'add_n'],
 
     #['add_constant', 'div_consecutive'],
     #['sub_constant', 'add_n', 'add_n'],
     #['sub_constant'],
     #['sub_constant', 'div_consecutive',],
-    #['sub_constant', 'div_consecutive' ],
-    ['sub_constant'],
+    ['sub_constant',    'div_consecutive'],
+    ['div_consecutive', 'sub_constant'],
+
+    # ['sub_constant', 'sub_consecutive'],
 
     #['sub_constant'],
     #['add_n', 'div_consecutive',],
     #['div_consecutive',],
-            );
+);
 
 my @constants = (1 .. 5);    #, #exp(1), atan2(0, -'inf'));
 
 my $seq = Sequence::ClosedForm->new();
-my @seq = (map { $_ * ($_ + 1) / 2 } 1 .. 10);
 
-#my @seq = (map {(0+$_)->fac + 1} 0..9);
+#my @seq = (map { $_ * ($_ + 1) / 2 + 1 } map {Math::BigNum->new($_) }1.. 10);
+
+my @seq = (map { $_->fac + 2 } map { Math::BigNum->new($_) } 1 .. 9);
+
 #my @seq = (map{$_+0}1..10);
+
+say "\nseq: @seq\n";
 
 sub make_constant_obj {
     my ($method) = @_;
@@ -255,24 +263,44 @@ sub generate_actions {
 }
 
 my %closed_forms = (
-    'sub_consecutive' => sub {
+    sub_consecutive => sub {
         my ($n, $data) = @_;
         "($data->{factor}*$n + $data->{offset})*($data->{factor}*$n + $data->{offset} + 1)/2";
+
+        #"($n * ($n+1) / 2)";
+    },
+    add_n => sub {
+        my ($n, $data) = @_;
+
+        #"(2 * ($n) / $data->{factor})";
+        #"($n / (2 * $data->{factor}))";
+        "(2*$n)";
+    },
+    div_consecutive => sub {
+        my ($n) = @_;
+        "($n!)";
+    },
+    sub_constant => sub {
+        my ($n, $data, $const) = @_;
+        "($n+$constants[$const->[1]{i}-1])";
     },
 );
 
 sub fill_closed_form {
-    my ($cf, $transforms, $constant) = @_;
+    my ($cf, $actions) = @_;
 
-    my $result = 'n';
-    foreach my $rule (@{$transforms}) {
-        $result = $closed_forms{$rule}($result, $cf);
+    my $result = '(n)';
+    foreach my $action (reverse @$actions) {
+        my ($name, $obj) = @$action;
+        if (not exists($closed_forms{$name})) {
+            warn "No closed-form for rule: $name\n";
+            next;
+        }
+        $result = $closed_forms{$name}($result, $cf, $action);
     }
 
-    $result;
+    "$result / $cf->{factor} + $cf->{offset}";
 }
-
-use List::Util qw(first);
 
 RULE: foreach my $rule (@rules) {
     my @actions   = generate_actions(@$rule);
@@ -280,7 +308,7 @@ RULE: foreach my $rule (@rules) {
     my $has_const = !!@const_pos;
 
     while (1) {
-        my @new;
+        my @sequence;
 
         my $stop = $has_const;
         foreach my $pos (@const_pos) {
@@ -316,11 +344,19 @@ RULE: foreach my $rule (@rules) {
                 }
             }
 
-            next if ($result <= 0 or not $result->is_real);
-            push @new, $result;
+            next RULE if ($result <= 0 or not $result->is_real);
+            push @sequence, $result;
         }
 
-        say "@new";
+        say "@sequence";
+        my @closed_forms = $seq->find_closed_form(\@sequence);
+
+        if (@closed_forms) {
+            foreach my $cf (@closed_forms) {
+                my $filled = fill_closed_form($cf, \@actions);
+                say "\n=> Possible closed-form: $filled\n";
+            }
+        }
 
         $has_const || last;
         foreach my $group (grep { $_->[0] !~ /_constant\z/ } @actions) {
@@ -328,16 +364,4 @@ RULE: foreach my $rule (@rules) {
             $group->[1] = $seq->$method;
         }
     }
-
-    #~ foreach my $i(0..$#sequences) {
-    #~ my $sequence = $sequences[$i];
-    #~ my @closed_forms = $seq->find_closed_form($sequence);
-    #~ if (@closed_forms) {
-    #~ my $constant = $constants[$i];
-    #~ foreach my $cf(@closed_forms) {
-    #~ my $filled = fill_closed_form($cf, $rule, $constant);
-    #~ say "Possible closed-form: $filled";
-    #~ }
-    #~ }
-    #~ }
 }
