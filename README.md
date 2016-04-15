@@ -16,6 +16,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Perl code analyzer](./Analyzers/perl_code_analyzer.pl)
     * [Reptop](./Analyzers/reptop)
     * [Sequence analyzer](./Analyzers/sequence_analyzer.pl)
+    * [Sequence closed form](./Analyzers/sequence_closed_form.pl)
     * [Text stats](./Analyzers/text_stats.pl)
     * [Unidecode word top](./Analyzers/unidecode_word_top.pl)
     * [Wcer](./Analyzers/wcer)
