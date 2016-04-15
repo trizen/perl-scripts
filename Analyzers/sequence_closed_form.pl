@@ -210,14 +210,17 @@ use List::Util qw(first);
 
 my @rules = (
 
-    #['sub_consecutive', 'add_n'],# 'add_n'],
+    #['sub_consecutive', 'add_n'], # 'add_n'],
+    #['add_constant', 'sub_consecutive'],
+    ['sub_constant', 'sub_consecutive'],
 
     #['add_constant', 'div_consecutive'],
-    #['sub_constant', 'add_n', 'add_n'],
+    ['sub_constant', 'add_n',],
     #['sub_constant'],
     #['sub_constant', 'div_consecutive',],
-    ['sub_constant',    'div_consecutive'],
-    ['div_consecutive', 'sub_constant'],
+    ['sub_constant', 'div_consecutive'],
+
+    #['div_consecutive', 'sub_constant'],
 
     # ['sub_constant', 'sub_consecutive'],
 
@@ -230,11 +233,8 @@ my @constants = (1 .. 5);    #, #exp(1), atan2(0, -'inf'));
 
 my $seq = Sequence::ClosedForm->new();
 
-#my @seq = (map { $_ * ($_ + 1) / 2 + 1 } map {Math::BigNum->new($_) }1.. 10);
-
+#my @seq = (map { $_ * ($_ + 1) / 2 + 2 } map {Math::BigNum->new($_) }1.. 10);
 my @seq = (map { $_->fac + 2 } map { Math::BigNum->new($_) } 1 .. 9);
-
-#my @seq = (map{$_+0}1..10);
 
 say "\nseq: @seq\n";
 
@@ -265,20 +265,28 @@ sub generate_actions {
 my %closed_forms = (
     sub_consecutive => sub {
         my ($n, $data) = @_;
-        "($data->{factor}*$n + $data->{offset})*($data->{factor}*$n + $data->{offset} + 1)/2";
 
+        #"($data->{factor}*$n + $data->{offset})*($data->{factor}*$n + $data->{offset} + 1)/2";
         #"($n * ($n+1) / 2)";
+
+        "($n * ($n+1) / 2)";
     },
     add_n => sub {
         my ($n, $data) = @_;
 
         #"(2 * ($n) / $data->{factor})";
         #"($n / (2 * $data->{factor}))";
-        "(2*$n)";
+        #"($n - 1)";
+
+        $n;
     },
     div_consecutive => sub {
         my ($n) = @_;
         "($n!)";
+    },
+    add_constant => sub {
+        my ($n, $data, $const) = @_;
+        "($n-$constants[$const->[1]{i}-1])";
     },
     sub_constant => sub {
         my ($n, $data, $const) = @_;
@@ -289,7 +297,7 @@ my %closed_forms = (
 sub fill_closed_form {
     my ($cf, $actions) = @_;
 
-    my $result = '(n)';
+    my $result = 'n';
     foreach my $action (reverse @$actions) {
         my ($name, $obj) = @$action;
         if (not exists($closed_forms{$name})) {
@@ -299,15 +307,25 @@ sub fill_closed_form {
         $result = $closed_forms{$name}($result, $cf, $action);
     }
 
-    "$result / $cf->{factor} + $cf->{offset}";
+    $result;
+
+    #"$result / $cf->{factor} + $cf->{offset}";
 }
+
+my %seen;
 
 RULE: foreach my $rule (@rules) {
     my @actions   = generate_actions(@$rule);
     my @const_pos = grep { $rule->[$_] =~ /_constant\z/ } 0 .. $#{$rule};
     my $has_const = !!@const_pos;
 
-    while (1) {
+  WHILE: while (1) {
+
+        foreach my $group (grep { $_->[0] !~ /_constant\z/ } @actions) {
+            my $method = $group->[0];
+            $group->[1] = $seq->$method;
+        }
+
         my @sequence;
 
         my $stop = $has_const;
@@ -344,11 +362,18 @@ RULE: foreach my $rule (@rules) {
                 }
             }
 
-            next RULE if ($result <= 0 or not $result->is_real);
+            next WHILE if ($result <= 0 or not $result->is_real);
             push @sequence, $result;
         }
 
-        say "@sequence";
+        if ($sequence[0] >= $sequence[1]) {
+            $has_const || last;
+            next;
+        }
+
+        next if $seen{join(';', map { $_->as_rat } @sequence)}++;
+
+        say "new: @sequence";
         my @closed_forms = $seq->find_closed_form(\@sequence);
 
         if (@closed_forms) {
@@ -359,9 +384,5 @@ RULE: foreach my $rule (@rules) {
         }
 
         $has_const || last;
-        foreach my $group (grep { $_->[0] !~ /_constant\z/ } @actions) {
-            my $method = $group->[0];
-            $group->[1] = $seq->$method;
-        }
     }
 }
