@@ -133,7 +133,7 @@ package Sequence::ClosedForm {
 
             ratio_min => Inf,
             ratio_max => -Inf,
-            ratio_avg => 1,
+            ratio_avg => 0,
 
             min => Inf,
             max => -Inf,
@@ -185,23 +185,34 @@ package Sequence::ClosedForm {
 
         $data{ratio_avg} /= $count;
 
+        my @closed_forms;
+
         if ($data{diff_avg} == $data{diff_max} and $data{diff_max} == $data{diff_min}) {
             my $min = ($data{min} - $data{diff_min})->round(-20);
-
-            return {
-                    factor => $data{diff_min},
-                    offset => $min,
-                    type   => 'arithmetic',
-                   },
-              ;
+            push @closed_forms,
+              scalar {
+                      factor => $data{diff_min},
+                      offset => $min,
+                      type   => 'arithmetic',
+                     };
         }
 
-        foreach my $key (sort keys %data) {
-            printf("%9s => %s\n", $key, $data{$key});
+        if ($data{ratio_avg} == $data{ratio_max} and $data{ratio_max} == $data{ratio_min}) {
+            my $factor = $data{min} / $data{ratio_min};
+            push @closed_forms,
+              scalar {
+                      factor => $factor,
+                      base   => $data{ratio_min},
+                      type   => 'geometric',
+                     };
         }
-        print "\n";
 
-        return ();
+        #foreach my $key (sort keys %data) {
+        #    printf("%9s => %s\n", $key, $data{$key});
+        #}
+        #print "\n";
+
+        return @closed_forms;
     }
 }
 
@@ -213,6 +224,7 @@ my @rules = (
     #['sub_consecutive', 'add_n'], # 'add_n'],
     #['add_constant', 'sub_consecutive'],
     ['sub_constant', 'sub_consecutive'],
+    ['sub_constant', 'div_constant'],
     ['sub_constant'],
 
     #['add_constant', 'div_consecutive'],
@@ -237,6 +249,7 @@ my $seq = Sequence::ClosedForm->new();
 
 my @numbers = (map { Math::BigNum->new($_) } 1 .. 9);
 
+#my @seq = map { 3**$_ + 2} @numbers;
 #my @seq = map { 3 * $_  } @numbers;
 #my @seq = map { $_ * ($_ + 1) / 2 + 1 } @numbers;
 my @seq = map { $_->fac + 2 } @numbers;
@@ -291,11 +304,22 @@ my %closed_forms = (
     },
     add_constant => sub {
         my ($n, $data, $const) = @_;
-        "($data->{factor}*($n-$constants[$const->[1]{i}-1+$data->{offset}]))";
+
+        $data->{type} eq 'arithmetic'
+          ? "($data->{factor}*($n-$constants[$const->[1]{i}-1+$data->{offset}]))"
+          : die "geometric sequences are not supported, yet!";    # TODO: implement it
     },
     sub_constant => sub {
         my ($n, $data, $const) = @_;
-        "($data->{factor}*($n+$constants[$const->[1]{i}-1]+$data->{offset}))";
+        $data->{type} eq 'arithmetic'
+          ? "($data->{factor}*($n+$constants[$const->[1]{i}-1]+$data->{offset}))"
+          : "($constants[$const->[1]{i}-1] + $n)";                # wrong
+    },
+    div_constant => sub {
+        my ($n, $data, $const) = @_;
+        $data->{type} eq 'geometric'
+          ? "($constants[$const->[1]{i}-1] * $data->{factor} * $data->{base}**$n)"
+          : "($data->{factor} * $n)";                             # wrong
     },
 );
 
@@ -337,8 +361,15 @@ RULE: foreach my $rule (@rules) {
         foreach my $pos (@const_pos) {
             my $constant = $actions[$pos][1];
 
-            if (not $constant->{done}) {
-
+            if ($constant->{done}) {
+                if ($constant->{i} >= $#constants) {
+                    $constant->{i} = 0;
+                }
+                else {
+                    $constant->{i}++;
+                }
+            }
+            else {
                 if ($constant->{i} >= $#constants) {
                     $constant->{i}    = 0;
                     $constant->{done} = 1;
