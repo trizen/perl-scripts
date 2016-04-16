@@ -219,6 +219,9 @@ package Sequence::ClosedForm {
 use Math::BigNum;
 use List::Util qw(first);
 
+my $seq       = Sequence::ClosedForm->new();
+my @constants = (1 .. 5);                      #, #exp(1), atan2(0, -'inf'));
+
 my @rules = (
 
     #['sub_consecutive', 'add_n'], # 'add_n'],
@@ -229,6 +232,7 @@ my @rules = (
 
     #['add_constant', 'div_consecutive'],
     ['sub_constant', 'add_n',],
+    ['sub_constant', 'div_consecutive', 'sub_constant'],
 
     #['sub_constant'],
     #['sub_constant', 'div_consecutive',],
@@ -242,19 +246,6 @@ my @rules = (
     #['add_n', 'div_consecutive',],
     #['div_consecutive',],
 );
-
-my @constants = (1 .. 5);    #, #exp(1), atan2(0, -'inf'));
-
-my $seq = Sequence::ClosedForm->new();
-
-my @numbers = (map { Math::BigNum->new($_) } 1 .. 9);
-
-#my @seq = map { 3**$_ + 2} @numbers;
-#my @seq = map { 3 * $_  } @numbers;
-#my @seq = map { $_ * ($_ + 1) / 2 + 1 } @numbers;
-my @seq = map { $_->fac + 2 } @numbers;
-
-say "\nseq: @seq\n";
 
 sub make_constant_obj {
     my ($method) = @_;
@@ -280,6 +271,15 @@ sub generate_actions {
     map { /_constant\z/ ? [$_, make_constant_obj($_)] : [$_, $seq->$_] } @_;
 }
 
+my @numbers = (map { Math::BigNum->new($_) } 1 .. 9);
+
+#my @seq = map { 3**$_ + 2} @numbers;
+#my @seq = map { 3 * $_  } @numbers;
+#my @seq = map { $_ * ($_ + 1) / 2 + 1 } @numbers;
+my @seq = map { $_->fac + 2 } @numbers;
+
+say "\nseq: @seq\n";
+
 my %closed_forms = (
     sub_consecutive => sub {
         my ($n, $data) = @_;
@@ -287,7 +287,9 @@ my %closed_forms = (
         #"($data->{factor}*$n + $data->{offset})*($data->{factor}*$n + $data->{offset} + 1)/2";
         #"($n * ($n+1) / 2)";
 
-        "($n * ($n+1) / 2)";
+        $data->{type} eq 'arithmetic'
+          ? "($n * ($n+1) / 2)"
+          : "($data->{base}**$n)";
     },
     add_n => sub {
         my ($n, $data) = @_;
@@ -306,19 +308,19 @@ my %closed_forms = (
         my ($n, $data, $const) = @_;
 
         $data->{type} eq 'arithmetic'
-          ? "($data->{factor}*($n-$constants[$const->[1]{i}-1+$data->{offset}]))"
+          ? "($data->{factor}*($n-$constants[$const->{i}-1+$data->{offset}]))"
           : die "geometric sequences are not supported, yet!";    # TODO: implement it
     },
     sub_constant => sub {
         my ($n, $data, $const) = @_;
         $data->{type} eq 'arithmetic'
-          ? "($data->{factor}*($n+$constants[$const->[1]{i}-1]+$data->{offset}))"
-          : "($constants[$const->[1]{i}-1] + $n)";                # wrong
+          ? "($data->{factor}*($n+$constants[$const->{i}-1]+$data->{offset}))"
+          : "($constants[$const->{i}-1] + $n)";                   # wrong
     },
     div_constant => sub {
         my ($n, $data, $const) = @_;
         $data->{type} eq 'geometric'
-          ? "($constants[$const->[1]{i}-1] * $data->{factor} * $data->{base}**$n)"
+          ? "($constants[$const->{i}-1] * $data->{factor} * $data->{base}**$n)"
           : "($data->{factor} * $n)";                             # wrong
     },
 );
@@ -329,17 +331,21 @@ sub fill_closed_form {
     my $result = 'n';
     foreach my $action (reverse @$actions) {
         my ($name, $obj) = @$action;
+
+        #$report .= "name: $name" . (ref($obj) eq 'Sequence::Constant' ? (' (' . $constants[$obj->{i}-1] . ')') : '') . "\n";
         if (not exists($closed_forms{$name})) {
             warn "No closed-form for rule: $name\n";
             next;
         }
-        $result = $closed_forms{$name}($result, $cf, $action);
+        $result = $closed_forms{$name}($result, $cf, $obj);
     }
 
     $result;
 
     #"$result / $cf->{factor} + $cf->{offset}";
 }
+
+say '-' x 80;
 
 my %seen;
 
@@ -409,14 +415,30 @@ RULE: foreach my $rule (@rules) {
 
         next if $seen{join(';', map { $_->as_rat } @sequence)}++;
 
-        say "new: @sequence";
+        say "try: @sequence";
         my @closed_forms = $seq->find_closed_form(\@sequence);
 
         if (@closed_forms) {
+            say "new: @sequence\n";
             foreach my $cf (@closed_forms) {
+                if ($cf->{type} eq 'geometric') {
+                    say "type: $cf->{type}";
+                    say "base: $cf->{base}";
+                    say "fact: $cf->{factor}";
+                }
+                elsif ($cf->{type} eq 'arithmetic') {
+                    say "type: $cf->{type}";
+                    say "fact: $cf->{factor}";
+                    say "offs: $cf->{offset}";
+                }
+                foreach my $action (@actions) {
+                    my ($name, $obj) = @$action;
+                    say "name: $name" . (ref($obj) eq 'Sequence::Constant' ? " (constant: $constants[$obj->{i}-1])" : '');
+                }
                 my $filled = fill_closed_form($cf, \@actions);
-                say "\n=> Possible closed-form: $filled\n";
+                say "\n=> Possible closed-form: $filled";
             }
+            say '-' x 80;
         }
 
         $has_const || last;
