@@ -152,6 +152,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Line pattern triangles](./GD/line_pattern_triangles.pl)
     * LSystem
         * [LSystem.pm](./GD/LSystem/LSystem.pm)
+        * [Plant](./GD/LSystem/plant.pl)
         * [Sierpinski triangle](./GD/LSystem/sierpinski_triangle.pl)
         * [Tree](./GD/LSystem/tree.pl)
         * [Turtle.pm](./GD/LSystem/Turtle.pm)
