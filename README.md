@@ -151,8 +151,9 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Langton s ant gd](./GD/langton_s_ant_gd.pl)
     * [Line pattern triangles](./GD/line_pattern_triangles.pl)
     * LSystem
-        * [Example](./GD/LSystem/example.pl)
         * [LSystem.pm](./GD/LSystem/LSystem.pm)
+        * [Sierpinski triangle](./GD/LSystem/sierpinski_triangle.pl)
+        * [Tree](./GD/LSystem/tree.pl)
         * [Turtle.pm](./GD/LSystem/Turtle.pm)
     * [Magic triangle](./GD/magic_triangle.pl)
     * [Mathematical butt](./GD/mathematical_butt.pl)
