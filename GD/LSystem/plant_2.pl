@@ -31,5 +31,5 @@ my %stemchanges = (
     }
 );
 
-my $lsys = LSystem->new(1000, \%stemchanges, \%stemchanges);
+my $lsys = LSystem->new(1000, \%stemchanges);
 $lsys->execute('S', 6, "plant_2.png", %rules);

@@ -31,7 +31,7 @@ my %stemchanges = (
     }
 );
 
-my $lsys = LSystem->new(1000, \%stemchanges, \%stemchanges);
+my $lsys = LSystem->new(1000, \%stemchanges);
 
 $lsys->turtle->turn(grad2rad(33.33333333333333333333));
 $lsys->execute('S--S--S', 7, "sierpinski_triangle.png", %rules);

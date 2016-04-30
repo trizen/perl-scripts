@@ -12,10 +12,10 @@ my %rules = (
              'L' => '[{S+S+S+S+S+S}]'
             );
 
-my $x_offset = -200;
+my $x_offset = -400;
 
 my %stemchanges = (
-    distance  => 18.5,
+    distance  => 35,
     dtheta    => 0.1,
     motionsub => sub {
         my ($self, $m, $n, $o, $p) = @_;
@@ -29,7 +29,7 @@ my %stemchanges = (
 );
 
 my %polychanges = (
-    distance  => 3,
+    distance  => 5,
     dtheta    => 0.4,
     motionsub => sub {
         my ($self, $x, $y) = @_;
@@ -37,5 +37,5 @@ my %polychanges = (
     }
 );
 
-my $lsys = LSystem->new(400, \%stemchanges, \%polychanges);
+my $lsys = LSystem->new(800, \%stemchanges, \%polychanges);
 $lsys->execute('A', 10, "tree.png", %rules);
