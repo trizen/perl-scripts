@@ -7,18 +7,15 @@ use warnings;
 use LSystem;
 use Math::Trig qw(grad2rad);
 
-my %rules = (
-             'S' => 'S--S--S--T',
-             'T' => 'TT',
-            );
+my %rules = ('S' => 'SS+[+S-S-S]-[-S+S+S]');
 
-my $scale    = 0.4;
-my $x_offset = -280;
-my $y_offset = 400;
+my $scale    = 1;
+my $x_offset = -600;
+my $y_offset = 0;
 
 my %stemchanges = (
-    distance  => 30,
-    dtheta    => grad2rad(133.33333333333333333333333333333333),
+    distance  => 8,
+    dtheta    => grad2rad(25),
     motionsub => sub {
         my ($self, $m, $n, $o, $p) = @_;
         $self->draw(
@@ -32,6 +29,4 @@ my %stemchanges = (
 );
 
 my $lsys = LSystem->new(1000, \%stemchanges, \%stemchanges);
-
-$lsys->turtle->turn(grad2rad(33.33333333333333333333));
-$lsys->execute('S--S--S', 7, "sierpinski_triangle.png", %rules);
+$lsys->execute('S', 5, "plant.png", %rules);
