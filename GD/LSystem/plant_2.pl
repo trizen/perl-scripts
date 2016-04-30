@@ -8,9 +8,9 @@ use LSystem;
 use Math::Trig qw(grad2rad);
 
 my %rules = (
-    S => 'T-[[S]+S]+T[+TS]-S',
-    T => 'TT',
-);
+             S => 'T-[[S]+S]+T[+TS]-S',
+             T => 'TT',
+            );
 
 my $scale    = 0.7;
 my $x_offset = -200;
