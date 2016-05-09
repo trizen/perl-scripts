@@ -27,8 +27,8 @@ sub is_sum_of_2_squares {
         $map{$p}++;
     }
 
-    foreach my $key (keys %map) {
-        $map{$key} % 2 == 0 or return;
+    while (my (undef, $count) = each %map) {
+        $count % 2 == 0 or return;
     }
 
     return 1;
