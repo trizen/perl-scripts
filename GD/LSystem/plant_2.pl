@@ -5,11 +5,11 @@ use strict;
 use warnings;
 
 use LSystem;
-use Math::Trig qw(grad2rad);
+use Math::Trig qw(deg2rad);
 
 my %rules = (
              S => 'T-[[S]+S]+T[+TS]-S',
-             T => 'TT',         # or: 'T[S]T'
+             T => 'TT',                   # or: 'T[S]T'
             );
 
 my $scale    = 0.7;
@@ -18,7 +18,7 @@ my $y_offset = 300;
 
 my %stemchanges = (
     distance  => 8,
-    dtheta    => grad2rad(25),
+    dtheta    => deg2rad(25),
     motionsub => sub {
         my ($self, $m, $n, $o, $p) = @_;
         $self->draw(

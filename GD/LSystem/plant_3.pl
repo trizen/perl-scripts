@@ -7,11 +7,14 @@ use warnings;
 use LSystem;
 use Math::Trig qw(deg2rad);
 
-my %rules = ('S' => 'SS+[+S-S-S]-[-S+S+S]');
+my %rules = (
+             F=>'CFF-[C-F+F]+[C+F-F]',
+             X=>'CFF+[C+F]+[C-F]',
+            );
 
-my $scale    = 1;
-my $x_offset = -600;
-my $y_offset = 0;
+my $scale    = 0.5;
+my $x_offset = 0;
+my $y_offset = 500;
 
 my %stemchanges = (
     distance  => 8,
@@ -29,4 +32,4 @@ my %stemchanges = (
 );
 
 my $lsys = LSystem->new(1000, \%stemchanges);
-$lsys->execute('S', 5, "plant.png", %rules);
+$lsys->execute('FX', 5, "snowflake.png", %rules);

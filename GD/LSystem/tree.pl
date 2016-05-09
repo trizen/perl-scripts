@@ -6,10 +6,10 @@ use warnings;
 use LSystem;
 
 my %rules = (
-             'A' => 'S[---LMA][++++B]',
-             'B' => 'S[++LB][--C]',
-             'C' => 'S[-----LB]GS[+MC]',
-             'L' => '[{S+S+S+S+S+S}]'
+             'a' => 'S[---l:a][++++b]',
+             'b' => 'S[++lb][--c]',
+             'c' => 'S[-----lb]gS[+:c]',
+             'l' => '[{S+S+S+S+S+S}]'
             );
 
 my $x_offset = -400;
@@ -38,4 +38,4 @@ my %polychanges = (
 );
 
 my $lsys = LSystem->new(800, \%stemchanges, \%polychanges);
-$lsys->execute('A', 10, "tree.png", %rules);
+$lsys->execute('a', 10, "tree.png", %rules);

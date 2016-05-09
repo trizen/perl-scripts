@@ -3,6 +3,18 @@
 # Written by jreed@itis.com, adapted by John Cristy.
 # Later adopted and improved by Daniel "Trizen" Șuteu.
 
+# Defined rules:
+#   +     Turn clockwise
+#   -     Turn counter-clockwise
+#   :     Mirror
+#   [     Begin branch
+#   ]     End branch
+#   {     Begin polygon
+#   }     End polygon
+
+# Any upper case letter draws a line.
+# Any lower case letter is a no-op.
+
 package LSystem {
 
     use 5.010;
@@ -29,15 +41,9 @@ package LSystem {
         my ($self, $letter) = @_;
 
         my %table = (
-            'S' => sub {    # Step forward
-                $self->{turtle}->forward($self->{changes}->{distance}, $self->{changes}->{motionsub});
-            },
-            'T' => sub {    # Step forward
-                $self->{turtle}->forward($self->{changes}->{distance}, $self->{changes}->{motionsub});
-            },
-            '-' => sub { $self->{turtle}->turn(-$self->{changes}->{dtheta}); },                    # counter-clockwise
             '+' => sub { $self->{turtle}->turn($self->{changes}->{dtheta}); },                     # Turn clockwise
-            'M' => sub { $self->{turtle}->mirror(); },                                             # Mirror
+            '-' => sub { $self->{turtle}->turn(-$self->{changes}->{dtheta}); },                    # Turn counter-clockwise
+            ':' => sub { $self->{turtle}->mirror(); },                                             # Mirror
             '[' => sub { push(@{$self->{statestack}}, [$self->{turtle}->state()]); },              # Begin branch
             ']' => sub { $self->{turtle}->setstate(@{pop(@{$self->{statestack}})}); },             # End branch
             '{' => sub { $self->{turtle}{poly} = []; $self->{changes} = $self->{polychanges} },    # Begin polygon
@@ -53,6 +59,9 @@ package LSystem {
 
         if (exists $table{$letter}) {
             $table{$letter}->();
+        }
+        elsif ($letter =~ /^[[:upper:]]\z/) {
+            $self->{turtle}->forward($self->{changes}->{distance}, $self->{changes}->{motionsub});
         }
     }
 

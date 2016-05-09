@@ -151,11 +151,11 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Langton s ant gd](./GD/langton_s_ant_gd.pl)
     * [Line pattern triangles](./GD/line_pattern_triangles.pl)
     * LSystem
+        * [Honeycomb](./GD/LSystem/honeycomb.pl)
         * [LSystem.pm](./GD/LSystem/LSystem.pm)
         * [Plant](./GD/LSystem/plant.pl)
         * [Plant 2](./GD/LSystem/plant_2.pl)
-        * [Plant 2.png](./GD/LSystem/plant_2.png)
-        * [Plant 2 orig.png](./GD/LSystem/plant_2_orig.png)
+        * [Plant 3](./GD/LSystem/plant_3.pl)
         * [Sierpinski triangle](./GD/LSystem/sierpinski_triangle.pl)
         * [Tree](./GD/LSystem/tree.pl)
         * [Turtle.pm](./GD/LSystem/Turtle.pm)
