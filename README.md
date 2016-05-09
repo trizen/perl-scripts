@@ -152,6 +152,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Line pattern triangles](./GD/line_pattern_triangles.pl)
     * LSystem
         * [Honeycomb](./GD/LSystem/honeycomb.pl)
+        * [Honeycomb 2](./GD/LSystem/honeycomb_2.pl)
         * [LSystem.pm](./GD/LSystem/LSystem.pm)
         * [Plant](./GD/LSystem/plant.pl)
         * [Plant 2](./GD/LSystem/plant_2.pl)

@@ -9,8 +9,6 @@
 #   :     Mirror
 #   [     Begin branch
 #   ]     End branch
-#   {     Begin polygon
-#   }     End polygon
 
 # Any upper case letter draws a line.
 # Any lower case letter is a no-op.
@@ -23,45 +21,44 @@ package LSystem {
 
     use Turtle;
     use Image::Magick;
+    use Math::Trig qw(deg2rad);
 
     sub new {
-        my ($class, $imagesize, $changes, $polychanges) = @_;
+        my ($class, %opt) = @_;
 
-        my %opt = (
-                   turtle      => Turtle->new($imagesize, $imagesize, 0, 1),
-                   changes     => $changes,
-                   stemchanges => $changes,
-                   polychanges => $polychanges,
-                  );
+        my %state = (
+                     theta => deg2rad($opt{angle} // 90),
+                     scale => $opt{scale} // 1,
+                     xoff  => $opt{xoff}  // 0,
+                     yoff  => $opt{yoff}  // 0,
+                     len   => $opt{len}   // 5,
+                     color => $opt{color} // 'black',
+                     turtle => Turtle->new($opt{width} // 1000, $opt{height} // 1000, 0, 1),
+                    );
 
-        bless \%opt, $class;
+        if (defined $opt{turn}) {
+            $state{turtle}->turn(deg2rad($opt{turn}));
+        }
+
+        bless \%state, $class;
     }
 
     sub translate {
         my ($self, $letter) = @_;
 
         my %table = (
-            '+' => sub { $self->{turtle}->turn($self->{changes}->{dtheta}); },                     # Turn clockwise
-            '-' => sub { $self->{turtle}->turn(-$self->{changes}->{dtheta}); },                    # Turn counter-clockwise
-            ':' => sub { $self->{turtle}->mirror(); },                                             # Mirror
-            '[' => sub { push(@{$self->{statestack}}, [$self->{turtle}->state()]); },              # Begin branch
-            ']' => sub { $self->{turtle}->setstate(@{pop(@{$self->{statestack}})}); },             # End branch
-            '{' => sub { $self->{turtle}{poly} = []; $self->{changes} = $self->{polychanges} },    # Begin polygon
-            '}' => sub {                                                                           # End polygon
-                $self->{turtle}->draw(
-                                      primitive => 'Polygon',
-                                      points    => join(' ', @{$self->{turtle}{poly}}),
-                                      fill      => 'light green'
-                                     );
-                $self->{changes} = $self->{stemchanges};
-            },
-        );
+                     '+' => sub { $self->{turtle}->turn($self->{theta}); },                        # Turn clockwise
+                     '-' => sub { $self->{turtle}->turn(-$self->{theta}); },                       # Turn counter-clockwise
+                     ':' => sub { $self->{turtle}->mirror(); },                                    # Mirror
+                     '[' => sub { push(@{$self->{statestack}}, [$self->{turtle}->state()]); },     # Begin branch
+                     ']' => sub { $self->{turtle}->setstate(@{pop(@{$self->{statestack}})}); },    # End branch
+                    );
 
         if (exists $table{$letter}) {
             $table{$letter}->();
         }
         elsif ($letter =~ /^[[:upper:]]\z/) {
-            $self->{turtle}->forward($self->{changes}->{distance}, $self->{changes}->{motionsub});
+            $self->{turtle}->forward($self->{len}, $self);
         }
     }
 
@@ -71,10 +68,10 @@ package LSystem {
     }
 
     sub execute {
-        my ($self, $string, $repetitions, $filename, %rule) = @_;
+        my ($self, $string, $repetitions, $filename, %rules) = @_;
 
         for (1 .. $repetitions) {
-            $string =~ s{(.)}{$rule{$1} // $1}eg;
+            $string =~ s{(.)}{$rules{$1} // $1}eg;
         }
 
         foreach my $command (split(//, $string)) {

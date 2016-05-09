@@ -6,10 +6,7 @@ use warnings;
 
 use LSystem;
 
-my %rules = (
-             A => '-A-B+B+B+B+',
-             B => '-A+B+A+B+A+B+A-',
-            );
+my %rules = (F => 'F[-F][+F]');
 
 my $lsys = LSystem->new(
     width  => 1000,
@@ -17,11 +14,10 @@ my $lsys = LSystem->new(
 
     scale => 1,
     xoff  => -500,
-    yoff  => -400,
+    yoff  => -500,
 
     len   => 20,
     angle => 60,
     color => 'orange',
                        );
-
-$lsys->execute('A', 6, "honeycomb.png", %rules);
+$lsys->execute('F', 10, "honeycomb_2.png", %rules);

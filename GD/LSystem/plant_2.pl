@@ -5,31 +5,23 @@ use strict;
 use warnings;
 
 use LSystem;
-use Math::Trig qw(deg2rad);
 
 my %rules = (
              S => 'T-[[S]+S]+T[+TS]-S',
              T => 'TT',                   # or: 'T[S]T'
             );
 
-my $scale    = 0.7;
-my $x_offset = -200;
-my $y_offset = 300;
+my $lsys = LSystem->new(
+    width  => 1000,
+    height => 1000,
 
-my %stemchanges = (
-    distance  => 8,
-    dtheta    => deg2rad(25),
-    motionsub => sub {
-        my ($self, $m, $n, $o, $p) = @_;
-        $self->draw(
-               primitive => 'line',
-               points =>
-                 join(' ', $m * $scale + $x_offset, $n * $scale + $y_offset, $o * $scale + $x_offset, $p * $scale + $y_offset),
-               stroke      => 'dark green',
-               strokewidth => 1
-        );
-    }
-);
+    scale => 0.7,
+    xoff  => -200,
+    yoff  => 300,
 
-my $lsys = LSystem->new(1000, \%stemchanges);
+    len   => 8,
+    angle => 25,
+    color => 'dark green',
+                       );
+
 $lsys->execute('S', 6, "plant_2.png", %rules);

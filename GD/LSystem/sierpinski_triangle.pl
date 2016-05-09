@@ -5,33 +5,24 @@ use strict;
 use warnings;
 
 use LSystem;
-use Math::Trig qw(deg2rad);
 
 my %rules = (
              'S' => 'S--S--S--T',
              'T' => 'TT',
             );
 
-my $scale    = 0.4;
-my $x_offset = -280;
-my $y_offset = 400;
+my $lsys = LSystem->new(
+    width  => 1000,
+    height => 1000,
 
-my %stemchanges = (
-    distance  => 30,
-    dtheta    => deg2rad(120),
-    motionsub => sub {
-        my ($self, $m, $n, $o, $p) = @_;
-        $self->draw(
-               primitive => 'line',
-               points =>
-                 join(' ', $m * $scale + $x_offset, $n * $scale + $y_offset, $o * $scale + $x_offset, $p * $scale + $y_offset),
-               stroke      => 'dark green',
-               strokewidth => 1
-        );
-    }
-);
+    scale => 0.4,
+    xoff  => -280,
+    yoff  => 400,
 
-my $lsys = LSystem->new(1000, \%stemchanges);
+    len   => 30,
+    angle => 120,
+    turn  => 30,
+    color => 'dark red',
+                       );
 
-$lsys->turtle->turn(deg2rad(30));
 $lsys->execute('S--S--S', 7, "sierpinski_triangle.png", %rules);

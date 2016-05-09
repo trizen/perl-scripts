@@ -24,15 +24,27 @@ package Turtle {
     }
 
     sub forward {
-        my ($self, $r, $what) = @_;
+        my ($self, $r, $opt) = @_;
         my ($newx, $newy) = ($self->{x} + $r * sin($self->{theta}), $self->{y} + $r * -cos($self->{theta}));
 
-        if ($what) {
-            $what->($self, $self->{x}, $self->{y}, $newx, $newy);    # motion
-        }
+        $self->draw(
+                    primitive => 'line',
+                    points    => join(' ',
+                                   $self->{x} * $opt->{scale} + $opt->{xoff},
+                                   $self->{y} * $opt->{scale} + $opt->{yoff},
+                                   $newx * $opt->{scale} + $opt->{xoff},
+                                   $newy * $opt->{scale} + $opt->{yoff},
+                                  ),
+                    stroke      => $opt->{color},
+                    strokewidth => 1
+                   );
+
+        #if ($what) {
+        #    $what->($self, $self->{x}, $self->{y}, $newx, $newy);    # motion
+        #}
 
         # According to the coderef passed in
-        ($self->{x}, $self->{y}) = ($newx, $newy);                   # change the old coords
+        ($self->{x}, $self->{y}) = ($newx, $newy);    # change the old coords
     }
 
     sub draw {
