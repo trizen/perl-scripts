@@ -9,7 +9,7 @@ use Math::Trig qw(grad2rad);
 
 my %rules = (
              S => 'T-[[S]+S]+T[+TS]-S',
-             T => 'TT',
+             T => 'TT',         # or: 'T[S]T'
             );
 
 my $scale    = 0.7;
