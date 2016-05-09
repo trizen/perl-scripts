@@ -251,6 +251,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Cal](./Math/cal.pl)
     * [Coin change](./Math/coin_change.pl)
     * [Continued fractions](./Math/continued_fractions.pl)
+    * [Continued fractions for e](./Math/continued_fractions_for_e.pl)
     * [Continued fractions for nth roots](./Math/continued_fractions_for_nth_roots.pl)
     * [Continued fractions for pi](./Math/continued_fractions_for_pi.pl)
     * [Continued fractions for square roots](./Math/continued_fractions_for_square_roots.pl)
