@@ -13,6 +13,7 @@ use strict;
 use warnings;
 
 use ntheory qw(factor is_prime);
+use List::Util qw(any);
 
 sub is_sum_of_2_squares {
     my ($n) = @_;
@@ -27,11 +28,7 @@ sub is_sum_of_2_squares {
         $map{$p}++;
     }
 
-    while (my (undef, $count) = each %map) {
-        $count % 2 == 0 or return;
-    }
-
-    return 1;
+    (any { $_ % 2 != 0 } values %map) ? 0 : 1;
 }
 
 for my $i (0 .. 50) {
