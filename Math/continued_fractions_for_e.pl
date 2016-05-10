@@ -20,5 +20,11 @@ sub e_2 {
     $limit > 0 ? 1 / (1 + 1 / (2 * $i + 1 / (1 + e_2($i + 1, $limit - 1)))) : 0;
 }
 
-say 1 + 1 / e_1(1, 100);    # very fast convergence
-say 2 + e_2(1, 100);        # extremely fast convergence
+sub e_3 {
+    my ($i, $limit) = @_;
+    $limit > 0 ? (1 / (2 * $i + 1 + e_3($i + 1, $limit - 1))) : 0;
+}
+
+say 1 + 1 / e_1(1, 100);          # very fast convergence
+say 2 + e_2(1, 100);              # extremely fast convergence
+say sqrt(1 + 2 / e_3(1, 100));    # extremely fast convergence
