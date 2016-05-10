@@ -282,6 +282,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Multi sqrt nums](./Math/multi_sqrt_nums.pl)
     * [N dimensional circles](./Math/n_dimensional_circles.pl)
     * [Next power of two](./Math/next_power_of_two.pl)
+    * [Nth root recurrence constant](./Math/nth_root_recurrence_constant.pl)
     * [Number numbers](./Math/number_numbers.pl)
     * [Number of divisions](./Math/number_of_divisions.pl)
     * [Pascal s triangle multiples](./Math/pascal_s_triangle_multiples.pl)
