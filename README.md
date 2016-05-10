@@ -266,6 +266,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Faulhaber s formula](./Math/faulhaber_s_formula.pl)
     * [Fibonacci closed form](./Math/fibonacci_closed_form.pl)
     * [Fibonacci closed form 2](./Math/fibonacci_closed_form_2.pl)
+    * [Find least common denominator](./Math/find_least_common_denominator.pl)
     * [Function graph](./Math/function_graph.pl)
     * [Gamma function](./Math/gamma_function.pl)
     * [General binary multiplier](./Math/general_binary_multiplier.pl)
