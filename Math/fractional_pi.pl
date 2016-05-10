@@ -20,19 +20,23 @@ use Math::BigNum qw(:constant);
 
 no warnings 'recursion';
 
-memoize('pi_numerator');
-memoize('pi_denominator');
+memoize('pi_nu');
+memoize('pi_de');
 
-sub pi_numerator {
+sub pi_nu {
     my ($n) = @_;
-    $n < 2 ? ($n == 0 ? 1 : 0) : (2 * $n - 1) * pi_numerator($n - 1) + ($n - 1)**2 * pi_numerator($n - 2);
+    $n < 2
+      ? ($n == 0 ? 1 : 0)
+      : (2 * $n - 1) * pi_nu($n - 1) + ($n - 1)**2 * pi_nu($n - 2);
 }
 
-sub pi_denominator {
+sub pi_de {
     my ($n) = @_;
-    $n < 2 ? $n : (2 * $n - 1) * pi_denominator($n - 1) + ($n - 1)**2 * pi_denominator($n - 2);
+    $n < 2
+      ? $n
+      : (2 * $n - 1) * pi_de($n - 1) + ($n - 1)**2 * pi_de($n - 2);
 }
 
 my $prec = 1000;
-my $pi = (4 / (1 + pi_numerator($prec) / pi_denominator($prec)))->as_float(int($prec / (1.32)));
+my $pi = (4 / (1 + pi_nu($prec) / pi_de($prec)))->as_float(int($prec / 1.32));
 say $pi;
