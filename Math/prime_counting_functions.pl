@@ -18,7 +18,7 @@ use utf8;
 use strict;
 use warnings;
 
-use bigint (try => 'GMP');
+use Math::BigNum qw(:constant);
 use ntheory qw(prime_count LogarithmicIntegral RiemannR);
 
 binmode(STDOUT, ':utf8');
@@ -29,7 +29,7 @@ foreach my $n (1 .. 15) {
     my $p  = prime_count($x);
     my $r  = int(RiemannR($x));
     my $li = int(LogarithmicIntegral($x));
-    my $f  = $x->copy->bpow(2)->bdiv($x->bfac->blog);
+    my $f  = $x->ipow(2)->bidiv($x->fac->blog->bint);
 
     printf "%2d. π=%-10s R=%-10s Li=%-10s F=%-10s R-π=%-10s Li-π=%-10s F-π=%s\n", $n, $p, $r, $li, $f, $r - $p, $li - $p,
       $f - $p;
