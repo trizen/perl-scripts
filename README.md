@@ -288,6 +288,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Pascal s triangle multiples](./Math/pascal_s_triangle_multiples.pl)
     * [Pattern mixing](./Math/pattern_mixing.pl)
     * [Perfect numbers](./Math/perfect_numbers.pl)
+    * [Pi from infinity](./Math/pi_from_infinity.pl)
     * [Prime 41](./Math/prime_41.pl)
     * [Prime counting functions](./Math/prime_counting_functions.pl)
     * [Prime factorization concept](./Math/prime_factorization_concept.pl)
