@@ -20,6 +20,11 @@ use Inline 'C';
 for (1 .. 100) {
 
     my ($w, $h) = (800, 600);
+
+    my $zoom  = 1;
+    my $moveX = 0;
+    my $moveY = 0;
+
     my $img = Imager->new(xsize => $w, ysize => $h, channels => 3);
 
     #my $maxIter = int(rand(200))+50;
@@ -33,8 +38,8 @@ for (1 .. 100) {
 
     foreach my $x (0 .. $w - 1) {
         foreach my $y (0 .. $h - 1) {
-            my $zx = ($x - $w / 2) / $w * 3;
-            my $zy = ($y - $h / 2) / $h * 2;
+            my $zx = 3/2 * (2*$x - $w) / ($w * $zoom) + $moveX;
+            my $zy = 1/1 * (2*$y - $h) / ($h * $zoom) + $moveY;
             my $i  = iterate($zx, $zy, $cX, $cY, $maxIter);
             $color->set(hsv => [$i / $maxIter * 360, 1, $i]);
             $img->setpixel(x => $x, y => $y, color => $color);
