@@ -58,14 +58,8 @@ sub avg {
     (int(sum(@_) / @_)) x 3;
 }
 
-{
-    my %cache;
-    sub get_pixel {
-        my $key = join(' ', @_);
-        exists($cache{$key})
-            ? (@{$cache{$key}})
-            : (@{$cache{$key} = [$img->rgb($img->getPixel(@_))]});
-    }
+sub get_pixel {
+    $img->rgb($img->getPixel(@_))
 }
 
 foreach my $y (1 .. $height - 2) {
