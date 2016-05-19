@@ -55,22 +55,18 @@ sub avg {
 {
     my %cache;
     sub get_avg_pixel {
-        my ($x, $y) = @_;
-        $cache{"$x;$y"} //= avg($img->rgb($img->getPixel($x, $y)));
+        $cache{"@_"} //= avg($img->rgb($img->getPixel(@_)));
     }
 }
 
 # Detect edge
 foreach my $y (1 .. $height - 2) {
     foreach my $x (1 .. $width - 2) {
-        my $left  = get_avg_pixel($x-1, $y);
-        my $right = get_avg_pixel($x+1, $y);
-
-        my $up   = get_avg_pixel($x, $y-1);
-        my $down = get_avg_pixel($x, $y+1);
-
-        if (   abs($left - $right) / 255 * 100 > $tolerance
-            or abs($up   - $down)  / 255 * 100 > $tolerance) {
+        if (   abs(get_avg_pixel($x-1, $y  ) - get_avg_pixel($x+1, $y  )) / 255 * 100 > $tolerance      # left     <-> right
+            or abs(get_avg_pixel($x,   $y-1) - get_avg_pixel($x,   $y+1)) / 255 * 100 > $tolerance      # up       <-> down
+            or abs(get_avg_pixel($x-1, $y-1) - get_avg_pixel($x+1, $y+1)) / 255 * 100 > $tolerance      # up-left  <-> down-right
+            or abs(get_avg_pixel($x+1, $y-1) - get_avg_pixel($x-1, $y+1)) / 255 * 100 > $tolerance      # up-right <-> down-left
+            ) {
             $matrix[$y][$x] = 1;
         }
     }
