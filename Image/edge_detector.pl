@@ -76,10 +76,14 @@ foreach my $y (1 .. $height - 2) {
 foreach my $y (1 .. $height - 2) {
     foreach my $x (1 .. $width - 2) {
         if (defined($matrix[$y][$x])) {
-            if (!defined($matrix[$y][$x-1])
-            and !defined($matrix[$y][$x+1])
-            and !defined($matrix[$y-1][$x])
-            and !defined($matrix[$y+1][$x])
+            if (!defined($matrix[$y  ][$x+1])
+            and !defined($matrix[$y  ][$x-1])
+            and !defined($matrix[$y-1][$x-1])
+            and !defined($matrix[$y-1][$x  ])
+            and !defined($matrix[$y-1][$x+1])
+            and !defined($matrix[$y+1][$x-1])
+            and !defined($matrix[$y+1][$x  ])
+            and !defined($matrix[$y+1][$x+1])
         ) {
                 undef $matrix[$y][$x];
           }
