@@ -41,8 +41,8 @@ for (1 .. 100) {
     foreach my $x (0 .. $w - 1) {
         foreach my $y (0 .. $h - 1) {
             my $i = iterate(
-                3/2 * (2*$x - $w) / ($w * $zoom) + $moveX,
-                1/1 * (2*$y - $h) / ($h * $zoom) + $moveY,
+                3/2 * (2*($x+1) - $w) / ($w * $zoom) + $moveX,
+                1/1 * (2*($y+1) - $h) / ($h * $zoom) + $moveY,
                 $cx, $cy, $maxIter
             );
             $color->set(hsv => [$i / $maxIter * 360 - 120, 1, $i]);
