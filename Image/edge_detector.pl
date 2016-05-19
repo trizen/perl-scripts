@@ -19,7 +19,7 @@ use Getopt::Long qw(GetOptions);
 my $tolerance = 15;    # lower tolerance => more noise
 
 GetOptions('t|tolerance=f' => \$tolerance,
-           'h|help'        => sub { help(0) },)
+           'h|help'        => sub { help(0) })
   or die "Error in command-line arguments!";
 
 sub help {
@@ -51,22 +51,24 @@ sub avg {
     ($_[0] + $_[1] + $_[2]) / 3;
 }
 
+{
+    my %cache;
+    sub get_avg_pixel {
+        my ($x, $y) = @_;
+        $cache{"$x;$y"} //= avg($img->rgb($img->getPixel($x, $y)));
+    }
+}
+
 foreach my $y (1 .. $height - 2) {
     foreach my $x (1 .. $width - 2) {
-        my $left  = $img->getPixel($x - 1, $y);
-        my $right = $img->getPixel($x + 1, $y);
+        my $left  = get_avg_pixel($x-1, $y);
+        my $right = get_avg_pixel($x+1, $y);
 
-        my $up   = $img->getPixel($x, $y - 1);
-        my $down = $img->getPixel($x, $y + 1);
+        my $up   = get_avg_pixel($x, $y-1);
+        my $down = get_avg_pixel($x, $y+1);
 
-        my $left_avg  = avg($img->rgb($left));
-        my $right_avg = avg($img->rgb($right));
-
-        my $up_avg   = avg($img->rgb($up));
-        my $down_avg = avg($img->rgb($down));
-
-        if (   abs($left_avg - $right_avg) / 255 * 100 > $tolerance
-            or abs($up_avg - $down_avg) / 255 * 100 > $tolerance) {
+        if (   abs($left - $right) / 255 * 100 > $tolerance
+            or abs($up - $down) / 255 * 100 > $tolerance) {
             $matrix[$y][$x] = 0;
         }
     }
