@@ -3,6 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 05 November 2015
+# Edit: 19 May 2016
 # Website: https://github.com/trizen
 
 # A very basic edge detector, which highlights the edges in an image.
@@ -59,6 +60,7 @@ sub avg {
     }
 }
 
+# Detect edge
 foreach my $y (1 .. $height - 2) {
     foreach my $x (1 .. $width - 2) {
         my $left  = get_avg_pixel($x-1, $y);
@@ -68,8 +70,23 @@ foreach my $y (1 .. $height - 2) {
         my $down = get_avg_pixel($x, $y+1);
 
         if (   abs($left - $right) / 255 * 100 > $tolerance
-            or abs($up - $down) / 255 * 100 > $tolerance) {
-            $matrix[$y][$x] = 0;
+            or abs($up   - $down)  / 255 * 100 > $tolerance) {
+            $matrix[$y][$x] = 1;
+        }
+    }
+}
+
+# Remove noise
+foreach my $y (1 .. $height - 2) {
+    foreach my $x (1 .. $width - 2) {
+        if (defined($matrix[$y][$x])) {
+            if (!defined($matrix[$y][$x-1])
+            and !defined($matrix[$y][$x+1])
+            and !defined($matrix[$y-1][$x])
+            and !defined($matrix[$y+1][$x])
+        ) {
+                undef $matrix[$y][$x];
+          }
         }
     }
 }
