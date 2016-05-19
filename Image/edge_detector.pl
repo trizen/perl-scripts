@@ -15,6 +15,7 @@ use warnings;
 use GD;
 GD::Image->trueColor(1);
 
+use List::Util qw(sum);
 use Getopt::Long qw(GetOptions);
 
 my $tolerance = 15;    # lower tolerance => more noise
@@ -48,15 +49,8 @@ my $img = GD::Image->new($in_file);
 my @matrix = ([]);
 my ($width, $height) = $img->getBounds;
 
-sub avg {
-    ($_[0] + $_[1] + $_[2]) / 3;
-}
-
-{
-    my %cache;
-    sub get_avg_pixel {
-        $cache{"@_"} //= avg($img->rgb($img->getPixel(@_)));
-    }
+sub get_avg_pixel {
+    sum($img->rgb($img->getPixel(@_))) / 3;
 }
 
 # Detect edge
