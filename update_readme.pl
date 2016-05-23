@@ -59,7 +59,7 @@ my $main_dir     = File::Spec->curdir;
 
         my $section = '';
         foreach my $file (@files) {
-            my $title = $file->{name} =~ tr/_/ /r;
+            my $title = $file->{name} =~ tr/_/ /r =~ s/ s /'s /gr;
 
             if (-d $file->{path}) {
                 $section .= (' ' x $spaces) . "* $title\n";
