@@ -33,12 +33,8 @@ package LSystem {
                      yoff  => $opt{yoff}  // 0,
                      len   => $opt{len}   // 5,
                      color => $opt{color} // 'black',
-                     turtle => Turtle->new($opt{width} // 1000, $opt{height} // 1000, 0, 1),
+                     turtle => Turtle->new($opt{width} // 1000, $opt{height} // 1000, deg2rad($opt{turn} // 0), 1),
                     );
-
-        if (defined $opt{turn}) {
-            $state{turtle}->turn(deg2rad($opt{turn}));
-        }
 
         bless \%state, $class;
     }
