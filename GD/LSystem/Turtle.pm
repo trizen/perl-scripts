@@ -17,9 +17,7 @@ package Turtle {
         my $im = Image::Magick->new(size => $opt{x} . 'x' . $opt{y});
         $im->ReadImage('canvas:white');
 
-        $opt{im}   = $im;
-        $opt{poly} = [];
-
+        $opt{im} = $im;
         bless \%opt, $class;
     }
 
