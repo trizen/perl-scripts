@@ -7,8 +7,8 @@ use warnings;
 use LSystem;
 
 my %rules = (
-             'S' => 'S--S--S--T',
-             'T' => 'TT',
+             S => 'S--S--S--T',
+             T => 'TT',
             );
 
 my $lsys = LSystem->new(

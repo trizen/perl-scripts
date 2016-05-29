@@ -5,7 +5,6 @@ use strict;
 use warnings;
 
 use LSystem;
-use Math::Trig qw(deg2rad);
 
 my %rules = (F => 'FF-[-F+F-F]+[+F-F]');
 

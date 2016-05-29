@@ -39,11 +39,6 @@ package Turtle {
                     strokewidth => 1
                    );
 
-        #if ($what) {
-        #    $what->($self, $self->{x}, $self->{y}, $newx, $newy);    # motion
-        #}
-
-        # According to the coderef passed in
         ($self->{x}, $self->{y}) = ($newx, $newy);    # change the old coords
     }
 

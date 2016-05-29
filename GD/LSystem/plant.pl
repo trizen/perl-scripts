@@ -6,7 +6,7 @@ use warnings;
 
 use LSystem;
 
-my %rules = ('S' => 'SS+[+S-S-S]-[-S+S+S]');
+my %rules = (S => 'SS+[+S-S-S]-[-S+S+S]');
 
 my $lsys = LSystem->new(
     width  => 1000,

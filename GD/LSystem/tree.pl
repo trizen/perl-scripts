@@ -6,10 +6,10 @@ use warnings;
 use LSystem;
 
 my %rules = (
-             'a' => 'S[---l:a][++++b]',
-             'b' => 'S[++lb][--c]',
-             'c' => 'S[-----lb]gS[+:c]',
-             'l' => '[{S+S+S+S+S+S}]'
+             a => 'S[---l:a][++++b]',
+             b => 'S[++lb][--c]',
+             c => 'S[-----lb]gS[+:c]',
+             l => '[{S+S+S+S+S+S}]'
             );
 
 my $lsys = LSystem->new(
