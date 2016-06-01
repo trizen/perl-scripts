@@ -36,21 +36,26 @@
 #    39 = 1 + 13 + 25
 #
 #    P(1)  = {15, 6, 18}                ; returned by get_pos_steps(39, 1)
+#    P(13) = {35}                       ; returned by get_pos_steps(39, 13)
 #    P(25) = {6, 15, 18}                ; returned by get_pos_steps(39, 25)
 #
 #    s1 = 1                             ; returned by get_pos_steps(39, 1)
 #    s2 = 4                             ; returned by get_pos_steps(39, 25)
+#    s3 = 13                            ; returned by get_pos_steps(39, 13)
 #
-#    117367 = 39 * a + s1 + 15
-#    134476 = 39 * b + s2 + 0
+#    117367 = a * 39 + s1 + 15
+#    134476 = b * 39 + s2 + 0
+#   -159380 = c * 39 + s3 + 0
 #
 # then we find:
 #    a = 3009
 #    b = 3448
+#    c = -4087
 #
 # which results to:
-#    117367 = 39 * 3009 + 16
-#    134476 = 39 * 3448 + 4
+#    117367 =  3009 * 39 + 16
+#    134476 =  3448 * 39 + 4
+#   -159380 = -4087 * 39 + 13
 #
 
 # We can also easily observe that any valid solution satisfies:
