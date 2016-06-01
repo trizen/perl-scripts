@@ -16,6 +16,49 @@
 #       (x^3 mod n) + (y^3 mod n) + (z^3 mod n) = 2n       ; this is more common (?)
 #
 
+# This leads to the following conjecture:
+#       x = a * n + k
+#       y = b * n + j
+#
+# for every term x and y in a valid equation: x^3 + y^3 + z^3 = n
+
+# Less generally, we can say:
+#
+#       x = a * n + s1 + psum(P(k))
+#       y = b * n + s2 + psum(P(k))
+
+# where `s1` and `s2` are the starting points for the corresponding terms
+# and `psum(P(k))` is a partial sum of the remainders of n in the form: (k^3 mod n).
+
+# Example:
+#    39 = 134476^3 + 117367^3 - 159380^3
+#
+#    39 = 1 + 13 + 25
+#
+#    P(1)  = {15, 6, 18}                ; returned by get_pos_steps(39, 1)
+#    P(25) = {6, 15, 18}                ; returned by get_pos_steps(39, 25)
+#
+#    s1 = 1                             ; returned by get_pos_steps(39, 1)
+#    s2 = 4                             ; returned by get_pos_steps(39, 25)
+#
+#    117367 = 39 * a + s1 + 15
+#    134476 = 39 * b + s2 + 0
+#
+# then we find:
+#    a = 3009
+#    b = 3448
+#
+# which results to:
+#    117367 = 39 * 3009 + 16
+#    134476 = 39 * 3448 + 4
+#
+
+# We can also easily observe that any valid solution satisfies:
+#
+#    is_cube(x^3 + y^3 - n) or
+#    is_cube(x^3 - y^3 - n)
+#
+
 # Currently, in this code, we show how to calculate the steps
 # of a given term and how to collect and filter potential valid solutions.
 
@@ -34,7 +77,7 @@ use warnings;
 #use integer;
 #use Math::BigNum qw(:constant);
 
-use ntheory qw(powmod);
+use ntheory qw(powmod is_power);
 use List::Util qw(pairmap any sum0);
 
 use Data::Dump qw(pp);
@@ -51,14 +94,7 @@ sub get_pos_steps {
         }
     }
 
-    my %seen;
-    (
-     $steps[0],
-     [
-      #grep { !$seen{$_}++ }
-      map { $steps[$_] - $steps[$_ - 1] } 1 .. $#steps
-     ]
-    );
+    ($steps[0], [map { $steps[$_] - $steps[$_ - 1] } 1 .. $#steps]);
 }
 
 sub get_neg_steps {
@@ -71,14 +107,7 @@ sub get_neg_steps {
         }
     }
 
-    my %seen;
-    (
-     $steps[0],
-     [
-      #grep { !$seen{$_}++ }
-      map { $steps[$_] - $steps[$_ - 1] } 1 .. $#steps
-     ]
-    );
+    ($steps[0], [map { $steps[$_] - $steps[$_ - 1] } 1 .. $#steps]);
 }
 
 sub get_partitions {
@@ -154,18 +183,11 @@ my $z = -284650292555885;
 #~ my $y = 134476;
 #~ my $z = 117367;
 
-#~ $x **= 3;
-#~ $y **= 3;
-#~ $z **= 3;
-
-#~ say $x;
-#~ say $y;
-#~ say $z;
-
-#~ die($x+$y+$z);
+#$x **= 3;
+#$y **= 3;
+#$z **= 3;
 
 my @partitions = (get_partitions($n), get_partitions(2 * $n));
-
 my @valid;
 
 F1: foreach my $p (@partitions) {
@@ -211,8 +233,8 @@ foreach my $solution (@valid) {
             my $s = $_;
 
             any {
-                ($k % $n == sum0(@{$s->{pos}{steps}}[0 .. $_]) + $s->{pos}{start})
-                  or ($k % (-$n) == sum0(@{$s->{neg}{steps}}[0 .. $_]) + $s->{neg}{start})
+                (($k % $n) == sum0(@{$s->{pos}{steps}}[0 .. $_]) + $s->{pos}{start})
+                  or (($k % (-$n)) == sum0(@{$s->{neg}{steps}}[0 .. $_]) + $s->{neg}{start})
             }
             (-1 .. int(@{$s->{pos}{steps}} / 2) - 1);
 
