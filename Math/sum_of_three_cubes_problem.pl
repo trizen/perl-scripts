@@ -49,7 +49,8 @@ sub get_pos_steps {
         }
     }
 
-    ($steps[0], [map { $steps[$_] - $steps[$_ - 1] } 1 .. $#steps]);
+    my %seen;
+    ($steps[0], [grep { !$seen{$_}++ } map { $steps[$_] - $steps[$_ - 1] } 1 .. $#steps]);
 }
 
 sub get_neg_steps {
@@ -62,7 +63,8 @@ sub get_neg_steps {
         }
     }
 
-    ($steps[0], [map { $steps[$_] - $steps[$_ - 1] } 1 .. $#steps]);
+    my %seen;
+    ($steps[0], [grep { !$seen{$_}++ } map { $steps[$_] - $steps[$_ - 1] } 1 .. $#steps]);
 }
 
 sub get_partitions {
@@ -86,10 +88,14 @@ sub get_partitions {
     return @p;
 }
 
+#use Math::BigNum qw(:constant);
+
 my $n = 74;
 my $x = 66229832190556;
 my $y = 283450105697727;
 my $z = -284650292555885;
+
+#die $x->modinv(13);
 
 #~ my $n = 30;
 #~ my $x = 2_220_422_932;
@@ -174,18 +180,18 @@ foreach my $solution (@valid) {
 
             any {
                 ($k % $n == sum0(@{$s->{pos}{steps}}[0 .. $_]) + $s->{pos}{start})
-                  or ($k % $n == sum0(@{$s->{neg}{steps}}[0 .. $_]) + $s->{neg}{start})
+                  or ($k % (-$n) == sum0(@{$s->{neg}{steps}}[0 .. $_]) + $s->{neg}{start})
             }
-            (-1 .. int(@{$s->{pos}{steps}} / 2));
+            (-1 .. $#{$s->{pos}{steps}} - 1)    #int(@{$s->{pos}{steps}} / 2));
 
-            #~ any {
-            #~ ($k % sum(@{$s->{pos}{steps}}[0 .. $_]) == $s->{pos}{start})
-            #~ or ($k % sum(@{$s->{neg}{steps}}[0 .. $_]) == $s->{neg}{start})
-            #~ }
-            #~ int(@{$s->{pos}{steps}} / 2) .. $#{$s->{pos}{steps}};
+              #~ any {
+              #~ ($k % sum(@{$s->{pos}{steps}}[0 .. $_]) == $s->{pos}{start})
+              #~ or ($k % sum(@{$s->{neg}{steps}}[0 .. $_]) == $s->{neg}{start})
+              #~ }
+              #~ int(@{$s->{pos}{steps}} / 2) .. $#{$s->{pos}{steps}};
 
-            #(any      { $k % $_ == $s->{pos}{start} } @{$s->{pos}{steps}})
-            #or (any { $k % $_ == $s->{neg}{start} } @{$s->{neg}{steps}})
+              #(any      { $k % $_ == $s->{pos}{start} } @{$s->{pos}{steps}})
+              #or (any { $k % $_ == $s->{neg}{start} } @{$s->{neg}{steps}})
         }
         @{$solution};
     }
@@ -196,4 +202,4 @@ foreach my $solution (@valid) {
 
 say scalar @valid;
 
-# pp \@valid;
+#pp \@valid;
