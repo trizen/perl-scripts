@@ -314,6 +314,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Sqrt n](./Math/sqrt_n.pl)
     * [Stern brocot sequence](./Math/stern_brocot_sequence.pl)
     * [Sum factorial](./Math/sum_factorial.pl)
+    * [Sum of three cubes problem](./Math/sum_of_three_cubes_problem.pl)
     * [Sum of two primes](./Math/sum_of_two_primes.pl)
     * [Sum x](./Math/sum_x.pl)
     * [Trip2mars](./Math/trip2mars.pl)
