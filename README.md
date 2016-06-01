@@ -275,6 +275,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Goldbach conjecture 2n prime](./Math/goldbach_conjecture_2n_prime.pl)
     * [Goldbach conjecture possibilities](./Math/goldbach_conjecture_possibilities.pl)
     * [Goldbach conjecture random primes](./Math/goldbach_conjecture_random_primes.pl)
+    * [Is perfect power](./Math/is_perfect_power.pl)
     * [Is sum of two squares](./Math/is_sum_of_two_squares.pl)
     * [Lanczos approximation](./Math/lanczos_approximation.pl)
     * [Long division](./Math/long_division.pl)

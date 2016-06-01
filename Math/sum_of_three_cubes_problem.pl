@@ -90,6 +90,11 @@ sub get_partitions {
 
 #use Math::BigNum qw(:constant);
 
+#~ my $n = 33;
+#~ my $x = 0;
+#~ my $y = 0;
+#~ my $z = 0;
+
 my $n = 74;
 my $x = 66229832190556;
 my $y = 283450105697727;
@@ -131,6 +136,16 @@ my $z = -284650292555885;
 #~ my $x = -159380;
 #~ my $y = 134476;
 #~ my $z = 117367;
+
+#~ $x **= 3;
+#~ $y **= 3;
+#~ $z **= 3;
+
+#~ say $x;
+#~ say $y;
+#~ say $z;
+
+#~ die($x+$y+$z);
 
 my @partitions = get_partitions(2 * $n);
 
@@ -201,5 +216,3 @@ foreach my $solution (@valid) {
 }
 
 say scalar @valid;
-
-#pp \@valid;
