@@ -9,9 +9,11 @@
 # integer solutions to the following equation: x^3 + y^3 + z^3 = n
 
 # The concept of the algorithm is to use modular exponentiation,
-# based on the relation:
+# based on the relations:
 #
-#       (x^3 mod n) + (y^3 mod n) + (z^3 mod n) = 2n
+#       (x^3 mod n) + (y^3 mod n) + (z^3 mod n) = n
+# or:
+#       (x^3 mod n) + (y^3 mod n) + (z^3 mod n) = 2n       ; this is more common (?)
 #
 
 # Currently, in this code, we show how to calculate the steps
@@ -50,7 +52,13 @@ sub get_pos_steps {
     }
 
     my %seen;
-    ($steps[0], [grep { !$seen{$_}++ } map { $steps[$_] - $steps[$_ - 1] } 1 .. $#steps]);
+    (
+     $steps[0],
+     [
+      #grep { !$seen{$_}++ }
+      map { $steps[$_] - $steps[$_ - 1] } 1 .. $#steps
+     ]
+    );
 }
 
 sub get_neg_steps {
@@ -64,7 +72,13 @@ sub get_neg_steps {
     }
 
     my %seen;
-    ($steps[0], [grep { !$seen{$_}++ } map { $steps[$_] - $steps[$_ - 1] } 1 .. $#steps]);
+    (
+     $steps[0],
+     [
+      #grep { !$seen{$_}++ }
+      map { $steps[$_] - $steps[$_ - 1] } 1 .. $#steps
+     ]
+    );
 }
 
 sub get_partitions {
@@ -95,12 +109,15 @@ sub get_partitions {
 #~ my $y = 0;
 #~ my $z = 0;
 
+#~ my $n = 42;
+#~ my $x = 0;
+#~ my $y = 0;
+#~ my $z = 0;
+
 my $n = 74;
 my $x = 66229832190556;
 my $y = 283450105697727;
 my $z = -284650292555885;
-
-#die $x->modinv(13);
 
 #~ my $n = 30;
 #~ my $x = 2_220_422_932;
@@ -111,6 +128,11 @@ my $z = -284650292555885;
 #~ my $x = -61922712865;
 #~ my $y = 23961292454;
 #~ my $z = 60702901317;
+
+#~ my $n = 75;
+#~ my $x = -435203231;
+#~ my $y = 435203083;
+#~ my $z = 4381159;
 
 #~ my $n = 75;
 #~ my $x = 2_576_191_140_760;
@@ -127,11 +149,6 @@ my $z = -284650292555885;
 #~ my $y =-4126;
 #~ my $z = -1972;
 
-#~ my $n = 75;
-#~ my $x = -435203231;
-#~ my $y = 435203083;
-#~ my $z = 4381159;
-
 #~ my $n = 39;
 #~ my $x = -159380;
 #~ my $y = 134476;
@@ -147,7 +164,7 @@ my $z = -284650292555885;
 
 #~ die($x+$y+$z);
 
-my @partitions = get_partitions(2 * $n);
+my @partitions = (get_partitions($n), get_partitions(2 * $n));
 
 my @valid;
 
@@ -197,16 +214,16 @@ foreach my $solution (@valid) {
                 ($k % $n == sum0(@{$s->{pos}{steps}}[0 .. $_]) + $s->{pos}{start})
                   or ($k % (-$n) == sum0(@{$s->{neg}{steps}}[0 .. $_]) + $s->{neg}{start})
             }
-            (-1 .. $#{$s->{pos}{steps}} - 1)    #int(@{$s->{pos}{steps}} / 2));
+            (-1 .. int(@{$s->{pos}{steps}} / 2) - 1);
 
-              #~ any {
-              #~ ($k % sum(@{$s->{pos}{steps}}[0 .. $_]) == $s->{pos}{start})
-              #~ or ($k % sum(@{$s->{neg}{steps}}[0 .. $_]) == $s->{neg}{start})
-              #~ }
-              #~ int(@{$s->{pos}{steps}} / 2) .. $#{$s->{pos}{steps}};
+            #~ any {
+            #~ ($k % sum(@{$s->{pos}{steps}}[0 .. $_]) == $s->{pos}{start})
+            #~ or ($k % sum(@{$s->{neg}{steps}}[0 .. $_]) == $s->{neg}{start})
+            #~ }
+            #~ int(@{$s->{pos}{steps}} / 2) .. $#{$s->{pos}{steps}};
 
-              #(any      { $k % $_ == $s->{pos}{start} } @{$s->{pos}{steps}})
-              #or (any { $k % $_ == $s->{neg}{start} } @{$s->{neg}{steps}})
+            #(any      { $k % $_ == $s->{pos}{start} } @{$s->{pos}{steps}})
+            #or (any { $k % $_ == $s->{neg}{start} } @{$s->{neg}{steps}})
         }
         @{$solution};
     }
