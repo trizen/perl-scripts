@@ -8,6 +8,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
 * Analyzers
     * [Char counter](./Analyzers/char_counter.pl)
     * [Chr freq](./Analyzers/chr_freq.pl)
+    * [Dieharder](./Analyzers/dieharder.pl)
     * [Jaro-winkler distance](./Analyzers/jaro-winkler_distance.pl)
     * kcal
         * [Kcal](./Analyzers/kcal/kcal.pl)

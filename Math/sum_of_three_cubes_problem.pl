@@ -284,3 +284,6 @@ foreach my $solution (@valid) {
 }
 
 say scalar @valid;
+
+my %seen;
+pp [sort {$a <=> $b} grep{!$seen{$_}++} map { map {$_->{pos}{start}}@{$_} } @valid];
