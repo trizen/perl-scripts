@@ -72,3 +72,10 @@ say 2 / prod(
         nestrad(1, $n, sub($) { 2 }, sub($x) { sqrt($x) }) / 2;
     }
 );
+
+# A formula by N. J. Wildberger
+# https://www.youtube.com/watch?v=lcIbCZR0HbU
+
+say sqrt(4**(12+1) *
+    (2 - nestrad(1, 12, sub($) { 2 }, sub($x) { sqrt($x) }))
+);
