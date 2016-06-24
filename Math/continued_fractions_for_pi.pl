@@ -21,5 +21,11 @@ sub pi_2 {
     $limit > 0 ? ($i**2 / (2 * $i + 1 + pi_2($i + 1, $limit - 1))) : 0;
 }
 
-say 4 / (1 + pi_1(1, 100000));    # slower convergence
-say 4 / (1 + pi_2(1, 100));       # faster convergence
+sub pi_3 {
+    my ($i, $limit) = @_;
+    $limit > 0 ? ((2 * $i + 1)**2 / (6 + pi_3($i + 1, $limit - 1))) : 0;
+}
+
+say 4 / (1 + pi_1(1, 100000));    # slow convergence
+say 4 / (1 + pi_2(1, 100));       # fast convergence
+say 3 + pi_3(0, 100000);          # slow convergence
