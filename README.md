@@ -305,6 +305,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Primes diff](./Math/primes_diff.pl)
     * [Primes sum of pair product](./Math/primes_sum_of_pair_product.pl)
     * [Primorial](./Math/primorial.pl)
+    * [Rational summation of fractions](./Math/rational_summation_of_fractions.pl)
     * [Recursive matrix multiplication](./Math/recursive_matrix_multiplication.pl)
     * [Rest calc](./Math/rest_calc.pl)
     * [Reversed number triangle](./Math/reversed_number_triangle.pl)
