@@ -27,8 +27,25 @@
 #   f(n+1) = (n+1)! * f(n) + | | k!
 #                            k=0
 #   f(0)   = 1
+#
+#====================================================
+#
+# Generally:
+#
+#   x
+#  ---
+#  \    a(n)        f(x)
+#   -  ------ =  -----------
+#  /    b(n)       _x_
+#  ---             | | b(k)
+#  n=0             k=0
+#
+# where:                              _n_
+#   f(n+1) = b(n+1) * f(n) * a(n+1) * | | b(k)
+#                                     k=0
+#   f(0)   = a(0)
 
-use 5.014;
+use 5.010;
 use strict;
 use warnings;
 
@@ -39,8 +56,8 @@ memoize('f');
 memoize('b');
 memoize('p');
 
-my $start = 0;     # first value of n
-my $iter  = 99;    # number of iterations
+my $start = 0;     # start iteration from this value
+my $iter  = 90;    # number of iterations
 
 sub a {
     2**$_[0];
@@ -52,8 +69,8 @@ sub b {
 
 sub f {
     my ($n) = @_;
-    $n <= $start + 1
-      ? a($n - 1) * b($n) + a($n) * b($n - 1)
+    $n <= $start
+      ? a($n)
       : b($n) * f($n - 1) + a($n) * p($n - 1);
 }
 
