@@ -34,16 +34,19 @@
 #
 #   x
 #  ---
-#  \    a(n)        f(x)
-#   -  ------ =  -----------
-#  /    b(n)       _x_
-#  ---             | | b(k)
-#  n=0             k=0
+#  \    a(n)       f(x)
+#   -  ------  =  ------
+#  /    b(n)       g(x)
+#  ---
+#  n=0
 #
-# where:                              _n_
-#   f(n+1) = b(n+1) * f(n) * a(n+1) * | | b(k)
-#                                     k=0
-#   f(0)   = a(0)
+# where:
+# | f(0) = a(0)
+# | f(n) = b(n) * f(n-1) + a(n) * g(n-1)
+#
+# and:
+# | g(0) = b(0)
+# | g(n) = b(n) * g(n-1)
 
 use 5.010;
 use strict;
@@ -52,9 +55,9 @@ use warnings;
 use Memoize qw(memoize);
 use Math::BigNum qw(:constant);
 
-memoize('f');
 memoize('b');
-memoize('p');
+memoize('f');
+memoize('g');
 
 my $start = 0;     # start iteration from this value
 my $iter  = 90;    # number of iterations
@@ -71,16 +74,16 @@ sub f {
     my ($n) = @_;
     $n <= $start
       ? a($n)
-      : b($n) * f($n - 1) + a($n) * p($n - 1);
+      : b($n) * f($n - 1) + a($n) * g($n - 1);
 }
 
-sub p {
+sub g {
     my ($n) = @_;
     $n <= $start
       ? b($n)
-      : b($n) * p($n - 1);
+      : b($n) * g($n - 1);
 }
 
-my $x = f($iter) / p($iter);
+my $x = f($iter) / g($iter);
 say $x->as_rat;
 say "e^2 =~ ", $x->as_float(64);
