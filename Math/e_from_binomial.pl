@@ -8,12 +8,12 @@
 # A new identity for e, based on (n+1)^n / n^n, as n->infinity,
 # with the binomial expansion of (n+1)^n derived by the author.
 
-#      n
+#    n -> ∞
 #     ---
 #     \     binomial(n, k)
-#     /    ---------------  =  e            # as "n" goes to infinity.
+#     /    ---------------  =  e
 #     ---      n^(n-k)
-#     k=0
+#    k = 0
 
 use 5.014;
 use strict;
