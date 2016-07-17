@@ -10,7 +10,7 @@
 # (based on Newton's method for nth-root)
 
 # Example: 100 = x^x
-#          lgrt(100) = x
+#          x = lgrt(100)
 #          x =~ 3.59728502354042
 
 use 5.010;
