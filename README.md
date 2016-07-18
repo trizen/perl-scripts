@@ -269,6 +269,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [E primorial](./Math/e_primorial.pl)
     * [Factorial from primes](./Math/factorial_from_primes.pl)
     * [Factorial in half steps](./Math/factorial_in_half_steps.pl)
+    * [Factors of n factorial](./Math/factors_of_n_factorial.pl)
     * [Faulhaber's formula](./Math/faulhaber_s_formula.pl)
     * [Fibonacci closed form](./Math/fibonacci_closed_form.pl)
     * [Fibonacci closed form 2](./Math/fibonacci_closed_form_2.pl)
