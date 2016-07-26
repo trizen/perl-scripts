@@ -261,7 +261,6 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Continued fractions for pi](./Math/continued_fractions_for_pi.pl)
     * [Continued fractions for square roots](./Math/continued_fractions_for_square_roots.pl)
     * [Continued fractions prime constant](./Math/continued_fractions_prime_constant.pl)
-    * [Convergent series.db](./Math/convergent_series.db)
     * [Convergent series](./Math/convergent_series.pl)
     * [Cosmic calendar](./Math/cosmic_calendar.pl)
     * [Count subtriangles](./Math/count_subtriangles.pl)

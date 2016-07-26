@@ -61,6 +61,10 @@ my $main_dir     = File::Spec->curdir;
         foreach my $file (@files) {
             my $title = $file->{name} =~ tr/_/ /r =~ s/ s /'s /gr;
 
+            if ($file->{name} =~ /\.(\w{2,3})\z/) {
+                next if $1 !~ /^(?:pl|csv|pm)\z/i;
+            }
+
             if (-d $file->{path}) {
                 $section .= (' ' x $spaces) . "* $title\n";
                 push @root, $file->{name};
