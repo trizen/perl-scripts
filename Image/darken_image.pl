@@ -49,31 +49,23 @@ my ($width, $height) = $img->getBounds;
 
 my $new_img = GD::Image->new($width, $height);
 
+sub get_pixel {
+    $img->rgb($img->getPixel(@_));
+}
+
 foreach my $y (1 .. $height - 2) {
     foreach my $x (1 .. $width - 2) {
-        my $left  = $img->getPixel($x - 1, $y);
-        my $right = $img->getPixel($x + 1, $y);
+        my @left  = get_pixel($x - 1, $y);
+        my @right = get_pixel($x + 1, $y);
 
-        my $down_left  = $img->getPixel($x - 1, $y + 1);
-        my $down_right = $img->getPixel($x + 1, $y + 1);
+        my @down_left  = get_pixel($x - 1, $y + 1);
+        my @down_right = get_pixel($x + 1, $y + 1);
 
-        my $up   = $img->getPixel($x, $y - 1);
-        my $down = $img->getPixel($x, $y + 1);
+        my @up   = get_pixel($x, $y - 1);
+        my @down = get_pixel($x, $y + 1);
 
-        my $up_left  = $img->getPixel($x - 1, $y - 1);
-        my $up_right = $img->getPixel($x + 1, $y - 1);
-
-        my @left  = $img->rgb($left);
-        my @right = $img->rgb($right);
-
-        my @down_left  = $img->rgb($down_left);
-        my @down_right = $img->rgb($down_right);
-
-        my @up   = $img->rgb($up);
-        my @down = $img->rgb($down);
-
-        my @up_left  = $img->rgb($up_left);
-        my @up_right = $img->rgb($up_right);
+        my @up_left  = get_pixel($x - 1, $y - 1);
+        my @up_right = get_pixel($x + 1, $y - 1);
 
         $matrix[$y][$x] =
           $new_img->colorAllocate(
