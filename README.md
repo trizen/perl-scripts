@@ -357,6 +357,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [All substrings](./Text/all_substrings.pl)
     * [Group alike words](./Text/group_alike_words.pl)
     * [Repeated substrings](./Text/repeated_substrings.pl)
+    * [Search by prefix](./Text/search_by_prefix.pl)
     * [Sim end words](./Text/sim_end_words.pl)
     * [SmartWordWrap](./Text/smartWordWrap.pl)
     * [SmartWordWrap lazy](./Text/smartWordWrap_lazy.pl)
