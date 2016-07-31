@@ -2,9 +2,9 @@
 
 # A nice recursive pattern, using the following rule:
 
-#           ---                     |---|
-# | goes to  |  which, then goes to   |   and so on.
-#           ---                     |---|
+#           ---               |---|
+# | goes to  |  which goes to   |   and so on.
+#           ---               |---|
 
 use 5.014;
 use Imager;
