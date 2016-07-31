@@ -181,6 +181,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Random machinery art](./GD/random_machinery_art.pl)
     * [Random noise triangle](./GD/random_noise_triangle.pl)
     * [Real shell](./GD/real_shell.pl)
+    * [Recursive squares](./GD/recursive_squares.pl)
     * [Regular poligons](./GD/regular_poligons.pl)
     * [Reversed prime triangles](./GD/reversed_prime_triangles.pl)
     * [Right triangle primes](./GD/right_triangle_primes.pl)
