@@ -17,9 +17,12 @@ use 5.010;
 use strict;
 use warnings;
 
-sub lgrt {
-    my ($c, $p) = @_;
+use Math::BigNum qw(:constant);
 
+sub lgrt {
+    my ($c) = @_;
+
+    my $p = 1 / 10**($Math::BigNum::PREC / 4);
     my $d = log($c);
 
     my $x = 1;
@@ -33,4 +36,4 @@ sub lgrt {
     $x;
 }
 
-say lgrt(100, 1e-15);
+say lgrt(100);    # 3.59728502354041750549765225178229
