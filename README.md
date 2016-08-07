@@ -190,6 +190,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Spiral tree](./GD/spiral_tree.pl)
     * [Star-turtle](./GD/star-turtle.pl)
     * [Stern brocot shapes](./GD/stern_brocot_shapes.pl)
+    * [Triangle factors](./GD/triangle_factors.pl)
     * [Triangle primes](./GD/triangle_primes.pl)
     * [Triangle primes 2](./GD/triangle_primes_2.pl)
     * [Triangle primes irregular](./GD/triangle_primes_irregular.pl)
