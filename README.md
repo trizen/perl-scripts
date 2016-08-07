@@ -250,6 +250,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Rus translit](./Lingua/rus_translit.pl)
 * Math
     * [1 over x is finite](./Math/1_over_x_is_finite.pl)
+    * [Arithmetic expressions](./Math/arithmetic_expressions.pl)
     * [Ascii-cuboid](./Math/ascii-cuboid.pl)
     * [Bernoulli numbers](./Math/bernoulli_numbers.pl)
     * [Bernoulli numbers recursive](./Math/bernoulli_numbers_recursive.pl)
