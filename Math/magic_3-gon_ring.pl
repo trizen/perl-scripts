@@ -5,7 +5,7 @@
 # Date: 08 August 2016
 # Website: https://github.com/trizen
 
-# Solve a magic 6-gon ring
+# Solve a magic 3-gon ring.
 # See: https://projecteuler.net/problem=68
 
 use 5.014;
@@ -21,6 +21,6 @@ forperm {
         and $d[0] < $d[5]
         and $n == $d[3] + $d[2] + $d[4]
         and $n == $d[5] + $d[4] + $d[1]) {
-        say "$d[0],$d[1],$d[2] ;; $d[3],$d[2],$d[4] ;; $d[5],$d[4],$d[1] = $n";
+        say "($d[0] $d[1] $d[2] | $d[3] $d[2] $d[4] | $d[5] $d[4] $d[1]) = $n";
     }
 } scalar(@nums);
