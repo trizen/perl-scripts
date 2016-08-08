@@ -291,6 +291,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Logarithmic root](./Math/logarithmic_root.pl)
     * [Long division](./Math/long_division.pl)
     * [Long multiplication](./Math/long_multiplication.pl)
+    * [Magic 6-gon ring](./Math/magic_6-gon_ring.pl)
     * [Map num](./Math/map_num.pl)
     * [Matrix path best](./Math/matrix_path_best.pl)
     * [Matrix path four ways](./Math/matrix_path_four_ways.pl)
