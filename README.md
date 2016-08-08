@@ -284,6 +284,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Goldbach conjecture 2n prime](./Math/goldbach_conjecture_2n_prime.pl)
     * [Goldbach conjecture possibilities](./Math/goldbach_conjecture_possibilities.pl)
     * [Goldbach conjecture random primes](./Math/goldbach_conjecture_random_primes.pl)
+    * [Greedy matrix path](./Math/greedy_matrix_path.pl)
     * [Inverse of factorial](./Math/inverse_of_factorial.pl)
     * [Is perfect power](./Math/is_perfect_power.pl)
     * [Is sum of two squares](./Math/is_sum_of_two_squares.pl)
