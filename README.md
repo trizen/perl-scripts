@@ -378,6 +378,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Greycmd](./Visualisators/greycmd.pl)
     * [Human-finder-visual](./Visualisators/human-finder-visual.pl)
     * [Lz visual](./Visualisators/lz_visual.pl)
+    * [Matrix minimum path sum](./Visualisators/matrix_minimum_path_sum.pl)
     * [Pview](./Visualisators/pview)
     * [Random finder visual](./Visualisators/random_finder_visual.pl)
     * [Triangle sub-string finder](./Visualisators/triangle_sub-string_finder.pl)
