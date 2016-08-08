@@ -293,6 +293,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Long multiplication](./Math/long_multiplication.pl)
     * [Map num](./Math/map_num.pl)
     * [Matrix path best](./Math/matrix_path_best.pl)
+    * [Matrix path four ways](./Math/matrix_path_four_ways.pl)
     * [Matrix path greedy](./Math/matrix_path_greedy.pl)
     * [Multi sqrt nums](./Math/multi_sqrt_nums.pl)
     * [N dimensional circles](./Math/n_dimensional_circles.pl)
