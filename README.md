@@ -129,6 +129,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Dancing shapes](./GD/dancing_shapes.pl)
     * [Fact exp primorial growing](./GD/fact_exp_primorial_growing.pl)
     * [Factorial turtles](./GD/factorial_turtles.pl)
+    * [Factors of two triangle](./GD/factors_of_two_triangle.pl)
     * [Fgraph](./GD/fgraph.pl)
     * [Fgraph precision](./GD/fgraph_precision.pl)
     * [Fibonacci gd](./GD/fibonacci_gd.pl)
