@@ -242,6 +242,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Img rewrite](./Image/img_rewrite.pl)
     * [Magick similar images](./Image/magick_similar_images.pl)
     * [Magick star trails](./Image/magick_star_trails.pl)
+    * [Matrix visual](./Image/matrix_visual.pl)
     * [Sharp 2x zoom](./Image/sharp_2x_zoom.pl)
 * JAPH
     * [Alien japh](./JAPH/alien_japh.pl)
