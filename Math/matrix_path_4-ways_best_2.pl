@@ -45,39 +45,28 @@ sub path {
     }
 
     my @points;
-    my @paths;
 
     if ($j < $end and $valid->($i, $j + 1)) {
-        push @seen, join(':', $i, $j + 1);
         push @points, [$i, $j + 1];
     }
 
     if ($i > 0 and $valid->($i - 1, $j)) {
-        push @seen, join(':', $i - 1, $j);
         push @points, [$i - 1, $j];
     }
 
     if ($j > 0 and $valid->($i, $j - 1)) {
-        push @seen, join(':', $i, $j - 1);
         push @points, [$i, $j - 1];
     }
 
     if ($i < $end and $valid->($i + 1, $j)) {
-        push @seen, join(':', $i + 1, $j);
         push @points, [$i + 1, $j];
     }
 
-    my $s = join(' ', sort @seen);
+    my $min = 'inf';
+    my $snn = join(' ', sort (@seen, map { join(':', @$_) } @points));
 
     foreach my $point (@points) {
-        push @paths, path(@$point, $s);
-    }
-
-    @paths || return 'inf';
-
-    my $min = 'inf';
-
-    foreach my $sum (@paths) {
+        my $sum = path(@$point, $snn);
         $min = $sum if $sum < $min;
     }
 
