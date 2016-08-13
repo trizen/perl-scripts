@@ -5,10 +5,12 @@
 # Date: 08 August 2016
 # Website: https://github.com/trizen
 
-# Find the best path-sum from the top-left to bottom-right of a square matrix.
-# Allowed moves are: up, down, right and left.
+# In the 5 by 5 matrix below, the minimal path sum from the top left
+# to the bottom right, by moving left, right, up, and down, is equal to 2297.
 
 # Problem from: https://projecteuler.net/problem=83
+
+# (this algorithm is not scalable for matrices beyond 5x5)
 
 use 5.010;
 use strict;
