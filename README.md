@@ -295,6 +295,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Magic 3-gon ring](./Math/magic_3-gon_ring.pl)
     * [Magic 5-gon ring](./Math/magic_5-gon_ring.pl)
     * [Map num](./Math/map_num.pl)
+    * [Matrix path 3-ways greedy](./Math/matrix_path_3-ways_greedy.pl)
     * [Matrix path best](./Math/matrix_path_best.pl)
     * [Matrix path four ways](./Math/matrix_path_four_ways.pl)
     * [Matrix path greedy](./Math/matrix_path_greedy.pl)
