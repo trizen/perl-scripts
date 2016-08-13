@@ -297,6 +297,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Map num](./Math/map_num.pl)
     * [Matrix path 2-ways best](./Math/matrix_path_2-ways_best.pl)
     * [Matrix path 2-ways greedy](./Math/matrix_path_2-ways_greedy.pl)
+    * [Matrix path 3-ways best](./Math/matrix_path_3-ways_best.pl)
     * [Matrix path 3-ways greedy](./Math/matrix_path_3-ways_greedy.pl)
     * [Matrix path 4-ways best](./Math/matrix_path_4-ways_best.pl)
     * [Multi sqrt nums](./Math/multi_sqrt_nums.pl)
