@@ -55,14 +55,11 @@ sub image2mozaic {
     foreach my $i (0 .. $#matrix) {
         my $row = $matrix[$i];
         foreach my $j (0 .. $#{$row}) {
-            my $cell = $row->[$j];
-            my $color = Imager::Color->new(sprintf("#%06x", $cell));
-
             $mozaic->circle(
                             r     => $radius,
-                            x     => $j * $scale_x + $space,
-                            y     => $i * $scale_y + $space,
-                            color => $color,
+                            x     => int($radius + $j * $scale_x + rand($space)),
+                            y     => int($radius + $i * $scale_y + rand($space)),
+                            color => Imager::Color->new(sprintf("#%06x", $row->[$j])),
                            );
         }
     }
