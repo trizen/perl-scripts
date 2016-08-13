@@ -235,6 +235,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Gd similar images](./Image/gd_similar_images.pl)
     * [Gd star trails](./Image/gd_star_trails.pl)
     * [Image2matrix](./Image/image2matrix.pl)
+    * [Image2mozaic](./Image/image2mozaic.pl)
     * [Img-autocrop-whitebg](./Image/img-autocrop-whitebg.pl)
     * [Img-autocrop](./Image/img-autocrop.pl)
     * [Img2ascii](./Image/img2ascii.pl)
