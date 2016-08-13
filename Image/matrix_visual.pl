@@ -25,9 +25,10 @@ my @matrix = (
               [805, 732, 524, 37,  331],
              );
 
-my $max_color    = (2**16 - 1);
+my $max_color    = 2**16 - 1;
 my $scale_factor = 10;
 my $radius       = $scale_factor / atan2(0, -'inf');
+my $space        = $radius / 2;
 
 my $img = Imager->new(
                       xsize    => @{$matrix[0]} * $scale_factor,
@@ -47,8 +48,8 @@ foreach my $i (0 .. $#matrix) {
 
         $img->circle(
                      r     => $radius,
-                     x     => $j * $scale_factor + 3,
-                     y     => $i * $scale_factor + 3,
+                     x     => int($j * $scale_factor + $radius + $space),
+                     y     => int($i * $scale_factor + $radius + $space),
                      color => $color,
                     );
     }
