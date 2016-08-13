@@ -304,6 +304,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Matrix path 3-ways greedy](./Math/matrix_path_3-ways_greedy.pl)
     * [Matrix path 4-ways best](./Math/matrix_path_4-ways_best.pl)
     * [Matrix path 4-ways best 2](./Math/matrix_path_4-ways_best_2.pl)
+    * [Matrix path 4-ways best 3](./Math/matrix_path_4-ways_best_3.pl)
     * [Matrix path 4-ways greedy](./Math/matrix_path_4-ways_greedy.pl)
     * [Multi sqrt nums](./Math/multi_sqrt_nums.pl)
     * [N dimensional circles](./Math/n_dimensional_circles.pl)
