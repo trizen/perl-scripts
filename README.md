@@ -270,6 +270,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Continued fractions prime constant](./Math/continued_fractions_prime_constant.pl)
     * [Convergent series](./Math/convergent_series.pl)
     * [Cosmic calendar](./Math/cosmic_calendar.pl)
+    * [Count partitions](./Math/count_partitions.pl)
     * [Count subtriangles](./Math/count_subtriangles.pl)
     * [Cuboid](./Math/cuboid.pl)
     * [E from binomial](./Math/e_from_binomial.pl)
