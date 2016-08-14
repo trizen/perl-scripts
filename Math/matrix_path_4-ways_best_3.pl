@@ -70,7 +70,8 @@ sub two_way_path {
 my @stack;
 my $sum = 0;
 my ($i, $j) = (0, 0);
-my $limit = two_way_path(0, 0, $end, $end) + max(map { @$_ } @matrix);
+my $limit = two_way_path(0, 0, $end, $end);
+my $max = max(map { @$_ } @matrix);
 
 my %min = (sum => 'inf');
 
@@ -89,12 +90,12 @@ while (1) {
     }
 
     # Skip invalid starting paths
-    if (not $sum <= $limit or not $sum <= two_way_path(0, 0, $i, $j)) {
+    if (not($sum <= $limit) or not($sum <= two_way_path(0, 0, $i, $j))) {
         goto STACK if @stack;
     }
 
     # Skip invalid ending paths (this is a HUGE optimization)
-    if (not($sum - $matrix[$i][$j] + two_way_path($i, $j, $end, $end) <= $limit)) {
+    if (not($sum - $matrix[$i][$j] + two_way_path($i, $j, $end, $end) <= $limit + $max)) {
         goto STACK if @stack;
     }
 
@@ -130,12 +131,14 @@ while (1) {
 
     my $min = splice(@points, int(rand(@points)), 1);
 
-    if (@points and $sum <= $limit and $sum <= two_way_path(0, 0, $i, $j)) {
+    if (@points) {
 
         my @ok = (
             grep {
                 my $s = ($sum + $matrix[$_->[0]][$_->[1]]);
-                $s <= $limit and $s <= two_way_path(0, 0, $_->[0], $_->[1])
+                $s <= $limit
+                  and ($s <= two_way_path(0, 0, $_->[0], $_->[1]))
+                  and ($sum + two_way_path($_->[0], $_->[1], $end, $end) <= $limit + $max)
               } @points
         );
 
