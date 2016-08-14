@@ -308,6 +308,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Matrix path 4-ways best 3](./Math/matrix_path_4-ways_best_3.pl)
     * [Matrix path 4-ways greedy](./Math/matrix_path_4-ways_greedy.pl)
     * [Multi sqrt nums](./Math/multi_sqrt_nums.pl)
+    * [Mysterious sum pentagonal numbers](./Math/mysterious_sum_pentagonal_numbers.pl)
     * [N dimensional circles](./Math/n_dimensional_circles.pl)
     * [Newton's method recursive](./Math/newton_s_method_recursive.pl)
     * [Next power of two](./Math/next_power_of_two.pl)
