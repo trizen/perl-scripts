@@ -18,6 +18,7 @@ no warnings 'recursion';
 use Memoize qw(memoize);
 use List::Util qw(min);
 use List::UtilsBy qw(min_by);
+use Time::HiRes qw(sleep);
 use Term::ANSIColor qw(colored);
 
 memoize('two_way_path');
@@ -85,6 +86,8 @@ while (1) {
         if ($sum < $min{sum}) {
             $min{sum}  = $sum;
             $min{path} = [keys %seen];
+            draw([map { [split ' '] } @{$min{path}}]);
+            sleep(0.5) if @stack;
         }
 
         @stack ? goto STACK: last;
