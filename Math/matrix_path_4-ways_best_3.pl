@@ -7,7 +7,7 @@
 
 # Problem from: https://projecteuler.net/problem=83
 
-# (this algorithm is scalable up to matrices of size 35x35)
+# (this algorithm is scalable up to matrices of size 80x80)
 
 use 5.010;
 use strict;
@@ -16,9 +16,7 @@ use warnings;
 no warnings 'recursion';
 
 use Memoize qw(memoize);
-use List::Util qw(min);
-use List::UtilsBy qw(min_by);
-use Time::HiRes qw(sleep);
+use List::Util qw(min max);
 use Term::ANSIColor qw(colored);
 
 memoize('two_way_path');
@@ -70,11 +68,11 @@ sub two_way_path {
 }
 
 my @stack;
-my $sum   = 0;
-my $count = 0;
+my $sum = 0;
 my ($i, $j) = (0, 0);
+my $limit = two_way_path(0, 0, $end, $end) + max(map { @$_ } @matrix);
 
-my %min = (sum => 'inf',);
+my %min = (sum => 'inf');
 
 while (1) {
     undef $seen{"$i $j"};
@@ -86,14 +84,17 @@ while (1) {
         if ($sum < $min{sum}) {
             $min{sum}  = $sum;
             $min{path} = [keys %seen];
-            draw([map { [split ' '] } @{$min{path}}]);
-            sleep(0.5) if @stack;
         }
-
         @stack ? goto STACK: last;
     }
 
-    if (not $sum <= two_way_path(0, 0, $i, $j)) {
+    # Skip invalid starting paths
+    if (not $sum <= $limit or not $sum <= two_way_path(0, 0, $i, $j)) {
+        goto STACK if @stack;
+    }
+
+    # Skip invalid ending paths (this is a HUGE optimization)
+    if (not($sum - $matrix[$i][$j] + two_way_path($i, $j, $end, $end) <= $limit)) {
         goto STACK if @stack;
     }
 
@@ -127,14 +128,16 @@ while (1) {
         }
     }
 
-    my $min = min_by { $matrix[$_->[0]][$_->[1]] } @points;
+    my $min = splice(@points, int(rand(@points)), 1);
 
-    if (@points > 1 and $sum <= two_way_path(0, 0, $i, $j)) {
+    if (@points and $sum <= $limit and $sum <= two_way_path(0, 0, $i, $j)) {
 
         my @ok = (
-                  grep { ($sum + $matrix[$_->[0]][$_->[1]]) <= two_way_path(0, 0, $_->[0], $_->[1]) }
-                  grep { "@$_" ne "@$min" } @points
-                 );
+            grep {
+                my $s = ($sum + $matrix[$_->[0]][$_->[1]]);
+                $s <= $limit and $s <= two_way_path(0, 0, $_->[0], $_->[1])
+              } @points
+        );
 
         if (@ok) {
             push @stack, [$sum, [keys %seen], [$i, $j], \@ok];
@@ -142,11 +145,6 @@ while (1) {
     }
 
     ($i, $j) = @$min;
-
-    if (++$count % 10_000 == 0) {
-        say "$i:$j = $sum";
-        $count = 0;
-    }
 }
 
 my @path = map { [split ' '] } @{$min{path}};
