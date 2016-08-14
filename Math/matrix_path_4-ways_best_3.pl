@@ -7,7 +7,7 @@
 
 # Problem from: https://projecteuler.net/problem=83
 
-# (this algorithm is scalable up to matrices of size 30x30)
+# (this algorithm is scalable up to matrices of size 35x35)
 
 use 5.010;
 use strict;
@@ -91,6 +91,10 @@ while (1) {
         }
 
         @stack ? goto STACK: last;
+    }
+
+    if (not $sum <= two_way_path(0, 0, $i, $j)) {
+        goto STACK if @stack;
     }
 
     if ($i > 0 and valid($i - 1, $j)) {
