@@ -295,6 +295,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Is perfect power](./Math/is_perfect_power.pl)
     * [Is sum of two squares](./Math/is_sum_of_two_squares.pl)
     * [Lanczos approximation](./Math/lanczos_approximation.pl)
+    * [Legendary question six](./Math/legendary_question_six.pl)
     * [Length of shortest addition chain](./Math/length_of_shortest_addition_chain.pl)
     * [Logarithmic root](./Math/logarithmic_root.pl)
     * [Long division](./Math/long_division.pl)
