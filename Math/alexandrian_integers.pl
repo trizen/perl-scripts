@@ -26,9 +26,14 @@ sub nth_alexandrian {
     my $prev  = 6;
 
   OUT: foreach my $n (1 .. $nth) {
-        foreach my $d (divisors($n**2 + 1)) {
-            my $A = $n * ($n + $d) * ($n + ($n**2 + 1) / $d);
+        foreach my $d (divisors($n * $n + 1)) {
 
+            my $q = $n + $d;
+            my $r = ($n + ($n * $n + 1) / $d);
+
+            last if $q > $r;
+
+            my $A = $n * $q * $r;
             --$count if ($A < $prev);
 
             if (not exists $nums{$A}) {
