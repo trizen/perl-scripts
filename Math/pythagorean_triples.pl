@@ -25,14 +25,20 @@ sub pythagorean_triples {
     foreach my $n (1 .. $end - 1) {
         for (my $m = $n + 1 ; $m <= $end ; $m += 2) {
 
+            my $x = ($m**2 - $n**2);
+            my $y = (2 * $m * $n);
+            my $z = ($m**2 + $n**2);
+
+            last if $x + $y + $z > $limit;
+
             if (gcd($n, $m) == 1) {    # n and m coprime
 
                 my $k = 1;
-                while (1) {
 
-                    my $x = $k * ($m**2 - $n**2);
-                    my $y = $k * (2 * $m * $n);
-                    my $z = $k * ($m**2 + $n**2);
+                while (1) {
+                    my $x = $k * $x;
+                    my $y = $k * $y;
+                    my $z = $k * $z;
 
                     last if $x + $y + $z > $limit;
 
