@@ -11,23 +11,18 @@ use 5.010;
 use strict;
 use warnings;
 
-use Math::BigInt (only => 'GMP');
-my $prime = Math::BigInt->new(3);
-my $fact  = Math::BigInt->new(2);
+use Math::BigNum;
+my $prime = Math::BigNum->new(3);
+my $fac  = Math::BigNum->new(2);
 
 say 2;    # print the first prime number
 
 while (1) {
-    if (($fact + 1)->bmod($prime)->is_zero) {
+    if ($fac->inc->bmod($prime)->is_zero) {
         say $prime;
     }
 
-    $fact->bmul($prime);
-    $fact->bmul($prime->binc);
+    $fac->bmul($prime);
+    $fac->bmul($prime->binc);
     $prime->binc;
-}
-
-__END__
-if (((($f - 1)->bfac + 1)->bmod($f))->is_zero) {
-    say $f;
 }

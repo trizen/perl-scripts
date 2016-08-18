@@ -17,7 +17,7 @@ use strict;
 use warnings;
 use GD::Simple;
 
-use bignum (try => 'GMP');
+use Math::BigNum;
 use File::Spec::Functions qw(catfile);
 
 my $beg = 3;                      # start point
@@ -41,7 +41,7 @@ foreach my $n ($beg .. $end) {
     $img->fgcolor('red');
 
     my @values;
-    my $p = 1;
+    my $p = Math::BigNum->new(1);
     foreach my $j (0 .. $n - 1) {
         $p *= $n - $j;
         push @values, $p;

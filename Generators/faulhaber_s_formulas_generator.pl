@@ -19,7 +19,7 @@ use 5.010;
 use strict;
 use warnings;
 
-use bigrat (try => 'GMP');
+use Math::BigNum qw(:constant);
 
 # This function returns the nth Bernoulli number
 # See: https://en.wikipedia.org/wiki/Bernoulli_number
@@ -42,9 +42,9 @@ sub bernoulli_number {
 
 # The binomial coefficient
 # See: https://en.wikipedia.org/wiki/Binomial_coefficient
-sub nok {
+sub binomial {
     my ($n, $k) = @_;
-    Math::BigRat->new($n)->bnok($k);
+    Math::BigNum->new($n)->binomial($k);
 }
 
 # The Faulhaber's formula
@@ -54,7 +54,7 @@ sub faulhaber_s_formula {
 
     my @formula;
     for my $j (0 .. $p) {
-        push @formula, ('(' . (nok($p + 1, $j) * bernoulli_number($j)) . ')') . '*' . "n^" . ($p + 1 - $j);
+        push @formula, ('(' . (binomial($p + 1, $j) * bernoulli_number($j))->as_rat . ')') . '*' . "n^" . ($p + 1 - $j);
     }
 
     my $formula = join(' + ', grep { !/\(0\)\*/ } @formula);

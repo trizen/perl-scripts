@@ -4,7 +4,7 @@ use 5.010;
 use strict;
 use warnings;
 
-use bigrat (try => 'GMP');
+use Math::BigNum qw(:constant);
 
 # Translation of:
 #   https://en.wikipedia.org/wiki/Bernoulli_number#Algorithmic_description
@@ -26,8 +26,8 @@ sub bernoulli_number {
     return $A[0];                    # which is Bn
 }
 
-foreach my $i (0 .. 10) {
-    say "$i: ", bernoulli_number($i);
+foreach my $i (0 .. 20) {
+    say "$i: ", bernoulli_number($i)->as_rat;
 }
 
 __END__
@@ -42,3 +42,13 @@ __END__
 8: -1/30
 9: 0
 10: 5/66
+11: 0
+12: -691/2730
+13: 0
+14: 7/6
+15: 0
+16: -3617/510
+17: 0
+18: 43867/798
+19: 0
+20: -174611/330

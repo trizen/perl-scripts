@@ -35,7 +35,7 @@ $img->box(filled => 1, color => $white);
 my $x = 0;
 
 {
-    use bigint (try => 'GMP');
+    use Math::BigNum qw(:constant);
 
     my $f = 1;
     my $p = 1;
@@ -43,11 +43,11 @@ my $x = 0;
     for (my $i = 1 ; $i <= 100 ; $i->binc) {
 
         $f->bmul($i + 1);
-        $p->bmul(nth_prime($i->bstr));
+        $p->bmul(nth_prime($i));
 
-        $img->setpixel(x => $x, y => $p->copy->blog->bsub($ysize)->babs->bstr,           color => $red);
-        $img->setpixel(x => $x, y => $f->copy->blog->bsub($ysize)->babs->bstr,           color => $blue);
-        $img->setpixel(x => $x, y => $i->copy->bpow($i)->blog->bsub($ysize)->babs->bstr, color => $green);
+        $img->setpixel(x => $x, y => $p->log->bsub($ysize)->babs->as_int,           color => $red);
+        $img->setpixel(x => $x, y => $f->log->bsub($ysize)->babs->as_int,           color => $blue);
+        $img->setpixel(x => $x, y => $i->pow($i)->blog->bsub($ysize)->babs->as_int, color => $green);
 
         $x++;
     }

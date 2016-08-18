@@ -19,7 +19,7 @@ use 5.010;
 use strict;
 use warnings;
 
-use bigrat (try => 'GMP');
+use Math::BigNum qw(:constant);
 use Memoize qw( memoize );
 
 memoize('binomial');
@@ -67,7 +67,7 @@ sub bernoulli_number {
     for my $m (0 .. $n) {
         $A[$m] = 1 / ($m + 1);
         for (my $j = $m ; $j > 0 ; $j--) {
-            $A[$j - 1] = "$j*($A[$j-1]-$A[$j])";
+            $A[$j - 1] = "$j*" . '(' . join('-', map { ref($_) ? $_->as_rat : $_ } ($A[$j - 1], $A[$j])) . ')';
         }
     }
 

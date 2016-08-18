@@ -16,7 +16,7 @@ use 5.010;
 use strict;
 use warnings;
 
-use bignum (try => 'GMP');
+use Math::BigNum qw(:constant);
 
 # This function returns the nth Bernoulli number
 # See: https://en.wikipedia.org/wiki/Bernoulli_number
@@ -39,9 +39,9 @@ sub bernoulli_number {
 
 # The binomial coefficient
 # See: https://en.wikipedia.org/wiki/Binomial_coefficient
-sub nok {
+sub binomial {
     my ($n, $k) = @_;
-    Math::BigFloat->new($n)->bnok($k);
+    Math::BigNum->new($n)->binomial($k);
 }
 
 # The Faulhaber's formula
@@ -51,7 +51,7 @@ sub faulhaber_s_formula {
 
     my $sum = 0;
     for my $j (0 .. $p) {
-        $sum += nok($p + 1, $j) * bernoulli_number($j) * ($n + 1)**($p + 1 - $j);
+        $sum += binomial($p + 1, $j) * bernoulli_number($j) * ($n + 1)**($p + 1 - $j);
     }
 
     $sum / ($p + 1);
@@ -59,13 +59,12 @@ sub faulhaber_s_formula {
 
 # Alternate expression using Bernoulli polynomials
 # See: https://en.wikipedia.org/wiki/Faulhaber%27s_formula#Alternate_expressions
-
 sub bernoulli_polynomials {
     my ($n, $x) = @_;
 
     my $sum = 0;
     for my $k (0 .. $n) {
-        $sum += nok($n, $k) * bernoulli_number($n - $k) * $x**$k;
+        $sum += binomial($n, $k) * bernoulli_number($n - $k) * $x**$k;
     }
 
     $sum;
@@ -78,6 +77,6 @@ sub faulhaber_s_formula_2 {
 
 # Test for 1^4 + 2^4 + 3^4 + ... + 10^4
 foreach my $i (0 .. 10) {
-    say "$i: ", faulhaber_s_formula(4, $i)->bfround(-2);
-    say "$i: ", faulhaber_s_formula_2(4, $i)->bfround(-2);
+    say "$i: ", faulhaber_s_formula(4, $i);
+    say "$i: ", faulhaber_s_formula_2(4, $i);
 }

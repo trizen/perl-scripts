@@ -6,15 +6,15 @@ use 5.010;
 use strict;
 use warnings;
 
-use bignum ('precision' => -128);
-
-sub factorial {
-    state $x = 1;
-    $x *= $_[0];
-}
+use Math::BigNum;
 
 for my $i (1 .. 60) {
-    my $sqrt = sqrt(factorial($i) + 1);
-    next if $sqrt != int($sqrt);
-    printf("(%d, %d)\n", int($sqrt), $i);
+    my $n = Math::BigNum->new($i)->fac + 1;
+    $n->is_ppow || next;
+    printf("(%d, %d)\n", int(sqrt($n)), $i);
 }
+
+__END__
+(5, 4)
+(11, 5)
+(71, 7)

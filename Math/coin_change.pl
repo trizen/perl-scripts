@@ -13,7 +13,7 @@ use warnings;
 
 use List::Util qw(sum0);
 no warnings qw(recursion);
-#use bignum (try => 'GMP');         # uncomment this line for a better floating-point precision
+use Math::BigNum qw(:constant);
 
 my @denominations = (.01, .05, .1, .25, .5, 1, 2, 5, 10, 20, 50, 100);
 

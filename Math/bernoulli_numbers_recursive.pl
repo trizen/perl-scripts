@@ -14,8 +14,8 @@ use 5.010;
 use strict;
 use warnings;
 
-use bigrat (try => 'GMP');
-use Memoize qw( memoize );
+use Memoize qw(memoize);
+use Math::BigNum qw(:constant);
 
 no warnings qw(recursion);
 
@@ -48,7 +48,7 @@ sub bernoulli_number {
 }
 
 for my $i (0 .. 50) {
-    printf "B%-2d = %s\n", $i, bernoulli_number($i + 0);
+    printf "B%-2d = %s\n", $i, bernoulli_number($i + 0)->as_rat;
 }
 
 __END__
