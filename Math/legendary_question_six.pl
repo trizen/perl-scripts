@@ -27,8 +27,13 @@ foreach my $x (1 .. $limit) {
         my $k = ($x**2 + $y**2);
         my $j = ($x * $y + 1);
 
-        if ($k % $j == 0 and is_power($k / $j, 2)) {
-            printf("a = %-10s b = %-10s => %10s / %-10s = %s\n", $x, $y, $k, $j, $k / $j);
+        if ($k % $j == 0) {
+            if (is_power($k / $j, 2)) {
+                printf("a = %-10s b = %-10s => %10s / %-10s = %s\n", $x, $y, $k, $j, $k / $j);
+            }
+            else {
+                die "error: found a counter-example...";
+            }
         }
     }
 }
