@@ -13,8 +13,7 @@ use strict;
 use warnings;
 
 use Memoize qw(memoize);
-use bignum (try => 'GMP');
-use constant PI => bignum->bpi;
+use Math::BigNum qw(:constant pi);
 
 sub bernoulli_number {
     my ($n) = @_;
@@ -41,7 +40,7 @@ memoize('factorial');
 
 sub zeta_2n {
     my ($n2) = 2 * $_[0];
-    ((-1)**($_[0] + 1) * 2**($n2 - 1) * PI**$n2 * bernoulli_number($n2)) / factorial($n2);
+    ((-1)**($_[0] + 1) * 2**($n2 - 1) * pi**$n2 * bernoulli_number($n2)) / factorial($n2);
 }
 
 for my $i (1 .. 10) {
