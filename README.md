@@ -310,6 +310,8 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Matrix path 4-ways best 2](./Math/matrix_path_4-ways_best_2.pl)
     * [Matrix path 4-ways best 3](./Math/matrix_path_4-ways_best_3.pl)
     * [Matrix path 4-ways greedy](./Math/matrix_path_4-ways_greedy.pl)
+    * [Modular factorial](./Math/modular_factorial.pl)
+    * [Modular fibonacci](./Math/modular_fibonacci.pl)
     * [Multi sqrt nums](./Math/multi_sqrt_nums.pl)
     * [Mysterious sum-pentagonal numbers](./Math/mysterious_sum-pentagonal_numbers.pl)
     * [Mysterious sum-pentagonal numbers 2](./Math/mysterious_sum-pentagonal_numbers_2.pl)
