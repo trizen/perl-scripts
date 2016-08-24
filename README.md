@@ -349,6 +349,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Riemann's J function](./Math/riemann_s_J_function.pl)
     * [Semiprime equationization](./Math/semiprime_equationization.pl)
     * [Semiprime equationization uncached](./Math/semiprime_equationization_uncached.pl)
+    * [Solve congruence equation example](./Math/solve_congruence_equation_example.pl)
     * [Sorting algorithms](./Math/sorting_algorithms.pl)
     * [Sphere volume](./Math/sphere_volume.pl)
     * [Sqrt n](./Math/sqrt_n.pl)
