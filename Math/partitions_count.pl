@@ -8,7 +8,10 @@
 # A very fast algorithm for counting the number of partitions of a given number.
 # See the sequence at: http://oeis.org/A000041
 
-use 5.014;
+use 5.010;
+use strict;
+use warnings;
+
 use POSIX qw(floor ceil);
 use Memoize qw(memoize);
 
