@@ -5,8 +5,8 @@
 # Date: 25 August 2016
 # https://github.com/trizen
 
-# Chaos game, as described by Keith Peters in his presentation.
-# https://www.youtube.com/watch?v=e0JaZuLfZ_0 (starting from 18:03)
+# Chaos game, generating a Sierpinski triangle, as described by Keith Peters in his presentation.
+# See: https://www.youtube.com/watch?v=e0JaZuLfZ_0 (starting from 18:03)
 
 use 5.010;
 use strict;
@@ -58,4 +58,4 @@ foreach my $i (1 .. 100000) {
     $r = $h;
 }
 
-$img->write(file => 'chaos_game.png');
+$img->write(file => 'chaos_game_triangle.png');
