@@ -264,7 +264,6 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Bernoulli numbers recursive](./Math/bernoulli_numbers_recursive.pl)
     * [Binary multiplier](./Math/binary_multiplier.pl)
     * [Brown numbers](./Math/brown_numbers.pl)
-    * [Cal](./Math/cal.pl)
     * [Coin change](./Math/coin_change.pl)
     * [Continued fractions](./Math/continued_fractions.pl)
     * [Continued fractions for e](./Math/continued_fractions_for_e.pl)
@@ -400,6 +399,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Unique prefixes](./Text/unique_prefixes.pl)
     * [Word roots](./Text/word_roots.pl)
 * Time
+    * [Calendar](./Time/calendar.pl)
     * [Contdown](./Time/contdown.pl)
 * Visualisators
     * [Binview](./Visualisators/binview)
