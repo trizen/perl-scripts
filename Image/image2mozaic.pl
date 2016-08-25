@@ -29,18 +29,9 @@ sub image2mozaic {
 
     my @matrix;
     foreach my $y (0 .. $thumb_height - 1) {
-        push @matrix, [
-            map {
-                my $color = $thumb->getpixel(y => $y, x => $_);
-                my ($r, $g, $b) = $color->rgba;
-
-                my $rgb = $r;
-                $rgb = ($rgb << 8) + $g;
-                $rgb = ($rgb << 8) + $b;
-
-                $rgb
-              } (0 .. $thumb_width - 1)
-        ];
+        push @matrix, [map {
+                [$thumb->getpixel(y => $y, x => $_)->rgba]
+        } (0 .. $thumb_width - 1)];
     }
 
     my $scale_x = int($width / $thumb_width);
@@ -52,14 +43,17 @@ sub image2mozaic {
                              channels => 3,
                             );
 
+    my $color = Imager::Color->new(0, 0, 0);
+
     foreach my $i (0 .. $#matrix) {
         my $row = $matrix[$i];
         foreach my $j (0 .. $#{$row}) {
+            $color->set(@{$row->[$j]});
             $mozaic->circle(
                             r     => $radius,
                             x     => int($radius + $j * $scale_x + rand($space)),
                             y     => int($radius + $i * $scale_y + rand($space)),
-                            color => Imager::Color->new(sprintf("#%06x", $row->[$j])),
+                            color => $color,
                            );
         }
     }
