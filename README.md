@@ -119,6 +119,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Abstract map](./GD/abstract_map.pl)
     * [Barnsley fern fractal](./GD/barnsley_fern_fractal.pl)
     * [Black yellow number triangles](./GD/black_yellow_number_triangles.pl)
+    * [Chaos game](./GD/chaos_game.pl)
     * [Circular prime triangle](./GD/circular_prime_triangle.pl)
     * [Circular triangle](./GD/circular_triangle.pl)
     * [Collatz triangle](./GD/collatz_triangle.pl)
