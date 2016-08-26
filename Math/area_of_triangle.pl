@@ -5,7 +5,7 @@
 # Date: 17 August 2016
 # Website: https://github.com/trizen
 
-# Find the area of a triangle all three sides of a triangle are known, using Heron's Formula.
+# Find the area of a triangle where all three sides are known, using Heron's Formula.
 
 use 5.010;
 use strict;
