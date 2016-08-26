@@ -19,7 +19,6 @@ sub all_substrings {
     while (my ($i, $c) = each @chars) {
         $cache[$_] .= $c for (0 .. $i);
         $callback->(@cache);
-        $i++;
     }
 
     return;
