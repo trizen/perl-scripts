@@ -62,7 +62,7 @@ sub solve_pell {
 foreach my $d (2 .. 20) {
     is_power($d, 2) && next;
     my ($x, $y) = solve_pell($d);
-    printf("x^2 - %2dy^2 = 1 \t minimum solution: x=%4d and y=%4d\n", $d, $x, $y);
+    printf("x^2 - %2dy^2 = 1 \t minimum solution: x=%4s and y=%4s\n", $d, $x, $y);
 }
 
 __END__
