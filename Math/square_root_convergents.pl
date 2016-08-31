@@ -21,7 +21,7 @@ use Math::BigNum qw(:constant);
 sub sqrt_convergents {
     my ($n) = @_;
 
-    my $x = int(sqrt($n));
+    my $x = $n->isqrt;
     my $y = $x;
     my $z = 1;
 
@@ -36,15 +36,15 @@ sub sqrt_convergents {
     return @convergents;
 }
 
-my @c = sqrt_convergents(61);
-
 sub continued_frac {
-    my ($i) = @_;
-    $i == -1 ? 0 : 1 / ($c[$i] + continued_frac($i - 1));
+    my ($i, $c) = @_;
+    $i < 0 ? 0 : ($c->[$i] + continued_frac($i - 1, $c))->binv;
 }
 
+my @c = sqrt_convergents(61);
+
 for my $i (0 .. $#c) {
-    say((continued_frac($i))->as_rat);
+    say((continued_frac($i, \@c))->as_rat);
 }
 
 __END__
