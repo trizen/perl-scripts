@@ -312,6 +312,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Matrix path 4-ways best 2](./Math/matrix_path_4-ways_best_2.pl)
     * [Matrix path 4-ways best 3](./Math/matrix_path_4-ways_best_3.pl)
     * [Matrix path 4-ways greedy](./Math/matrix_path_4-ways_greedy.pl)
+    * [Maximum square remainder](./Math/maximum_square_remainder.pl)
     * [Modular factorial](./Math/modular_factorial.pl)
     * [Modular fibonacci](./Math/modular_fibonacci.pl)
     * [Modular hyperoperation](./Math/modular_hyperoperation.pl)
