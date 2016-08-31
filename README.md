@@ -329,6 +329,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Pascal's triangle multiples](./Math/pascal_s_triangle_multiples.pl)
     * [Pattern mixing](./Math/pattern_mixing.pl)
     * [Perfect numbers](./Math/perfect_numbers.pl)
+    * [Period length of square roots](./Math/period_length_of_square_roots.pl)
     * [Pi from infinity](./Math/pi_from_infinity.pl)
     * [Polygonal numbers](./Math/polygonal_numbers.pl)
     * [Powers of primes in factorial](./Math/powers_of_primes_in_factorial.pl)
