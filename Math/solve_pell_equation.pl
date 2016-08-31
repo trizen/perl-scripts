@@ -38,7 +38,7 @@ sub sqrt_convergents {
 
 sub continued_frac {
     my ($i, $c) = @_;
-    $i == -1 ? 0 : 1 / ($c->[$i] + continued_frac($i - 1, $c));
+    $i->is_neg ? 0 : ($c->[$i] + continued_frac($i - 1, $c))->binv;
 }
 
 sub solve_pell {
@@ -51,10 +51,10 @@ sub solve_pell {
         if ($i > $#c) { push @c, @period; $i = 2 * $i - 1 }
 
         my $x = continued_frac($i, [$k, @c])->denominator;
-        my $p = 4 * $d * ($x**2 - 1);
+        my $p = 4 * $d * ($x*$x - 1);
 
         if (is_power($p, 2)) {
-            return ($x, $p->isqrt / (2 * $d));
+            return ($x, $p->bisqrt / (2 * $d));
         }
     }
 }
