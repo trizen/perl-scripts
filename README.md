@@ -358,6 +358,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Semiprime equationization](./Math/semiprime_equationization.pl)
     * [Semiprime equationization uncached](./Math/semiprime_equationization_uncached.pl)
     * [Solve congruence equation example](./Math/solve_congruence_equation_example.pl)
+    * [Solve pell equation](./Math/solve_pell_equation.pl)
     * [Sorting algorithms](./Math/sorting_algorithms.pl)
     * [Sphere volume](./Math/sphere_volume.pl)
     * [Sqrt n](./Math/sqrt_n.pl)
