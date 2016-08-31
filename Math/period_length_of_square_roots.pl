@@ -16,26 +16,23 @@ use strict;
 use warnings;
 
 #
-## Defined only for irrational square roots.
+## Defined only for irrational square roots, where n is positive integer.
 #
 
 sub period_length {
     my ($n) = @_;
 
-    my $x_0 = int(sqrt($n));
-    my $y   = $x_0;
-    my $z   = $n - $x_0 * $x_0;
-
-    my $y_0 = $y;
-    my $z_0 = $z;
+    my $x = int(sqrt($n));
+    my $y = $x;
+    my $z = 1;
 
     my $period = 0;
 
     do {
-        $y = int(($x_0 + $y) / $z) * $z - $y;
+        $y = int(($x + $y) / $z) * $z - $y;
         $z = int(($n - $y * $y) / $z);
         ++$period;
-    } until (($y == $y_0) && ($z == $z_0));
+    } until (($y == $x) && ($z == 1));
 
     $period;
 }
