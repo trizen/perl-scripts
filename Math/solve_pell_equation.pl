@@ -16,14 +16,7 @@ use strict;
 use warnings;
 
 use Math::BigNum qw(:constant);
-local $Math::BigNum::PREC = 10000;
-
 use ntheory qw(is_power sqrtint);
-
-sub quadratic_formula {
-    my ($x, $y, $z) = @_;
-    (-$y - sqrt($y**2 - 4 * $x * $z)) / (2 * $x);
-}
 
 sub sqrt_convergents {
     my ($n) = @_;
@@ -48,7 +41,7 @@ sub continued_frac {
     $i == -1 ? 0 : 1 / ($c->[$i] + continued_frac($i - 1, $c));
 }
 
-sub solve {
+sub solve_pell {
     my ($d) = @_;
 
     my ($k, @c) = sqrt_convergents($d);
@@ -56,18 +49,19 @@ sub solve {
     my @period = @c;
     for (my $i = 0 ; ; ++$i) {
         if ($i > $#c) { push @c, @period; $i = 2 * $i - 1 }
-        my $x = continued_frac($i, [$k, @c])->denominator;
-        my $y = quadratic_formula(-$d, 0, $x**2 - 1);
 
-        if ($y > 0 and $y->is_int) {
-            return ($x, $y);
+        my $x = continued_frac($i, [$k, @c])->denominator;
+        my $p = 4 * $d * ($x**2 - 1);
+
+        if (is_power($p, 2)) {
+            return ($x, sqrtint($p) / (2 * $d));
         }
     }
 }
 
 foreach my $d (2 .. 20) {
     is_power($d, 2) && next;
-    my ($x, $y) = solve($d);
+    my ($x, $y) = solve_pell($d);
     printf("x^2 - %2dy^2 = 1 \t minimum solution: x=%4d and y=%4d\n", $d, $x, $y);
 }
 
