@@ -52,15 +52,10 @@ sub solve {
     my ($d) = @_;
 
     my ($k, @c) = sqrt_convergents($d);
-    my $period = @c;
 
-    for (my ($i, $acc) = (0, 0) ; ; ++$i) {
-
-        if ($i > $#c) {
-            push @c, @c[0 .. $period - 1];
-            $i = 2 * $i - 1;
-        }
-
+    my @period = @c;
+    for (my $i = 0 ; ; ++$i) {
+        if ($i > $#c) { push @c, @period; $i = 2 * $i - 1 }
         my $x = continued_frac($i, [$k, @c])->denominator;
         my $y = quadratic_formula(-$d, 0, $x**2 - 1);
 
