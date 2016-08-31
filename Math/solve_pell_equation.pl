@@ -54,7 +54,7 @@ sub solve_pell {
         my $p = 4 * $d * ($x**2 - 1);
 
         if (is_power($p, 2)) {
-            return ($x, sqrtint($p) / (2 * $d));
+            return ($x, $p->isqrt / (2 * $d));
         }
     }
 }
