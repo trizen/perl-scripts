@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 
-# Author: Trizen
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 14 January 2013
-# http://trizen.googlecode.com
+# https://github.com/trizen
 
 # Calculates how to give back some amount of money.
 

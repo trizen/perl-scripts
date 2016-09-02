@@ -1,10 +1,10 @@
 #!/usr/bin/perl
 
-# Author: Trizen
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 01 January 2012
 # Edit: 15 February 2013
-# http://trizen.googlecode.com
+# https://github.com/trizen
 
 # Find and list duplicted files from one or more paths
 

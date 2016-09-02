@@ -1,10 +1,9 @@
 #!/usr/bin/perl
 
-# Author: Șuteu "Trizen" Daniel
+# Daniel "Trizen" Șuteu
+# License: GPLv3
 # Date: 18 August 2013
-# Email: echo dHJpemVueEBnbWFpbC5jb20K | base64 -d
-# Blog: http://trizenx.blogspot.com
-# Website: http://trizen.googlecode.com
+# https://github.com/trizen
 
 # Put two or more files together as columns.
 

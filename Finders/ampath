@@ -1,16 +1,12 @@
 #!/usr/bin/perl
-#
-# Find files which have exact or
-# almost the same name in a path.
-#-----------------
-# Author : Trizen
+
+# Daniel "Trizen" Șuteu
 # License: GPLv3
-# Appname: ampath
-# Version: 0.0.2
-#-----------------
-# Created on 27 December 2011
-# Latest edit on 18 February 2012
-# http://trizen.googlecode.com
+# Date: 27 December 2011
+# Edit: 18 February 2012
+# https://github.com/trizen
+
+# Find files which have the exact or almost the exact name in a path.
 
 use 5.010;
 use strict;

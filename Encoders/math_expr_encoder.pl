@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 
-# Author: Trizen
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 14 April 2012
-# http://trizen.googlecode.com
+# https://github.com/trizen
 
 @ARGV = @ARGV ? (@ARGV) : ($0);
 

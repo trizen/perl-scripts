@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 
-# Author: Trizen
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 24 December 2012
-# http://trizen.googlecode.com
+# https://github.com/trizen
 
 # Long division with arbitrary precision.
 

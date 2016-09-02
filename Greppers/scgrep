@@ -1,13 +1,13 @@
-#!/usr/bin/perl 
+#!/usr/bin/perl
 
 eval 'exec /usr/bin/perl  -S $0 ${1+"$@"}'
     if 0; # not running under some shell
 
-# Author: Daniel "Trizen" Șuteu
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 04 February 2013
 # Latest edit on: 16 July 2015
-# Website: http://trizen.googlecode.com
+# https://github.com/trizen
 
 # Perl source code extractor.
 

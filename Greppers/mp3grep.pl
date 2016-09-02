@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 
-# Author: Trizen
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 22 March 2013
-# http://trizen.googlecode.com
+# https://github.com/trizen
 
 # List MP3 files, from a directory, that matches some
 # specified tags, such as: artist, genre, title, etc...

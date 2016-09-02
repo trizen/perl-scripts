@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 
-# Author: Trizen
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 13 April 2012
-# http://trizen.googlecode.com
+# https://github.com/trizen
 
 # If you saw this code on perlmonks.org,
 # posted by an Anonymous Monk, that was me.

@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 
-# Author: Trizen
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 18 Novermber 2012
-# Website: http://trizen.googlecode.com
+# https://github.com/trizen
 
 # For a stronger encryption, use very long keys, but
 # avoid keys which contains spaces or null byte characters.

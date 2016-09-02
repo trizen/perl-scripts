@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 
-# Author: Trizen
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 22 June 2012
-# http://trizen.googlecode.com
+# https://github.com/trizen
 
 # Find files which have exactly or *ALMOST*
 # exactly the same name in a given path.

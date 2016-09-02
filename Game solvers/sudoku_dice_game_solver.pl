@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 
-# Author: Trizen
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 30 June 2013
-# http://trizen.googlecode.com
+# https://github.com/trizen
 
 # Sudoku dice game solver
 

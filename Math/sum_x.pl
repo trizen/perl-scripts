@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 
-# Author: Trizen
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 03 September 2012
-# http://trizen.googlecode.com
+# https://github.com/trizen
 
 # Get sum of consecutive numbers (with a given step between numbers).
 # Example: sum_x(1,3,1) returns 6  because 1+2+3   =  6

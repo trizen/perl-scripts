@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 
-# Author: Trizen
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 25 December 2012
-# http://trizen.googlecode.com
+# https://github.com/trizen
 
 sub next_power_of_two {
     return 2 << log($_[0]) / log(2);

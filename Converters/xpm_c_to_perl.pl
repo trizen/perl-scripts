@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 
-# Author: Trizen
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date : 21 February 2013
-# Website: http://trizen.googlecode.com
+# https://github.com/trizen
 
 # XPM to Perl data.
 # for file in `find /usr/share/pixmaps/ -maxdepth 1`; do perl -X xpm_c_to_perl.pl $file > $(basename $file); done

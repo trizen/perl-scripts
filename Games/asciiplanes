@@ -1,10 +1,10 @@
 #!/usr/bin/perl
 
-# Author: Daniel "Trizen" Șuteu
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Created on: 21 August 2012
 # Latest edit on: 10 November 2013
-# Websites: http://trizen.googlecode.com
+# https://github.com/trizen
 
 # Find the planes' positions on a grid. (text-based game)
 

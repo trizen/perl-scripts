@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 
-# Author: Trizen
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 15 March 2013
-# http://trizen.googlecode.com
+# https://github.com/trizen
 
 # Print a CSV file to standard output as an ASCII table.
 

@@ -1,11 +1,11 @@
 #!/usr/bin/perl
 
-# usage: perl unidecode_word_top.pl [file]
-
-# Author: Trizen
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 11 March 2013
-# http://trizen.googlecode.com
+# https://github.com/trizen
+
+# usage: perl unidecode_word_top.pl [file]
 
 use 5.010;
 use strict;

@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 
-# Author: Trizen
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 04 November 2012
-# http://trizen.googlecode.com
+# https://github.com/trizen
 
 # Update files in a directory, with files from other dirs.
 # Example: perl dir_file_updater.pl -o /tmp /root

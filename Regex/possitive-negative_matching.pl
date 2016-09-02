@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 
-# Author: Trizen
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 30 May 2013
-# http://trizen.googlecode.com
+# https://github.com/trizen
 
 # Returns true in a possitive check
 # if a string doesn't matches a regex.

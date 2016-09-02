@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 
-# Author: Trizen
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 16 March 2013
-# Website: http://trizen.googlecode.com
+# https://github.com/trizen
 
 # List activated options from config_2, which are
 # not activated in config_1, or have different values.

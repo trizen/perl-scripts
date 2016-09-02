@@ -1,10 +1,11 @@
 #!/usr/bin/perl
 
-# Dice game solver
-# Author: Trizen
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 20 May 2013
-# http://trizen.googlecode.com
+# https://github.com/trizen
+
+# Dice game solver
 
 use 5.010;
 use strict;

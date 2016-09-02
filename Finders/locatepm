@@ -1,10 +1,10 @@
 #!/usr/bin/perl
 
-# Author: Trizen
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 18 February 2012
-# Latest edit on: 08 August 2012
-# http://trizen.googlecode.com
+# Edit: 08 August 2012
+# https://github.com/trizen
 
 # Find installed Perl modules matching a regular expression
 

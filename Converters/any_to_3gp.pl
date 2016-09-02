@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 
-# Author: Trizen
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 10 June 2013
-# Website: http://trizen.googlecode.com
+# https://github.com/trizen
 
 #
 ## Convert any media file to the 3gp mobile format.

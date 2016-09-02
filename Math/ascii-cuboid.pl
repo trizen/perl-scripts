@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 
-# Author: Trizen
+# Daniel "Trizen" Șuteu
 # Date: 05 June 2012
 # License: GPLv3
-# http://trizen.googlecode.com
+# https://github.com/trizen
 
 use 5.010;
 

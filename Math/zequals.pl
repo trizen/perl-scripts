@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 
-# Author: Trizen
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 21 February 2013
-# http://trizen.googlecode.com
+# https://github.com/trizen
 
 # Zequals and estimations
 # http://www.youtube.com/watch?v=aOJOfh2_4PE

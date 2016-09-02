@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 
-# Coded by Trizen
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 20 April 2012
-# http://trizen.googlecode.com
+# https://github.com/trizen
 
 # Perl locate - a pretty efficient file locater
 

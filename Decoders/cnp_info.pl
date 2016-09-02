@@ -1,14 +1,14 @@
 #!/usr/bin/perl
 
-# CNP Info
-
-# Author: Trizen
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 11 October 2012
-# http://trizen.googlecode.com
+# https://github.com/trizen
 
-# See:
-# http://ro.wikipedia.org/wiki/Cod_numeric_personal
+# CNP info
+
+# See also:
+#   http://ro.wikipedia.org/wiki/Cod_numeric_personal
 
 use 5.010;
 use strict;

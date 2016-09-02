@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 
-# Author: Trizen
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 25 July 2012
-# http://trizen.googlecode.com
+# https://github.com/trizen
 
 # A simple ASCII encoder-decoder.
 

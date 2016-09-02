@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 
-# Author: Trizen
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 15 June 2013
-# http://trizen.googlecode.com
+# https://github.com/trizen
 
 #
 ## This script will compare the repetition of words from different authors.

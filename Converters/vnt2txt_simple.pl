@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 
-# Author: Trizen
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 08 May 2013
-# http://trizen.googlecode.com
+# https://github.com/trizen
 
 # Convert a .vnt file to a plain text file and set the right modification time.
 

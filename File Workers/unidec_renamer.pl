@@ -1,10 +1,10 @@
 #!/usr/bin/perl
 
-# Author: Trizen
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 29 October 2012
-# Latest edit on: 23 June 2013
-# http://trizen.googlecode.com
+# Edit: 23 June 2013
+# https://github.com/trizen
 
 # Unidecode filename renamer.
 # Ex: fișier.mp3 -> fisier.mp3

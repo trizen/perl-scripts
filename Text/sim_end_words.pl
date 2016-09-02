@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 
-# Author: Trizen
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 17 April 2012
-# http://trizen.googlecode.com
+# https://github.com/trizen
 
 # Group and list words from a wordlist that have similar ending chars
 
