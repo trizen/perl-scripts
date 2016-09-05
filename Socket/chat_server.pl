@@ -29,7 +29,7 @@ my %users : shared;
 sub broadcast {
     my ($id, $message) = @_;
     print "$message\n";
-    foreach my $i (0 .. $#open) {
+    foreach my $i (keys %users) {
         if ($i != $id) {
             $open[$i]->send("$message\n");
         }
@@ -87,7 +87,7 @@ while (1) {
         sign_in($conn);
     }
 
-    for (my $i = 0 ; $i <= $#open ; $i++) {
+    foreach my $i (keys %users) {
 
         my $conn = $open[$i];
         my $message;
@@ -110,7 +110,8 @@ while (1) {
             }
             else {
                 broadcast($i, "--- $users{$i} leaves ---");
-                splice(@open, $i--, 1);
+                delete $users{$i};
+                undef $open[$i];
             }
         }
     }
