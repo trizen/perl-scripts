@@ -390,6 +390,8 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Prime regexp](./Regex/prime_regexp.pl)
     * [Regex pair factors](./Regex/regex_pair_factors.pl)
     * [Regexp to strings](./Regex/regexp_to_strings.pl)
+* Socket
+    * [Chat server](./Socket/chat_server.pl)
 * Subtitle
     * [Srt-delay](./Subtitle/srt-delay)
     * [Srt assembler](./Subtitle/srt_assembler.pl)
