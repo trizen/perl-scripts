@@ -31,15 +31,6 @@ my $img = Imager->new(
                      );
 
 my $color = Imager::Color->new('#ff0000');
-
-foreach my $p (@points) {
-    $img->setpixel(
-        x     => $p->[0],
-        y     => $p->[1],
-        color => $color,
-    );
-}
-
 my $r = [int(rand($width)), int(rand($height))];
 
 foreach my $i (1 .. 200000) {
