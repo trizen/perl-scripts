@@ -296,7 +296,10 @@ sub write_to_file {
 
     # Substitute bad characters
     #$name =~ tr{-A-Za-z0-9[]'*_/À-ÿ}{_}c;
-    $name =~ s{[^\pL\pN\[\]_'"*/\-]+}{_}g;
+    $name =~ s{[^\pL\pN\[\]'*/\-]+}{ }g;
+
+    # Replace multiple spaces with a single underscore
+    $name = join('_', split(' ', $name));
 
     my $char = uc(substr($name, 0, 1));
     my $dir = catdir($base_dir, $char);
