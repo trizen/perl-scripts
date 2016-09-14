@@ -178,6 +178,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Prime gaps](./GD/prime_gaps.pl)
     * [Prime rectangles](./GD/prime_rectangles.pl)
     * [Prime stripe triangle](./GD/prime_stripe_triangle.pl)
+    * [Prime triangle 90deg](./GD/prime_triangle_90deg.pl)
     * [Pythagoras tree](./GD/pythagoras_tree.pl)
     * [Random abstract art](./GD/random_abstract_art.pl)
     * [Random abstract art 2](./GD/random_abstract_art_2.pl)
