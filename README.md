@@ -131,6 +131,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Cuboid turtle2](./GD/cuboid_turtle2.pl)
     * [Cuboid turtle3](./GD/cuboid_turtle3.pl)
     * [Dancing shapes](./GD/dancing_shapes.pl)
+    * [Divisor triangle](./GD/divisor_triangle.pl)
     * [Fact exp primorial growing](./GD/fact_exp_primorial_growing.pl)
     * [Factor triangle](./GD/factor_triangle.pl)
     * [Factorial turtles](./GD/factorial_turtles.pl)
