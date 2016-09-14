@@ -8,8 +8,6 @@
 # For each factor `f` of a composite number `n`, draw a circle
 # in such a way that the line of the circle passes through both `n` and `f`.
 
-# The result is very unexpected!
-
 use 5.014;
 use strict;
 use warnings;
