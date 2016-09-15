@@ -294,6 +294,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Function graph](./Math/function_graph.pl)
     * [Gamma function](./Math/gamma_function.pl)
     * [General binary multiplier](./Math/general_binary_multiplier.pl)
+    * [Golbach conjecture increasing primes](./Math/golbach_conjecture_increasing_primes.pl)
     * [Goldbach conjecture 2n prime](./Math/goldbach_conjecture_2n_prime.pl)
     * [Goldbach conjecture possibilities](./Math/goldbach_conjecture_possibilities.pl)
     * [Goldbach conjecture random primes](./Math/goldbach_conjecture_random_primes.pl)
