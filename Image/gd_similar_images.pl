@@ -170,7 +170,7 @@ sub find_similar_images(&@) {
 @ARGV || help(1);
 find_similar_images {
     my ($score, $files) = @_;
-    printf("=> Similarity: %.0f%%\n", $score), say join("\n", @{$files});
+    printf("=> Similarity: %.0f%%\n", $score), say join("\n", sort @{$files});
     say "-" x 80;
 }
 @ARGV;
