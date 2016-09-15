@@ -339,6 +339,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Pi from infinity](./Math/pi_from_infinity.pl)
     * [Polygonal numbers](./Math/polygonal_numbers.pl)
     * [Powers of primes in factorial](./Math/powers_of_primes_in_factorial.pl)
+    * [Powers of primes modulus in factorial](./Math/powers_of_primes_modulus_in_factorial.pl)
     * [Prime 41](./Math/prime_41.pl)
     * [Prime counting functions](./Math/prime_counting_functions.pl)
     * [Prime factorization concept](./Math/prime_factorization_concept.pl)
