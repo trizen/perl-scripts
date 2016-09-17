@@ -307,6 +307,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Legendary question six](./Math/legendary_question_six.pl)
     * [Length of shortest addition chain](./Math/length_of_shortest_addition_chain.pl)
     * [Logarithmic root](./Math/logarithmic_root.pl)
+    * [Logarithmic root complex](./Math/logarithmic_root_complex.pl)
     * [Logarithmic root mpfr](./Math/logarithmic_root_mpfr.pl)
     * [Long division](./Math/long_division.pl)
     * [Long multiplication](./Math/long_multiplication.pl)
