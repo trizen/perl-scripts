@@ -299,6 +299,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Goldbach conjecture possibilities](./Math/goldbach_conjecture_possibilities.pl)
     * [Goldbach conjecture random primes](./Math/goldbach_conjecture_random_primes.pl)
     * [Inverse of factorial](./Math/inverse_of_factorial.pl)
+    * [Inverse of factorial stirling](./Math/inverse_of_factorial_stirling.pl)
     * [Is perfect power](./Math/is_perfect_power.pl)
     * [Is provable prime](./Math/is_provable_prime.pl)
     * [Is sum of two squares](./Math/is_sum_of_two_squares.pl)
