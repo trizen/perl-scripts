@@ -16,13 +16,13 @@ use strict;
 use warnings;
 
 use Math::BigNum;
-use ntheory qw(forprimes is_prime);
+use ntheory qw(forprimes is_mersenne_prime);
 
 my $one = Math::BigNum->one;
 
 forprimes {
-    my $n = $one << $_;
-    if (is_prime($n - 1)) {
+    if (is_mersenne_prime($_)) {
+        my $n = $one << $_;
         say "2^($_-1) * (2^$_-1) = ", $n * ($n - 1) / 2;
     }
 } 1, 100;
