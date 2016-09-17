@@ -2,7 +2,7 @@
 
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
-# Date: 21 August 2016
+# Date: 17 September 2016
 # Website: https://github.com/trizen
 
 # A provable (but not very efficient) primality test.
