@@ -14,12 +14,13 @@ use 5.010;
 use strict;
 use warnings;
 
-use ntheory qw(Pi LambertW);
+use ntheory qw(LambertW Pi);
 
-use constant S => sqrt(2 * Pi());
+use constant S => log(sqrt(2 * Pi()));
 
 sub inverse_of_factorial {
-    log($_[0] / S) / LambertW(1 / exp(1) * log($_[0] / S)) - 0.5;
+    my $l = log($_[0]) - S;
+    $l / LambertW(1 / exp(1) * $l) - 0.5;
 }
 
 #
