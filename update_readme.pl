@@ -5,7 +5,7 @@
 # Date: 24 April 2015
 # Website: https://github.com/trizen
 
-# Add a given directory to a given section in SUMMARY.md (for gitbooks)
+# Updated the README.md file by adding new scripts to the summary.
 
 use 5.014;
 use strict;

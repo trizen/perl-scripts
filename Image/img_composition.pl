@@ -6,7 +6,7 @@
 # Edit: 18 September 2016
 # Website: https://github.com/trizen
 
-# Compose two images together by merging all the pixel color by color.
+# Compose two images together by merging all the pixels, color by color.
 
 use 5.010;
 use strict;
