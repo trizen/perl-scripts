@@ -379,6 +379,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Square root convergents](./Math/square_root_convergents.pl)
     * [Stern brocot sequence](./Math/stern_brocot_sequence.pl)
     * [Sum factorial](./Math/sum_factorial.pl)
+    * [Sum of natural powers in constant base](./Math/sum_of_natural_powers_in_constant_base.pl)
     * [Sum of three cubes problem](./Math/sum_of_three_cubes_problem.pl)
     * [Sum of two primes](./Math/sum_of_two_primes.pl)
     * [Sum x](./Math/sum_x.pl)
