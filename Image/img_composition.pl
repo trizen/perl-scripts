@@ -108,8 +108,7 @@ sub write_matrix {
 
     foreach my $y (0 .. $rows) {
         foreach my $x (0 .. $cols) {
-            my $color = $img->colorAllocate(map { $_ % 256 } @{$matrix->[$y][$x]});
-            $img->setPixel($x, $y, $color);
+            $img->setPixel($x, $y, $img->colorAllocate(@{$matrix->[$y][$x]}));
         }
     }
 
