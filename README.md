@@ -247,7 +247,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Img-autocrop](./Image/img-autocrop.pl)
     * [Img2ascii](./Image/img2ascii.pl)
     * [Img2html](./Image/img2html.pl)
-    * [Img matrix composition](./Image/img_matrix_composition.pl)
+    * [Img composition](./Image/img_composition.pl)
     * [Img rewrite](./Image/img_rewrite.pl)
     * [Magick similar images](./Image/magick_similar_images.pl)
     * [Magick star trails](./Image/magick_star_trails.pl)

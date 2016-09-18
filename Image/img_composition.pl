@@ -3,9 +3,10 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 15 April 2015
+# Edit: 18 September 2016
 # Website: https://github.com/trizen
 
-# Compose two images by using a modified matrix multiplication algorithm
+# Compose two images together by merging all the pixel color by color.
 
 use 5.010;
 use strict;
@@ -13,6 +14,8 @@ use autodie;
 use warnings;
 
 use GD;
+
+use List::Util qw(min);
 use Getopt::Long qw(GetOptions);
 
 GD::Image->trueColor(1);
@@ -57,7 +60,6 @@ sub scale_image {
 sub make_matrix {
     my ($file, $scale_percentage) = @_;
 
-    my %cache;
     my $img = GD::Image->new($file) // do {
         warn "Can't load image `$file': $!\n";
         return;
@@ -71,35 +73,28 @@ sub make_matrix {
     my ($width, $height) = $img->getBounds();
     foreach my $x (0 .. $width - 1) {
         foreach my $y (0 .. $height - 1) {
-            my $index = $img->getPixel($x, $y);
-            $matrix[$x][$y] = ($cache{$index} //= [$img->rgb($index)]);
+            $matrix[$x][$y] = [$img->rgb($img->getPixel($x, $y))];
         }
     }
 
     return \@matrix;
 }
 
-sub multiply_matrices {
+sub compose_images {
     my ($A, $B) = @_;
 
     local $| = 1;
 
-    my $arows = $#{$A};
-    my $brows = $#{$B};
-    my $bcols = $#{$B->[0]};
-
-    no warnings 'uninitialized';
+    my ($rows, $cols) = (min($#{$A}, $#{$B}), min($#{$A->[0]}, $#{$B->[0]}));
 
     my @C;
-    foreach my $r (0 .. $arows) {
-        foreach my $c (0 .. $bcols) {
-            foreach my $i (0 .. $brows) {
-                foreach my $j (0 .. 2) {
-                    $C[$r][$c][$j] += ($A->[$r][$i][$j] + $B->[$i][$c][$j]) / 2;    # this line can be changed arbitrarily
-                }
+    foreach my $r (0 .. $rows) {
+        foreach my $i (0 .. $cols) {
+            foreach my $c (0 .. 2) {
+                $C[$i][$r][$c] = int(($A->[$r][$i][$c] + $B->[$r][$i][$c]) / 2);
             }
         }
-        print "$r of $arows...\r";
+        print "$r of $rows...\r";
     }
 
     return \@C;
@@ -108,11 +103,12 @@ sub multiply_matrices {
 sub write_matrix {
     my ($matrix, $file) = @_;
 
-    my $img = GD::Image->new($#{$matrix->[0]} + 1, $#{$matrix});
+    my ($rows, $cols) = ($#{$matrix}, $#{$matrix->[0]});
+    my $img = GD::Image->new($cols + 1, $rows + 1);
 
-    foreach my $x (0 .. $#{$matrix}) {
-        foreach my $y (0 .. $#{$matrix->[0]}) {
-            my $color = $img->colorAllocate(map { $_ % 256 } @{$matrix->[$x][$y]});
+    foreach my $y (0 .. $rows) {
+        foreach my $x (0 .. $cols) {
+            my $color = $img->colorAllocate(map { $_ % 256 } @{$matrix->[$y][$x]});
             $img->setPixel($x, $y, $color);
         }
     }
@@ -129,8 +125,8 @@ say "** Reading images...";
 my $A = make_matrix(shift(@ARGV) // usage(), $scale_percentage) // die "error 1: $!";
 my $B = make_matrix(shift(@ARGV) // usage(), $scale_percentage) // die "error 2: $!";
 
-say "** Multiplying matrices...";
-my $C = multiply_matrices($A, $B);
+say "** Composing images...";
+my $C = compose_images($A, $B);
 
 say "** Writing the output image...";
 write_matrix($C, $output_file)
