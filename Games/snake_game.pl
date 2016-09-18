@@ -60,7 +60,7 @@ use constant {
     A_FOOD => colored('❇', FOOD_COLOR),
              };
 
-my $sleep    = 0.05;    # sleep duration between displays
+my $sleep    = 0.03;    # sleep duration between displays
 my $food_num = 1;       # number of initial food sources
 
 local $| = 1;
