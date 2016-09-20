@@ -5,7 +5,7 @@
 # Date: 20 September 2016
 # Website: https://github.com/trizen
 
-# A fast function that returns true when a given number is even-perfect. False otherwise.
+# A very fast function that returns true when a given number is even-perfect. False otherwise.
 
 # See also:
 #   https://en.wikipedia.org/wiki/Perfect_number
@@ -15,27 +15,20 @@ use strict;
 use warnings;
 
 use Math::BigNum qw(:constant);
-use ntheory qw(next_prime is_mersenne_prime);
+use ntheory qw(is_mersenne_prime is_prime_power is_power sqrtint);
 
 sub is_even_perfect {
     my ($n) = @_;
 
     $n % 2 == 0 || return 0;
 
-    my $p = 2;
+    my $square = 8 * $n + 1;
+    is_power($square, 2) || return 0;
 
-    for (; ;) {
-        my $mp = (1 << $p) - 1;
-        my $np = ($mp * ($mp + 1) / 2);
+    my $tp = (sqrtint($square) + 1) / 2;
+    my $k = is_prime_power($tp, \my $base) || return 0;
 
-        $np > $n && return 0;
-
-        if (is_mersenne_prime($p) and $np == $n) {
-            return 1;
-        }
-
-        $p = next_prime($p);
-    }
+    defined($base) && ($base == 2) && is_mersenne_prime($k) ? 1 : 0;
 }
 
 say is_even_perfect(191561942608236107294793378084303638130997321548169216);                           # true
