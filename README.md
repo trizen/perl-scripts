@@ -300,7 +300,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Inverse of factorial lgrt](./Math/inverse_of_factorial_lgrt.pl)
     * [Inverse of factorial stirling](./Math/inverse_of_factorial_stirling.pl)
     * [Is even perfect](./Math/is_even_perfect.pl)
-    * [Is even perfect fast](./Math/is_even_perfect_fast.pl)
+    * [Is even perfect 2](./Math/is_even_perfect_2.pl)
     * [Is perfect power](./Math/is_perfect_power.pl)
     * [Is provable prime](./Math/is_provable_prime.pl)
     * [Is sum of two squares](./Math/is_sum_of_two_squares.pl)
