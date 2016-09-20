@@ -15,7 +15,7 @@ use strict;
 use warnings;
 
 use Math::BigNum qw(:constant);
-use ntheory qw(is_mersenne_prime is_power valuation sqrtint powmod);
+use ntheory qw(is_mersenne_prime valuation hammingweight is_power sqrtint);
 
 sub is_even_perfect {
     my ($n) = @_;
@@ -25,10 +25,8 @@ sub is_even_perfect {
     my $square = 8 * $n + 1;
     is_power($square, 2) || return 0;
 
-    my $tp = (sqrtint($square) + 1) / 2;
-    my $pow = valuation($tp, 2);
-
-    powmod(2, $pow, $tp) == 0 && is_mersenne_prime($pow) ? 1 : 0;
+    my $k = (sqrtint($square) + 1) / 2;
+    hammingweight($k) == 1 && is_mersenne_prime(valuation($k, 2)) ? 1 : 0;
 }
 
 say is_even_perfect(191561942608236107294793378084303638130997321548169216);                           # true
