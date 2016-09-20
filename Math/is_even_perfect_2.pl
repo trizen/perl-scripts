@@ -15,7 +15,7 @@ use strict;
 use warnings;
 
 use Math::BigNum qw(:constant);
-use ntheory qw(is_mersenne_prime is_power logint sqrtint powmod);
+use ntheory qw(is_mersenne_prime is_power valuation sqrtint powmod);
 
 sub is_even_perfect {
     my ($n) = @_;
@@ -26,7 +26,7 @@ sub is_even_perfect {
     is_power($square, 2) || return 0;
 
     my $tp = (sqrtint($square) + 1) / 2;
-    my $pow = logint($tp, 2);
+    my $pow = valuation($tp, 2);
 
     powmod(2, $pow, $tp) == 0 && is_mersenne_prime($pow) ? 1 : 0;
 }
