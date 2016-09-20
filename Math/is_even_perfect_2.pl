@@ -26,6 +26,8 @@ sub is_even_perfect {
     is_power($square, 2) || return 0;
 
     my $k = (sqrtint($square) + 1) / 2;
+
+    #($k & ($k - 1)) == 0 && is_mersenne_prime(valuation($k, 2)) ? 1 : 0;
     hammingweight($k) == 1 && is_mersenne_prime(valuation($k, 2)) ? 1 : 0;
 }
 
