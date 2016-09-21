@@ -336,6 +336,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Nth root recurrence constant](./Math/nth_root_recurrence_constant.pl)
     * [Number numbers](./Math/number_numbers.pl)
     * [Number of divisions](./Math/number_of_divisions.pl)
+    * [Numbers with pow 2 divisors](./Math/numbers_with_pow_2_divisors.pl)
     * [Partitions count](./Math/partitions_count.pl)
     * [Partitions count simple](./Math/partitions_count_simple.pl)
     * [Pascal's triangle multiples](./Math/pascal_s_triangle_multiples.pl)
