@@ -29,9 +29,12 @@ Example:
 
 In the end, x is: 11010100, where each bit of 1 represents a prime number in the following set: (2, 3, 4, 5, 6, 7, 8, 9)
 
-Those numbers are the primes bellow 9: (2, 3, 5, 7), where 9 is the number of initial bits of x.
+Visualizing this, each number that has a bit of 1 in its corresponding position, is a prime number:
 
-To make this a general-purpose sieve, more work is required...
+    [2, 3, 4, 5, 6, 7, 8, 9]
+    [1, 1, 0, 1, 0, 1, 0, 0]
+
+For making this a general-purpose sieve, more work is required.
 
 =cut
 
