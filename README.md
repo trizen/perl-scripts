@@ -383,6 +383,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Sphere volume](./Math/sphere_volume.pl)
     * [Sqrt n](./Math/sqrt_n.pl)
     * [Square root convergents](./Math/square_root_convergents.pl)
+    * [Square root method](./Math/square_root_method.pl)
     * [Stern brocot sequence](./Math/stern_brocot_sequence.pl)
     * [Sum factorial](./Math/sum_factorial.pl)
     * [Sum of natural powers in constant base](./Math/sum_of_natural_powers_in_constant_base.pl)
