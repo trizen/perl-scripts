@@ -334,6 +334,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Mysterious sum-pentagonal numbers](./Math/mysterious_sum-pentagonal_numbers.pl)
     * [Mysterious sum-pentagonal numbers 2](./Math/mysterious_sum-pentagonal_numbers_2.pl)
     * [N dimensional circles](./Math/n_dimensional_circles.pl)
+    * [Newton's method](./Math/newton_s_method.pl)
     * [Newton's method recursive](./Math/newton_s_method_recursive.pl)
     * [Next power of two](./Math/next_power_of_two.pl)
     * [Nth root recurrence constant](./Math/nth_root_recurrence_constant.pl)
