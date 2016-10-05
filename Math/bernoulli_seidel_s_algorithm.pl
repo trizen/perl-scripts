@@ -28,7 +28,7 @@ sub seidel_bernoulli {
     $n % 2  and return zero;
 
     my @D = (zero) x ($n + 1);
-    $D[1] = 1;
+    $D[1] = one;
 
     my $h = 1;
     foreach my $i (0 .. $n - 1) {
