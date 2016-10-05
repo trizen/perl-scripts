@@ -30,24 +30,21 @@ sub seidel_bernoulli {
     my @D = (zero) x ($n + 1);
     $D[1] = 1;
 
-    my ($w, $h, $p) = (1, 1, one);
-
+    my $h = 1;
     foreach my $i (0 .. $n - 1) {
-        if ($w) {
-            $p *= 4;
+        if ($i & 1) {
+            foreach my $k (1 .. $h - 1) {
+                $D[$k] += $D[$k - 1];
+            }
+        }
+        else {
             for (my $k = $h ; $k > 0 ; --$k) {
                 $D[$k] += $D[$k + 1];
             }
             ++$h;
         }
-        else {
-            foreach my $k (1 .. $h - 1) {
-                $D[$k] += $D[$k - 1];
-            }
-        }
-        $w ^= 1;
     }
-    $D[$h - 1] / (2 * ($p - 1) * ($n % 4 == 0 ? -1 : 1));
+    $D[$h - 1] / (((one << ($n + 1)) - 2) * ($n % 4 == 0 ? -1 : 1));
 }
 
 foreach my $i (0 .. 50) {
