@@ -268,6 +268,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Bernoulli numbers](./Math/bernoulli_numbers.pl)
     * [Bernoulli numbers recursive](./Math/bernoulli_numbers_recursive.pl)
     * [Bernoulli numbers recursive 2](./Math/bernoulli_numbers_recursive_2.pl)
+    * [Bernoulli seidel's algorithm](./Math/bernoulli_seidel_s_algorithm.pl)
     * [Binary multiplier](./Math/binary_multiplier.pl)
     * [Binary prime encoder](./Math/binary_prime_encoder.pl)
     * [Binary prime encoder fast](./Math/binary_prime_encoder_fast.pl)
