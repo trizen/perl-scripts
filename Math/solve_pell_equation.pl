@@ -53,7 +53,7 @@ sub solve_pell {
         my $x = continued_frac($i, [$k, @c])->denominator;
         my $p = 4 * $d * ($x*$x - 1);
 
-        if (is_power($p, 2)) {
+        if ($p->is_psqr) {
             return ($x, $p->bisqrt / (2 * $d));
         }
     }
