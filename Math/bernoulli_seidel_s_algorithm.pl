@@ -27,17 +27,15 @@ sub seidel_bernoulli {
     $n == 1 and return half;
     $n % 2  and return zero;
 
-    my @D = (zero) x ($n+1);
+    my @D = (zero) x ($n + 1);
     $D[1] = 1;
 
-    my ($num, $den);
     my ($w, $h, $s, $p) = (1, 1, -2, one);
 
     foreach my $i (0 .. $n - 1) {
         if ($w) {
             $p *= 4;
             $s = -$s;
-            $den = $s * ($p - 1);
             for (my $k = $h ; $k > 0 ; --$k) {
                 $D[$k] += $D[$k + 1];
             }
@@ -47,11 +45,10 @@ sub seidel_bernoulli {
             foreach my $k (1 .. $h - 1) {
                 $D[$k] += $D[$k - 1];
             }
-            $num = $D[$h - 1];
         }
         $w ^= 1;
     }
-    $num / $den;
+    $D[$h - 1] / ($s * ($p - 1));
 }
 
 foreach my $i (0 .. 50) {
