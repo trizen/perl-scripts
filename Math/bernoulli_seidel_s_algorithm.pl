@@ -14,25 +14,21 @@ use warnings;
 
 use Math::BigNum;
 
-use constant {
-              zero => Math::BigNum->zero,
-              one  => Math::BigNum->one,
-              half => Math::BigNum->new('1/2'),
-             };
-
-sub seidel_bernoulli {
+sub bernoulli_seidel {
     my ($n) = @_;
 
-    $n == 0 and return one;
-    $n == 1 and return half;
-    $n % 2  and return zero;
+    $n == 0 and return Math::BigNum->one;
+    $n == 1 and return Math::BigNum->new('1/2');
+    $n % 2  and return Math::BigNum->zero;
 
-    my @D = (zero) x ($n + 1);
-    $D[1] = one;
+    state $zero = Math::GMPz->new(0);
+    state $one  = Math::GMPz->new(1);
 
-    my $h = 1;
+    my @D = ($zero, $one, ($zero) x ($n - 1));
+
+    my ($h, $w) = (1, 1);
     foreach my $i (0 .. $n - 1) {
-        if ($i & 1) {
+        if ($w ^= 1) {
             foreach my $k (1 .. $h - 1) {
                 $D[$k] += $D[$k - 1];
             }
@@ -44,9 +40,9 @@ sub seidel_bernoulli {
             ++$h;
         }
     }
-    $D[$h - 1] / (((one << ($n + 1)) - 2) * ($n % 4 == 0 ? -1 : 1));
+    Math::BigNum->new($D[$h - 1]) / Math::BigNum->new((($one << ($n + 1)) - 2) * ($n % 4 == 0 ? -1 : 1));
 }
 
 foreach my $i (0 .. 50) {
-    printf "B%-3d = %s\n", 2 * $i, seidel_bernoulli(2 * $i)->as_rat;
+    printf "B%-3d = %s\n", 2 * $i, bernoulli_seidel(2 * $i)->as_rat;
 }
