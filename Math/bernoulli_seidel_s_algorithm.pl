@@ -19,7 +19,7 @@ sub bernoulli_seidel {
 
     $n == 0 and return Math::BigNum->one;
     $n == 1 and return Math::BigNum->new('1/2');
-    $n % 2  and return Math::BigNum->zero;
+    $n %  2 and return Math::BigNum->zero;
 
     state $zero = Math::GMPz->new(0);
     state $one  = Math::GMPz->new(1);
@@ -34,10 +34,9 @@ sub bernoulli_seidel {
             }
         }
         else {
-            for (my $k = $h ; $k > 0 ; --$k) {
+            for (my $k = $h++ ; $k > 0 ; --$k) {
                 $D[$k] += $D[$k + 1];
             }
-            ++$h;
         }
     }
     Math::BigNum->new($D[$h - 1]) / Math::BigNum->new((($one << ($n + 1)) - 2) * ($n % 4 == 0 ? -1 : 1));
