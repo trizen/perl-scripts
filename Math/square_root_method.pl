@@ -7,7 +7,10 @@
 
 # Approximate the square root of a number.
 
-use 5.014;
+use 5.010;
+use strict;
+use warnings;
+
 use Math::BigNum qw(:constant);
 
 sub square_root {
@@ -19,11 +22,11 @@ sub square_root {
     my $r = 0;
 
     while (abs($m - $r) > $eps) {
-        $m = ($m + $r) / 2;
-        $r = $n / $m;
+        $m = ($m + $r)->fdiv(2);
+        $r = $n->fdiv($m);
     }
 
     $r;
 }
 
-say square_root(12345);
+say square_root(1234);

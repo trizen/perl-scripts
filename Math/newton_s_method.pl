@@ -7,7 +7,10 @@
 
 # Approximate nth-roots using Newton's method.
 
-use 5.014;
+use 5.010;
+use strict;
+use warnings;
+
 use Math::BigNum qw(:constant);
 
 sub nth_root {
