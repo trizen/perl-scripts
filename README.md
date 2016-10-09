@@ -260,7 +260,8 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Lingua ro numbers](./Lingua/lingua_ro_numbers.pl)
     * [Rus translit](./Lingua/rus_translit.pl)
 * Math
-    * [1 over x is finite](./Math/1_over_x_is_finite.pl)
+    * [1 over n is finite](./Math/1_over_n_is_finite.pl)
+    * [1 over n period length](./Math/1_over_n_period_length.pl)
     * [Alexandrian integers](./Math/alexandrian_integers.pl)
     * [Area of triangle](./Math/area_of_triangle.pl)
     * [Arithmetic expressions](./Math/arithmetic_expressions.pl)

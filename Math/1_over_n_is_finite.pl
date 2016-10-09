@@ -5,7 +5,7 @@
 # Date: 25 December 2012
 # https://github.com/trizen
 
-# Checks if 1/x is finite or infinite.
+# Checks if 1/n is finite or infinite.
 
 # See also: http://perlmonks.org/index.pl?node_id=1006283
 
