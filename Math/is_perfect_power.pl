@@ -11,16 +11,12 @@ use 5.010;
 use strict;
 use warnings;
 
-use ntheory qw(factor);
+use ntheory qw(factor_exp);
 use List::Util qw(all);
 
 sub is_perfect_power {
     my ($n, $k) = @_;
-
-    my %table;
-    ++$table{$_} for factor($n);
-
-    all { $table{$_} % $k == 0 } keys(%table);
+    all { $_->[1] % $k == 0 } factor_exp($n);
 }
 
 for my $i (1 .. 1000) {

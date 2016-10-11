@@ -24,7 +24,7 @@ sub bernoulli_seidel {
     state $zero = Math::GMPz->new(0);
     state $one  = Math::GMPz->new(1);
 
-    my @D = ($zero, $one, ($zero) x ($n - 1));
+    my @D = ($zero, $one, ($zero) x ($n / 2));
 
     my ($h, $w) = (1, 1);
     foreach my $i (0 .. $n - 1) {
