@@ -21,19 +21,22 @@ sub bernoulli_seidel {
     $n == 1 and return Math::BigNum->new('1/2');
     $n %  2 and return Math::BigNum->zero;
 
-    state $zero = Math::GMPz->new(0);
-    state $one  = Math::GMPz->new(1);
+    state $one = Math::GMPz::Rmpz_init_set_ui(1);
 
-    my @D = ($zero, $one, ($zero) x ($n / 2));
+    my @D = (
+        Math::GMPz::Rmpz_init_set_ui(0),
+        Math::GMPz::Rmpz_init_set_ui(1),
+        map { Math::GMPz::Rmpz_init_set_ui(0) } 1 .. $n / 2
+    );
 
     my ($h, $w) = (1, 1);
     foreach my $i (0 .. $n - 1) {
         if ($w ^= 1) {
-            $D[$_] += $D[$_ - 1] for (1 .. $h - 1);
+            Math::GMPz::Rmpz_add($D[$_], $D[$_], $D[$_ - 1]) for (1 .. $h - 1);
         }
         else {
             $w = $h++;
-            $D[$w] += $D[$w + 1] while --$w;
+            Math::GMPz::Rmpz_add($D[$w], $D[$w], $D[$w + 1]) while --$w;
         }
     }
 
