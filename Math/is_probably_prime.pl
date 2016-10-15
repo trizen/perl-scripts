@@ -30,7 +30,7 @@ use strict;
 use integer;
 use warnings;
 
-use ntheory qw(powmod prime_iterator sqrtint logint);
+use ntheory qw(powmod next_prime sqrtint logint);
 
 sub is_probably_prime {
     my ($n) = @_;
@@ -38,11 +38,12 @@ sub is_probably_prime {
     return 1 if $n == 2;
     return 0 if powmod(2, $n - 1, $n) != 1;
 
-    my $iter = prime_iterator(2);
+    my $p = 2;
     my $limit = $n >= 9 ? int(sqrtint($n) / logint($n, 9)) + 1 : sqrtint($n);
 
     for (my $i = $limit ; $i ; --$i) {
-        ($n % $iter->()) == 0 and return 0;
+        ($n % $p) == 0 and return 0;
+        $p = next_prime($p);
     }
 
     return 1;
