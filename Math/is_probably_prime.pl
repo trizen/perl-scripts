@@ -5,10 +5,7 @@
 # Date: 15 October 2016
 # Website: https://github.com/trizen
 
-# A simple probabilistic primality test, based on Fermat's little theorem + a new conjecture.
-
-# See also:
-#   https://en.wikipedia.org/wiki/Fermat%27s_little_theorem
+# A simple probabilistic primality test, based on Fermat's little theorem.
 
 # Pseudoprimes are eliminated based on the following conjecture:
 #
@@ -22,6 +19,11 @@
 #
 # Therefore, we can check "n" for divisibility with the first "k" primes only.
 # As of today (15 October 2016), no counter-example was found. It was tested up to: 999986341201.
+
+# See also:
+#   https://oeis.org/A001567
+#   https://oeis.org/A177415
+#   https://en.wikipedia.org/wiki/Fermat%27s_little_theorem
 
 use 5.010;
 use strict;
