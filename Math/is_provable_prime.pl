@@ -27,7 +27,6 @@
 
 use 5.010;
 use strict;
-use integer;
 use warnings;
 
 use Math::BigInt (try => 'GMP');
@@ -39,8 +38,11 @@ sub is_provable_prime {
     return 1 if $n == 2;
     return 0 if powmod(2, $n - 1, $n) != 1;
 
-    # Probably, we can improve this limit even further
+    # We can improve this limit even further
     my $limit = rootint($n, 3);
+
+    # A small (unproven) optimization
+    #$limit = int($limit / (1 + log(log(log($limit + 2)))));
 
     for (my $p = 3 ; $p <= $limit ; $p = next_prime($p)) {
         powmod($p, $n - 1, $n) != 1 and return 0;
@@ -196,7 +198,7 @@ my @pseudoprimes = (
 );
 
 foreach my $pp (@pseudoprimes) {
-    is_provable_prime($pp) && die "error for pseudoprime: $pp";
+    is_provable_prime($pp) && warn "error for pseudoprime: $pp";
 }
 
 my $count = 0;
@@ -205,4 +207,4 @@ foreach my $i (0 .. $limit) {
     ++$count if is_provable_prime($i);
 }
 
-say "There are $count primes bellow $limit.";
+say "There are $count primes bellow $limit";
