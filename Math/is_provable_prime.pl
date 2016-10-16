@@ -27,6 +27,7 @@
 
 use 5.010;
 use strict;
+use integer;
 use warnings;
 
 use Math::BigInt (try => 'GMP');

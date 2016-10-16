@@ -395,6 +395,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Sum of three cubes problem](./Math/sum_of_three_cubes_problem.pl)
     * [Sum of two primes](./Math/sum_of_two_primes.pl)
     * [Sum x](./Math/sum_x.pl)
+    * [Triangle hyperoperation](./Math/triangle_hyperoperation.pl)
     * [Trip2mars](./Math/trip2mars.pl)
     * [Wilson prime formula](./Math/wilson_prime_formula.pl)
     * [Yahtzee](./Math/yahtzee.pl)
