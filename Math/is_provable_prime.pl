@@ -18,11 +18,13 @@
 # When we encounter a number that satisfies the above inequality,
 # we can say with a 100% certainty that the number is composite.
 
-# We can improve on this limit, by letting "k" be the cube root of "n".
+# We can improve on this limit, by letting "k" be the cube root of "n",
+# as it is proven that every Carmichael number has at least three prime factors.
 
 # See also:
 #   https://oeis.org/A001567
 #   https://oeis.org/A177415
+#   http://oeis.org/wiki/Carmichael_numbers
 #   https://en.wikipedia.org/wiki/Fermat%27s_little_theorem
 
 use 5.010;
@@ -38,7 +40,8 @@ sub is_provable_prime {
     return 1 if $n == 2;
     return 0 if powmod(2, $n - 1, $n) != 1;
 
-    # Probably, we can improve this limit even further
+    # We can improve this limit a little bit further,
+    # as it is proven that every Carmichael number is squarefree.
     my $limit = rootint($n, 3);
 
     for (my $p = 3 ; $p <= $limit ; $p = next_prime($p)) {
