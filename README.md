@@ -289,6 +289,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Cuboid](./Math/cuboid.pl)
     * [E from binomial](./Math/e_from_binomial.pl)
     * [E primorial](./Math/e_primorial.pl)
+    * [Ethiopian multiplication](./Math/ethiopian_multiplication.pl)
     * [Factorial from primes](./Math/factorial_from_primes.pl)
     * [Factorial in half steps](./Math/factorial_in_half_steps.pl)
     * [Faulhaber's formula](./Math/faulhaber_s_formula.pl)
