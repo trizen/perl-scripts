@@ -343,6 +343,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Newton's method](./Math/newton_s_method.pl)
     * [Newton's method recursive](./Math/newton_s_method_recursive.pl)
     * [Next power of two](./Math/next_power_of_two.pl)
+    * [Nth prime approx](./Math/nth_prime_approx.pl)
     * [Nth root recurrence constant](./Math/nth_root_recurrence_constant.pl)
     * [Number numbers](./Math/number_numbers.pl)
     * [Number of divisions](./Math/number_of_divisions.pl)
