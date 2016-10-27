@@ -1,6 +1,6 @@
-#!?usr/bin/perl
+#!/usr/bin/perl
 
-# An messy, but interesting approximation for the nth-prime.
+# A messy, but interesting approximation for the nth-prime.
 
 # Formulas from:
 #   http://stackoverflow.com/a/9487883/1063770
