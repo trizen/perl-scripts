@@ -37,6 +37,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Json2csv](./Converters/json2csv.pl)
     * [Unicode2ascii](./Converters/unicode2ascii.pl)
     * [Vnt2txt simple](./Converters/vnt2txt_simple.pl)
+    * [Xml2hash](./Converters/xml2hash.pl)
     * [Xpm c to perl](./Converters/xpm_c_to_perl.pl)
 * Decoders
     * [Base64 decoding-tutorial](./Decoders/base64_decoding-tutorial.pl)
