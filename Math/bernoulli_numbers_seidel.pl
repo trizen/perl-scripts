@@ -19,15 +19,15 @@ sub bernoulli_seidel {
 
     $n == 0 and return Math::BigNum->one;
     $n == 1 and return Math::BigNum->new('1/2');
-    $n %  2 and return Math::BigNum->zero;
+    $n % 2  and return Math::BigNum->zero;
 
     state $one = Math::GMPz::Rmpz_init_set_ui(1);
 
     my @D = (
-        Math::GMPz::Rmpz_init_set_ui(0),
-        Math::GMPz::Rmpz_init_set_ui(1),
-        map { Math::GMPz::Rmpz_init_set_ui(0) } (1 .. $n / 2 - 1)
-    );
+             Math::GMPz::Rmpz_init_set_ui(0),
+             Math::GMPz::Rmpz_init_set_ui(1),
+             map { Math::GMPz::Rmpz_init_set_ui(0) } (1 .. $n / 2 - 1)
+            );
 
     my ($h, $w) = (1, 1);
     foreach my $i (0 .. $n - 1) {

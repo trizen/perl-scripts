@@ -64,7 +64,7 @@ sub harmfrac {
         Math::GMPq::Rmpq_set_den($q, $den);
         Math::GMPq::Rmpq_canonicalize($q);
 
-        return bless \$q, 'Math::BigNum';
+        return Math::BigNum->new($q);
     }
 
     my $num = Math::GMPz::Rmpz_init_set_ui(1);
@@ -81,7 +81,7 @@ sub harmfrac {
     Math::GMPq::Rmpq_set_den($r, $den);
     Math::GMPq::Rmpq_canonicalize($r);
 
-    bless \$r, 'Math::BigNum';
+    Math::BigNum->new($r);
 }
 
 foreach my $i (0 .. 30) {
