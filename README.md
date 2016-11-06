@@ -293,6 +293,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Ethiopian multiplication](./Math/ethiopian_multiplication.pl)
     * [Ethiopian multiplication binary](./Math/ethiopian_multiplication_binary.pl)
     * [Factorial from primes](./Math/factorial_from_primes.pl)
+    * [Factorial from primes simple](./Math/factorial_from_primes_simple.pl)
     * [Factorial in half steps](./Math/factorial_in_half_steps.pl)
     * [Faulhaber's formula](./Math/faulhaber_s_formula.pl)
     * [Fibonacci closed form](./Math/fibonacci_closed_form.pl)
