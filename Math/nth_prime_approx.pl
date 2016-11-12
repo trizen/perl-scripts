@@ -14,7 +14,7 @@ use ntheory qw(nth_prime);
 my $sum1 = 0;
 my $sum2 = 0;
 
-for (my $n = 10 ; $n <= 1e7 ; $n += 1e6) {
+for (my $n = 1e6 ; $n < 1e7 ; $n += 1e6) {
     my $p = nth_prime($n);
 
     # more than good approximation (experimental)
@@ -67,7 +67,7 @@ for (my $n = 10 ; $n <= 1e7 ; $n += 1e6) {
     $sum1 += $p / $p1;
     $sum2 += $p / $p2;
 
-    say join(" ", sprintf("%10s" x 3, $p, $p1, $p2), "\t", sprintf("%.5f", $p / $p1), sprintf("%.5f", $p / $p2));
+    say "P($n) -> ",join(" ", sprintf("%10s" x 3, $p, $p1, $p2), "\t", sprintf("%.5f", $p / $p1), sprintf("%.5f", $p / $p2));
 }
 
 say "P1 error: $sum1";
