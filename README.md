@@ -173,6 +173,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Magic triangle](./GD/magic_triangle.pl)
     * [Mathematical butt](./GD/mathematical_butt.pl)
     * [Mirror shells](./GD/mirror_shells.pl)
+    * [Mobius walking line](./GD/mobius_walking_line.pl)
     * [Number triangles](./GD/number_triangles.pl)
     * [Pascal's triangle multiples](./GD/pascal_s_triangle_multiples.pl)
     * [Pattern triangle](./GD/pattern_triangle.pl)
