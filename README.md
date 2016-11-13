@@ -62,8 +62,10 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Tlen compressor](./Encoders/tlen_compressor.pl)
     * [Tzip](./Encoders/tzip)
     * [Tzip2](./Encoders/tzip2)
-    * [Unbreakable xor encryption](./Encoders/unbreakable_xor_encryption.pl)
-    * [Xor file encoder](./Encoders/xor_file_encoder.pl)
+* Encryption
+    * [One-time pad](./Encryption/one-time_pad.pl)
+    * [Unbreakable xor encryption](./Encryption/unbreakable_xor_encryption.pl)
+    * [Xor file encryption](./Encryption/xor_file_encryption.pl)
 * File Readers
     * [Ldump](./File Readers/ldump)
     * [Multi-file-line-reader](./File Readers/multi-file-line-reader.pl)
