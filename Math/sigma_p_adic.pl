@@ -49,7 +49,7 @@ sub sigma_p_adic {
 }
 
 forcomposites {
-    say $_, "\t", join ' ', sigma_p_adic($_);
+    say $_, "\t", sigma_p_adic($_);
 } 30;
 
 __END__
