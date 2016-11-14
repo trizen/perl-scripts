@@ -390,6 +390,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Semiprime equationization uncached](./Math/semiprime_equationization_uncached.pl)
     * [Sequence analyzer](./Math/sequence_analyzer.pl)
     * [Sequence closed form](./Math/sequence_closed_form.pl)
+    * [Sigma p adic](./Math/sigma_p_adic.pl)
     * [Smarandache function](./Math/smarandache_function.pl)
     * [Solve congruence equation example](./Math/solve_congruence_equation_example.pl)
     * [Solve pell equation](./Math/solve_pell_equation.pl)
