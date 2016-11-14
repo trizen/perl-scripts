@@ -7,7 +7,7 @@
 
 # An interesting function that computes the sum of
 # divisors (excluding the trivial divisors 1 and n),
-# each divisor raised to its p-adic valuation ν_d(n).
+# each divisor raised to its p-adic valuation ν_d(n!).
 
 # For prime numbers, the value of `sigma_p_adic(p)` is 0.
 
