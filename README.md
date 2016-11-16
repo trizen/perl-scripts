@@ -239,6 +239,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
         * [HAL9000.memory](./HAL/HAL9000/HAL9000.memory)
         * [HAL9000](./HAL/HAL9000/HAL9000.pl)
 * Image
+    * [Cyan vision](./Image/cyan_vision.pl)
     * [Darken image](./Image/darken_image.pl)
     * [Diff negative](./Image/diff_negative.pl)
     * [Edge detector](./Image/edge_detector.pl)

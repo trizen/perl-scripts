@@ -25,6 +25,15 @@ my @matrix = (
               [805, 732, 524, 37,  331],
              );
 
+#<<<
+# Reading a matrix from the standard input.
+#~ @matrix = ();
+#~ while(<>) {
+    #~ chomp;
+    #~ push @matrix, [split(/,/, $_)];
+#~ }
+#>>>
+
 my $max_color    = 2**16 - 1;
 my $scale_factor = 10;
 my $radius       = $scale_factor / atan2(0, -'inf');
