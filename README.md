@@ -28,6 +28,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Wave-cmp2](./Audio/wave-cmp2.pl)
 * Benchmarks
     * [Array range vs shift](./Benchmarks/array_range_vs_shift.pl)
+    * [Types of variables](./Benchmarks/types_of_variables.pl)
 * Book tools
     * [Rosettacode to markdown](./Book tools/rosettacode_to_markdown.pl)
     * [Update summary](./Book tools/update_summary.pl)
