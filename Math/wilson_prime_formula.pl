@@ -5,7 +5,8 @@
 # Date: 27 September 2014
 # http://github.com/trizen
 
-# Requires: Math::BigInt::GMP
+# See also:
+#   https://en.wikipedia.org/wiki/Wilson's_theorem
 
 use 5.010;
 use strict;
