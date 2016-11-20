@@ -331,6 +331,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Magic 3-gon ring](./Math/magic_3-gon_ring.pl)
     * [Magic 5-gon ring](./Math/magic_5-gon_ring.pl)
     * [Map num](./Math/map_num.pl)
+    * [Matrix determinant bareiss](./Math/matrix_determinant_bareiss.pl)
     * [Matrix path 2-ways best](./Math/matrix_path_2-ways_best.pl)
     * [Matrix path 2-ways greedy](./Math/matrix_path_2-ways_greedy.pl)
     * [Matrix path 3-ways best](./Math/matrix_path_3-ways_best.pl)
