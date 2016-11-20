@@ -20,8 +20,8 @@ use 5.010;
 use strict;
 use warnings;
 
-use List::Util qw(uniq max);
-use ntheory qw(factor factorial is_prime);
+use List::Util qw(max sum);
+use ntheory qw(factor_exp factorial is_prime);
 
 binmode(STDOUT, ':utf8');
 
@@ -32,35 +32,34 @@ sub smarandache {
 
     return $n if is_prime($n);
 
-    my @f = factor($n);
-    my @u = uniq(@f);
+    my @f = factor_exp($n);
+    my $Ω = sum(map { $_->[1] } @f);
 
-    (@u == @f)
-      && return $f[-1];
+    (@f == $Ω)
+      && return $f[-1][0];
 
-    if (@u == 1) {
+    if (@f == 1) {
 
-        (@f <= $u[0])
-          && return $u[0] * @f;
+        my $ϕ = $f[0][0];
+
+        ($Ω <= $ϕ)
+          && return $ϕ * $Ω;
 
         exists($cache{$n})
           && return $cache{$n};
 
-        my $max = $u[0] * @f;
-        my $f   = factorial($max - $u[0]);
+        my $m = $ϕ * $Ω;
+        my $f = factorial($m - $ϕ);
 
         while ($f % $n == 0) {
-            $max -= $u[0];
-            $f /= $max;
+            $m -= $ϕ;
+            $f /= $m;
         }
 
-        return ($cache{$n} = $max);
+        return ($cache{$n} = $m);
     }
 
-    my %count;
-    ++$count{$_} for @f;
-
-    max(map { $count{$_} == 1 ? $_ : smarandache($_**$count{$_}) } @u);
+    max(map { $_->[1] == 1 ? $_->[0] : smarandache($_->[0]**$_->[1]) } @f);
 }
 
 #
