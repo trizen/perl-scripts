@@ -124,6 +124,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Black yellow number triangles](./GD/black_yellow_number_triangles.pl)
     * [Chaos game tetrahedron](./GD/chaos_game_tetrahedron.pl)
     * [Chaos game triangle](./GD/chaos_game_triangle.pl)
+    * [Circle numerical shapes](./GD/circle_numerical_shapes.pl)
     * [Circular prime triangle](./GD/circular_prime_triangle.pl)
     * [Circular triangle](./GD/circular_triangle.pl)
     * [Collatz triangle](./GD/collatz_triangle.pl)
