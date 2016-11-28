@@ -5,7 +5,7 @@
 # Date: 27 November 2016
 # https://github.com/trizen
 
-# Generates circle-like shapes for arbitrary numerical values (based on Euler's identity).
+# Generates circle-like shapes for arbitrary numerical values (based on Euler's formula).
 
 use 5.010;
 use strict;
