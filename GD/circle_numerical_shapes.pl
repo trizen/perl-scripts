@@ -12,13 +12,12 @@ use strict;
 use warnings;
 
 use GD::Simple;
-use Math::Complex;
 
 my ($width, $height) = (1000, 1000);
 my $img = 'GD::Simple'->new($width, $height);
 
-my $center = ($width + $height) / 4;
-$img->moveTo($center, $center);
+my $center = ($width + $height) >> 2;
+$img->moveTo($width >> 1, $height >> 1);
 
 my $number      = 9;       # draw a representation for this number
 my $granularity = 3000;    # the amount of granularity / detail
@@ -26,23 +25,19 @@ my $granularity = 3000;    # the amount of granularity / detail
 my $step1 = $number / $granularity;
 my $step2 = $step1 / $number;
 
-my $pi = atan2(0, -'inf');
-my $tau = 2 * $pi;
+my $tau = 2 * atan2(0, -'inf');
 
 my $scale = 300;
 my $color = $img->colorAllocate(255, 0, 0);
 
 for (my ($i, $j) = (0, 0) ; $j <= $tau ; $i += $step1, $j += $step2) {
-    my $point1 = exp($pi * i * $i);
-    my $point2 = exp($pi * i * $j);
 
-    my $re1 = $center + $point1->Re * $scale;
-    my $im1 = $center + $point1->Im * $scale;
+    my ($x1, $y1, $x2, $y2) = (
+        map { $_ * $scale + $center }
+            (cos($i), sin($i), cos($j), sin($j))
+    );
 
-    my $re2 = $center + $point2->Re * $scale;
-    my $im2 = $center + $point2->Im * $scale;
-
-    $img->setPixel(($re1 + $re2) / 2, ($im1 + $im2) / 2, $color);
+    $img->setPixel(($x1 + $x2) >> 1, ($y1 + $y2) >> 1, $color);
 }
 
 my $image_name = "circle_$number.png";
