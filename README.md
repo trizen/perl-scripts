@@ -438,6 +438,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Srt assembler](./Subtitle/srt_assembler.pl)
     * [Srt fix](./Subtitle/srt_fix.pl)
 * Text
+    * [Abs string](./Text/abs_string.pl)
     * [All substrings](./Text/all_substrings.pl)
     * [Group alike words](./Text/group_alike_words.pl)
     * [Repeated substrings](./Text/repeated_substrings.pl)
