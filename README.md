@@ -312,6 +312,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Goldbach conjecture increasing primes](./Math/goldbach_conjecture_increasing_primes.pl)
     * [Goldbach conjecture possibilities](./Math/goldbach_conjecture_possibilities.pl)
     * [Goldbach conjecture random primes](./Math/goldbach_conjecture_random_primes.pl)
+    * [Golomb's sequence](./Math/golomb_s_sequence.pl)
     * [Harmonic numbers](./Math/harmonic_numbers.pl)
     * [Inverse of factorial](./Math/inverse_of_factorial.pl)
     * [Inverse of factorial lgrt](./Math/inverse_of_factorial_lgrt.pl)
