@@ -23,7 +23,7 @@ sub nth_root {
 
     while (abs($m - $r) > $eps) {
         $r = $m;
-        $m = ((($n - 1) * $r + $x / ($r**($n - 1))) / $n)->float;
+        $m = ((($n - 1)->fmul($r) + $x->fdiv($r->fpow($n - 1)))->fdiv($n));
     }
 
     $r;
