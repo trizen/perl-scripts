@@ -17,9 +17,9 @@ use ntheory qw(is_mersenne_prime valuation);
 sub is_even_perfect {
     my ($n) = @_;
     my $v = valuation($n, 2) || return 0;
-    my $m = 1 + ($n >> $v);
-    ($m &  ($m-1))           && return 0;
-    ($m >> ($v+1)) == 1      || return 0;
+    my $m = ($n >> $v);
+    ($m & ($m+1))            && return 0;
+    ($m >> $v) == 1          || return 0;
     is_mersenne_prime($v+1);
 }
 
