@@ -16,12 +16,11 @@ use ntheory qw(is_mersenne_prime valuation);
 
 sub is_even_perfect {
     my ($n) = @_;
-    my $v1 = valuation($n, 2) || return 0;
-    my $m = 1 + ($n >> $v1);
-    my $v2 = valuation($m, 2);
-    $v2 == $v1 + 1            || return 0;
-    ($m >> $v2) == 1          || return 0;
-    is_mersenne_prime($v2);
+    my $v = valuation($n, 2) || return 0;
+    my $m = 1 + ($n >> $v);
+    ($m &  ($m-1))           && return 0;
+    ($m >> ($v+1)) == 1      || return 0;
+    is_mersenne_prime($v+1);
 }
 
 say is_even_perfect(191561942608236107294793378084303638130997321548169216);                           # true
