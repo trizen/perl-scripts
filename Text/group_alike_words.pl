@@ -43,20 +43,21 @@ getopts('d:kmh', \%opt);
 $opt{h} && usage();
 
 # Levenshtein's distance function (optimized for speed)
-sub lev {
+sub leven {
     my ($s, $t) = @_;
 
     my @d = ([0 .. @$t], map { [$_] } 1 .. @$s);
-    foreach my $i (1 .. @$s) {
-        foreach my $j (1 .. @$t) {
-            $d[$i][$j] =
-                $$s[$i - 1] eq $$t[$j - 1]
-              ? $d[$i - 1][$j - 1]
-              : min($d[$i - 1][$j], $d[$i][$j - 1], $d[$i - 1][$j - 1]) + 1;
+
+    foreach my $i (0 .. $#{$s}) {
+        foreach my $j (0 .. $#{$t}) {
+            $d[$i + 1][$j + 1] =
+              $s->[$i] eq $t->[$j]
+                ? $d[$i][$j]
+                : 1 + min($d[$i][$j + 1], $d[$i + 1][$j], $d[$i][$j]);
         }
     }
 
-    $d[-1][-1] // min($#{$s} + 1, $#{$t} + 1);
+    $d[-1][-1];
 }
 
 # When no file has been provided, throw an error
