@@ -10,7 +10,6 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Chr freq](./Analyzers/chr_freq.pl)
     * [Dieharder](./Analyzers/dieharder.pl)
     * [First letter top](./Analyzers/first_letter_top.pl)
-    * [Jaro-winkler distance](./Analyzers/jaro-winkler_distance.pl)
     * kcal
         * [Kcal](./Analyzers/kcal/kcal.pl)
         * [Products.csv](./Analyzers/kcal/products.csv)
@@ -442,6 +441,9 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Abs string](./Text/abs_string.pl)
     * [All substrings](./Text/all_substrings.pl)
     * [Group alike words](./Text/group_alike_words.pl)
+    * [Jaro-winkler distance](./Text/jaro-winkler_distance.pl)
+    * [Levenshtein distance iter](./Text/levenshtein_distance_iter.pl)
+    * [Levenshtein distance rec](./Text/levenshtein_distance_rec.pl)
     * [Repeated substrings](./Text/repeated_substrings.pl)
     * [Search by prefix](./Text/search_by_prefix.pl)
     * [Sim end words](./Text/sim_end_words.pl)

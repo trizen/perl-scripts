@@ -19,8 +19,8 @@ use warnings;
 
 use ntheory qw(invmod);
 
-my $k =  10**5;     # factor of x
-my $r = -19541;     # after equal
+my $k =  10**5;     # coefficient of x
+my $r = -19541;     # congruent to this
 my $m =  19543;     # modulo this number
 
 say "x = ", (invmod($k, $m) * $r) % $m;

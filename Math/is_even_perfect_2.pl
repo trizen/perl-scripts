@@ -23,7 +23,7 @@ sub is_even_perfect {
     $n % 2 == 0 || return 0;
 
     my $square = 8*$n + 1;
-    $square->is_pow(2) || return 0;
+    $square->is_psqr || return 0;
 
     my $k = ($square->isqrt + 1)/2;
     ($k & ($k - 1)) == 0 && is_mersenne_prime($k->valuation(2)) ? 1 : 0;
