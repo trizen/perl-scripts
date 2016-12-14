@@ -116,8 +116,9 @@ sub smart_wrap ($text, $width) {
                 $path,
                 sub ($combination) {
                     my $score = 0;
-                    foreach my $line (@{$combination}[0 .. $#{$combination}]) {
+                    foreach my $line (@$combination) {
                         $score += ($width - length($line))**2;
+                        return if $score > $best{score};
                     }
                     if ($score < $best{score}) {
                         $best{score} = $score;
