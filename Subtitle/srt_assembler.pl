@@ -1,42 +1,137 @@
 #!/usr/bin/perl
 
-# Author: Daniel "Trizen" Șuteu
+# Daniel "Trizen" Șuteu
 # Date: 14 December 2014
+# Edit: 14 December 2016
 # License: GPLv3
-# Website: https://github.com/trizen
+# https://github.com/trizen
 
 # Extract text and scheleton from a srt file
 # translate the text into another language
 # and join back the text with the srt scheleton.
 
+use utf8;
 use 5.010;
 use strict;
 use autodie;
 use warnings;
 
+use experimental qw(signatures);
+
 use Getopt::Std qw(getopts);
-use Text::Reflow qw(reflow_string);
 use File::BOM qw(get_encoding_from_filehandle);
 
 sub usage {
     my ($code) = @_;
+    require File::Basename;
+    my $main = File::Basename::basename($0);
     print <<"EOF";
-usage: $0 [options] [input file]
+usage: $main [options] [input file]
 
 options:
     -j  : join text with template
     -t  : name of the template file
 
 example:
-    $0 -t file.t file.srt > file.text
-    $0 -t file.t file.text > new_file.srt
+    $main -t file.t file.srt > file.text
+    $main -t file.t file.text > new_file.srt
 EOF
 
     exit($code // 0);
 }
 
-sub disassemble {
-    my ($srt_file, $template_file) = @_;
+sub prepare_words ($words, $width, $callback, $depth = 0) {
+
+    my @root;
+    my $len = 0;
+    my $i   = -1;
+
+    my $limit = $#{$words};
+    while (++$i <= $limit) {
+        $len += (my $word_len = length($words->[$i]));
+
+        if ($len > $width) {
+            if ($word_len > $width) {
+                $len -= $word_len;
+                splice(@$words, $i, 1, unpack("(A$width)*", $words->[$i]));
+                $limit = $#{$words};
+                --$i;
+                next;
+            }
+            last;
+        }
+
+#<<<
+        push @root, [
+            join(' ', @{$words}[0 .. $i]),
+            prepare_words([@{$words}[$i + 1 .. $limit]], $width, $callback, $depth + 1),
+        ];
+#>>>
+
+        if ($depth == 0) {
+            $callback->($root[0]);
+            @root = ();
+        }
+
+        last if (++$len > $width);
+    }
+
+    \@root;
+}
+
+sub combine ($path, $callback, $root = []) {
+    my $key = shift(@$path);
+    foreach my $value (@$path) {
+        push @$root, $key;
+        if (@$value) {
+            foreach my $item (@$value) {
+                combine($item, $callback, $root);
+            }
+        }
+        else {
+            $callback->($root);
+        }
+        pop @$root;
+    }
+}
+
+sub smart_wrap ($text, $width) {
+
+    my @words = (
+                 ref($text) eq 'ARRAY'
+                 ? @{$text}
+                 : split(' ', $text)
+                );
+
+    my %best = (
+                score => 'inf',
+                value => [],
+               );
+
+    prepare_words(
+        \@words,
+        $width,
+        sub ($path) {
+            combine(
+                $path,
+                sub ($combination) {
+                    my $score = 0;
+                    foreach my $line (@{$combination}[0 .. $#{$combination}]) {
+                        $score += ($width - length($line))**2;
+                    }
+                    if ($score < $best{score}) {
+                        $best{score} = $score;
+                        $best{value} = [@$combination];
+                    }
+                }
+            );
+        }
+    );
+
+    join("\n", @{$best{value}});
+}
+
+sub disassemble ($srt_file, $template_file) {
 
     open(my $srt_fh,  '<:crlf', $srt_file);
     open(my $tmpl_fh, '>',      $template_file);
@@ -66,7 +161,7 @@ sub disassemble {
             $text =~ s/<.*?>//gs;    # remove HTML tags
                                      # (consider this a bug)
 
-            print reflow_string($text, maximum => 1024, optimum => 1024);
+            print join(' ', split(' ', $text)), "\n\n";
         }
         else {
             die "[ERROR] Invalid paragraph:
@@ -80,8 +175,7 @@ $para
     close $tmpl_fh;
 }
 
-sub assemble {
-    my ($text_file, $template_file) = @_;
+sub assemble ($text_file, $template_file) {
 
     open my $txt_fh,  '<:crlf', $text_file;
     open my $tmpl_fh, '<:crlf', $template_file;
@@ -98,8 +192,11 @@ sub assemble {
     local $/ = "";
     while (defined(my $text = <$txt_fh>)) {
         my $format = <$tmpl_fh> // die "Unexpected error: template file is shorter than text!";
-        my $text = reflow_string($text, optimum => [25 .. 30], maximum => 36);
-        printf($format, unpack('A*', $text));
+
+        $text =~ s/[?!.)\]"']\K\h+([-‒―—]+)(?=\h)/\n$1/g;
+        $text = join("\n", map { length($_) <= 45 ? $_ : smart_wrap($_, 45) } split(/\R/, $text));
+
+        printf($format, $text);
     }
 
     close $txt_fh;
