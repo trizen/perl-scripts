@@ -281,6 +281,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Binary prime encoder](./Math/binary_prime_encoder.pl)
     * [Binary prime encoder fast](./Math/binary_prime_encoder_fast.pl)
     * [Binary prime sieve](./Math/binary_prime_sieve.pl)
+    * [Binomial theorem](./Math/binomial_theorem.pl)
     * [Brown numbers](./Math/brown_numbers.pl)
     * [Coin change](./Math/coin_change.pl)
     * [Continued fractions](./Math/continued_fractions.pl)
