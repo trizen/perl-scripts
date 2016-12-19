@@ -16,7 +16,7 @@ use GD::Simple;
 my $img = 'GD::Simple'->new(1000, 1000);
 $img->fgcolor('blue');
 $img->bgcolor(undef);
-$img->moveTo(300, 150);
+$img->moveTo(300, 200);
 
 my $n    = 5;
 my $size = 100;
