@@ -200,6 +200,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Spinning shapes](./GD/spinning_shapes.pl)
     * [Spiral matrix primes](./GD/spiral_matrix_primes.pl)
     * [Spiral tree](./GD/spiral_tree.pl)
+    * [Square of circles](./GD/square_of_circles.pl)
     * [Star-turtle](./GD/star-turtle.pl)
     * [Stern brocot shapes](./GD/stern_brocot_shapes.pl)
     * [Triangle factors](./GD/triangle_factors.pl)
