@@ -6,8 +6,9 @@
 # Website: https://github.com/trizen
 
 # Logarithmic root of n.
+
 # Solves c = x^x, where "c" is known.
-# (based on Newton's method for nth-root)
+# (based on Newton's method for the nth-root)
 
 # Example: 100 = x^x
 #          x = lgrt(100)
@@ -30,10 +31,10 @@ sub lgrt {
 
     while (abs($x - $y) > $p) {
         $y = $x;
-        $x = ($x + $d) / (1 + log($x));
+        $x = ($x + $d)->fdiv(1 + log($x));
     }
 
     $x;
 }
 
-say lgrt(100);    # 3.59728502354041750549765225178229
+say lgrt(100);    # 3.59728502354041750549765225178228606913554305488658
