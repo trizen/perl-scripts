@@ -324,7 +324,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Is perfect power](./Math/is_perfect_power.pl)
     * [Is provable prime](./Math/is_provable_prime.pl)
     * [Is sum of two squares](./Math/is_sum_of_two_squares.pl)
-    * [Lambert w function](./Math/lambert_w_function.pl)
+    * [Lambert W function](./Math/lambert_W_function.pl)
     * [Lambert W function complex](./Math/lambert_W_function_complex.pl)
     * [Lanczos approximation](./Math/lanczos_approximation.pl)
     * [Legendary question six](./Math/legendary_question_six.pl)
