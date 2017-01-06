@@ -258,6 +258,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Magick similar images](./Image/magick_similar_images.pl)
     * [Magick star trails](./Image/magick_star_trails.pl)
     * [Matrix visual](./Image/matrix_visual.pl)
+    * [Photo mosaic from images](./Image/photo_mosaic_from_images.pl)
     * [Sharp 2x zoom](./Image/sharp_2x_zoom.pl)
 * JAPH
     * [Alien japh](./JAPH/alien_japh.pl)
