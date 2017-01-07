@@ -79,7 +79,11 @@ sub analyze_image {
         }
     }
 
-    my ($x, $y, $z) = map { ($avg + $_) / 2 } ($red_avg, $green_avg, $blue_avg);
+    # This formula works better in some cases
+    ##my ($x, $y, $z) = map { exp(sqrt(log($_ + 1) * log($_ + 1))) } ($red_avg, $green_avg, $blue_avg);
+
+    # This formula which works good on average
+    my ($x, $y, $z) = map { ($_ + $avg) / 2 } ($red_avg, $green_avg, $blue_avg);
 
     push @{$images->[$x][$y][$z]}, $img;
 }
@@ -163,12 +167,12 @@ sub find_closest {
 
     # Finds the closest blue value
     for (my $j = 0 ; ; ++$j) {
-        if (exists($G->[$blue + $j]) and defined($G->[$blue + $j]) and @{$G->[$blue + $j]}) {
+        if (exists($G->[$blue + $j]) and defined($G->[$blue + $j])) {
             $B = $G->[$blue + $j];
             last;
         }
 
-        if ($blue - $j >= 0 and defined($G->[$blue - $j]) and @{$G->[$blue - $j]}) {
+        if ($blue - $j >= 0 and defined($G->[$blue - $j])) {
             $B = $G->[$blue - $j];
             last;
         }
@@ -179,9 +183,6 @@ sub find_closest {
 
 my $main_file = shift(@ARGV) // usage(2);
 my @photo_dirs = (@ARGV ? @ARGV : usage(2));
-
-local $| = 1;
-my $formats_re = qr/\.(?:jpe?g|png)\z/i;
 
 my $img = GD::Image->new($main_file) || die "Can't load image `$main_file`: $!";
 
@@ -194,7 +195,7 @@ my @images;    # stores all the image objects
 find {
     no_chdir => 1,
     wanted   => sub {
-        if (/$formats_re/) {
+        if (/\.(?:jpe?g|png)\z/i) {
             analyze_image($_, \@images);
         }
     },
