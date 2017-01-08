@@ -64,7 +64,6 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Tzip2](./Encoders/tzip2)
 * Encryption
     * [One-time pad](./Encryption/one-time_pad.pl)
-    * [Xor file encryption](./Encryption/xor_file_encryption.pl)
 * File Readers
     * [Ldump](./File Readers/ldump)
     * [Multi-file-line-reader](./File Readers/multi-file-line-reader.pl)

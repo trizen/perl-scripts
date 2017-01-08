@@ -10,6 +10,13 @@
 # See also:
 #   https://en.wikipedia.org/wiki/One-time_pad
 
+#---------------------------------------------------
+#                !!! WARNING !!!
+#---------------------------------------------------
+# This program is just a proof-of-concept.
+# Do NOT use this program to encrypt sensitive data!
+#---------------------------------------------------
+
 use 5.010;
 use strict;
 use warnings;
@@ -17,7 +24,7 @@ use warnings;
 use Getopt::Std qw(getopts);
 
 my %opts;
-getopts('s:o:i:h', \%opts);
+getopts('s:h', \%opts);
 
 use constant {
               READ_SIZE => 2 * 1024**2,    # 2 MB
