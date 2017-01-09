@@ -20,6 +20,7 @@ use Getopt::Long qw(GetOptions);
 my $bits     = 1024;
 my $decrypt  = 0;
 my $generate = 0;
+my $sign     = 0;
 
 my $public  = 'public.rsa';
 my $private = 'private.rsa';
@@ -36,13 +37,15 @@ options:
     -b --bits=i    : size of the prime numbers in bits (default: $bits)
 
     -d --decrypt!  : decrypt mode (default: $decrypt)
-       --public=s  : public key file (default: $public)
-       --private=s : private key file (default: $private)
+    -s --sign!     : encrypt with private key (default: $sign)
+
+    --public=s     : public key file (default: $public)
+    --private=s    : private key file (default: $private)
 
     -i --input=s   : input file (default: /dev/stdin)
     -o --outpus=s  : output file (default: /dev/stdout)
 
-    --help      : prints this message
+    -h --help      : prints this message
 
 example:
     perl $0 --generate
@@ -59,6 +62,7 @@ GetOptions(
            'public=s'  => \$public,
            'private=s' => \$private,
            'input=s'   => \$in_fh,
+           'sign!'     => \$sign,
            'output=s'  => \$out_fh,
            'help'      => \&usage,
           )
@@ -166,6 +170,10 @@ sub encrypt {
 
         last if $len != $bits;
     }
+}
+
+if ($sign) {
+    ($private, $public) = ($public, $private);
 }
 
 if ($decrypt) {
