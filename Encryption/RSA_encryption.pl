@@ -33,7 +33,7 @@ usage: $0 [options] [<input] [>output]
 
 options:
     -g --generate! : generate the private and public keys
-    -b --bits=i    : n-bit prime numbers (default: $bits)
+    -b --bits=i    : size of the prime numbers in bits (default: $bits)
 
     -d --decrypt!  : decrypt mode (default: $decrypt)
        --public=s  : public key file (default: $public)
@@ -85,7 +85,7 @@ if ($generate) {
 
     # Make sure `bits` is a power of two
     if ($bits & ($bits - 1)) {
-        $bits = 2 << int(log($bits) / log(2));
+        $bits = 2 << (log($bits) / log(2));
     }
 
     my $p = random_strong_prime($bits);
