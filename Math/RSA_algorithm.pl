@@ -32,8 +32,8 @@ my $phi = ($p - 1) * ($q - 1);
 # == choosing `e`
 my $e;
 do {
-    $e = 1->irand($phi);
-} until ($e->gcd($phi) == 1);
+    $e = 1->irand($n);
+} until ($e < $phi and $e->gcd($phi) == 1);
 
 say "e = $e";
 
