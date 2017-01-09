@@ -38,7 +38,7 @@ do {
 say "e = $e";
 
 # == computing `d`
-my $d = $e->modinv($phi);    # note that BigNum understands BigInt
+my $d = $e->modinv($phi);
 
 say "d = $d";
 
