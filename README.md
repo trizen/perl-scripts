@@ -395,6 +395,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Reversed number triangle](./Math/reversed_number_triangle.pl)
     * [Reversed number triangles](./Math/reversed_number_triangles.pl)
     * [Riemann's J function](./Math/riemann_s_J_function.pl)
+    * [Rsa algorithm](./Math/rsa_algorithm.pl)
     * [Semiprime equationization](./Math/semiprime_equationization.pl)
     * [Semiprime equationization uncached](./Math/semiprime_equationization_uncached.pl)
     * [Sequence analyzer](./Math/sequence_analyzer.pl)
