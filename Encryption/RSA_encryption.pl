@@ -147,7 +147,7 @@ sub encrypt {
         split(' ', scalar <$fh>);
     };
 
-    my $mlen = $bits << 1;
+    my $L = $bits << 1;
 
     $bits >>= 2;
     $bits -= 1;
@@ -155,18 +155,14 @@ sub encrypt {
     while (1) {
         my $len = read($in_fh, my ($message), $bits);
 
-        my $binary = '1' . join('', unpack('b*', $message));
-        my $m = Math::BigNum->new($binary, 2);
+        my $B = '1' . join('', unpack('b*', $message));
+        my $m = Math::BigNum->new($B, 2);
         my $c = $m->modpow($e, $n);
 
         my $bin  = $c->as_bin;
         my $size = length($bin);
-        my $mod  = $size % 8;
 
-        $bin .= ('0' x ((($mlen - $size) >> 3) << 3));
-        $bin .= ('0' x (8 - $mod)) if $mod;
-
-        print $out_fh pack('S', $size) . pack('b*', $bin);
+        print $out_fh pack('S', $size) . pack("b$L", $bin);
 
         last if $len != $bits;
     }
