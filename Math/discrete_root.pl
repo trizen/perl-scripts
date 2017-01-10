@@ -5,8 +5,9 @@
 # Date: 10 January 2016
 # https://github.com/trizen
 
-# An example for solving for `x` in:
-#   x^e = r (mod n).
+# An example for finding the smallest value `x` in:
+#
+#   x^e = r (mod n)
 
 use 5.010;
 use strict;
@@ -23,4 +24,5 @@ sub discrete_root {
 #
 ## Solves for x in x^65537 = 1653 (mod 2279)
 #
+
 say discrete_root(65537, 1653, 2279);        # 1234
