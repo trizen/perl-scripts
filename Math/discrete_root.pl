@@ -12,18 +12,15 @@ use 5.010;
 use strict;
 use warnings;
 
-use ntheory qw(invmod powmod factor);
+use ntheory qw(invmod powmod euler_phi);
 
 sub discrete_root {
-    my ($e, $n, $r) = @_;
-
-    my ($p, $q) = factor($n);
-    my $d = invmod($e, ($p-1)*($q-1));
-
+    my ($e, $r, $n) = @_;
+    my $d = invmod($e, euler_phi($n));
     powmod($r, $d, $n);
 }
 
 #
-## Solves: x^65537 = 1653 (mod 2279)
+## Solves for x in x^65537 = 1653 (mod 2279)
 #
-say discrete_root(65537, 2279, 1653);        # 1234
+say discrete_root(65537, 1653, 2279);        # 1234
