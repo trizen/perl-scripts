@@ -52,7 +52,7 @@ sub expmod($$$) {
     my ($a, $b, $n) = @_;
     my $c = 1;
     do {
-        ($c *= $a) %= $n if $b % 2;
+        ($c *= $a) %= $n if $b & 1;
         ($a *= $a) %= $n;
     } while ($b >>= 1);
     return $c;
