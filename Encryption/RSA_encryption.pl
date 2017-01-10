@@ -157,7 +157,7 @@ sub encrypt {
     $bits -= 1;
 
     while (1) {
-        my $len = read($in_fh, my ($message), $bits);
+        my $len = read($in_fh, my ($message), $bits) || last;
 
         my $B = '1' . join('', unpack('b*', $message));
         my $m = Math::BigNum->new($B, 2);
