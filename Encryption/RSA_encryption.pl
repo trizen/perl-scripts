@@ -101,7 +101,7 @@ if ($generate) {
     # Choosing `e` (part of the public key)
     my $e;
     do {
-        $e = 1->irand($n);
+        $e = 3->irand($n);
     } until ($e < $phi and $e->gcd($phi) == 1);
 
     # Computing `d` (part of the private key)
