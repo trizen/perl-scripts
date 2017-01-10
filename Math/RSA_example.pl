@@ -29,7 +29,7 @@ sub gcd($$) {
 }
 
 my $e = 0;
-for (my $k = 1 ; gcd($e, $phi) != 1 ; ++$k) {
+for (my $k = 16 ; gcd($e, $phi) != 1 ; ++$k) {
     $e = 2**$k + 1;
 }
 
