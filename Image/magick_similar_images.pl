@@ -82,7 +82,7 @@ sub fingerprint {
 
     my $img = Image::Magick->new;
     $img->Read(filename => $image) && return;
-    $img->Resize(width => $width, height => $height) && return;
+    $img->AdaptiveResize(width => $width, height => $height) && return;
 
     my @pixels = $img->GetPixels(
                                  map       => 'RGB',
@@ -115,16 +115,17 @@ sub find_similar_images(&@) {
 
     my @files;
     find {
-        wanted => sub {
+        no_chdir => 1,
+        wanted   => sub {
             (/$img_formats_re/o && -f) || return;
 
             push @files,
               {
                 fingerprint => fingerprint($_) // return,
-                filename => $File::Find::name,
+                filename => $_,
               };
-          }
-         } => @_;
+        }
+    } => @_;
 
     #
     ## Populate the %alike hash
