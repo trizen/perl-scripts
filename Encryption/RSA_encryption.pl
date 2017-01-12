@@ -46,7 +46,7 @@ options:
     --private=s    : private key file (default: $private)
 
     -i --input=s   : input file (default: /dev/stdin)
-    -o --outpus=s  : output file (default: /dev/stdout)
+    -o --output=s  : output file (default: /dev/stdout)
 
     -h --help      : prints this message
 
