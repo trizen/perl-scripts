@@ -134,12 +134,9 @@ sub decrypt {
     while (1) {
         my $len = read($in_fh, my ($message), $bits) || last;
 
-        my ($s1, $s2) = unpack('SS', $message);
+        my ($s1, $s2, $msg) = unpack('SSb*', $message);
 
-        $message = unpack('b*', substr($message, shortsize + shortsize));
-        $message = substr($message, 0, $s1);
-
-        my $c = Math::BigNum->new($message, 2);
+        my $c = Math::BigNum->new(substr($msg, 0, $s1), 2);
         my $M = $c->modpow($d, $n);
 
         print $out_fh pack('b*', substr($M->as_bin, 1, $s2));
@@ -165,19 +162,14 @@ sub encrypt {
         my $B = '1' . join('', unpack('b*', $message));
 
         if ($bits != $len) {
-            $B .= join('', map { int rand 2 } 1 .. ($L - ($len << 3) - 2));
+            $B .= join('', map { int rand 2 } 1 .. ($L - ($len << 3) - 8));
         }
 
         my $m = Math::BigNum->new($B, 2);
         my $c = $m->modpow($e, $n);
+        my $bin = $c->as_bin;
 
-        my $bin  = $c->as_bin;
-        my $size = length($bin);
-
-        my $s1 = pack('S', $size);
-        my $s2 = pack('S', $len << 3);
-
-        print $out_fh $s1 . $s2 . pack("b$L", $bin);
+        print $out_fh pack("SSb$L", length($bin), $len << 3, $bin);
 
         last if $len != $bits;
     }
