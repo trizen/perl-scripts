@@ -102,10 +102,16 @@ if ($generate) {
     my $phi = ($p - 1) * ($q - 1);
 
     # Choosing `e` (part of the public key)
+#<<<
     my $e;
     do {
-        $e = 3->irand($n);
-    } until ($e < $phi and $e->gcd($phi) == 1);
+        $e = 65537->irand($n);
+    } until (
+            $e < $phi
+        and $e->gcd($phi) == 1
+        and 2->modpow($e, $n) != 2
+    );
+#>>>
 
     # Computing `d` (part of the private key)
     my $d = $e->modinv($phi);
