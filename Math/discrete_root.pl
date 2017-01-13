@@ -2,7 +2,7 @@
 
 # Daniel "Trizen" Șuteu
 # License: GPLv3
-# Date: 10 January 2016
+# Date: 10 January 2017
 # https://github.com/trizen
 
 # An example for finding the smallest value `x` in:
