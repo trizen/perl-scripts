@@ -102,6 +102,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Longest substring](./Finders/longest_substring.pl)
     * [Model matching system](./Finders/model_matching_system.pl)
     * [Plocate](./Finders/plocate.pl)
+    * [Similar files levenshtein](./Finders/similar_files_levenshtein.pl)
 * Formatters
     * [Ascii table csv](./Formatters/ascii_table_csv.pl)
     * [File columner](./Formatters/file_columner.pl)

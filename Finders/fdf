@@ -6,7 +6,7 @@
 # Edit: 15 February 2013
 # https://github.com/trizen
 
-# Find and list duplicted files from one or more paths
+# Find and list duplicated files from one or more paths
 
 use 5.005;
 use strict;
