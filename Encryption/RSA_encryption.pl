@@ -110,7 +110,8 @@ if ($generate) {
     } until (
             $e < $phi
         and $e->gcd($phi) == 1
-        and (($e - 1)->gcd($p - 1) + 1) * (($e - 1)->gcd($q - 1) + 1) == 9
+        and ($e - 1)->gcd($p - 1) == 2
+        and ($e - 1)->gcd($q - 1) == 2
     );
 #>>>
 
