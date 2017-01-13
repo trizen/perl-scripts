@@ -95,8 +95,8 @@ if ($generate) {
         $bits = 2 << (log($bits) / log(2));
     }
 
-    my $p = random_strong_prime($bits);
-    my $q = random_strong_prime($bits);
+    my $p = Math::BigNum->new(random_strong_prime($bits));
+    my $q = Math::BigNum->new(random_strong_prime($bits));
 
     my $n = $p * $q;
     my $phi = ($p - 1) * ($q - 1);
@@ -105,11 +105,14 @@ if ($generate) {
 #<<<
     my $e;
     do {
+        say "** Choosing e...";
         $e = 65537->irand($n);
     } until (
             $e < $phi
         and $e->gcd($phi) == 1
         and 2->modpow($e, $n) != 2
+        and ($q-1)->modpow($e, $n) != $q-1
+        and ($p-1)->modpow($e, $n) != $p-1
     );
 #>>>
 
