@@ -82,7 +82,7 @@ sub analyze_image {
     # This formula works better in some cases
     ##my ($x, $y, $z) = map { exp(sqrt(log($_ + 1) * log($_ + 1))) } ($red_avg, $green_avg, $blue_avg);
 
-    # This formula which works good on average
+    # This formula works pretty good on average
     my ($x, $y, $z) = map { ($_ + $avg) / 2 } ($red_avg, $green_avg, $blue_avg);
 
     push @{$images->[$x][$y][$z]}, $img;
