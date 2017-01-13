@@ -110,7 +110,6 @@ if ($generate) {
     } until (
             $e < $phi
         and $e->gcd($phi) == 1
-        and 2->modpow($e, $n) != 2
         and ($q-1)->modpow($e, $n) != $q-1
         and ($p-1)->modpow($e, $n) != $p-1
     );
