@@ -39,8 +39,8 @@ options:
     -g --generate! : generate the private and public keys
     -b --bits=i    : size of the prime numbers in bits (default: $bits)
 
-    -d --decrypt!  : decrypt mode (default: $decrypt)
-    -s --sign!     : encrypt with private key (default: $sign)
+    -d --decrypt!  : decrypt mode (default: ${\($decrypt ? 'true' : 'false')})
+    -s --sign!     : sign/unsign mode (default: ${\($sign ? 'true' : 'false')})
 
     --public=s     : public key file (default: $public)
     --private=s    : private key file (default: $private)
@@ -167,7 +167,7 @@ sub encrypt {
     while (1) {
         my $len = read($in_fh, my ($message), $bits) || last;
 
-        my $B = '1' . join('', unpack('b*', $message));
+        my $B = '1' . unpack('b*', $message);
 
         if ($bits != $len) {
             $B .= join('', map { int rand 2 } 1 .. ($L - ($len << 3) - 8));
