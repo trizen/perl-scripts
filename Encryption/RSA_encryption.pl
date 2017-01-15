@@ -20,7 +20,7 @@ use Getopt::Long qw(GetOptions);
 
 use constant shortsize => $Config{shortsize};
 
-my $bits     = 1024;
+my $bits     = 2048;
 my $decrypt  = 0;
 my $generate = 0;
 my $sign     = 0;
