@@ -22,7 +22,6 @@ use ntheory qw(random_strong_prime);
     my $q = Math::BigNum->new(random_strong_prime(128));
 
     my $n = $p * $q;
-    my $h = $n >> 1;
 
     my $min = Math::BigNum->new(65537);
     my $phi = ($p - 1) * ($q - 1);
@@ -45,7 +44,7 @@ use ntheory qw(random_strong_prime);
         my $state = Math::BigNum->new(abs($seed));
 
         sub {
-            $state = (($h * $state) & $h)->modpow($e, $n) & 0x7fff_ffff;
+            $state = ($state + 11)->modpow($e, $n) & 0x7fff_ffff;
         };
     }
 }
