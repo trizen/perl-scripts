@@ -291,8 +291,8 @@ sub to_markdown {
 sub write_to_file {
     my ($base_dir, $name, $markdown, $overwrite) = @_;
 
-    # Replace parentheses with square brackets
-    $name =~ tr/()/[]/;
+    # Remove parenthesis
+    $name =~ tr/()//d;
 
     # Substitute bad characters
     #$name =~ tr{-A-Za-z0-9[]'*_/À-ÿ}{_}c;
