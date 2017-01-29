@@ -6,9 +6,10 @@
 # License: GPLv3
 # https://github.com/trizen
 
-# Extract text and scheleton from a srt file
-# translate the text into another language
-# and join back the text with the srt scheleton.
+# Extract the text and the skeleton from a SRT file.
+
+# The text can be translated into another language, then
+# joined back with the SRT skeleton into a new SRT file.
 
 use utf8;
 use 5.010;

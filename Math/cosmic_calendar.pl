@@ -22,7 +22,7 @@ push @cosmic_year, [$cosmic_year[-1][0] / 30.4368499, 'days'];
 push @cosmic_year, [$cosmic_year[-1][0] / 24,         'hours'];
 push @cosmic_year, [$cosmic_year[-1][0] / 60,         'minutes'];
 push @cosmic_year, [$cosmic_year[-1][0] / 60,         'seconds'];
-push @cosmic_year, [$cosmic_year[-1][0] / 1000,       'miliseconds'];
+push @cosmic_year, [$cosmic_year[-1][0] / 1000,       'milliseconds'];
 
 print <<'EOF';
 This program will scale the age of the universe to a normal year.

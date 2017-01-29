@@ -34,7 +34,7 @@ options:
     -p --percentage=i   : minimum percentage of approximation (default: $min_percentage)
 
 Match subtitles to video names across directories and rename them accordingly.
-The match is done heuristically, using an approximation comparation algorithm.
+The match is done heuristically, using an approximation comparison algorithm.
 
 When there are more subtitles and more videos inside a directory, the script
 makes decisions based on the filename approximations and rename the file
@@ -183,7 +183,7 @@ foreach my $dir (sort keys %content) {
     my $subs   = $content{$dir}{subs}   // next;
     my $videos = $content{$dir}{videos} // next;
 
-    # Make a table with scores and raname the subtitles
+    # Make a table with scores and rename the subtitles
     # accordingly to each video it belongs (using heuristics)
     my (%table, %seen, %subs_taken);
 

@@ -6,7 +6,7 @@
 # Edit: 19 May 2016
 # Website: https://github.com/trizen
 
-# Replace the light-color pixels with the difference between the brightest and darkest neighbours.
+# Replace the light-color pixels with the difference between the brightest and darkest neighbors.
 
 #   _________________
 #  |     |     |     |

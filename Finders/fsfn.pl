@@ -43,8 +43,8 @@ Options:
         -i  --insensitive    : make all words case-insensitive
         -s  --size!          : group files by size (default: off)
         -p  --percentage=f   : mark the files as similar based on this percent
-        -r  --round-up!      : round up the percentange (default: off)
-        -L  --levenshtein    : use the Levenshtein distance alogorithm
+        -r  --round-up!      : round up the percentage (default: off)
+        -L  --levenshtein    : use the Levenshtein distance algorithm
         -J  --jaro           : use the Jaro distance algorithm
 
 Usage example:

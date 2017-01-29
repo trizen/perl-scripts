@@ -66,7 +66,7 @@ sub hal {
 # Speak the text (with espeak)
 sub speak {
     my ($text) = @_;
-    `espeak \Q$text\E &> /dev/null`;    # speak the anwser
+    `espeak \Q$text\E &> /dev/null`;    # speak the answer
 }
 
 print <<"EOF";

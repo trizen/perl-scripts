@@ -10,7 +10,7 @@
 #
 
 # It tries to find a substring inside a given text, starting at random positions, by
-# spliting (recursively) the text into halves, stoping when the window is too narrow.
+# splitting (recursively) the text into halves, stopping when the window is too narrow.
 # If the substring exists inside the text, it returns "true". "false" otherwise.
 
 # This is the visual version of the algorithm.

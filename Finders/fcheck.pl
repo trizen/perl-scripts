@@ -26,7 +26,7 @@ my $min_size = @ARGV
   : 100 * 1024**2;           # 100MB
 
 my $min_date = @ARGV
-  ? shift()                  # thirth argument
+  ? shift()                  # third argument
   : '10.09.2013';            # 10th September 2013
 
 # Converting date into seconds

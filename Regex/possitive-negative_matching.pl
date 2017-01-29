@@ -5,7 +5,7 @@
 # Date: 30 May 2013
 # https://github.com/trizen
 
-# Returns true in a possitive check
+# Returns true in a positive check
 # if a string doesn't matches a regex.
 
 my $string = 'This is a TOP 10 string.';

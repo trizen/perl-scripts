@@ -25,7 +25,7 @@ use constant {
              };
 
 use constant {
-              MIN       => 3 * 3 + 1,             # 3 bytes per posion * 3 positions
+              MIN       => 3 * 3 + 1,             # 3 bytes per position * 3 positions
               BUFFER    => 9999,
               SIGNATURE => uc(FORMAT) . chr(3),
              };

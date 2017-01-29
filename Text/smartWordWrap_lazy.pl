@@ -58,7 +58,7 @@ sub prepare_words ($words, $width, $callback, $depth = 0) {
 }
 
 # This function combines the
-# the parents with the childrens.
+# the parents with the children.
 sub combine ($path, $callback, $root = []) {
     my $key = shift(@$path);
     foreach my $value (@$path) {

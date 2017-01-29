@@ -42,7 +42,7 @@ options:
     -s  --sort-by=s     : sort the files by:
                             name   -> sort by filename
                             iname  -> sort by filename case-insensitively
-                            lenght -> sort by the length of the filename
+                            length -> sort by the length of the filename
                             size   -> sort by the size of the file
                             atime  -> sort by file access time
                             mtime  -> sort by file modification time

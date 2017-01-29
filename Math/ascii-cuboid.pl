@@ -11,7 +11,7 @@ use 5.010;
 
 sub cuboid {
 
-    # Constant dimnesions of the cuboid
+    # Constant dimensions of the cuboid
     my ($x, $y, $z) = map int, @_[0 .. 2];
 
     # ASCII characters

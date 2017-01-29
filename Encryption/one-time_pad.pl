@@ -2,7 +2,7 @@
 
 # Daniel "Trizen" Șuteu
 # License: GPLv3
-# Date: 13 Novermber 2016
+# Date: 13 November 2016
 # https://github.com/trizen
 
 # One-time pad symmetric encryption, where the key is pseudo-randomly generated from a given seed.

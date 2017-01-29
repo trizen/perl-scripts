@@ -7,7 +7,7 @@
 
 # Get the n^th root of a number.
 # For example, sqrt_n(125, 3) == 5 because 5^3 == 125
-#              sqrt_n(2694.64663369533, 7.19) == 3 becuase 3^7.19 == 2694.64663369533
+#              sqrt_n(2694.64663369533, 7.19) == 3 because 3^7.19 == 2694.64663369533
 
 #
 ## Solves x^y=z if you know 'y' and 'z'.

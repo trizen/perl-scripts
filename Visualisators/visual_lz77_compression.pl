@@ -27,7 +27,7 @@ usage: $0 [options] [files]
 
 options:
         --min=i     : minimum length of a dictionary key (default: $min)
-        --max=i     : maximimum length of a dictionary key (default: $max)
+        --max=i     : maximum length of a dictionary key (default: $max)
         --buffer=i  : buffer size of the input stream, in bytes (default: $buffer)
         --help      : print this message and exit
 

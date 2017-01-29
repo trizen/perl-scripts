@@ -34,7 +34,7 @@ GetOptions(
 usage: $0 [options] wordlists
 
 options:
-       --end-min=i   : mininum number of similar characters (default: $min)
+       --end-min=i   : minimum number of similar characters (default: $min)
        --end-max=i   : maximum number of similar characters (default: $max)
        --group-min=i : minimum number of words per group (default: $min_words)
        --group-max=i : maximum number of words per group (default: $max_words)

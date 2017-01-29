@@ -5,7 +5,7 @@
 # Date: 07 November 2015
 # Website: https://github.com/trizen
 
-# Replace the light-color pixels with their darken neighbours.
+# Replace the light-color pixels with their darken neighbors.
 
 #   _________________
 #  |     |     |     |

@@ -58,7 +58,7 @@ sub lzt_compress {
             $memo .= $c;
         }
 
-        # Incremement the iterator
+        # Increment the iterator
         $i++;
 
         # Create the dictionary from the cache of substrings

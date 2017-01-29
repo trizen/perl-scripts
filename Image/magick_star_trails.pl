@@ -6,7 +6,7 @@
 # Edited: 31 January 2015
 # Website: https://github.com/trizen
 
-# Merge two or more images together and keep the most intesive pixel colors
+# Merge two or more images together and keep the most intensive pixel colors
 
 use 5.010;
 use strict;

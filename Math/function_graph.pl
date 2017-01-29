@@ -33,7 +33,7 @@ sub assign {
 # Map the function
 foreach my $x (-5 .. 5) {
     my $fx = $x**2 + 1;    # this is the function
-    say "($x, $fx)";       # this line prints the coordonates
+    say "($x, $fx)";       # this line prints the coordinates
     assign($x, $fx, 'o');  # this line maps the value of (x, f(x)) on the graph
 }
 
