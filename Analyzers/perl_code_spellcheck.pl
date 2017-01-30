@@ -25,7 +25,7 @@ my $similarity     = 90 / 100;
 my $min_word_len   = 6;
 my $aggressive     = 0;
 my $non_word_split = 0;
-my $scan_cats      = 'comm,str';
+my $scan_cats      = 'com,str';
 
 sub help {
     my ($code) = @_;
