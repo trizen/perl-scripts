@@ -114,7 +114,6 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Dice game solver](./Game solvers/dice_game_solver.pl)
     * [Peg-solitaire-solver](./Game solvers/peg-solitaire-solver)
     * [Reflex sheep game](./Game solvers/reflex_sheep_game.pl)
-    * [Sudoku algorithm solver](./Game solvers/sudoku_algorithm_solver.pl)
     * [Sudoku dice game solver](./Game solvers/sudoku_dice_game_solver.pl)
     * [Sudoku solver](./Game solvers/sudoku_solver.pl)
 * Games
