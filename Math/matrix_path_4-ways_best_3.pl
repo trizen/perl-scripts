@@ -15,11 +15,8 @@ use warnings;
 
 no warnings 'recursion';
 
-use Memoize qw(memoize);
 use List::Util qw(min max);
 use Term::ANSIColor qw(colored);
-
-memoize('two_way_path');
 
 my @matrix = map {
     [map { int rand 10_000 } 1 .. 15]
@@ -49,10 +46,16 @@ sub valid {
     not exists $seen{"@_"};
 }
 
+my %two_way_cache;
 my $end = $#matrix;
 
 sub two_way_path {
     my ($i, $j, $k, $l) = @_;
+
+    my $key = "$i $j $k $l";
+    if (exists $two_way_cache{$key}) {
+        return $two_way_cache{$key};
+    }
 
     my @paths;
 
@@ -64,7 +67,7 @@ sub two_way_path {
         push @paths, two_way_path($i, $j + 1, $k, $l);
     }
 
-    $matrix[$i][$j] + (min(@paths) || 0);
+    $two_way_cache{$key} = $matrix[$i][$j] + (min(@paths) || 0);
 }
 
 my @stack;
