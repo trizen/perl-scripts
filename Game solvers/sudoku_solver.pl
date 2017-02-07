@@ -23,12 +23,8 @@ sub check {
     $jd == $id && return 1;
     $jm == $im && return 1;
 
-    my $id2 = $id / 3;
-    my $jd2 = $jd / 3;
-
-    ($id2 == $jd2) || return 0;
-
-    $jm / 3 == $im / 3;
+        $id / 3 == $jd / 3
+    and $jm / 3 == $im / 3;
 }
 
 my @lookup;
