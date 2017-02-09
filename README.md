@@ -270,6 +270,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [En phoneme](./Lingua/en_phoneme.pl)
     * [Lingua ro numbers](./Lingua/lingua_ro_numbers.pl)
     * [Poetry from poetry](./Lingua/poetry_from_poetry.pl)
+    * [Poetry from poetry with variations](./Lingua/poetry_from_poetry_with_variations.pl)
     * [Random poetry generator](./Lingua/random_poetry_generator.pl)
     * [Rus translit](./Lingua/rus_translit.pl)
 * Math
