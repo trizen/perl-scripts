@@ -106,7 +106,7 @@ foreach my $file (@ARGV) {
             next if $diff > $opt{d};
 
             # Compute the Levenshtein distance
-            if (lev($words[$i], $words[$j]) <= $opt{d}) {
+            if (leven($words[$i], $words[$j]) <= $opt{d}) {
                 if (not exists $table{$i}) {
                     $table{$i} = [join('', @{$words[$i]})];
                 }
