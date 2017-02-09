@@ -6,7 +6,7 @@
 # https://github.com/trizen
 
 # An experimental poetry generator, using a given poetry
-# as input, replacing words with closer random alternatives.
+# as input, replacing words with other similar ending words.
 
 # usage:
 #   perl poetry_from_poetry.pl [poetry.txt] [wordlists]
