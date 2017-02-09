@@ -19,9 +19,10 @@ use open IO => ':utf8', ':std';
 
 use File::Find qw(find);
 
-my $dir        = $ARGV[0] // die "usage: $0 [wordlist]\n";    # wordlist or directory
-my $min_len    = 20;                                          # minimum length of each verse
-my $ending_len = 4;                                           # rhyme ending length
+@ARGV || die "usage: $0 [wordlists]\n";    # wordlists or directories
+
+my $min_len    = 20;                       # minimum length of each verse
+my $ending_len = 4;                        # rhyme ending length
 
 # Rhyme template
 my @template = ('A', 'A', 'B', 'B');
@@ -59,7 +60,7 @@ find {
             collect_words($_);
         }
     },
-} => $dir;
+} => @ARGV;
 
 my @keys = keys(%words);
 
@@ -77,7 +78,7 @@ foreach my $r (@template) {
         my $try = 0;
         do {
             $ending = $keys[rand @keys];
-          } while ((exists($used_ending{$ending}) or @{$words{$ending}} < 2) and ++$try < 100);
+        } while ((exists($used_ending{$ending}) or @{$words{$ending}} < 2) and ++$try < 100);
         $endings{$r}          = $ending;
         $used_ending{$ending} = 1;
     }
