@@ -7,29 +7,56 @@
 
 # An experimental random poetry generator.
 
-use 5.010;
+# usage:
+#   perl random_poetry_generator.pl [wordlist]
+
+use 5.016;
 use strict;
+use autodie;
 use warnings;
+
+use open IO => ':utf8', ':std';
 
 use File::Find qw(find);
 
-my $dir     = "$ENV{HOME}/Other/Grouped files";    # directory of grouped files
-my $min_len = 20;                                  # minimum length of each verse
+my $dir        = $ARGV[0] // die "usage: $0 [wordlist]\n";    # wordlist or directory
+my $min_len    = 20;                                          # minimum length of each verse
+my $ending_len = 4;                                           # rhyme ending length
 
 # Rhyme template
 my @template = ('A', 'A', 'B', 'B');
 
 my %words;
+my %seen;
+
+sub collect_words {
+    my ($file) = @_;
+
+    open my $fh, '<', $file;
+
+    my $content = do {
+        local $/;
+        <$fh>;
+    };
+
+    close $fh;
+
+    my @words =
+      grep { length($_) > $ending_len }
+      map  { CORE::fc(s/^[^\pL]+//r =~ s/[^\pL]+\z//r) }
+      split(' ', $content);
+
+    foreach my $word (@words) {
+        next if $seen{$word}++;
+        push @{$words{substr($word, -$ending_len)}}, $word;
+    }
+}
 
 find {
     no_chdir => 1,
     wanted   => sub {
-        if ((-f $_) and m{.*/(.*?)\.txt\z}i) {
-            push @{$words{$1}}, do {
-                open my $fh, '<', $_;
-                chomp(my @words = <$fh>);
-                @words;
-            };
+        if ((-f $_) and (-T _)) {
+            collect_words($_);
         }
     },
 } => $dir;
@@ -50,14 +77,14 @@ foreach my $r (@template) {
         my $try = 0;
         do {
             $ending = $keys[rand @keys];
-        } while (exists($used_ending{$ending}) and ++$try < 100);
+          } while ((exists($used_ending{$ending}) or @{$words{$ending}} < 2) and ++$try < 100);
         $endings{$r}          = $ending;
         $used_ending{$ending} = 1;
     }
 
     my @row;
 
-    for (my $length = 0; ;) {
+    for (my $length = 0 ; ;) {
 
         my $word;
         my $try = 0;
