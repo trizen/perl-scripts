@@ -269,6 +269,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
 * Lingua
     * [En phoneme](./Lingua/en_phoneme.pl)
     * [Lingua ro numbers](./Lingua/lingua_ro_numbers.pl)
+    * [Random poetry generator](./Lingua/random_poetry_generator.pl)
     * [Rus translit](./Lingua/rus_translit.pl)
 * Math
     * [1 over n is finite](./Math/1_over_n_is_finite.pl)
