@@ -17,15 +17,30 @@ use warnings;
 
 use open IO => ':utf8', ':std';
 
+use List::Util qw(max);
 use File::Find qw(find);
 
 @ARGV || die "usage: $0 [wordlists]\n";    # wordlists or directories
 
-my $min_len    = 20;                       # minimum length of each verse
-my $ending_len = 4;                        # rhyme ending length
+my $min_len     = 20;                      # minimum length of each verse
+my $ending_len  = 3;                       # rhyme ending length
+my $strophe_len = 4;                       # number of verses in a strophe
 
-# Rhyme template
-my @template = ('A', 'A', 'B', 'B');
+#<<<
+# Rhymes template
+my @template = (
+    'A', 'A', 'B', 'B',
+    'A', 'B', 'B', 'A',
+    'A', 'B', 'A', 'B',
+    'B', 'A', 'A', 'B',
+);
+#>>>
+
+my $max_endings = do {
+    my %count;
+    ++$count{$_} for @template;
+    max(values %count);
+};
 
 my %words;
 my %seen;
@@ -68,6 +83,7 @@ my %endings;
 my %used_ending;
 my %used_word;
 
+my $strofhe_i = 0;
 foreach my $r (@template) {
     my $ending;
 
@@ -78,7 +94,7 @@ foreach my $r (@template) {
         my $try = 0;
         do {
             $ending = $keys[rand @keys];
-        } while ((exists($used_ending{$ending}) or @{$words{$ending}} < 2) and ++$try < 100);
+        } while (@{$words{$ending}} < $max_endings and !exists($used_ending{$ending}) and ++$try < 1000);
         $endings{$r}          = $ending;
         $used_ending{$ending} = 1;
     }
@@ -93,7 +109,7 @@ foreach my $r (@template) {
             my $key = ($length > $min_len) ? $ending : $keys[rand @keys];
             my $words = $words{$key};
             $word = $words->[rand @$words];
-        } while (exists($used_word{$word}) and ++$try < 100);
+        } while (exists($used_word{$word}) and ++$try < 1000);
 
         $used_word{$word} = 1;
 
@@ -103,4 +119,5 @@ foreach my $r (@template) {
     }
 
     say "@row";
+    print "\n" if (++$strofhe_i % $strophe_len == 0);
 }
