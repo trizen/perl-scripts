@@ -21,10 +21,13 @@ use 5.010;
 use strict;
 use warnings;
 
-use List::Util qw(sum);
-use ntheory qw(random_prime is_prime);
+use ntheory qw(
+    vecsum
+    is_prime
+    random_prime
+);
 
-my $max = 10000;
+my $max = 100000;
 
 my @counts;
 foreach my $i (2 .. $max) {
@@ -40,7 +43,7 @@ foreach my $i (2 .. $max) {
 }
 
 say "Expected: ", log($max) / 2;
-say "Observed: ", sum(@counts) / @counts;
+say "Observed: ", vecsum(@counts) / @counts;
 
 __END__
 --------------------------
