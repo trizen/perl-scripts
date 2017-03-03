@@ -178,9 +178,8 @@ sub compress {
     my $enc = ($U - 1) >> $pow;
 
     # Remove any divisibility by 2
-    while ($enc > 0 and $enc % 2 == 0) {
-        $pow++;
-        $enc >>= 1;
+    if ($enc > 0 and $enc % 2 == 0) {
+        $pow += Math::GMPz::Rmpz_remove($enc, $enc, Math::GMPz->new(2));
     }
 
     my $bin = Math::GMPz::Rmpz_get_str($enc, 2);
