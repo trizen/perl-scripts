@@ -23,13 +23,13 @@ sub semiprime_equationization {
     my $mem = '0';
 
     my %x_loops;
-    foreach my $i (1 .. $xlen) {
+    foreach my $i (0 .. $xlen) {
         my $start = $i == $xlen ? 1 : 0;
         $x_loops{"x$i"} = "for (unsigned int x$i = $start; x$i < 10; ++x$i) {";
     }
 
     my %y_loops;
-    foreach my $i (1 .. $ylen) {
+    foreach my $i (0 .. $ylen) {
         my $start = $i == $ylen ? 1 : 0;
         $y_loops{"y$i"} = "for (unsigned int y$i = $start; y$i < 10; ++y$i) {";
     }
@@ -68,43 +68,16 @@ sub semiprime_equationization {
     my @mrange = (0 .. $#map);
     my $end    = $xlen + $ylen + 1;
 
-    my $pair_factors = sub {
-        my ($n) = @_;
-
-        my @pairs;
-        my %seen;
-        for my $x (1 .. 9) {
-            for my $y (1 .. 9) {
-                next if $seen{join '', sort ($x, $y)}++;
-                if (($x * $y) % 10 == $n) {
-                    push @pairs, [$x, $y];
-                }
-            }
-        }
-        return @pairs;
-    };
-
-    my @pairs = $pair_factors->($number[0]);
-    push @result, ("int a[" . @pairs . "][2] = {" . join(', ', map { '{' . join(", ", @{$_}) . '}' } @pairs) . "};");
-    push @result,
-      (
-        "for (unsigned int i = 0; i < " . @pairs . "; ++i) {",
-        "const unsigned int x0 = a[i][0];",
-        "const unsigned int y0 = a[i][1];",
-      );
-
     my %seen;
     my $loop_init = sub {
         my ($str) = @_;
         while ($str =~ /\b(y\d+)/g) {
-            next if $1 eq "y0";
             if (not $seen{$1}++) {
                 my $init = $y_loops{$1};
                 push @result, $init;
             }
         }
         while ($str =~ /\b(x\d+)/g) {
-            next if $1 eq "x0";
             if (not $seen{$1}++) {
                 my $init = $x_loops{$1};
                 push @result, $init;
@@ -152,7 +125,7 @@ sub semiprime_equationization {
     }
 
     unshift @result, "#include <stdio.h>", "int main() {";
-    push @result, "}" x (1 + $xlen + 1 + $ylen);
+    push @result, "}" x (1 + $xlen + 1 + $ylen + 1);
 
     return @result;
 }
