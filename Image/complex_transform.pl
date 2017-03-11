@@ -5,10 +5,7 @@
 # Date: 11 March 2017
 # https://github.com/trizen
 
-# Julia transform of an image.
-
-# See also:
-#   https://en.wikipedia.org/wiki/Julia_set
+# Complex transform of an image, by mapping each pixel position to complex function.
 
 use 5.010;
 use strict;
@@ -47,15 +44,11 @@ sub transform {
     );
 #>>>
 
-    state $c = Math::Complex->make(-0.4, 0.6);
+    # Complex function
+    my $t = $z->sin;
 
-    my $i = 10;
-    while ($z->abs < 2 and --$i >= 0) {
-        $z = $z * $z + $c;
-    }
-
-    my $real = ref($z) eq 'Math::Complex' ? $z->Re : $z;
-    my $imag = ref($z) eq 'Math::Complex' ? $z->Im : 0;
+    my $real = ref($t) eq 'Math::Complex' ? $t->Re : $t;
+    my $imag = ref($t) eq 'Math::Complex' ? $t->Im : 0;
 
     ($real, $imag);
 }
@@ -105,4 +98,4 @@ foreach my $y (0 .. $height - 1) {
     }
 }
 
-$out_img->write(file => 'julia_transform.png');
+$out_img->write(file => 'complex_transform.png');
