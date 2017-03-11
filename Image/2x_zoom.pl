@@ -97,8 +97,8 @@ sub gap_color {
 #<<<
     # Compute the average gap-filling color
     my @gap_color = (
-        sum(@red)   / @red,
-        sum(@blue)  / @blue,
+        sum(@red  ) / @red,
+        sum(@blue ) / @blue,
         sum(@green) / @green,
         sum(@alpha) / @alpha,
     );
@@ -108,14 +108,12 @@ sub gap_color {
 }
 
 foreach my $y (0 .. $#matrix) {
-    my $row = $matrix[$y];
-    foreach my $x (0 .. $#{$row}) {
-
+    foreach my $x (0 .. $#{$matrix[$y]}) {
 #<<<
         # Fill the gaps
-        $out_img->setpixel(x => 2 * $x,     y => 2 * $y,     color => $row->[$x]);
+        $out_img->setpixel(x => 2 * $x,     y => 2 * $y,     color => $matrix[$y][$x]);
         $out_img->setpixel(x => 2 * $x + 1, y => 2 * $y + 1, color => gap_color($x + 1, $y + 1));
-        $out_img->setpixel(x => 2 * $x + 1, y => 2 * $y,     color => gap_color($x + 1, $y));
+        $out_img->setpixel(x => 2 * $x + 1, y => 2 * $y,     color => gap_color($x + 1, $y    ));
         $out_img->setpixel(x => 2 * $x,     y => 2 * $y + 1, color => gap_color($x,     $y + 1));
 #>>>
     }
