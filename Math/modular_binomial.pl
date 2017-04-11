@@ -42,7 +42,7 @@ sub modular_binomial {
         }
 
         if ($p > 0) {
-            $prod *= powmod($_, $p, $m);
+            $prod *= ($p == 1) ? ($_ % $m) : powmod($_, $p, $m);
             $prod %= $m;
         }
     } $n;
