@@ -283,6 +283,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Alexandrian integers](./Math/alexandrian_integers.pl)
     * [Area of triangle](./Math/area_of_triangle.pl)
     * [Arithmetic expressions](./Math/arithmetic_expressions.pl)
+    * [Arithmetic geometric mean complex](./Math/arithmetic_geometric_mean_complex.pl)
     * [Ascii-cuboid](./Math/ascii-cuboid.pl)
     * [Bernoulli numbers](./Math/bernoulli_numbers.pl)
     * [Bernoulli numbers from zeta](./Math/bernoulli_numbers_from_zeta.pl)
