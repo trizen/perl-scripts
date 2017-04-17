@@ -61,19 +61,11 @@ sub agm($$) {
         Math::MPC::Rmpc_add($t, $a0, $g0, $ROUND);
         Math::MPC::Rmpc_mul($g1, $g1, $t, $ROUND);
 
-        Math::MPC::Rmpc_add($a0, $a1, $g1, $ROUND);
-        Math::MPC::Rmpc_div_2exp($a0, $a0, 1, $ROUND);
-
-        Math::MPC::Rmpc_mul($g0, $a1, $g1, $ROUND);
-        Math::MPC::Rmpc_add($t, $a1, $g1, $ROUND);
-        Math::MPC::Rmpc_sqr($t, $t, $ROUND);
-        Math::MPC::Rmpc_cmp_si_si($t, 0, 0) || return $t;
-        Math::MPC::Rmpc_div($g0, $g0, $t, $ROUND);
-        Math::MPC::Rmpc_sqrt($g0, $g0, $ROUND);
-        Math::MPC::Rmpc_add($t, $a1, $g1, $ROUND);
-        Math::MPC::Rmpc_mul($g0, $g0, $t, $ROUND);
-
-        ($a0 != $a1 and ++$count < $PREC) ? redo : ();
+        if (Math::MPC::Rmpc_cmp($a0, $a1) and ++$count < $PREC) {
+            Math::MPC::Rmpc_set($a0, $a1, $ROUND);
+            Math::MPC::Rmpc_set($g0, $g1, $ROUND);
+            redo;
+        }
     }
 
     return $g0;
