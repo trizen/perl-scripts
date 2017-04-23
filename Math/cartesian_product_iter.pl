@@ -18,9 +18,9 @@ sub cartesian(&@) {
     my ($more, @lengths);
 
     foreach my $arr (@arrs) {
-        my @arr = @$arr;
+        my $end = $#{$arr};
 
-        if (@arr) {
+        if ($end >= 0) {
             $more ||= 1;
         }
         else {
@@ -28,7 +28,7 @@ sub cartesian(&@) {
             last;
         }
 
-        push @lengths, $#arr;
+        push @lengths, $end;
     }
 
     my @temp;
