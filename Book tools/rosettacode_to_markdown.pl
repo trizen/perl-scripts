@@ -68,7 +68,7 @@ sub tags_to_markdown {
             my ($url, $label) = ($1, $2);
 
             if ($url =~ m{^/}) {
-                $url = 'http://rosettacode.org' . $url;
+                $url = 'https://rosettacode.org' . $url;
             }
 
             $label = tags_to_markdown($label);
@@ -76,7 +76,7 @@ sub tags_to_markdown {
         }
         elsif ($t =~ m{\G(<img\b.*? src="/mw/.*?".*?/>)}gc) {
             my $html = $1;
-            $html =~ s{ src="\K/mw/}{http://rosettacode.org/mw/};
+            $html =~ s{ src="\K/mw/}{https://rosettacode.org/mw/};
             $html =~ s{ srcset=".*?"}{};
             $out .= $html;
         }
@@ -85,7 +85,7 @@ sub tags_to_markdown {
             if ($t =~
                 m{\G<meta class="mwe-math-fallback-image-inline".*? url\(&#39;(/mw/index\.php\?(?:.*?))&#39;\).*?/></span>}gc)
             {
-                $out .= '![image](http://rosettacode.org' . decode_entities($1) . ')';
+                $out .= '![image](https://rosettacode.org' . decode_entities($1) . ')';
             }
             else {
                 warn "[!] Failed to parse math meta class!\n";
@@ -342,7 +342,7 @@ my $lang      = 'Sidef';
 my $overwrite = 0;
 
 my $base_dir = 'programming_tasks';
-my $main_url = 'http://rosettacode.org';
+my $main_url = 'https://rosettacode.org';
 
 sub usage {
     print <<"EOT";

@@ -296,6 +296,8 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Binary prime sieve](./Math/binary_prime_sieve.pl)
     * [Binomial theorem](./Math/binomial_theorem.pl)
     * [Brown numbers](./Math/brown_numbers.pl)
+    * [Cartesian product iter](./Math/cartesian_product_iter.pl)
+    * [Cartesian product rec](./Math/cartesian_product_rec.pl)
     * [Coin change](./Math/coin_change.pl)
     * [Continued fractions](./Math/continued_fractions.pl)
     * [Continued fractions for e](./Math/continued_fractions_for_e.pl)
