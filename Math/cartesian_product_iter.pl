@@ -48,7 +48,7 @@ sub cartesian(&@) {
             }
         }
 
-        $callback->(map { @$_ ? $_->[CORE::shift(@temp)] : () } @arrs);
+        $callback->(map { $_->[CORE::shift(@temp)] } @arrs);
     }
 }
 
