@@ -5,7 +5,7 @@
 # Date: 11 March 2017
 # https://github.com/trizen
 
-# Complex transform of an image, by mapping each pixel position to complex function.
+# Complex transform of an image, by mapping each pixel position to a complex function.
 
 use 5.010;
 use strict;
