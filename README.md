@@ -381,6 +381,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Number of divisions](./Math/number_of_divisions.pl)
     * [Numbers with pow 2 divisors](./Math/numbers_with_pow_2_divisors.pl)
     * [Partitions count](./Math/partitions_count.pl)
+    * [Partitions count abs](./Math/partitions_count_abs.pl)
     * [Partitions count simple](./Math/partitions_count_simple.pl)
     * [Pascal's triangle multiples](./Math/pascal_s_triangle_multiples.pl)
     * [Pattern mixing](./Math/pattern_mixing.pl)
