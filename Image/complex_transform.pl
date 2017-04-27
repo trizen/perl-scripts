@@ -47,15 +47,14 @@ sub transform {
     # Complex function
     my $t = $z->sin;
 
-    my $real = ref($t) eq 'Math::Complex' ? $t->Re : $t;
-    my $imag = ref($t) eq 'Math::Complex' ? $t->Im : 0;
-
-    ($real, $imag);
+    ref($t) eq 'Math::Complex'
+      ? ($t->Re, $t->Im)
+      : ($t, 0);
 }
 
 my @matrix;
 
-my ($min_x, $min_y) = ('inf') x 2;
+my ($min_x, $min_y) = ( 'inf') x 2;
 my ($max_x, $max_y) = (-'inf') x 2;
 
 foreach my $y (0 .. $height - 1) {
@@ -88,13 +87,15 @@ my $out_img = Imager->new(xsize => $width,
 foreach my $y (0 .. $height - 1) {
     foreach my $x (0 .. $width - 1) {
         my ($new_x, $new_y) = @{$matrix[$y][$x]};
-        $new_x = map_val($new_x, $min_x, $max_x, 0, $width - 1);
+
+        $new_x = map_val($new_x, $min_x, $max_x, 0, $width  - 1);
         $new_y = map_val($new_y, $min_y, $max_y, 0, $height - 1);
+
         $out_img->setpixel(
-                           x     => $new_x,
-                           y     => $new_y,
-                           color => $img->getpixel(x => $x, y => $y),
-                          );
+            x => sprintf('%.0f', $new_x),
+            y => sprintf('%.0f', $new_y),
+            color => $img->getpixel(x => $x, y => $y),
+        );
     }
 }
 
