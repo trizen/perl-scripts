@@ -5,23 +5,23 @@
 # Date: 13 October 2016
 # Website: https://github.com/trizen
 
-# Computation of the nth-Bernoulli number using the Zeta function.
+# Computation of the nth-Bernoulli number, using the Zeta function.
 
 use 5.010;
 use strict;
 use warnings;
 
-use Math::BigNum;
+use Math::AnyNum;
 
 sub bern_zeta {
     my ($n) = @_;
 
     # B(n) = (-1)^(n/2 + 1) * zeta(n)*2*n! / (2*pi)^n
 
-    $n == 0 and return Math::BigNum->one;
-    $n == 1 and return Math::BigNum->new('1/2');
-    $n < 0  and return Math::BigNum->nan;
-    $n % 2  and return Math::BigNum->zero;
+    $n == 0 and return Math::AnyNum->one;
+    $n == 1 and return Math::AnyNum->new('1/2');
+    $n < 0  and return Math::AnyNum->nan;
+    $n % 2  and return Math::AnyNum->zero;
 
     my $ROUND = Math::MPFR::MPFR_RNDN();
 
@@ -29,7 +29,7 @@ sub bern_zeta {
     my $prec = (
         $n <= 156
         ? CORE::int($n * CORE::log($n) + 1)
-        : CORE::int($n * CORE::log($n) / CORE::log(2) - 3 * $n)    # TODO: optimize for large n (>50_000)
+        : CORE::int($n * CORE::log($n) / CORE::log(2) - 3 * $n)
     );
 
     my $f = Math::MPFR::Rmpfr_init2($prec);
@@ -58,9 +58,9 @@ sub bern_zeta {
     Math::GMPq::Rmpq_canonicalize($q);                             # remove common factors
 
     Math::GMPq::Rmpq_neg($q, $q) if $n % 4 == 0;                   # q = -q    (iff 4|n)
-    Math::BigNum->new($q);
+    Math::AnyNum->new($q);
 }
 
 foreach my $i (0 .. 50) {
-    printf "B%-3d = %s\n", 2 * $i, bern_zeta(2 * $i)->as_rat;
+    printf "B%-3d = %s\n", 2 * $i, bern_zeta(2 * $i);
 }

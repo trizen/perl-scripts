@@ -2,7 +2,7 @@
 
 # Daniel "Trizen" Șuteu
 # License: GPLv3
-# Date: 17 September 2016
+# Date: 18 September 2016
 # Website: https://github.com/trizen
 
 # The inverse of n factorial, based on the inverse of Stirling approximation.
@@ -14,37 +14,35 @@ use 5.010;
 use strict;
 use warnings;
 
-use ntheory qw(LambertW Pi);
+use Math::AnyNum qw(:overload tau e factorial);
 
-use constant S => log(sqrt(2 * Pi()));
+use constant S => tau->sqrt->log;
+use constant T => tau->root(-2.0 * e);
 
-sub inverse_of_factorial {
-    my $l = log($_[0]) - S;
-    $l / LambertW(1 / exp(1) * $l) - 0.5;
+sub inv_fac_W {
+    my ($n) = @_;
+    my $L = log($n) - S;
+    $L / ($L / e)->LambertW - 0.5;
 }
 
-#
-## Tests
-#
+sub inv_fac_lgrt {
+    my ($n) = @_;
+    (T * $n**(1 / e))->lgrt * e - 0.5;
+}
 
-#<<<
-my @tests = (
-    [3, 6],
-    [4, 24],
-    [5, 120],
-    [10, 3628800],
-    [15, 1307674368000],
-);
-#>>>
+for my $n (1 .. 100) {
 
-foreach my $test (@tests) {
-    my ($n, $f) = @{$test};
+    my $f = factorial($n);
+    my $i = inv_fac_W($f);
+    my $j = inv_fac_lgrt($f);
 
-    my $i = inverse_of_factorial($f);
+    printf("F(%2s!) =~ %s\n", $n, $i);
 
-    printf("F(%13s) =~ %s\n", $f, $i);
+    if ($i->round(-20) != $j->round(-20)) {
+        die "$i != $j";
+    }
 
-    if (sprintf('%.0f', $i) != $n) {
-        warn "However that is incorrect! (expected: $n)";
+    if ($i->round != $n) {
+        die "However that is incorrect! (expected: $n -- got ", $i->round, ")";
     }
 }

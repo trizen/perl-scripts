@@ -6,11 +6,11 @@ use 5.010;
 use strict;
 use warnings;
 
-use Math::BigNum;
+use Math::AnyNum qw(factorial is_power);
 
 for my $i (1 .. 60) {
-    my $n = Math::BigNum->new($i)->fac + 1;
-    $n->is_ppow || next;
+    my $n = factorial($i) + 1;
+    is_power($n) || next;
     printf("(%d, %d)\n", int(sqrt($n)), $i);
 }
 

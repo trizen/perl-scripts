@@ -15,17 +15,18 @@ use 5.010;
 use strict;
 use warnings;
 
-use Math::BigNum;
+use Math::AnyNum;
 use ntheory qw(forprimes is_mersenne_prime);
 
-my $one = Math::BigNum->one;
+my $one = Math::AnyNum->one;
 
 forprimes {
     if (is_mersenne_prime($_)) {
         my $n = $one << $_;
         say "2^($_-1) * (2^$_-1) = ", $n * ($n - 1) / 2;
     }
-} 1, 100;
+}
+1, 100;
 
 __END__
 2^(2-1) * (2^2-1) = 6

@@ -34,7 +34,7 @@ sub lgrt {
     }
 
     my $p = Math::MPFR::Rmpfr_init2($PREC);
-    Math::MPFR::Rmpfr_ui_pow_ui($p, 10, int($PREC / 4), $ROUND);
+    Math::MPFR::Rmpfr_ui_pow_ui($p, 10, $PREC >> 2, $ROUND);
     Math::MPFR::Rmpfr_ui_div($p, 1, $p, $ROUND);
 
     my $d = Math::MPFR::Rmpfr_init2($PREC);

@@ -14,7 +14,7 @@ use warnings;
 
 use Imager;
 use List::Util qw(max);
-use Math::BigNum qw();
+use Math::AnyNum qw(isqrt factorial);
 
 my %data;
 
@@ -22,8 +22,8 @@ sub generate {
     my ($n) = @_;
 
     foreach my $i (1 .. $n) {
-        my $j = Math::BigNum->new($i)->isqrt;
-        if (($j - 1)->fac % $j == $j - 1) {
+        my $j = isqrt($i);
+        if (factorial($j - 1) % $j == $j - 1) {
             undef $data{$i + 1};
         }
     }

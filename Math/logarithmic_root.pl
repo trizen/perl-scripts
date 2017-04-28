@@ -18,12 +18,12 @@ use 5.010;
 use strict;
 use warnings;
 
-use Math::BigNum qw(:constant);
+use Math::AnyNum qw(:overload);
 
 sub lgrt {
     my ($c) = @_;
 
-    my $p = 1 / 10**($Math::BigNum::PREC / 4);
+    my $p = 1 / 10**($Math::AnyNum::PREC >> 2);
     my $d = log($c);
 
     my $x = 1;
@@ -31,10 +31,11 @@ sub lgrt {
 
     while (abs($x - $y) > $p) {
         $y = $x;
-        $x = ($x + $d)->fdiv(1 + log($x));
+        $x = ($x + $d) / (1 + log($x));
     }
 
     $x;
 }
 
-say lgrt(100);    # 3.59728502354041750549765225178228606913554305488658
+say lgrt( 100);   # 3.59728502354041750549765225178228606913554305489
+say lgrt(-100);   # 3.70202936660214594290193962952737102802777010583+1.34823128471151901327831464969872480416292147614i

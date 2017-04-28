@@ -15,7 +15,7 @@ use warnings;
 
 use ntheory qw(primes);
 use List::Util qw(all);
-use Math::BigNum qw(:constant);
+use Math::AnyNum qw(:overload);
 
 sub power {
     my ($n, $p) = @_;
@@ -40,7 +40,7 @@ sub inverse_of_factorial {
     my $bin = $f->as_bin;
     my $t = length($bin) - rindex($bin, '1') - 1;
 
-    my $c = $t->log(2)->int;
+    my $c = $t->ilog2;
     my $p = 1 << $c;
     my $d = int($t * ($p / ($p - 1)));
 

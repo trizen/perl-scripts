@@ -7,12 +7,13 @@
 
 # A general purpose implementation of the RSA encryption algorithm.
 
+use utf8;
 use 5.010;
 use strict;
 use autodie;
 use warnings;
 
-use Math::BigNum qw(:constant);
+use Math::AnyNum qw(:overload gcd irand powmod invmod powmod);
 use Math::Prime::Util qw(random_strong_prime);
 
 use Config qw(%Config);
@@ -95,28 +96,28 @@ if ($generate) {
         $bits = 2 << (log($bits) / log(2));
     }
 
-    my $p = Math::BigNum->new(random_strong_prime($bits));
-    my $q = Math::BigNum->new(random_strong_prime($bits));
+    my $p = Math::AnyNum->new(random_strong_prime($bits));
+    my $q = Math::AnyNum->new(random_strong_prime($bits));
 
     my $n = $p * $q;
-    my $phi = ($p - 1) * ($q - 1);
+    my $ϕ = ($p - 1) * ($q - 1);
 
     # Choosing `e` (part of the public key)
 #<<<
     my $e;
     do {
         say "** Choosing e...";
-        $e = 65537->irand($n);
+        $e = irand(65537, $n);
     } until (
-            $e < $phi
-        and $e->gcd($phi) == 1
-        and ($e - 1)->gcd($p - 1) == 2
-        and ($e - 1)->gcd($q - 1) == 2
+            $e < $ϕ
+        and gcd($e,     $ϕ    ) == 1
+        and gcd($e - 1, $p - 1) == 2
+        and gcd($e - 1, $q - 1) == 2
     );
 #>>>
 
     # Computing `d` (part of the private key)
-    my $d = $e->modinv($phi);
+    my $d = invmod($e, $ϕ);
 
     open my $public_fh, '>', $public;
     print $public_fh "$bits $e $n";
@@ -131,7 +132,7 @@ if ($generate) {
 }
 
 sub decrypt {
-    my ($bits, $d, $n) = map { Math::BigNum->new($_) } do {
+    my ($bits, $d, $n) = map { Math::AnyNum->new($_) } do {
         open my $fh, '<', $private;
         split(' ', scalar <$fh>);
     };
@@ -144,8 +145,8 @@ sub decrypt {
 
         my ($s1, $s2, $msg) = unpack('SSb*', $message);
 
-        my $c = Math::BigNum->new(substr($msg, 0, $s1), 2);
-        my $M = $c->modpow($d, $n);
+        my $c = Math::AnyNum->new(substr($msg, 0, $s1), 2);
+        my $M = powmod($c, $d, $n);
 
         print $out_fh pack('b*', substr($M->as_bin, 1, $s2));
 
@@ -154,7 +155,7 @@ sub decrypt {
 }
 
 sub encrypt {
-    my ($bits, $e, $n) = map { Math::BigNum->new($_) } do {
+    my ($bits, $e, $n) = map { Math::AnyNum->new($_) } do {
         open my $fh, '<', $public;
         split(' ', scalar <$fh>);
     };
@@ -173,8 +174,8 @@ sub encrypt {
             $B .= join('', map { int rand 2 } 1 .. ($L - ($len << 3) - 8));
         }
 
-        my $m = Math::BigNum->new($B, 2);
-        my $c = $m->modpow($e, $n);
+        my $m = Math::AnyNum->new($B, 2);
+        my $c = powmod($m, $e, $n);
         my $bin = $c->as_bin;
 
         print $out_fh pack("SSb$L", length($bin), $len << 3, $bin);

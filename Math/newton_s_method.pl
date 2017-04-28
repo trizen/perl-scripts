@@ -11,19 +11,19 @@ use 5.010;
 use strict;
 use warnings;
 
-use Math::BigNum qw(:constant);
+use Math::AnyNum qw(:overload);
 
 sub nth_root {
     my ($n, $x) = @_;
 
-    my $eps = 10**-($Math::BigNum::PREC / 4);
+    my $eps = 10**-($Math::AnyNum::PREC >> 2);
 
-    my $m = $n;
-    my $r = 0;
+    my $r = 0.0;
+    my $m = 1.0;
 
     while (abs($m - $r) > $eps) {
         $r = $m;
-        $m = ((($n - 1)->fmul($r) + $x->fdiv($r->fpow($n - 1)))->fdiv($n));
+        $m = (($n - 1) * $r + $x / $r**($n - 1)) / $n;
     }
 
     $r;

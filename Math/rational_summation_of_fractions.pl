@@ -53,7 +53,7 @@ use strict;
 use warnings;
 
 use Memoize qw(memoize);
-use Math::BigNum qw(:constant);
+use Math::AnyNum qw(:overload factorial);
 
 memoize('b');
 memoize('f');
@@ -67,7 +67,7 @@ sub a {
 }
 
 sub b {
-    $_[0]->fac;
+    factorial($_[0]);
 }
 
 sub f {
@@ -85,5 +85,5 @@ sub g {
 }
 
 my $x = f($iter) / g($iter);
-say $x->as_rat;
-say "e^2 =~ ", $x->as_float(64);
+say $x;
+say "e^2 =~ ", $x->as_dec(64);

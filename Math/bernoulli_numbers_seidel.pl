@@ -12,14 +12,14 @@ use 5.010;
 use strict;
 use warnings;
 
-use Math::BigNum;
+use Math::AnyNum;
 
 sub bernoulli_seidel {
     my ($n) = @_;
 
-    $n == 0 and return Math::BigNum->one;
-    $n == 1 and return Math::BigNum->new('1/2');
-    $n % 2  and return Math::BigNum->zero;
+    $n == 0 and return Math::AnyNum->one;
+    $n == 1 and return Math::AnyNum->new('1/2');
+    $n % 2  and return Math::AnyNum->zero;
 
     state $one = Math::GMPz::Rmpz_init_set_ui(1);
 
@@ -40,9 +40,9 @@ sub bernoulli_seidel {
         }
     }
 
-    Math::BigNum->new($D[$h - 1]) / Math::BigNum->new((($one << ($n + 1)) - 2) * ($n % 4 == 0 ? -1 : 1));
+    Math::AnyNum->new($D[$h - 1]) / Math::AnyNum->new((($one << ($n + 1)) - 2) * ($n % 4 == 0 ? -1 : 1));
 }
 
 foreach my $i (0 .. 50) {
-    printf "B%-3d = %s\n", 2 * $i, bernoulli_seidel(2 * $i)->as_rat;
+    printf "B%-3d = %s\n", 2 * $i, bernoulli_seidel(2 * $i);
 }

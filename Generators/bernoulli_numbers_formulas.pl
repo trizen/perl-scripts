@@ -9,7 +9,7 @@ use 5.014;
 use strict;
 use warnings;
 
-use Math::BigNum qw(:constant);
+use Math::AnyNum qw(:overload);
 
 # Translation of:
 #   https://en.wikipedia.org/wiki/Bernoulli_number#Algorithmic_description
@@ -24,10 +24,7 @@ sub bernoulli_number {
         $A[$m] = 1 / ($m + 1);
 
         for (my $j = $m ; $j > 0 ; $j--) {
-            $A[$j - 1] =
-              ((($j == 1 ? '' : "$j*") .
-                '(' . join('-', map { ref($_) ? $_->as_rat : $_ } ($A[$j - 1], $A[$j])) . ')')
-                    =~ s/^\((.*?)\)\z/$1/r);
+            $A[$j - 1] = ((($j == 1 ? '' : "$j*") . '(' . join('-', ($A[$j - 1], $A[$j])) . ')') =~ s/^\((.*?)\)\z/$1/r);
         }
     }
 

@@ -42,7 +42,7 @@ use 5.010;
 use strict;
 use warnings;
 
-#use Math::BigNum qw(:constant);
+#use Math::AnyNum qw(:overload);
 use ntheory qw(todigitstring);
 
 my $n = 9;

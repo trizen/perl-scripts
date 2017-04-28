@@ -14,14 +14,14 @@
 # because (43^10)! contains 514559102697244 factors of 43
 # and 514559102697244 mod 43^7 = 6471871693
 
-# See also: https://projecteuler.net/problem=288
+# See also:
+#   https://projecteuler.net/problem=288
 
 use 5.010;
 use strict;
 use warnings;
 
-use ntheory qw(powmod);
-use Math::BigNum qw(:constant);
+use Math::AnyNum qw(:overload powmod);
 
 #
 ## Iterative version

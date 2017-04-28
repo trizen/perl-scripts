@@ -16,7 +16,7 @@ use 5.010;
 use strict;
 use warnings;
 
-use Math::BigNum qw(:constant);
+use Math::AnyNum qw(:overload binomial);
 
 # This function returns the nth Bernoulli number
 # See: https://en.wikipedia.org/wiki/Bernoulli_number
@@ -35,13 +35,6 @@ sub bernoulli_number {
     }
 
     return $A[0];                    # which is Bn
-}
-
-# The binomial coefficient
-# See: https://en.wikipedia.org/wiki/Binomial_coefficient
-sub binomial {
-    my ($n, $k) = @_;
-    Math::BigNum->new($n)->binomial($k);
 }
 
 # The Faulhaber's formula

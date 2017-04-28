@@ -12,7 +12,7 @@ use 5.010;
 use strict;
 use warnings;
 
-use Math::BigNum qw(:constant);
+use Math::AnyNum qw(:overload factorial);
 
 sub bernoulli_number {
     my ($n) = @_;
@@ -33,7 +33,7 @@ sub bernoulli_number {
 
 sub zeta_2n {
     my ($n2) = 2 * $_[0];
-    join('', (bernoulli_number($n2) * (-1)**($_[0] + 1) * 2**($n2 - 1) / $n2->fac)->as_rat, " * pi^$n2");
+    join('', (bernoulli_number($n2) * (-1)**($_[0] + 1) * 2**($n2 - 1) / factorial($n2)), " * pi^$n2");
 }
 
 for my $i (1 .. 10) {

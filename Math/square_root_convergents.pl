@@ -16,12 +16,12 @@ use 5.010;
 use strict;
 use warnings;
 
-use Math::BigNum qw(:constant);
+use Math::AnyNum qw(:overload isqrt);
 
 sub sqrt_convergents {
     my ($n) = @_;
 
-    my $x = $n->isqrt;
+    my $x = isqrt($n);
     my $y = $x;
     my $z = 1;
 
@@ -38,13 +38,13 @@ sub sqrt_convergents {
 
 sub continued_frac {
     my ($i, $c) = @_;
-    $i < 0 ? 0 : ($c->[$i] + continued_frac($i - 1, $c))->binv;
+    $i < 0 ? 0 : 1/($c->[$i] + continued_frac($i - 1, $c));
 }
 
 my @c = sqrt_convergents(61);
 
 for my $i (0 .. $#c) {
-    say((continued_frac($i, \@c))->as_rat);
+    say continued_frac($i, \@c);
 }
 
 __END__

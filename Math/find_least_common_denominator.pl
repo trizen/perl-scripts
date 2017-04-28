@@ -13,7 +13,7 @@ use strict;
 use warnings;
 
 use ntheory qw(lcm);
-use Math::BigNum qw(:constant);
+use Math::AnyNum qw(:overload);
 
 my @fractions = (
       19 / 6,

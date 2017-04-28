@@ -15,7 +15,7 @@ use strict;
 use warnings;
 
 use Memoize qw(memoize);
-use Math::BigNum qw(:constant);
+use Math::AnyNum qw(:overload);
 
 no warnings qw(recursion);
 
@@ -41,12 +41,12 @@ sub bern_diff {
 sub bernoulli_number {
     my ($n) = @_;
 
-    return 0.5 if $n == 1;
-    return 0.0 if $n % 2;
+    return 1/2 if $n == 1;
+    return 0   if $n % 2;
 
     $n > 0 ? bern_diff($n - 1, 0, 1) : 1;
 }
 
 for my $i (0 .. 50) {
-    printf "B%-3d = %s\n", '2' * $i, bernoulli_number('2' * $i)->as_rat;
+    printf "B%-3d = %s\n", 2 * $i, bernoulli_number(2 * $i);
 }

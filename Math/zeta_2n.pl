@@ -13,7 +13,7 @@ use strict;
 use warnings;
 
 use Memoize qw(memoize);
-use Math::BigNum qw(:constant pi);
+use Math::AnyNum qw(:overload pi);
 
 sub bernoulli_number {
     my ($n) = @_;

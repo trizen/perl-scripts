@@ -35,19 +35,19 @@ $img->box(filled => 1, color => $white);
 my $x = 0;
 
 {
-    use Math::BigNum qw(:constant);
+    use Math::AnyNum qw(:overload);
 
     my $f = 1;
     my $p = 1;
 
-    for (my $i = 1 ; $i <= 100 ; $i->binc) {
+    for (my $i = 1 ; $i <= 100 ; ++$i) {
 
-        $f->bmul($i + 1);
-        $p->bmul(nth_prime($i));
+        $f *= $i + 1;
+        $p *= nth_prime($i);
 
-        $img->setpixel(x => $x, y => $p->log->bsub($ysize)->babs->as_int,           color => $red);
-        $img->setpixel(x => $x, y => $f->log->bsub($ysize)->babs->as_int,           color => $blue);
-        $img->setpixel(x => $x, y => $i->pow($i)->blog->bsub($ysize)->babs->as_int, color => $green);
+        $img->setpixel(x => $x, y => (abs(log($p) - $ysize))->as_int,     color => $red);
+        $img->setpixel(x => $x, y => (abs(log($f) - $ysize))->as_int,     color => $blue);
+        $img->setpixel(x => $x, y => (abs(log($i**$i) - $ysize))->as_int, color => $green);
 
         $x++;
     }

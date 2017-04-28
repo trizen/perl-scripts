@@ -6,7 +6,7 @@ use 5.010;
 use strict;
 use warnings;
 
-use Math::BigNum qw(:constant);
+use Math::AnyNum qw(:overload);
 
 # Translation of:
 #   https://en.wikipedia.org/wiki/Bernoulli_number#Algorithmic_description
@@ -29,5 +29,5 @@ sub bernoulli {
 }
 
 foreach my $i (0 .. 50) {
-    printf "B%-3d = %s\n", '2' * $i, bernoulli('2' * $i)->as_rat;
+    printf "B%-3d = %s\n", 2 * $i, bernoulli(2 * $i);
 }

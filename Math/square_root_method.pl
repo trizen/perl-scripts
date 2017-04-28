@@ -11,19 +11,19 @@ use 5.010;
 use strict;
 use warnings;
 
-use Math::BigNum qw(:constant);
+use Math::AnyNum qw(:overload);
 
 sub square_root {
     my ($n) = @_;
 
-    my $eps = 10**-($Math::BigNum::PREC / 4);
+    my $eps = 10**-($Math::AnyNum::PREC >> 2);
 
     my $m = $n;
-    my $r = 0;
+    my $r = 0.0;
 
     while (abs($m - $r) > $eps) {
-        $m = ($m + $r)->fdiv(2);
-        $r = $n->fdiv($m);
+        $m = ($m + $r) / 2;
+        $r = $n / $m;
     }
 
     $r;

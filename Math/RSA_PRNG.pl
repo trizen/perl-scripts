@@ -14,37 +14,35 @@ use 5.010;
 use strict;
 use warnings;
 
-use Math::BigNum;
+use Math::AnyNum qw(gcd irand powmod);
 use ntheory qw(random_strong_prime);
 
 {
-    my $p = Math::BigNum->new(random_strong_prime(128));
-    my $q = Math::BigNum->new(random_strong_prime(128));
+    my $p = Math::AnyNum->new(random_strong_prime(256));
+    my $q = Math::AnyNum->new(random_strong_prime(256));
 
     my $n = $p * $q;
-
-    my $min = Math::BigNum->new(65537);
     my $phi = ($p - 1) * ($q - 1);
 
     my $e;
 #<<<
     do {
-        $e = $min->irand($n);
+        $e = irand(65537, $n);
     } until (
             $e < $phi
-        and $e->gcd($phi) == 1
-        and ($e - 1)->gcd($p - 1) == 2
-        and ($e - 1)->gcd($q - 1) == 2
+        and gcd($e,     $phi  ) == 1
+        and gcd($e - 1, $p - 1) == 2
+        and gcd($e - 1, $q - 1) == 2
     );
 #>>>
 
     sub RSA_PRNG {
         my ($seed) = @_;
 
-        my $state = Math::BigNum->new(abs($seed));
+        my $state = abs($seed);
 
         sub {
-            $state = ($state + 11)->modpow($e, $n) & 0x7fff_ffff;
+            $state = powmod($state + 11, $e, $n) & 0x7fff_ffff;
         };
     }
 }
@@ -52,5 +50,5 @@ use ntheory qw(random_strong_prime);
 my $rand = RSA_PRNG(42);
 
 foreach my $i (1 .. 20) {
-     say $rand->();
+    say $rand->();
 }

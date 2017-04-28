@@ -16,7 +16,7 @@ use strict;
 use warnings;
 
 use Memoize qw(memoize);
-use Math::BigNum qw(:constant);
+use Math::AnyNum qw(:overload as_dec);
 
 no warnings 'recursion';
 
@@ -38,5 +38,5 @@ sub pi_de {
 }
 
 my $prec = 1000;
-my $pi = (4 / (1 + pi_nu($prec) / pi_de($prec)))->as_float(int($prec / 1.32));
+my $pi = as_dec(4 / (1 + pi_nu($prec) / pi_de($prec)), int($prec / 1.32));
 say $pi;

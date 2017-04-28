@@ -11,7 +11,7 @@ use 5.010;
 use strict;
 use warnings;
 
-use Math::BigNum qw(:constant);
+use Math::AnyNum qw(:overload is_power);
 use ntheory qw(is_prime factor);
 
 my @vars = ('F', 'G', 'H');
@@ -103,7 +103,7 @@ sub generate {
             }
         }
 
-        if (is_prime($n) or $n->is_ppow) {
+        if (is_prime($n) or is_power($n)) {
             if (@open and rand(1) < 0.5) {
                 $str .= ']';
                 pop @open;

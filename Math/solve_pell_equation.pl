@@ -15,13 +15,12 @@ use 5.010;
 use strict;
 use warnings;
 
-use Math::BigNum qw(:constant);
-use ntheory qw(is_power sqrtint);
+use Math::AnyNum qw(isqrt is_square);
 
 sub sqrt_convergents {
     my ($n) = @_;
 
-    my $x = sqrtint($n);
+    my $x = isqrt($n);
     my $y = $x;
     my $z = 1;
 
@@ -38,7 +37,7 @@ sub sqrt_convergents {
 
 sub continued_frac {
     my ($i, $c) = @_;
-    $i->is_neg ? 0 : ($c->[$i] + continued_frac($i - 1, $c))->binv;
+    $i < 0 ? 0 : ($c->[$i] + continued_frac($i - 1, $c))->inv;
 }
 
 sub solve_pell {
@@ -51,16 +50,16 @@ sub solve_pell {
         if ($i > $#c) { push @c, @period; $i = 2 * $i - 1 }
 
         my $x = continued_frac($i, [$k, @c])->denominator;
-        my $p = 4 * $d * ($x*$x - 1);
+        my $p = 4 * $d * ($x * $x - 1);
 
-        if ($p->is_psqr) {
-            return ($x, $p->bisqrt / (2 * $d));
+        if (is_square($p)) {
+            return ($x, isqrt($p) / (2 * $d));
         }
     }
 }
 
 foreach my $d (2 .. 20) {
-    is_power($d, 2) && next;
+    is_square($d) && next;
     my ($x, $y) = solve_pell($d);
     printf("x^2 - %2dy^2 = 1 \t minimum solution: x=%4s and y=%4s\n", $d, $x, $y);
 }

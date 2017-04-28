@@ -10,16 +10,17 @@
 #    1^p + 2^p + 3^p + ... + n^p
 # where p is a positive integer.
 
-# See also: https://en.wikipedia.org/wiki/Faulhaber%27s_formula
+# See also:
+#   https://en.wikipedia.org/wiki/Faulhaber%27s_formula
 
-# To simplify the formulas, use Wolfram Alpha:
-# http://www.wolframalpha.com/
+# For simplifying the formulas, we can use Wolfram|Alpha:
+#   http://www.wolframalpha.com/
 
 use 5.010;
 use strict;
 use warnings;
 
-use Math::BigNum qw(:constant);
+use Math::AnyNum qw(:overload binomial);
 
 # This function returns the nth Bernoulli number
 # See: https://en.wikipedia.org/wiki/Bernoulli_number
@@ -40,13 +41,6 @@ sub bernoulli_number {
     return $A[0];                    # which is Bn
 }
 
-# The binomial coefficient
-# See: https://en.wikipedia.org/wiki/Binomial_coefficient
-sub binomial {
-    my ($n, $k) = @_;
-    Math::BigNum->new($n)->binomial($k);
-}
-
 # The Faulhaber's formula
 # See: https://en.wikipedia.org/wiki/Faulhaber%27s_formula
 sub faulhaber_s_formula {
@@ -54,7 +48,7 @@ sub faulhaber_s_formula {
 
     my @formula;
     for my $j (0 .. $p) {
-        push @formula, ('(' . (binomial($p + 1, $j) * bernoulli_number($j))->as_rat . ')') . '*' . "n^" . ($p + 1 - $j);
+        push @formula, ('(' . (binomial($p + 1, $j) * bernoulli_number($j)) . ')') . '*' . "n^" . ($p + 1 - $j);
     }
 
     my $formula = join(' + ', grep { !/\(0\)\*/ } @formula);

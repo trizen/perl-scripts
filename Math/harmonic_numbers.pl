@@ -12,14 +12,14 @@
 
 use 5.016;
 use warnings;
-use Math::BigNum;
+use Math::AnyNum;
 
 sub harmfrac {
     my ($ui) = @_;
 
     $ui = int($ui);
-    $ui || return Math::BigNum->zero;
-    $ui < 0 and return Math::BigNum->nan;
+    $ui || return Math::AnyNum->zero;
+    $ui < 0 and return Math::AnyNum->nan;
 
     # Use binary splitting for large values of n. (by Fredrik Johansson)
     # http://fredrik-j.blogspot.ro/2009/02/how-not-to-compute-harmonic-numbers.html
@@ -65,7 +65,7 @@ sub harmfrac {
         Math::GMPq::Rmpq_set_den($q, $den);
         Math::GMPq::Rmpq_canonicalize($q);
 
-        return Math::BigNum->new($q);
+        return Math::AnyNum->new($q);
     }
 
     my $num = Math::GMPz::Rmpz_init_set_ui(1);
@@ -82,9 +82,9 @@ sub harmfrac {
     Math::GMPq::Rmpq_set_den($r, $den);
     Math::GMPq::Rmpq_canonicalize($r);
 
-    Math::BigNum->new($r);
+    Math::AnyNum->new($r);
 }
 
 foreach my $i (0 .. 30) {
-    printf "%20s / %-20s\n", split('/', harmfrac($i)->as_frac);
+    printf "%20s / %-20s\n", harmfrac($i)->nude;
 }

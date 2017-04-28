@@ -334,7 +334,6 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Golomb's sequence](./Math/golomb_s_sequence.pl)
     * [Harmonic numbers](./Math/harmonic_numbers.pl)
     * [Inverse of factorial](./Math/inverse_of_factorial.pl)
-    * [Inverse of factorial lgrt](./Math/inverse_of_factorial_lgrt.pl)
     * [Inverse of factorial stirling](./Math/inverse_of_factorial_stirling.pl)
     * [Is even perfect](./Math/is_even_perfect.pl)
     * [Is even perfect 2](./Math/is_even_perfect_2.pl)

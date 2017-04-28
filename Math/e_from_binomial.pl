@@ -19,13 +19,13 @@ use 5.014;
 use strict;
 use warnings;
 
-use Math::BigNum qw(:constant);
+use Math::AnyNum qw(:overload binomial);
 
-my $n = 5000;         # the number of iterations - 1
-my $sum = 0;
+my $n = 5000;
+my $sum = 0.0;
 
 foreach my $k(0 .. $n) {
-    $sum += $n->binomial($k) / $n**($n-$k);
+    $sum += binomial($n, $k) / $n**($n-$k);
 }
 
 say $sum;
