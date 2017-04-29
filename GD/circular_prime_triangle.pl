@@ -20,7 +20,7 @@ my %data;
 sub generate {
     my ($n) = @_;
 
-    foreach my $i (0 .. $n) {
+    foreach my $i (1 .. $n) {
         undef $data{int(sqrt(nth_prime($i)**2 + $i * $i))};
     }
 
