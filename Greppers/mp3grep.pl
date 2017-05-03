@@ -89,14 +89,13 @@ sub check_file {
     }
 }
 
-my @dirs = grep {
-    -d or warn "[!] Not a directory: $_\n";
-    -d _;
+my @files = grep {
+    (-d) || (-f _) || warn "[!] Not a file or directory: $_\n";
 } @ARGV;
 
-@dirs || exit 1;
+@files || exit 1;
 
 find {
       no_chdir => 1,
       wanted   => \&check_file,
-     } => @dirs;
+     } => @files;
