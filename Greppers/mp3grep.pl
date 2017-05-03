@@ -90,7 +90,7 @@ sub check_file {
 }
 
 my @files = grep {
-    (-d) || (-f _) || warn "[!] Not a file or directory: $_\n";
+    (-d) || (-f _) || do { warn "[!] Not a file or directory: $_\n"; 0 }
 } @ARGV;
 
 @files || exit 1;
