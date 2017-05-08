@@ -14,7 +14,7 @@ use autodie;
 use warnings;
 
 use Math::AnyNum qw(:overload gcd irand powmod invmod powmod);
-use Math::Prime::Util qw(random_strong_prime);
+use Math::Prime::Util qw(random_strong_prime urandomm);
 
 use Config qw(%Config);
 use Getopt::Long qw(GetOptions);
@@ -171,7 +171,7 @@ sub encrypt {
         my $B = '1' . unpack('b*', $message);
 
         if ($bits != $len) {
-            $B .= join('', map { int rand 2 } 1 .. ($L - ($len << 3) - 8));
+            $B .= join('', map { urandomm(2) } 1 .. ($L - ($len << 3) - 8));
         }
 
         my $m = Math::AnyNum->new($B, 2);
