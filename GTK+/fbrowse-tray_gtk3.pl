@@ -262,7 +262,7 @@ sub add_content {
         }
 
         # Collect the files and dirs
-        push +((-d _) ? \@dirs : \@files), [$filename =~ s/_/__/gr, $abs_path];
+        push @{(-d _) ? \@dirs : \@files}, [$filename =~ s/_/__/gr, $abs_path];
     }
     closedir $dir_h;
 
