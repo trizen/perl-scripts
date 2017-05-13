@@ -288,6 +288,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Arithmetic geometric mean complex](./Math/arithmetic_geometric_mean_complex.pl)
     * [Ascii-cuboid](./Math/ascii-cuboid.pl)
     * [Bernoulli numbers](./Math/bernoulli_numbers.pl)
+    * [Bernoulli numbers from primes](./Math/bernoulli_numbers_from_primes.pl)
     * [Bernoulli numbers from zeta](./Math/bernoulli_numbers_from_zeta.pl)
     * [Bernoulli numbers recursive](./Math/bernoulli_numbers_recursive.pl)
     * [Bernoulli numbers recursive 2](./Math/bernoulli_numbers_recursive_2.pl)
