@@ -8,7 +8,7 @@
 # Computation of the nth-Bernoulli number, using prime numbers.
 
 # Algorithm due to Kevin J. McGown (December 8, 2005)
-# Descried in his paper: "Computing Bernoulli Numbers Quickly"
+# See his paper: "Computing Bernoulli Numbers Quickly"
 
 use 5.010;
 use strict;
