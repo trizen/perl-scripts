@@ -37,12 +37,11 @@ sub bern_from_primes {
 
     my $d = Math::GMPz::Rmpz_init();
     Math::GMPz::Rmpz_fac_ui($d, $n);
-    Math::GMPz::Rmpz_mul_2exp($d, $d, 1);
 
     my $K = Math::MPFR::Rmpfr_init2($prec);
     Math::MPFR::Rmpfr_const_pi($K, $round);
     Math::MPFR::Rmpfr_pow_ui($K, $K, $n, $round);
-    Math::MPFR::Rmpfr_mul_2ui($K, $K, $n, $round);
+    Math::MPFR::Rmpfr_mul_2ui($K, $K, $n-1, $round);
 
     Math::MPFR::Rmpfr_div_z($K, $K, $d, $round);
     Math::MPFR::Rmpfr_ui_div($K, 1, $K, $round);
