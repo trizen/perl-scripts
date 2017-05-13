@@ -29,7 +29,7 @@ use warnings;
 no warnings 'recursion';
 
 use Memoize qw(memoize);
-use Math::GMP qw(:constant);
+use Math::AnyNum qw(:overload);
 use ntheory qw(is_prime prev_prime);
 
 memoize('_encode');

@@ -7,7 +7,7 @@
 
 # A provable primality test, based on Fermat's little theorem.
 
-# Pseudoprimes are eliminated in the following way:
+# Pseudoprimes are eliminated as following:
 #
 #    Let "n" be a Fermat pseudoprime to base 2. (OEIS: A001567)
 #    Let "k" be the square root of "n".
@@ -18,8 +18,8 @@
 # When we encounter a number that satisfies the above inequality,
 # we can say with a 100% certainty that the number is composite.
 
-# We can improve on this limit, by letting "k" be the cube root of "n",
-# as it is proven that every Carmichael number has at least three prime factors.
+# We can improve on this upper bound, by letting "k" be the cube root of "n",
+# as it is known that every Carmichael number has at least three prime factors.
 
 # See also:
 #   https://oeis.org/A001567
@@ -31,7 +31,7 @@ use 5.010;
 use strict;
 use warnings;
 
-use Math::BigInt (try => 'GMP');
+use Math::AnyNum;
 use ntheory qw(powmod rootint next_prime);
 
 sub is_provable_prime {
@@ -40,8 +40,8 @@ sub is_provable_prime {
     return 1 if $n == 2;
     return 0 if powmod(2, $n - 1, $n) != 1;
 
-    # We can improve this limit a little bit further,
-    # as it is proven that every Carmichael number is squarefree.
+    # We can improve this upper bound a little bit further,
+    # as it is known that every Carmichael number is squarefree.
     my $limit = rootint($n, 3);
 
     for (my $p = 3 ; $p <= $limit ; $p = next_prime($p)) {
@@ -121,7 +121,7 @@ my @pseudoprimes = (
     1698571299601,
 
     (
-     map { Math::BigInt->new($_) }
+     map { Math::AnyNum->new($_) }
        qw(
        1039849                    1152271
        1373653                    1537381

@@ -14,7 +14,7 @@ use 5.010;
 use strict;
 use warnings;
 
-use Math::GMP qw(:constant);
+use Math::AnyNum qw(:overload);
 use ntheory qw(nth_prime valuation);
 
 sub encode_primes {
