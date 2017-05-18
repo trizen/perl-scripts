@@ -23,7 +23,7 @@ sub sieve_primes {
 
     my @primes;
     foreach my $p (2 .. $n) {
-        $composite[$p] || push(@primes, $p);
+        $composite[$p] // push(@primes, $p);
     }
 
     return @primes;
