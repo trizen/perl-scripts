@@ -28,11 +28,13 @@ sub bern_from_primes {
 
     my $round = Math::MPFR::MPFR_RNDN();
 
-    # The required precision is: O(n*log(n))
+    my $tau   = 6.28318530717958647692528676655900576839433879875;
+    my $log2B = (log(4 * $tau * $n) / 2 + $n * log($n) - $n * log($tau) - $n) / log(2);
+
     my $prec = (
-                $n <= 156
-                ? CORE::int($n * CORE::log($n) + 1)
-                : CORE::int($n * CORE::log($n) / CORE::log(2) - 3 * $n)
+                $n <= 90
+                    ? CORE::int($n * CORE::log($n) + 1)
+                    : CORE::int($n + $log2B)
                );
 
     my $d = Math::GMPz::Rmpz_init();
