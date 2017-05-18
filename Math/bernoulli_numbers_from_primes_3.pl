@@ -63,15 +63,16 @@ sub bern_from_primes {
     $N = Math::MPFR::Rmpfr_get_ui($N, $round);
 
     my $z = Math::MPFR::Rmpfr_init2($prec);             # zeta(n)
-    my $t = Math::MPFR::Rmpfr_init2($prec);             # temporary variable
+    my $u = Math::GMPz::Rmpz_init();                    # p^n
 
     Math::MPFR::Rmpfr_set_ui($z, 1, $round);            # z = 1
 
     forprimes {                                         # primes <= N
-        Math::MPFR::Rmpfr_ui_pow_ui($t, $_, $n, $round);    # t = p^n
-        Math::MPFR::Rmpfr_ui_div($t, 1, $t, $round);        # t = 1 / t
-        Math::MPFR::Rmpfr_ui_sub($t, 1, $t, $round);        # t = 1 - t
-        Math::MPFR::Rmpfr_mul($z, $z, $t, $round);          # z = z * t
+        Math::GMPz::Rmpz_ui_pow_ui($u, $_, $n);         # u = p^n
+        Math::GMPz::Rmpz_sub_ui($u, $u, 1);             # u = u-1
+        Math::MPFR::Rmpfr_mul_z($z, $z, $u, $round);    # z = z*u
+        Math::GMPz::Rmpz_add_ui($u, $u, 1);             # u = u+1
+        Math::MPFR::Rmpfr_div_z($z, $z, $u, $round);    # z = z/u
     } $N;
 
     Math::MPFR::Rmpfr_ui_div($z, 1, $z, $round);            # z = 1 / z
