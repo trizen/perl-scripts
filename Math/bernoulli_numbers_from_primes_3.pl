@@ -30,64 +30,68 @@ sub bern_from_primes {
 
     my $round = Math::MPFR::MPFR_RNDN();
 
-    # The required precision is: O(n*log(n))
+    my $tau   = 6.28318530717958647692528676655900576839433879875;
+    my $log2B = (log(4 * $tau * $n) / 2 + $n * log($n) - $n * log($tau) - $n) / log(2);
+
     my $prec = (
-                $n <= 156
-                ? CORE::int($n * CORE::log($n) + 1)
-                : CORE::int($n * CORE::log($n) / CORE::log(2) - 3 * $n)
+                $n <= 90
+                    ? CORE::int($n * CORE::log($n) + 1)
+                    : CORE::int($n + $log2B)
                );
 
     my $d = Math::GMPz::Rmpz_init();
-    Math::GMPz::Rmpz_fac_ui($d, $n);                 # d = n!
+    Math::GMPz::Rmpz_fac_ui($d, $n);                      # d = n!
 
     my $K = Math::MPFR::Rmpfr_init2($prec);
-    Math::MPFR::Rmpfr_const_pi($K, $round);          # K = pi
-    Math::MPFR::Rmpfr_pow_ui($K, $K, $n, $round);    # K = K^n
-    Math::MPFR::Rmpfr_mul_2ui($K, $K, $n-1, $round); # K = K * 2^(n-1)
-    Math::MPFR::Rmpfr_div_z($K, $K, $d, $round);     # K = K / d
-    Math::MPFR::Rmpfr_ui_div($K, 1, $K, $round);     # K = 1 / K
+    Math::MPFR::Rmpfr_const_pi($K, $round);               # K = pi
+    Math::MPFR::Rmpfr_pow_ui($K, $K, $n, $round);         # K = K^n
+    Math::MPFR::Rmpfr_mul_2ui($K, $K, $n - 1, $round);    # K = K * 2^(n-1)
+    Math::MPFR::Rmpfr_div_z($K, $K, $d, $round);          # K = K / d
+    Math::MPFR::Rmpfr_ui_div($K, 1, $K, $round);          # K = 1 / K
 
-    Math::GMPz::Rmpz_set_ui($d, 1);                  # d = 1
+    Math::GMPz::Rmpz_set_ui($d, 1);                       # d = 1
 
-    fordivisors {                                    # divisors of n
+    fordivisors {                                         # divisors of n
         if (is_prob_prime($_ + 1)) {
-            Math::GMPz::Rmpz_mul_ui($d, $d, $_ + 1);    # d = d * p, where (p-1)|n
+            Math::GMPz::Rmpz_mul_ui($d, $d, $_ + 1);      # d = d * p, where (p-1)|n
         }
     } $n;
 
     my $N = Math::MPFR::Rmpfr_init2(64);
-    Math::MPFR::Rmpfr_mul_z($N, $K, $d, $round);        # N = K * d
-    Math::MPFR::Rmpfr_root($N, $N, $n - 1, $round);     # N = K^(1/(n-1))
-    Math::MPFR::Rmpfr_ceil($N, $N);                     # N = ceil(N)
+    Math::MPFR::Rmpfr_mul_z($N, $K, $d, $round);          # N = K * d
+    Math::MPFR::Rmpfr_root($N, $N, $n - 1, $round);       # N = K^(1/(n-1))
+    Math::MPFR::Rmpfr_ceil($N, $N);                       # N = ceil(N)
 
     $N = Math::MPFR::Rmpfr_get_ui($N, $round);
 
-    my $z = Math::MPFR::Rmpfr_init2($prec);             # zeta(n)
-    my $t = Math::MPFR::Rmpfr_init2($prec);             # temporary variable
+    my $z = Math::MPFR::Rmpfr_init2($prec);               # zeta(n)
+    my $u = Math::GMPz::Rmpz_init();                      # p^n
 
-    Math::MPFR::Rmpfr_set_ui($z, 1, $round);            # z = 1
+    Math::MPFR::Rmpfr_set_ui($z, 1, $round);              # z = 1
 
-    forprimes {                                         # primes <= N
-        Math::MPFR::Rmpfr_ui_pow_ui($t, $_, $n, $round);    # t = p^n
-        Math::MPFR::Rmpfr_ui_div($t, 1, $t, $round);        # t = 1 / t
-        Math::MPFR::Rmpfr_ui_sub($t, 1, $t, $round);        # t = 1 - t
-        Math::MPFR::Rmpfr_mul($z, $z, $t, $round);          # z = z * t
+    forprimes {                                           # primes <= N
+        Math::GMPz::Rmpz_ui_pow_ui($u, $_, $n);           # u = p^n
+        Math::GMPz::Rmpz_sub_ui($u, $u, 1);               # u = u-1
+        Math::MPFR::Rmpfr_mul_z($z, $z, $u, $round);      # z = z*u
+        Math::GMPz::Rmpz_add_ui($u, $u, 1);               # u = u+1
+        Math::MPFR::Rmpfr_div_z($z, $z, $u, $round);      # z = z/u
     } $N;
 
-    Math::MPFR::Rmpfr_ui_div($z, 1, $z, $round);            # z = 1 / z
-    Math::MPFR::Rmpfr_mul($z, $z, $K, $round);              # z = z * K
-    Math::MPFR::Rmpfr_mul_z($z, $z, $d, $round);            # z = z * d
+    Math::MPFR::Rmpfr_ui_div($z, 1, $z, $round);          # z = 1 / z
 
-    Math::MPFR::Rmpfr_ceil($z, $z);                         # z = ceil(z)
+    Math::MPFR::Rmpfr_mul($K, $K, $z, $round);            # z = z * K
+    Math::MPFR::Rmpfr_mul_z($K, $K, $d, $round);          # z = z * d
+
+    Math::MPFR::Rmpfr_ceil($K, $K);                       # z = ceil(z)
 
     my $q = Math::GMPq::Rmpq_init();
 
-    Math::GMPq::Rmpq_set_den($q, $d);                       # denominator
-    Math::MPFR::Rmpfr_get_z($d, $z, $round);
-    Math::GMPz::Rmpz_neg($d, $d) if $n % 4 == 0;            # d = -d, iff 4|n
-    Math::GMPq::Rmpq_set_num($q, $d);                       # numerator
+    Math::GMPq::Rmpq_set_den($q, $d);                     # denominator
+    Math::MPFR::Rmpfr_get_z($d, $K, $round);
+    Math::GMPz::Rmpz_neg($d, $d) if $n % 4 == 0;          # d = -d, iff 4|n
+    Math::GMPq::Rmpq_set_num($q, $d);                     # numerator
 
-    return $q;                                              # Bn
+    return $q;                                            # Bn
 }
 
 foreach my $i (0 .. 50) {
