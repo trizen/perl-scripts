@@ -54,7 +54,7 @@ sub bern_from_primes {
         my @composite;
         foreach my $i (2 .. CORE::sqrt($n) + 1) {
             for (my $j = $i**2 ; $j <= $n + 1 ; $j += $i) {
-                $composite[$j] ||= 1;
+                $composite[$j] = 1;
             }
         }
 
