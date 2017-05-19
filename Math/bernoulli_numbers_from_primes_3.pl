@@ -35,8 +35,8 @@ sub bern_from_primes {
 
     my $prec = (
                 $n <= 90
-                    ? CORE::int($n * CORE::log($n) + 1)
-                    : CORE::int($n + $log2B)
+                    ? int($n * log($n) + 1)
+                    : int($n + $log2B)
                );
 
     my $d = Math::GMPz::Rmpz_init();
@@ -78,16 +78,14 @@ sub bern_from_primes {
     } $N;
 
     Math::MPFR::Rmpfr_ui_div($z, 1, $z, $round);          # z = 1 / z
-
-    Math::MPFR::Rmpfr_mul($K, $K, $z, $round);            # z = z * K
-    Math::MPFR::Rmpfr_mul_z($K, $K, $d, $round);          # z = z * d
-
-    Math::MPFR::Rmpfr_ceil($K, $K);                       # z = ceil(z)
+    Math::MPFR::Rmpfr_mul($z, $z, $K, $round);            # z = z * K
+    Math::MPFR::Rmpfr_mul_z($z, $z, $d, $round);          # z = z * d
+    Math::MPFR::Rmpfr_ceil($z, $z);                       # z = ceil(z)
 
     my $q = Math::GMPq::Rmpq_init();
 
     Math::GMPq::Rmpq_set_den($q, $d);                     # denominator
-    Math::MPFR::Rmpfr_get_z($d, $K, $round);
+    Math::MPFR::Rmpfr_get_z($d, $z, $round);
     Math::GMPz::Rmpz_neg($d, $d) if $n % 4 == 0;          # d = -d, iff 4|n
     Math::GMPq::Rmpq_set_num($q, $d);                     # numerator
 
