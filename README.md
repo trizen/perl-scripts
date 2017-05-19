@@ -57,6 +57,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Lzt-hc2](./Encoders/lzt-hc2.pl)
     * [Lzt-simple](./Encoders/lzt-simple.pl)
     * [Lzt-simple 2](./Encoders/lzt-simple_2.pl)
+    * [Lzw compression](./Encoders/lzw_compression.pl)
     * [Math expr encoder](./Encoders/math_expr_encoder.pl)
     * [Tac-compressor](./Encoders/tac-compressor.pl)
     * [Tacc-compressor](./Encoders/tacc-compressor.pl)
