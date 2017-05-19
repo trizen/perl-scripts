@@ -35,8 +35,8 @@ sub bern_from_primes {
 
     my $prec = (
                 $n <= 90
-                    ? CORE::int($n * CORE::log($n) + 1)
-                    : CORE::int($n + $log2B)
+                    ? int($n * log($n) + 1)
+                    : int($n + $log2B)
                );
 
     my $d = Math::GMPz::Rmpz_init();
