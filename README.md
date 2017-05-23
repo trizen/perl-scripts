@@ -234,7 +234,6 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Mp3grep](./Greppers/mp3grep.pl)
     * [Scgrep](./Greppers/scgrep)
 * GTK+
-    * [Fbrowse-tray gtk3](./GTK+/fbrowse-tray_gtk3.pl)
     * [Tray-file-browser](./GTK+/tray-file-browser.pl)
 * HAL
     * HAL3736
