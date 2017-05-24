@@ -126,6 +126,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Barnsley fern fractal](./GD/barnsley_fern_fractal.pl)
     * [Binary triangle](./GD/binary_triangle.pl)
     * [Black yellow number triangles](./GD/black_yellow_number_triangles.pl)
+    * [Box pattern](./GD/box_pattern.pl)
     * [Chaos game pentagon](./GD/chaos_game_pentagon.pl)
     * [Chaos game tetrahedron](./GD/chaos_game_tetrahedron.pl)
     * [Chaos game triangle](./GD/chaos_game_triangle.pl)
