@@ -340,6 +340,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Goldbach conjecture random primes](./Math/goldbach_conjecture_random_primes.pl)
     * [Golomb's sequence](./Math/golomb_s_sequence.pl)
     * [Harmonic numbers](./Math/harmonic_numbers.pl)
+    * [Harmonic numbers from digamma](./Math/harmonic_numbers_from_digamma.pl)
     * [Inverse of factorial](./Math/inverse_of_factorial.pl)
     * [Inverse of factorial stirling](./Math/inverse_of_factorial_stirling.pl)
     * [Is even perfect](./Math/is_even_perfect.pl)
