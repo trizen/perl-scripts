@@ -25,8 +25,9 @@ sub harmonic {
     $n == 0 and return Math::AnyNum->zero;
     $n == 1 and return Math::AnyNum->one;
 
-    my $tau = 6.28318530717958647692528676655900576839433879875;
-    my $log2_Hn = (-$n + $n * log($n) + (log($tau) + log($n)) / 2 + log(log($n))) / log(2);
+    my $tau     = 6.28318530717958647692528676655900576839433879875;
+    my $gamma   = 0.57721566490153286060651209008240243104215933594;
+    my $log2_Hn = (-$n + $n * log($n) + (log($tau) + log($n)) / 2 + log(log($n) + $gamma)) / log(2);
 
     my $prec  = int($log2_Hn + 8);
     my $round = Math::MPFR::MPFR_RNDN();
