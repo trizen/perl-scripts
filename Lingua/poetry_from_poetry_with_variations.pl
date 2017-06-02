@@ -32,6 +32,9 @@ my $poetry = do {
 };
 
 my $ending_len = 3;    # word ending length
+my $group_len  = 1;    # the number of words in a group
+
+my $word_regex = qr/[\pL]+(?:-[\pL]+)?/;
 
 my %words;
 my %seen;
@@ -48,11 +51,13 @@ sub collect_words {
 
     close $fh;
 
-    while ($content =~ /([\pL]+)/g) {
+    while ($content =~ /($word_regex(?:\h+$word_regex){$group_len})/go) {
         my $word = CORE::fc($1);
-        if (length($word) > $ending_len) {
+        my $len = $ending_len;
+
+        if (length($word) > $len) {
             next if $seen{$word}++;
-            push @{$words{substr($word, -$ending_len)}}, $word;
+            push @{$words{substr($word, -$len)}}, $word;
         }
     }
 }
@@ -69,13 +74,15 @@ find {
 my @keys = keys(%words);
 my %endings;
 
-$poetry =~ s{([\pL]+)}{
+$poetry =~ s{($word_regex)}{
     my $word = $1;
-    if (length($word) <= $ending_len) {
+    my $len = $ending_len;
+
+    if (length($word) <= $len) {
         $word;
     }
     else {
-        my $ending = CORE::fc(substr($word, -$ending_len));
+        my $ending = CORE::fc(substr($word, -$len));
         my $key = ($endings{$ending} //= $keys[rand @keys]);
         exists($words{$key}) ? $words{$key}[rand @{$words{$key}}] : $word;
     }
