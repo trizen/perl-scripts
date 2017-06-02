@@ -32,7 +32,7 @@ my $poetry = do {
 };
 
 my $ending_len = 3;    # word ending length
-my $group_len  = 1;    # the number of words in a group
+my $group_len  = 0;    # the number of words in a group - 1
 
 my $word_regex = qr/[\pL]+(?:-[\pL]+)?/;
 
