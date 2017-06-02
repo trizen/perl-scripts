@@ -19,6 +19,7 @@ package LSystem {
     use strict;
     use warnings;
 
+    use lib qw(.);
     use Turtle;
     use Image::Magick;
     use Math::Trig qw(deg2rad);
