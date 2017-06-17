@@ -1,7 +1,7 @@
 perl-scripts
 ============
 
-Some day-to-day Perl scripts which proves some ideas or implements some useful practicability.
+A collection of day-to-day Perl scripts that prove some ideas or implement some useful practicability.
 
 ### Summary
 
@@ -418,6 +418,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Pythagorean triples](./Math/pythagorean_triples.pl)
     * [Random integer factorization](./Math/random_integer_factorization.pl)
     * [Rational continued fractions](./Math/rational_continued_fractions.pl)
+    * [Rational prime product](./Math/rational_prime_product.pl)
     * [Rational summation of fractions](./Math/rational_summation_of_fractions.pl)
     * [Recursive matrix multiplication](./Math/recursive_matrix_multiplication.pl)
     * [Rest calc](./Math/rest_calc.pl)
