@@ -317,6 +317,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Cosmic calendar](./Math/cosmic_calendar.pl)
     * [Count subtriangles](./Math/count_subtriangles.pl)
     * [Cuboid](./Math/cuboid.pl)
+    * [Decimal to rational](./Math/decimal_to_rational.pl)
     * [Difference of k powers](./Math/difference_of_k_powers.pl)
     * [Discrete root](./Math/discrete_root.pl)
     * [E from binomial](./Math/e_from_binomial.pl)
