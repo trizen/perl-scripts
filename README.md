@@ -1,7 +1,7 @@
 perl-scripts
 ============
 
-Some day-to-day Perl scripts which proves some ideas or implements some useful practicability.
+A collection of day-to-day Perl scripts that prove some ideas or implement some useful practicability.
 
 ### Summary
 
@@ -288,6 +288,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Arithmetic expressions](./Math/arithmetic_expressions.pl)
     * [Arithmetic geometric mean complex](./Math/arithmetic_geometric_mean_complex.pl)
     * [Ascii-cuboid](./Math/ascii-cuboid.pl)
+    * [Batir factorial asymptotic formula mpfr](./Math/batir_factorial_asymptotic_formula_mpfr.pl)
     * [Bernoulli denominators](./Math/bernoulli_denominators.pl)
     * [Bernoulli numbers](./Math/bernoulli_numbers.pl)
     * [Bernoulli numbers from primes](./Math/bernoulli_numbers_from_primes.pl)
@@ -376,6 +377,7 @@ Some day-to-day Perl scripts which proves some ideas or implements some useful p
     * [Modular binomial](./Math/modular_binomial.pl)
     * [Modular factorial](./Math/modular_factorial.pl)
     * [Modular fibonacci](./Math/modular_fibonacci.pl)
+    * [Modular fibonacci mpz](./Math/modular_fibonacci_mpz.pl)
     * [Modular hyperoperation](./Math/modular_hyperoperation.pl)
     * [Multi sqrt nums](./Math/multi_sqrt_nums.pl)
     * [Mysterious sum-pentagonal numbers](./Math/mysterious_sum-pentagonal_numbers.pl)
