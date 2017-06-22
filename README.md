@@ -377,6 +377,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Modular binomial](./Math/modular_binomial.pl)
     * [Modular factorial](./Math/modular_factorial.pl)
     * [Modular fibonacci](./Math/modular_fibonacci.pl)
+    * [Modular fibonacci mpz](./Math/modular_fibonacci_mpz.pl)
     * [Modular hyperoperation](./Math/modular_hyperoperation.pl)
     * [Multi sqrt nums](./Math/multi_sqrt_nums.pl)
     * [Mysterious sum-pentagonal numbers](./Math/mysterious_sum-pentagonal_numbers.pl)
