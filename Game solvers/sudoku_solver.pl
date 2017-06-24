@@ -12,10 +12,11 @@
 
 use 5.016;
 use strict;
-use integer;
 
 sub check {
     my ($i, $j) = @_;
+
+    use integer;
 
     my ($id, $im) = ($i / 9, $i % 9);
     my ($jd, $jm) = ($j / 9, $j % 9);
