@@ -19,7 +19,7 @@ sub f {
     my ($n, $mod) = @_;
 
     $n <= 1 && return 1;
-    my $k = int($n/2);
+    my $k = $n >> 1;
 
     $n % 2 == 0
         ? (f($k, $mod) * f($k    , $mod) + f($k - 1, $mod) * f($k - 1, $mod)) % $mod
