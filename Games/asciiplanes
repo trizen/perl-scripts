@@ -8,6 +8,7 @@
 
 # Find the planes' positions on a grid. (text-based game)
 
+use utf8;
 use 5.010;
 use strict;
 use warnings;
