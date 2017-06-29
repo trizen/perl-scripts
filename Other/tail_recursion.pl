@@ -14,7 +14,7 @@ use warnings;
 sub factorial {
     my ($n, $fac) = @_;
     return $fac if $n == 0;
-    local @_ = ($n-1, $n*$fac);
+    @_ = ($n-1, $n*$fac);
     goto __SUB__;
 }
 
