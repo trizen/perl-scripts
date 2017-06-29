@@ -11,7 +11,7 @@
 #   |Bn| ~ 2 / (2*pi)^n * sqrt(2*pi*n) * (n/e)^n
 
 # This gives us the following inverse formula:
-#   lgrt((2*pi)^(-1/(4*pi*e)) * (|Bn| / 2)^(1/(2*pi*e))) * 2*pi*e - 1/2
+#   n ~ lgrt((2*pi)^(-1/(4*pi*e)) * (|Bn| / 2)^(1/(2*pi*e))) * 2*pi*e - 1/2
 
 use 5.010;
 use strict;
