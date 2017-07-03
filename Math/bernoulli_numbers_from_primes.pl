@@ -5,7 +5,7 @@
 # Date: 13 May 2017
 # https://github.com/trizen
 
-# Computation of the nth-Bernoulli number, using prime numbers.
+# A very high-level computation of the nth-Bernoulli number, using prime numbers.
 
 # Algorithm due to Kevin J. McGown (December 8, 2005)
 # See his paper: "Computing Bernoulli Numbers Quickly"
@@ -21,10 +21,13 @@ sub bern_from_primes {
 
     $n == 0 and return Math::AnyNum->one;
     $n == 1 and return Math::AnyNum->new('1/2');
-    $n < 0  and return Math::AnyNum->nan;
-    $n % 2  and return Math::AnyNum->zero;
+    $n <  0 and return Math::AnyNum->nan;
+    $n %  2 and return Math::AnyNum->zero;
 
-    local $Math::AnyNum::PREC = int($n * log($n) / log(2));
+    my $tau   = 6.28318530717958647692528676655900576839433879875;
+    my $log2B = (log(4 * $tau * $n) / 2 + $n * log($n) - $n * log($tau) - $n) / log(2);
+
+    local $Math::AnyNum::PREC = int($n + $log2B) + ($n <= 90 ? 18 : 0);
 
     my $K = factorial($n) * 2 / Math::AnyNum->tau**$n;
     my $d = 1;
