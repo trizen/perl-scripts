@@ -33,11 +33,7 @@ sub bern_from_primes {
     my $tau   = 6.28318530717958647692528676655900576839433879875;
     my $log2B = (log(4 * $tau * $n) / 2 + $n * log($n) - $n * log($tau) - $n) / log(2);
 
-    my $prec = (
-                $n <= 90
-                    ? int($n * log($n) + 1)
-                    : int($n + $log2B)
-               );
+    my $prec = int($n + $log2B) + ($n <= 90 ? 18 : 0);
 
     my $d = Math::GMPz::Rmpz_init();
     Math::GMPz::Rmpz_fac_ui($d, $n);                      # d = n!

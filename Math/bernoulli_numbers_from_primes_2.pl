@@ -29,13 +29,9 @@ sub bern_from_primes {
     my $round = Math::MPFR::MPFR_RNDN();
 
     my $tau   = 6.28318530717958647692528676655900576839433879875;
-    my $log2B = (CORE::log(4 * $tau * $n) / 2 + $n * CORE::log($n) - $n * CORE::log($tau) - $n) / CORE::log(2);
+    my $log2B = (log(4 * $tau * $n) / 2 + $n * log($n) - $n * log($tau) - $n) / log(2);
 
-    my $prec = (
-                $n <= 90
-                    ? CORE::int($n * CORE::log($n) + 1)
-                    : CORE::int($n + $log2B)
-               );
+    my $prec = int($n + $log2B) + ($n <= 90 ? 18 : 0);
 
     my $d = Math::GMPz::Rmpz_init();
     Math::GMPz::Rmpz_fac_ui($d, $n);                      # d = n!
@@ -52,7 +48,7 @@ sub bern_from_primes {
 
     {  # Sieve the primes <= n+1
         my @composite;
-        foreach my $i (2 .. CORE::sqrt($n) + 1) {
+        foreach my $i (2 .. sqrt($n) + 1) {
             for (my $j = $i**2 ; $j <= $n + 1 ; $j += $i) {
                 $composite[$j] = 1;
             }
