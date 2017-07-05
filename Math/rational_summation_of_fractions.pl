@@ -5,7 +5,7 @@
 # Date: 23 June 2016
 # Website: https://github.com/trizen
 
-# Rationalized summation of fractions, based on the principle:
+# Rationalized summation of fractions, based on the identity:
 #
 #  a     c     ad + bc
 # --- + --- = ----------
