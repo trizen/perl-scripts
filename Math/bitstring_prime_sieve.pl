@@ -5,7 +5,7 @@
 # Date: 09 July 2017
 # https://github.com/trizen
 
-# A decently fast bitstring sieve for prime numbers.
+# A decently fast bit-string sieve for prime numbers.
 # It's asymptotically faster than using Perl's arrays.
 
 # Also useful when memory is very restricted.
