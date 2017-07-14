@@ -43,7 +43,30 @@ sub e_4 {
     );
 }
 
-say 1 + 1 / e_1(1, 100);                  # very fast convergence
-say 2 + e_2(1, 100);                      # extremely fast convergence
-say sqrt(1 + 2 / e_3(1, 100));            # extremely fast convergence
-say sqrt(7 + 1 / (2 + (e_4(100, 1))));    # ultra-fast convergence
+sub e_5 {
+    my ($i, $n) = @_;
+
+    return 0 if $n >= $i;
+
+    1 / (
+        3 + 1 / (
+            2*$n + 1 / (
+                3 + 1 / (
+                    1 + 1 / (
+                        2*$n + 1 / (
+                            1 + e_5($i, $n + 1)
+                        )
+                    )
+                )
+            )
+        )
+    );
+}
+
+my $r = 100;        # number of repetitions
+
+say 1 + 1 / e_1(1, $r);                  # very fast convergence
+say 2 + e_2(1, $r);                      # extremely fast convergence
+say sqrt(1 + 2 / e_3(1, $r));            # extremely fast convergence
+say sqrt(7 + 1 / (2 + (e_4($r, 1))));    # ultra-fast convergence
+say ((5 + 1/(2 +  e_5($r, 1)))/2);       # ultra-fast convergence
