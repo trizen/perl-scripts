@@ -25,6 +25,25 @@ sub e_3 {
     $limit > 0 ? (1 / (2 * $i + 1 + e_3($i + 1, $limit - 1))) : 0;
 }
 
-say 1 + 1 / e_1(1, 100);          # very fast convergence
-say 2 + e_2(1, 100);              # extremely fast convergence
-say sqrt(1 + 2 / e_3(1, 100));    # extremely fast convergence
+sub e_4 {
+    my ($i, $n) = @_;
+
+    return 0 if $n >= $i;
+
+    1 / (
+        1 + 1 / (
+            1 + 1 / (
+                (3 * $n) + 1 / (
+                    (12 * $n + 6) + 1 / (
+                        (3 * $n + 2) + e_4($i, $n + 1)
+                    )
+                )
+            )
+        )
+    );
+}
+
+say 1 + 1 / e_1(1, 100);                  # very fast convergence
+say 2 + e_2(1, 100);                      # extremely fast convergence
+say sqrt(1 + 2 / e_3(1, 100));            # extremely fast convergence
+say sqrt(7 + 1 / (2 + (e_4(100, 1))));    # ultra-fast convergence

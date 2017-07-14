@@ -43,7 +43,7 @@ sub lgrt {
 
     my $x = Math::MPC::Rmpc_init2($PREC);
     Math::MPC::Rmpc_set($x, $c, $ROUND);
-    Math::MPC::Rmpc_sqr($x, $x, $ROUND);
+    Math::MPC::Rmpc_sqrt($x, $x, $ROUND);
     Math::MPC::Rmpc_add_ui($x, $x, 1, $ROUND);
     Math::MPC::Rmpc_log($x, $x, $ROUND);
 
