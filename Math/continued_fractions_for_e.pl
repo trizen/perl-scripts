@@ -107,8 +107,8 @@ my $r = 100;        # number of repetitions
 say 1 + 1 / e_1(1, $r);                  # good convergence
 say 2 + e_2(1, $r);                      # very fast convergence
 say sqrt(1 + 2 / e_3(1, $r));            # very fast convergence
-say sqrt(7 + 1 / (2 + (e_4($r, 1))));    # extremely fast convergence
+say sqrt(7 + 1 / (2 + (e_4($r, 1))));    # extremely fast convergence (best)
 say ((5 + 1/(2 +  e_5($r, 1)))/2);       # extremely fast convergence
 say sqrt(7 + 2/(5 + e_6($r, 1)));        # extremely fast convergence
-say sqrt(7 + e_7($r, 1));                # extremely fast convergence
+say sqrt(7 + e_7($r, 1));                # very fast convergence
 say ((1 + e_8($r, 1))**2);               # very fast convergence
