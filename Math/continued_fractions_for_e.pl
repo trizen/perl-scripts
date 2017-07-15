@@ -11,6 +11,8 @@
 use 5.010;
 use strict;
 
+#use Math::BigNum qw(:constant);
+
 sub e_1 {
     my ($i, $limit) = @_;
     $limit > 0 ? ($i / ($i + e_1($i + 1, $limit - 1))) : 0;
@@ -102,6 +104,22 @@ sub e_8 {
     );
 }
 
+sub e_9 {
+    my ($i, $n) = @_;
+
+    return 0 if $n >= $i;
+
+    1/(
+        2 + 1/(
+            4*$n + 1 + 1/(
+                -2 + 1/ (
+                    -4*$n - 3 + e_9($i, $n+1)
+                )
+            )
+        )
+    )
+}
+
 my $r = 100;        # number of repetitions
 
 say 1 + 1 / e_1(1, $r);                  # good convergence
@@ -112,3 +130,4 @@ say ((5 + 1/(2 +  e_5($r, 1)))/2);       # extremely fast convergence
 say sqrt(7 + 2/(5 + e_6($r, 1)));        # extremely fast convergence
 say sqrt(7 + e_7($r, 1));                # very fast convergence
 say ((1 + e_8($r, 1))**2);               # very fast convergence
+say 3 + 1/(-4 + e_9($r, 1));             # extremely fast convergence
