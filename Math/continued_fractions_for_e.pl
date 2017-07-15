@@ -3,9 +3,10 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 10 May 2016
+# Edit: 14 July 2017
 # Website: https://github.com/trizen
 
-# Continued fractions for Euler's number "e".
+# Continued fractions for the "e" mathematical constant.
 
 use 5.010;
 use strict;
@@ -63,10 +64,51 @@ sub e_5 {
     );
 }
 
+sub e_6 {
+    my ($i, $n) = @_;
+
+    return 0 if $n >= $i;
+
+    2 / (
+        8*($n+1) - 2 + 2 / (
+            4*($n+1) + 1 + e_6($i, $n+1)
+        )
+    );
+}
+
+sub e_7 {
+    my ($i, $n) = @_;
+
+    return 0 if $n >= $i;
+
+    8 / (
+        16*$n + 4 + 8 / (
+            8*($n+1) - 2 + e_7($i, $n+1)
+        )
+    );
+}
+
+sub e_8 {
+    my ($i, $n) = @_;
+
+    return 0 if $n >= $i;
+
+    1 / (
+        4*($n-1) + 1 + 1 / (
+            1 + 1/(
+                1 + e_8($i, $n+1)
+            )
+        )
+    );
+}
+
 my $r = 100;        # number of repetitions
 
-say 1 + 1 / e_1(1, $r);                  # very fast convergence
-say 2 + e_2(1, $r);                      # extremely fast convergence
-say sqrt(1 + 2 / e_3(1, $r));            # extremely fast convergence
-say sqrt(7 + 1 / (2 + (e_4($r, 1))));    # ultra-fast convergence
-say ((5 + 1/(2 +  e_5($r, 1)))/2);       # ultra-fast convergence
+say 1 + 1 / e_1(1, $r);                  # good convergence
+say 2 + e_2(1, $r);                      # very fast convergence
+say sqrt(1 + 2 / e_3(1, $r));            # very fast convergence
+say sqrt(7 + 1 / (2 + (e_4($r, 1))));    # extremely fast convergence
+say ((5 + 1/(2 +  e_5($r, 1)))/2);       # extremely fast convergence
+say sqrt(7 + 2/(5 + e_6($r, 1)));        # extremely fast convergence
+say sqrt(7 + e_7($r, 1));                # extremely fast convergence
+say ((1 + e_8($r, 1))**2);               # very fast convergence
