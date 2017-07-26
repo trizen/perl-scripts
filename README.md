@@ -422,6 +422,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Primes sum of pair product](./Math/primes_sum_of_pair_product.pl)
     * [Primorial](./Math/primorial.pl)
     * [Pythagorean triples](./Math/pythagorean_triples.pl)
+    * [Ramanujan sum](./Math/ramanujan_sum.pl)
     * [Random integer factorization](./Math/random_integer_factorization.pl)
     * [Rational continued fractions](./Math/rational_continued_fractions.pl)
     * [Rational prime product](./Math/rational_prime_product.pl)
