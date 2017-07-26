@@ -14,7 +14,7 @@
 
 # Alternatively, when n = k, `c_n(n)` is equivalent with `euler_phi(n)`.
 
-# The record values of `c_n(n) + 1`, are the prime numbers.
+# The record values, `c_n(n) + 1`, are the prime numbers.
 
 use 5.010;
 use strict;
