@@ -4,15 +4,23 @@
 # Date: 26 July 2017
 # https://github.com/trizen
 
-# Ramanujan's sum: c_k(n) = Sum_{m mod k; gcd(m, k) = 1} exp(2*pi*i*m*n/k).
+# Ramanujan's sum:
+#   c_k(n) = Sum_{m mod k; gcd(m, k) = 1} exp(2*pi*i*m*n/k)
 
 # For n = 1, c_k(1) is equivalent to moebius(k).
+
+# For integer real values of `n` and `k`, Ramanujan's sum is equivalent to:
+#   c_k(n) = Sum_{m mod k; gcd(m, k) = 1} cos(2*pi*m*n/k)
+
+# Alternatively, when n = k, `c_n(n)` is equivalent with `euler_phi(n)`.
+
+# The record values of `c_n(n) + 1`, are the prime numbers.
 
 use 5.010;
 use strict;
 use warnings;
 
-use Math::AnyNum qw(i tau gcd round);
+use Math::AnyNum qw(:overload tau gcd round);
 
 sub ramanujan_sum {
     my ($n, $k) = @_;
@@ -24,52 +32,51 @@ sub ramanujan_sum {
         }
     }
 
-    round($sum);
+    round($sum, -20);
 }
 
 my $sum = 0;
 my @partial_sums;
 foreach my $n (1 .. 30) {
-    my $r = ramanujan_sum($n, $n);
-    $sum += $r;
-    say "R($n, $n) = $r";
-    push @partial_sums, $sum;
+    my $r = ramanujan_sum($n, $n**2);
+    say "R($n, $n^2) = $r";
+    push @partial_sums, $sum += $r;
 }
 
 say "\n=> Partial sums:";
 say join(' ', @partial_sums);
 
 __END__
-R(1, 1) = 1
-R(2, 2) = 1
-R(3, 3) = 2
-R(4, 4) = 2
-R(5, 5) = 4
-R(6, 6) = 2
-R(7, 7) = 6
-R(8, 8) = 4
-R(9, 9) = 6
-R(10, 10) = 4
-R(11, 11) = 10
-R(12, 12) = 4
-R(13, 13) = 12
-R(14, 14) = 6
-R(15, 15) = 8
-R(16, 16) = 8
-R(17, 17) = 16
-R(18, 18) = 6
-R(19, 19) = 18
-R(20, 20) = 8
-R(21, 21) = 12
-R(22, 22) = 10
-R(23, 23) = 22
-R(24, 24) = 8
-R(25, 25) = 20
-R(26, 26) = 12
-R(27, 27) = 18
-R(28, 28) = 12
-R(29, 29) = 28
-R(30, 30) = 8
+R(1, 1^2) = 1
+R(2, 2^2) = -2
+R(3, 3^2) = -3
+R(4, 4^2) = 0
+R(5, 5^2) = -5
+R(6, 6^2) = 6
+R(7, 7^2) = -7
+R(8, 8^2) = 0
+R(9, 9^2) = 0
+R(10, 10^2) = 10
+R(11, 11^2) = -11
+R(12, 12^2) = 0
+R(13, 13^2) = -13
+R(14, 14^2) = 14
+R(15, 15^2) = 15
+R(16, 16^2) = 0
+R(17, 17^2) = -17
+R(18, 18^2) = 0
+R(19, 19^2) = -19
+R(20, 20^2) = 0
+R(21, 21^2) = 21
+R(22, 22^2) = 22
+R(23, 23^2) = -23
+R(24, 24^2) = 0
+R(25, 25^2) = 0
+R(26, 26^2) = 26
+R(27, 27^2) = 0
+R(28, 28^2) = 0
+R(29, 29^2) = -29
+R(30, 30^2) = -30
 
 => Partial sums:
-1 2 4 6 10 12 18 22 28 32 42 46 58 64 72 80 96 102 120 128 140 150 172 180 200 212 230 242 270 278
+1 -1 -4 -4 -9 -3 -10 -10 -10 0 -11 -11 -24 -10 5 5 -12 -12 -31 -31 -10 12 -11 -11 -11 15 15 15 -14 -44
