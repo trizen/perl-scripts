@@ -17,6 +17,6 @@ sub ramanujan_sum {
     $m * euler_phi($k) / euler_phi($g);
 }
 
-foreach my $n (1 .. 20) {
+foreach my $n (1 .. 30) {
     say ramanujan_sum($n, $n**2);
 }
