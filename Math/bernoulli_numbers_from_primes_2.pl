@@ -80,10 +80,9 @@ sub bern_from_primes {
 
     for (my $i = 0 ; $primes[$i] <= $N ; ++$i) {            # primes <= N
         Math::GMPz::Rmpz_ui_pow_ui($u, $primes[$i], $n);    # u = p^n
+        Math::MPFR::Rmpfr_div_z($z, $z, $u, $round);        # z = z/u
         Math::GMPz::Rmpz_sub_ui($u, $u, 1);                 # u = u-1
         Math::MPFR::Rmpfr_mul_z($z, $z, $u, $round);        # z = z*u
-        Math::GMPz::Rmpz_add_ui($u, $u, 1);                 # u = u+1
-        Math::MPFR::Rmpfr_div_z($z, $z, $u, $round);        # z = z/u
     }
 
     Math::MPFR::Rmpfr_ui_div($z, 1, $z, $round);            # z = 1 / z
