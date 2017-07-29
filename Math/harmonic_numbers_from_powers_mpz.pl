@@ -33,7 +33,7 @@ sub harmonic_numbers_from_powers {
 
             $t == 1
               ? Math::GMPz::Rmpz_add($num, $num, $den)
-              : Math::GMPz::Rmpz_addmul_ui($num, $den, ($g - 1) / ($p - 1));
+              : Math::GMPz::Rmpz_addmul_ui($num, $den, $t);
 
             Math::GMPz::Rmpz_mul_ui($den, $den, $g);
 
