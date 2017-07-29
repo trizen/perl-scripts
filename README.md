@@ -344,6 +344,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Golomb's sequence](./Math/golomb_s_sequence.pl)
     * [Harmonic numbers](./Math/harmonic_numbers.pl)
     * [Harmonic numbers from digamma](./Math/harmonic_numbers_from_digamma.pl)
+    * [Harmonic prime powers](./Math/harmonic_prime_powers.pl)
     * [Inverse of bernoulli numbers](./Math/inverse_of_bernoulli_numbers.pl)
     * [Inverse of factorial](./Math/inverse_of_factorial.pl)
     * [Inverse of factorial stirling](./Math/inverse_of_factorial_stirling.pl)
