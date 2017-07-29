@@ -16,11 +16,11 @@ use Math::AnyNum qw(:overload ilog);
 sub harmonic_numbers_from_powers {
     my ($n) = @_;
 
-    my %seen;
+    my @seen;
     my $harm = $n <= 0 ? 0 : 1;
 
     foreach my $k (2 .. $n) {
-        if (not exists $seen{$k}) {
+        if (not exists $seen[$k]) {
 
             my $p = $k;
             my $g = $p**ilog($n, $p);
@@ -28,7 +28,7 @@ sub harmonic_numbers_from_powers {
             $harm += ($g - 1) / ($g * ($p - 1));
 
             while ($p <= $n) {
-                undef $seen{$p};
+                $seen[$p] = undef;
                 $p *= $k;
             }
         }
