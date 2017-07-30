@@ -5,13 +5,13 @@
 # Date: 29 July 2017
 # https://github.com/trizen
 
-# Computation of the nth-harmonic number, using perfect powers.
+# A high-level algorithm implementation for computing the nth-harmonic number, using perfect powers.
 
 use 5.010;
 use strict;
 use warnings;
 
-use Math::AnyNum qw(:overload ilog);
+use Math::AnyNum qw(:overload idiv);
 
 sub harmonic_numbers_from_powers {
     my ($n) = @_;
@@ -23,14 +23,15 @@ sub harmonic_numbers_from_powers {
         if (not exists $seen[$k]) {
 
             my $p = $k;
-            my $g = $p**ilog($n, $p);
 
-            $harm += ($g - 1) / ($g * ($p - 1));
-
-            while ($p <= $n) {
+            do {
                 $seen[$p] = undef;
-                $p *= $k;
-            }
+            } while (($p *= $k) <= $n);
+
+            my $g = idiv($p, $k);
+            my $t = idiv($g - 1, $k - 1);
+
+            $harm += $t / $g;
         }
     }
 
