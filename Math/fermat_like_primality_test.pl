@@ -72,8 +72,6 @@ sub modular_binomial {
 sub is_probably_prime {
     my ($n) = @_;
 
-    my $c = 2;
-
     return 0 if $n <= 1;
     return 1 if $n == 2;
 
@@ -93,9 +91,10 @@ sub is_probably_prime {
         $im += 1;
     }
 
-    $re -= 2;
-
+    my $c = 2;
     my $r = log($n)**2;    # can the exponent be improved?
+
+    $re -= $c;
 
     my $count = 0;
     my ($p_re, $p_im) = ($re, $im);
