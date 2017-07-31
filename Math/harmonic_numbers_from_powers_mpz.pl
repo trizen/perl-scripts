@@ -12,7 +12,6 @@ use strict;
 use warnings;
 
 use Math::GMPz;
-use ntheory qw(logint);
 
 sub harmonic_numbers_from_powers {
     my ($n) = @_;
@@ -26,8 +25,13 @@ sub harmonic_numbers_from_powers {
         if (not exists $seen[$k]) {
 
             my $p = $k;
-            my $g = $p**logint($n, $p);
-            my $t = ($g - 1) / ($p - 1);
+
+            do {
+                $seen[$p] = undef;
+            } while (($p *= $k) <= $n);
+
+            my $g = $p / $k;
+            my $t = ($g - 1) / ($k - 1);
 
             Math::GMPz::Rmpz_mul_ui($num, $num, $g);
 
@@ -36,11 +40,6 @@ sub harmonic_numbers_from_powers {
               : Math::GMPz::Rmpz_addmul_ui($num, $den, $t);
 
             Math::GMPz::Rmpz_mul_ui($den, $den, $g);
-
-            while ($p <= $n) {
-                $seen[$p] = undef;
-                $p *= $k;
-            }
         }
     }
 
