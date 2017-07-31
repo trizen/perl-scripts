@@ -303,6 +303,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Binary prime encoder fast](./Math/binary_prime_encoder_fast.pl)
     * [Binary prime sieve](./Math/binary_prime_sieve.pl)
     * [Binary prime sieve 2](./Math/binary_prime_sieve_2.pl)
+    * [Binomial sum with imaginary term](./Math/binomial_sum_with_imaginary_term.pl)
     * [Binomial theorem](./Math/binomial_theorem.pl)
     * [Bitstring prime sieve](./Math/bitstring_prime_sieve.pl)
     * [Brown numbers](./Math/brown_numbers.pl)
