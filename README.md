@@ -330,6 +330,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Factorial from primes simple](./Math/factorial_from_primes_simple.pl)
     * [Factorial in half steps](./Math/factorial_in_half_steps.pl)
     * [Faulhaber's formula](./Math/faulhaber_s_formula.pl)
+    * [Fermat like primality test](./Math/fermat_like_primality_test.pl)
     * [Fibonacci closed form](./Math/fibonacci_closed_form.pl)
     * [Fibonacci closed form 2](./Math/fibonacci_closed_form_2.pl)
     * [Find least common denominator](./Math/find_least_common_denominator.pl)
