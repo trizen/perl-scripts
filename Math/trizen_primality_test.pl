@@ -34,7 +34,7 @@
 #   a(n) = real((2 + sqrt(-1))^n)
 #   b(n) = imag((2 + sqrt(-1))^n)
 #
-# Defined recursively, as:
+# Defined recursively as:
 #
 #   a(1) = 2; a(2) = 3; a(n) = 4*a(n-1) - 5*a(n-2)
 #   b(1) = 1; b(2) = 4; b(n) = 4*b(n-1) - 5*b(n-2)
