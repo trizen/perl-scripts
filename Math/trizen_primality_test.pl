@@ -37,7 +37,7 @@
 # Defined recursively, as:
 #
 #   a(1) = 2; a(2) = 3; a(n) = 4*a(n-1) - 5*a(n-2)
-#   b(1) = 1; b(2) = 4; b(n) = 4*b(n-2) - 5*b(n-2)
+#   b(1) = 1; b(2) = 4; b(n) = 4*b(n-1) - 5*b(n-2)
 #
 
 # Currently, we use only the `b(n)` branch, as it is strong enough to reject most composites.
