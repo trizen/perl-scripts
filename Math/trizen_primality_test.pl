@@ -70,20 +70,23 @@ sub mulmod {
         : ntheory::mulmod($n, $k, $mod);
 }
 
-sub modulo_test($n, $mod, $cache) {
+sub modulo_test($n, $mod) {
+
+    my %cache;
+
     sub ($n) {
 
         $n == 0 && return 1;
         $n == 1 && return 4;
 
-        if (exists($cache->{$n})) {
-            return $cache->{$n};
+        if (exists $cache{$n}) {
+            return $cache{$n};
         }
 
         my $k = $n >> 1;
 
 #<<<
-        $cache->{$n} = (
+        $cache{$n} = (
                         $n % 2 == 0
                          ? addmod(mulmod(__SUB__->($k), __SUB__->($k),     $mod), -mulmod(mulmod(5, __SUB__->($k - 1), $mod), __SUB__->($k - 1), $mod), $mod)
                          : addmod(mulmod(__SUB__->($k), __SUB__->($k + 1), $mod), -mulmod(mulmod(5, __SUB__->($k - 1), $mod), __SUB__->($k),     $mod), $mod)
@@ -98,7 +101,7 @@ sub is_probably_prime($n) {
     $n <= 1 && return 0;
     $n == 2 && return 1;
 
-    my $r = modulo_test($n, $n, {});
+    my $r = modulo_test($n, $n);
 
     ($n % 4 == 3) ? ($r == $n - 1) : ($r == 1);
 }
