@@ -38,7 +38,7 @@ foreach my $g (
 ) {
 
     no strict 'refs';
-    *{__PACKAGE__ . '::' . 'modulo_test' . $g->[0]} = sub($n, $mod) {
+    *{__PACKAGE__ . '::' . 'modulo_test' . $g->[0]} = sub ($n, $mod) {
         my %cache;
 
         sub ($n) {
@@ -117,7 +117,7 @@ eval {
 
 say "=> Searching for counter-examples...";
 
-# Find counter-examples
+# Look for counter-examples
 foreach my $n (1..3000) {
     if (is_probably_prime($n)) {
 
