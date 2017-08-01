@@ -6,8 +6,7 @@
 
 # A very strong primilaty test, inspired by the AKS primality test.
 
-# No counter-examples are known, but there may exist infinitely many of them.
-# However, first counter-example that may exist, is expected to be relatively large.
+# All known counter-examples are listed at the end of the script.
 
 use 5.020;
 use strict;
@@ -18,14 +17,6 @@ no warnings 'recursion';
 use ntheory qw(is_prime);
 use experimental qw(signatures);
 
-sub addmod {
-    my ($n, $k, $mod) = @_;
-
-    ref($mod)
-        ? ((($n % $mod) + $k) % $mod)
-        : ntheory::addmod($n, $k, $mod);
-}
-
 sub mulmod {
     my ($n, $k, $mod) = @_;
 
@@ -34,8 +25,8 @@ sub mulmod {
         : ntheory::mulmod($n, $k, $mod);
 }
 
-# Creates the `modulo_test{1,2,3}` subroutines.
-foreach my $g ([1, 1, 4, 5], [2, 1, 5, 3], [3, 1, 3, 5]) {
+# Creates the `modulo_test*` subroutines.
+foreach my $g ([1, 1, 4, 5], [2, 1, 5, 3], [3, 1, 3, 5], [4, 1, 7, 5]) {
 
     no strict 'refs';
     *{__PACKAGE__ . '::' . 'modulo_test' . $g->[0]} = sub($n, $mod) {
@@ -55,8 +46,8 @@ foreach my $g ([1, 1, 4, 5], [2, 1, 5, 3], [3, 1, 3, 5]) {
 #<<<
             $cache{$n} = (
                 $n % 2 == 0
-                    ? addmod(mulmod(__SUB__->($k), __SUB__->($k),     $mod), -mulmod(mulmod($g->[3], __SUB__->($k - 1), $mod), __SUB__->($k - 1), $mod), $mod)
-                    : addmod(mulmod(__SUB__->($k), __SUB__->($k + 1), $mod), -mulmod(mulmod($g->[3], __SUB__->($k - 1), $mod), __SUB__->($k),     $mod), $mod)
+                    ? (mulmod(__SUB__->($k), __SUB__->($k),     $mod) - mulmod(mulmod($g->[3], __SUB__->($k - 1), $mod), __SUB__->($k - 1), $mod)) % $mod
+                    : (mulmod(__SUB__->($k), __SUB__->($k + 1), $mod) - mulmod(mulmod($g->[3], __SUB__->($k - 1), $mod), __SUB__->($k),     $mod)) % $mod
             );
 #>>>
 
@@ -70,6 +61,7 @@ sub is_probably_prime($n) {
     $n ==  2 && return 1;
     $n == 11 && return 1;
     $n == 13 && return 1;
+    $n == 29 && return 1;
 
     my $r1 = modulo_test1($n, $n);
     (($n % 4 == 3) ? ($r1 == $n - 1) : ($r1 == 1)) or return 0;
@@ -78,7 +70,10 @@ sub is_probably_prime($n) {
     (($r2 == 1) or ($r2 == $n-1)) or return 0;
 
     my $r3 = modulo_test3($n, $n);
-    ($r3 == 1) or ($r3 == $n-1) or return 0;
+   ($r3 == 1) or ($r3 == $n-1) or return 0;
+
+    my $r4 = modulo_test4($n, $n);
+    ($r4 == 1) or ($r4 == $n-1) or return 0;
 }
 
 #
@@ -121,3 +116,43 @@ foreach my $n (1..3000) {
         warn "Missed a prime: $n\n";
     }
 }
+
+__END__
+
+#
+## Known counter-examples:
+#
+
+359505020161
+1121414775001
+1682253492481
+24400777040641
+38989474716193
+40977671331601
+46668334332673
+54080321943649
+106309139227201
+195449862688081
+224530340357233
+240723140898241
+320247762202369
+372402596837701
+443372888629441
+596657267497201
+712424619363601
+1444302789209281
+1514208533704777
+1961656420426561
+1984323150552601
+2161556745579001
+2256137288796301
+2427442746677521
+3198224171193481
+3448064239362601
+3716673343381441
+4002924544218601
+4025380496726161
+5085501271868161
+5606301981821641
+5819114530600801
+39671149333495681

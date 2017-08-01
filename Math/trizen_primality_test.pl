@@ -54,14 +54,6 @@ no warnings 'recursion';
 use ntheory qw(is_prime);
 use experimental qw(signatures);
 
-sub addmod {
-    my ($n, $k, $mod) = @_;
-
-    ref($mod)
-        ? ((($n % $mod) + $k) % $mod)
-        : ntheory::addmod($n, $k, $mod);
-}
-
 sub mulmod {
     my ($n, $k, $mod) = @_;
 
@@ -87,10 +79,10 @@ sub modulo_test($n, $mod) {
 
 #<<<
         $cache{$n} = (
-                        $n % 2 == 0
-                         ? addmod(mulmod(__SUB__->($k), __SUB__->($k),     $mod), -mulmod(mulmod(5, __SUB__->($k - 1), $mod), __SUB__->($k - 1), $mod), $mod)
-                         : addmod(mulmod(__SUB__->($k), __SUB__->($k + 1), $mod), -mulmod(mulmod(5, __SUB__->($k - 1), $mod), __SUB__->($k),     $mod), $mod)
-                       );
+            $n % 2 == 0
+             ? (mulmod(__SUB__->($k), __SUB__->($k),     $mod) - mulmod(mulmod(5, __SUB__->($k - 1), $mod), __SUB__->($k - 1), $mod)) % $mod
+             : (mulmod(__SUB__->($k), __SUB__->($k + 1), $mod) - mulmod(mulmod(5, __SUB__->($k - 1), $mod), __SUB__->($k),     $mod)) % $mod
+        );
 #>>>
 
       }->($n - 1);
