@@ -465,6 +465,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Sum x](./Math/sum_x.pl)
     * [Triangle hyperoperation](./Math/triangle_hyperoperation.pl)
     * [Trip2mars](./Math/trip2mars.pl)
+    * [Trizen primality test](./Math/trizen_primality_test.pl)
     * [Wilson prime formula](./Math/wilson_prime_formula.pl)
     * [Yahtzee](./Math/yahtzee.pl)
     * [Zequals](./Math/zequals.pl)
