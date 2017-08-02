@@ -4,7 +4,7 @@
 # Date: 02 August 2017
 # https://github.com/trizen
 
-# A very strong primilaty test, inspired by the AKS primality test.
+# A very strong primilaty test, inspired by Fermat's Little Theorem and the AKS test.
 
 # No counter-examples are known.
 
@@ -14,7 +14,7 @@ use warnings;
 
 no warnings 'recursion';
 
-use ntheory qw(is_prime);
+use ntheory qw(is_prime powmod);
 use experimental qw(signatures);
 
 sub mulmod {
@@ -54,8 +54,8 @@ foreach my $g (
 #<<<
             $cache{$n} = (
                 $n % 2 == 0
-                    ? (mulmod(__SUB__->($k), __SUB__->($k),     $mod) - mulmod(mulmod($g->[3], __SUB__->($k - 1), $mod), __SUB__->($k - 1), $mod)) % $mod
-                    : (mulmod(__SUB__->($k), __SUB__->($k + 1), $mod) - mulmod(mulmod($g->[3], __SUB__->($k - 1), $mod), __SUB__->($k),     $mod)) % $mod
+                    ? (mulmod(__SUB__->($k), __SUB__->($k),   $mod) - mulmod(mulmod($g->[3], __SUB__->($k-1), $mod), __SUB__->($k-1), $mod)) % $mod
+                    : (mulmod(__SUB__->($k), __SUB__->($k+1), $mod) - mulmod(mulmod($g->[3], __SUB__->($k-1), $mod), __SUB__->($k),   $mod)) % $mod
             );
 #>>>
 
@@ -73,8 +73,10 @@ sub is_probably_prime($n) {
     $n == 17 && return 1;
     $n == 59 && return 1;
 
+    powmod(2, $n-1, $n) == 1 or return 0;
+
     my $r1 = modulo_test1($n, $n);
-    (($n % 4 == 3) ? ($r1 == $n - 1) : ($r1 == 1)) or return 0;
+    (($n % 4 == 3) ? ($r1 == $n-1) : ($r1 == 1)) or return 0;
 
     my $r2 = modulo_test2($n, $n);
     ($r2 == 1) or ($r2 == $n-1) or return 0;
