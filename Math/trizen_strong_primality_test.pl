@@ -1,13 +1,12 @@
 #!/usr/bin/perl
 
 # Daniel "Trizen" Șuteu
-# Date: 01 August 2017
+# Date: 02 August 2017
 # https://github.com/trizen
 
-# A very strong primilaty test, inspired by the AKS primality test.
+# A very strong primilaty test, inspired by Fermat's Little Theorem and the AKS test.
 
-# Known counter-examples:
-#  [359505020161, 443372888629441, 39671149333495681]
+# No counter-examples are known.
 
 use 5.020;
 use strict;
@@ -15,7 +14,7 @@ use warnings;
 
 no warnings 'recursion';
 
-use ntheory qw(is_prime);
+use ntheory qw(is_prime powmod);
 use experimental qw(signatures);
 
 sub mulmod {
@@ -30,11 +29,11 @@ sub mulmod {
 ## Creates the `modulo_test*` subroutines.
 #
 foreach my $g (
-    [1, 1, 4,  5],
-    [2, 1, 5,  3],
-    [3, 1, 3,  5],
-    [4, 1, 7,  5],
-    [5, 1, 3, 17],
+    [1, 1,  4,  5],
+    [2, 1,  3,  5],
+    [3, 1,  5,  3],
+    [4, 1,  3, 17],
+    [5, 1, 11, 43],
 ) {
 
     no strict 'refs';
@@ -55,8 +54,8 @@ foreach my $g (
 #<<<
             $cache{$n} = (
                 $n % 2 == 0
-                    ? (mulmod(__SUB__->($k), __SUB__->($k),     $mod) - mulmod(mulmod($g->[3], __SUB__->($k - 1), $mod), __SUB__->($k - 1), $mod)) % $mod
-                    : (mulmod(__SUB__->($k), __SUB__->($k + 1), $mod) - mulmod(mulmod($g->[3], __SUB__->($k - 1), $mod), __SUB__->($k),     $mod)) % $mod
+                    ? (mulmod(__SUB__->($k), __SUB__->($k),   $mod) - mulmod(mulmod($g->[3], __SUB__->($k-1), $mod), __SUB__->($k-1), $mod)) % $mod
+                    : (mulmod(__SUB__->($k), __SUB__->($k+1), $mod) - mulmod(mulmod($g->[3], __SUB__->($k-1), $mod), __SUB__->($k),   $mod)) % $mod
             );
 #>>>
 
@@ -68,19 +67,22 @@ sub is_probably_prime($n) {
 
     $n <=  1 && return 0;
     $n ==  2 && return 1;
+    $n ==  3 && return 1;
     $n == 11 && return 1;
     $n == 13 && return 1;
-    $n == 29 && return 1;
+    $n == 17 && return 1;
     $n == 59 && return 1;
 
+    powmod(2, $n-1, $n) == 1 or return 0;
+
     my $r1 = modulo_test1($n, $n);
-    (($n % 4 == 3) ? ($r1 == $n - 1) : ($r1 == 1)) or return 0;
+    (($n % 4 == 3) ? ($r1 == $n-1) : ($r1 == 1)) or return 0;
 
     my $r2 = modulo_test2($n, $n);
-    (($r2 == 1) or ($r2 == $n-1)) or return 0;
+    ($r2 == 1) or ($r2 == $n-1) or return 0;
 
     my $r3 = modulo_test3($n, $n);
-   ($r3 == 1) or ($r3 == $n-1) or return 0;
+    ($r3 == 1) or ($r3 == $n-1) or return 0;
 
     my $r4 = modulo_test4($n, $n);
     ($r4 == 1) or ($r4 == $n-1) or return 0;
