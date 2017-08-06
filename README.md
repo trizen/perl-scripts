@@ -376,6 +376,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Matrix path 2-ways best](./Math/matrix_path_2-ways_best.pl)
     * [Matrix path 2-ways greedy](./Math/matrix_path_2-ways_greedy.pl)
     * [Matrix path 3-ways best](./Math/matrix_path_3-ways_best.pl)
+    * [Matrix path 3-ways diagonal best](./Math/matrix_path_3-ways_diagonal_best.pl)
     * [Matrix path 3-ways greedy](./Math/matrix_path_3-ways_greedy.pl)
     * [Matrix path 4-ways best](./Math/matrix_path_4-ways_best.pl)
     * [Matrix path 4-ways best 2](./Math/matrix_path_4-ways_best_2.pl)
