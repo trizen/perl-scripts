@@ -311,6 +311,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Cartesian product iter](./Math/cartesian_product_iter.pl)
     * [Cartesian product rec](./Math/cartesian_product_rec.pl)
     * [Coin change](./Math/coin_change.pl)
+    * [Complex zeta in real numbers](./Math/complex_zeta_in_real_numbers.pl)
     * [Continued fractions](./Math/continued_fractions.pl)
     * [Continued fractions for e](./Math/continued_fractions_for_e.pl)
     * [Continued fractions for nth roots](./Math/continued_fractions_for_nth_roots.pl)
