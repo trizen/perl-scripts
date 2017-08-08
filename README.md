@@ -216,6 +216,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Triangle primes irregular](./GD/triangle_primes_irregular.pl)
     * [Turtle pi](./GD/turtle_pi.pl)
     * [Wavy triangle](./GD/wavy_triangle.pl)
+    * [Zeta real half terms](./GD/zeta_real_half_terms.pl)
     * [Zig-zag primes](./GD/zig-zag_primes.pl)
 * Generators
     * [Bernoulli numbers formulas](./Generators/bernoulli_numbers_formulas.pl)
