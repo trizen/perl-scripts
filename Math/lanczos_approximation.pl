@@ -1,14 +1,13 @@
 #!/usr/bin/perl
 
-#
-## Algorithm from Wikipedia: https://en.wikipedia.org/wiki/Lanczos_approximation#Simple_implementation
-#
+# Algorithm from Wikipedia:
+#   https://en.wikipedia.org/wiki/Lanczos_approximation#Simple_implementation
 
 use 5.020;
 use strict;
 use warnings;
 
-use Math::Complex qw(pi cplx Re Im);
+use Math::AnyNum qw(:overload pi real imag);
 use experimental qw(signatures lexical_subs);
 
 sub gamma($z) {
@@ -25,27 +24,23 @@ sub gamma($z) {
         9.9843695780195716e-6,  1.5056327351493116e-7,
     ];
 
-    if (ref($z) ne 'Math::Complex') {
-        $z = cplx($z);
-    }
-
     my $result;
-    if (Re($z) < 0.5) {
+    if (real($z) < 0.5) {
         $result = (pi / (sin(pi * $z) * gamma(1 - $z)));
     }
     else {
         $z -= 1;
         my $x = 0.99999999999980993;
 
-        while (my ($i, $pval) = each @{$p}) {
+        while (my ($i, $pval) = each @$p) {
             $x += $pval / ($z + $i + 1);
         }
 
-        my $t = ($z + @{$p} - 0.5);
+        my $t = ($z + @$p - 0.5);
         $result = (sqrt(pi * 2) * $t**($z + 0.5) * exp(-$t) * $x);
     }
 
-    withinepsilon(Im($result)) ? Re($result) : $result;
+    withinepsilon(imag($result)) ? real($result) : $result;
 }
 
 foreach my $i (0.5, 4, 5, 6, 30, 40, 50) {
@@ -53,10 +48,10 @@ foreach my $i (0.5, 4, 5, 6, 30, 40, 50) {
 }
 
 __END__
-gamma(0.5) =~ 1.77245385090552
-gamma(  4) =~ 5.99999999999999
-gamma(  5) =~ 24
-gamma(  6) =~ 120
-gamma( 30) =~ 8.84176199373978e+30
-gamma( 40) =~ 2.0397882081197e+46
-gamma( 50) =~ 6.08281864034252e+62
+gamma(0.5) =~ 1.77245385090551659496855986697771284175944211142
+gamma(  4) =~ 6.00000000000000628999184513591742545418327380194
+gamma(  5) =~ 24.0000000000000308599507225303222574058679398028
+gamma(  6) =~ 120.000000000000178632999163000072600390777175518
+gamma( 30) =~ 8841761993739669928012342097034.15093049782426111
+gamma( 40) =~ 20397882081197200259694400837033107505429486392
+gamma( 50) =~ 6.08281864034254395430563164837656389765153447987e62
