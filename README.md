@@ -323,6 +323,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Count subtriangles](./Math/count_subtriangles.pl)
     * [Cuboid](./Math/cuboid.pl)
     * [Difference of k powers](./Math/difference_of_k_powers.pl)
+    * [Difference of two squares solutions](./Math/difference_of_two_squares_solutions.pl)
     * [Discrete root](./Math/discrete_root.pl)
     * [E from binomial](./Math/e_from_binomial.pl)
     * [E primorial](./Math/e_primorial.pl)
