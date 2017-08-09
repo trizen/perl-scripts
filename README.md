@@ -331,6 +331,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Factorial from primes](./Math/factorial_from_primes.pl)
     * [Factorial from primes simple](./Math/factorial_from_primes_simple.pl)
     * [Factorial in half steps](./Math/factorial_in_half_steps.pl)
+    * [Factorization with difference of prime factors](./Math/factorization_with_difference_of_prime_factors.pl)
     * [Faulhaber's formula](./Math/faulhaber_s_formula.pl)
     * [Fibonacci closed form](./Math/fibonacci_closed_form.pl)
     * [Fibonacci closed form 2](./Math/fibonacci_closed_form_2.pl)
