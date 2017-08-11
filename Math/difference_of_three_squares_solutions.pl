@@ -24,6 +24,11 @@ use ntheory qw(divisors sqrtint);
 sub difference_of_three_squares_solutions {
     my ($n) = @_;
 
+    # `n` must be congruent to 3 (mod 4).
+    if ($n % 4 != 3) {
+        return;
+    }
+
     my @divisors = divisors($n);
 
     my @solutions;
@@ -35,9 +40,7 @@ sub difference_of_three_squares_solutions {
         my $q = $n / $divisor;
         my $d = abs($p - $q);
 
-        my $k = sqrtint($d**2 + 4*$n);
-
-        ($k % 4 == 0) ? ($k >>= 2) : return ();
+        my $k = sqrtint($d**2 + 4*$n) >> 2;
 
         my $x1 = 3*$k - sqrtint(4 * $k**2 - $n);
         my $x2 = 3*$k + sqrtint(4 * $k**2 - $n);
