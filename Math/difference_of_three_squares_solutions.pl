@@ -24,8 +24,7 @@ use ntheory qw(divisors sqrtint);
 sub difference_of_three_squares_solutions {
     my ($n) = @_;
 
-    # `n` must be congruent to 3 (mod 4).
-    if ($n % 4 != 3) {
+    if ($n % 4 != 3) {   # `n` must be congruent to 3 (mod 4)
         return;
     }
 
