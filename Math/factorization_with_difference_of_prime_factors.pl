@@ -2,7 +2,7 @@
 
 # Daniel "Trizen" Șuteu
 # Date: 09 August 2017
-# https://githib.com/trizen
+# https://github.com/trizen
 
 # Theorem:
 #   If the absolute difference between the prime factors of a

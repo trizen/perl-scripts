@@ -2,7 +2,7 @@
 
 # Daniel "Trizen" Șuteu
 # Date: 09 August 2017
-# https://githib.com/trizen
+# https://github.com/trizen
 
 # An algorithm for finding solutions to an equation:
 #
