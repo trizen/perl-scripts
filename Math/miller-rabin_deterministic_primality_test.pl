@@ -35,7 +35,7 @@ sub is_provable_prime {
 
     $d >>= $s;
 
-  LOOP: for my $k (1 .. 2 * log($n)**2) {
+  LOOP: for my $k (1 .. 2*log($n)**2) {
 
         my $x = powmod($k, $d, $n);
         next if $x == 1 or $x == $n - 1;
