@@ -2,7 +2,7 @@
 
 # Daniel "Trizen" Șuteu
 # Date: 09 August 2017
-# https://githib.com/trizen
+# https://github.com/trizen
 
 # Theorem:
 #   If the absolute difference between the prime factors of a
@@ -33,7 +33,7 @@ use strict;
 use warnings;
 
 use ntheory qw(random_prime);
-use Math::AnyNum qw(:overload isqrt is_square);
+use Math::AnyNum qw(:overload isqrt);
 
 my $p = Math::AnyNum->new(random_prime(10**9));
 my $q = Math::AnyNum->new(random_prime(10**9));
