@@ -3,6 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 12 September 2012
+# Edit: 11 August 2017
 # https://github.com/trizen
 
 # Keep only one or more type of file formats in a directory and its sub-directories.
@@ -14,8 +15,6 @@ use warnings;
 
 use File::Find qw(find);
 use Getopt::Std qw(getopts);
-
-no if $] >= 5.018, warnings => 'experimental::smartmatch';
 
 sub usage {
     die <<"USAGE";
@@ -35,11 +34,15 @@ getopts('f:r', \%opts);
 $opts{f} // usage();
 @ARGV || usage();
 
-my @formats = map qr{\.\Q$_\E\z}i, split /\s*,\s*/, $opts{f};
+my $formats_re = do {
+    local $" = '|';
+    my @a = map { quotemeta } split(/\s*,\s*/, $opts{f});
+    qr/\.(?:@a)\z/i;
+};
 
 find {
     wanted => sub {
-        if (not $_ ~~ \@formats and -f) {
+        if (not /$formats_re/ and -f) {
             say $_;
             if ($opts{r}) {
                 unlink($_) or warn "Can't remove file '$_': $!";
@@ -47,4 +50,4 @@ find {
         }
     },
     no_chdir => 1,
-     } => @ARGV;
+} => @ARGV;
