@@ -388,6 +388,8 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Matrix path 4-ways best 3](./Math/matrix_path_4-ways_best_3.pl)
     * [Matrix path 4-ways greedy](./Math/matrix_path_4-ways_greedy.pl)
     * [Maximum square remainder](./Math/maximum_square_remainder.pl)
+    * [Miller-rabin deterministic primality test](./Math/miller-rabin_deterministic_primality_test.pl)
+    * [Miller-rabin deterministic primality test mpz](./Math/miller-rabin_deterministic_primality_test_mpz.pl)
     * [Modular binomial](./Math/modular_binomial.pl)
     * [Modular factorial](./Math/modular_factorial.pl)
     * [Modular fibonacci](./Math/modular_fibonacci.pl)
