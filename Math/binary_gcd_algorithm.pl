@@ -29,15 +29,13 @@ sub binary_gcd {
         elsif (($v & 1) == 0) {
             $v >>= 1;
         }
+        elsif ($u >= $v) {
+            $u -= $v;
+            $u >>= 1;
+        }
         else {
-            if ($u >= $v) {
-                $u -= $v;
-                $u >>= 1;
-            }
-            else {
-                $v -= $u;
-                $v >>= 1;
-            }
+            $v -= $u;
+            $v >>= 1;
         }
     }
 
