@@ -4,7 +4,7 @@
 # Date: 09 August 2017
 # https://github.com/trizen
 
-# An algorithm for finding solutions to an equation:
+# An algorithm for finding solutions to the equation:
 #
 #   x^2 - y^2 = 4*n
 #
@@ -36,7 +36,7 @@ sub difference_of_two_squares_solutions {
 
         my $p = $divisor;
         my $q = $n / $divisor;
-        my $d = abs($p - $q);
+        my $d = $q - $p;
 
         unshift @solutions, [sqrtint($d**2 + 4 * $n), $d];
     }
