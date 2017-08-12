@@ -16,7 +16,7 @@ use File::Find qw(find);
 use File::Compare qw(compare);
 use Getopt::Std qw(getopts);
 
-my @dirs = grep { -d } @ARGV;
+my @dirs = grep { (-d) or (-f) } @ARGV;
 die <<"HELP" if !@dirs;
 usage: $0 [options] /my/path [...]
 
