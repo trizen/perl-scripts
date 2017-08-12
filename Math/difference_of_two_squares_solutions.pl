@@ -5,7 +5,7 @@
 # Edit: 12 August 2017
 # https://github.com/trizen
 
-# An algorithm for finding solutions to the equation:
+# An efficient algorithm for finding solutions to the equation:
 #
 #   x^2 - y^2 = n
 #
