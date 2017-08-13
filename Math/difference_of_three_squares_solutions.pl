@@ -2,6 +2,7 @@
 
 # Daniel "Trizen" Șuteu
 # Date: 11 August 2017
+# Edit: 12 August 2017
 # https://github.com/trizen
 
 # An efficient algorithm for finding solutions to the equation:
@@ -29,7 +30,7 @@ sub difference_of_three_squares_solutions {
     my @solutions;
     foreach my $divisor (@divisors) {
 
-        last if $divisor >= sqrt($n);
+        last if $divisor > sqrt($n);
 
         my $p = $divisor;
         my $q = $n / $divisor;
@@ -44,13 +45,15 @@ sub difference_of_three_squares_solutions {
             push @solutions, [$x1, $k];
         }
 
-        push @solutions, [$x2, $k];
+        if ($x1 != $x2) {
+            push @solutions, [$x2, $k];
+        }
     }
 
     return sort { $a->[0] <=> $b->[0] } @solutions;
 }
 
-my $n         = 1155;
+my $n         = 900;
 my @solutions = difference_of_three_squares_solutions($n);
 
 foreach my $solution (@solutions) {
@@ -61,13 +64,9 @@ foreach my $solution (@solutions) {
 }
 
 __END__
-[40, 19] => 40^2 - (40 - 19)^2 - (40 - 2*19)^2 = 1155
-[50, 17] => 50^2 - (50 - 17)^2 - (50 - 2*17)^2 = 1155
-[52, 17] => 52^2 - (52 - 17)^2 - (52 - 2*17)^2 = 1155
-[74, 19] => 74^2 - (74 - 19)^2 - (74 - 2*19)^2 = 1155
-[100, 23] => 100^2 - (100 - 23)^2 - (100 - 2*23)^2 = 1155
-[134, 29] => 134^2 - (134 - 29)^2 - (134 - 2*29)^2 = 1155
-[208, 43] => 208^2 - (208 - 43)^2 - (208 - 2*43)^2 = 1155
-[290, 59] => 290^2 - (290 - 59)^2 - (290 - 2*59)^2 = 1155
-[482, 97] => 482^2 - (482 - 97)^2 - (482 - 2*97)^2 = 1155
-[1444, 289] => 1444^2 - (1444 - 289)^2 - (1444 - 2*289)^2 = 1155
+[35, 17] => 35^2 - (35 - 17)^2 - (35 - 2*17)^2 = 900
+[45, 15] => 45^2 - (45 - 15)^2 - (45 - 2*15)^2 = 900
+[67, 17] => 67^2 - (67 - 17)^2 - (67 - 2*17)^2 = 900
+[115, 25] => 115^2 - (115 - 25)^2 - (115 - 2*25)^2 = 900
+[189, 39] => 189^2 - (189 - 39)^2 - (189 - 2*39)^2 = 900
+[563, 113] => 563^2 - (563 - 113)^2 - (563 - 2*113)^2 = 900
