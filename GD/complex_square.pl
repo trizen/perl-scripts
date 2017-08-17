@@ -11,8 +11,8 @@ use 5.010;
 use strict;
 use warnings;
 
-use Imager qw();
-use Math::Complex qw();
+use Imager;
+use Math::AnyNum;
 
 my $img = Imager->new(xsize => 2000, ysize => 1500);
 
@@ -23,8 +23,8 @@ $img->box(filled => 1, color => $black);
 
 for my $i (1 .. 400) {
     for my $j (1 .. 400) {
-        my $x = Math::Complex->make($i, $j)->sqrt;
-        my ($re, $im) = ($x->Re, $x->Im);
+        my $x = Math::AnyNum->new_c($i, $j)->sqrt;
+        my ($re, $im) = ($x->real->numify, $x->imag->numify);
         $img->setpixel(x => 300 + int(60 * $re), y => 400 + int(60 * $im), color => $white);
     }
 }
