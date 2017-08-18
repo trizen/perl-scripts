@@ -286,6 +286,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [1 over n period length](./Math/1_over_n_period_length.pl)
     * [Alexandrian integers](./Math/alexandrian_integers.pl)
     * [Area of triangle](./Math/area_of_triangle.pl)
+    * [Arithmetic derivative](./Math/arithmetic_derivative.pl)
     * [Arithmetic expressions](./Math/arithmetic_expressions.pl)
     * [Arithmetic geometric mean complex](./Math/arithmetic_geometric_mean_complex.pl)
     * [Ascii-cuboid](./Math/ascii-cuboid.pl)
