@@ -461,6 +461,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Sequence closed form](./Math/sequence_closed_form.pl)
     * [Sieve of eratosthenes](./Math/sieve_of_eratosthenes.pl)
     * [Sigma0 of factorial](./Math/sigma0_of_factorial.pl)
+    * [Sigma function](./Math/sigma_function.pl)
     * [Sigma of factorial](./Math/sigma_of_factorial.pl)
     * [Sigma p adic](./Math/sigma_p_adic.pl)
     * [Smarandache function](./Math/smarandache_function.pl)
