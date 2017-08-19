@@ -478,6 +478,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Sum factorial](./Math/sum_factorial.pl)
     * [Sum of natural powers in constant base](./Math/sum_of_natural_powers_in_constant_base.pl)
     * [Sum of the number of divisors](./Math/sum_of_the_number_of_divisors.pl)
+    * [Sum of the sum of divisors](./Math/sum_of_the_sum_of_divisors.pl)
     * [Sum of three cubes problem](./Math/sum_of_three_cubes_problem.pl)
     * [Sum of two primes](./Math/sum_of_two_primes.pl)
     * [Sum x](./Math/sum_x.pl)
