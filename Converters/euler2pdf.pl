@@ -12,7 +12,7 @@ use File::Spec::Functions qw(catfile tmpdir);
 my $main_url = 'https://projecteuler.net/problem=%d';
 
 my $p_beg = 1;
-my $p_end = 521;
+my $p_end = 608;
 
 my $update_p_nums = 1;    # true to retrieve the current number of problems
 
