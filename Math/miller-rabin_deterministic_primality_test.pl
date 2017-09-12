@@ -11,12 +11,13 @@
 # Assuming the GRH, this primality test runs in polynomial time.
 
 # See also:
-#   https://rosettacode.org/wiki/Miller%E2%80%93Rabin_primality_test#Perl
+#   https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test
 
 use 5.010;
 use strict;
 use warnings;
 
+use List::Util qw(min);
 use ntheory qw(valuation powmod);
 
 sub is_provable_prime {
@@ -25,17 +26,12 @@ sub is_provable_prime {
     return 1 if $n == 2;
     return 0 if $n < 2 or $n % 2 == 0;
 
-    return 1 if $n == 5;
-    return 1 if $n == 7;
-    return 1 if $n == 11;
-    return 1 if $n == 13;
-
     my $d = $n - 1;
     my $s = valuation($d, 2);
 
     $d >>= $s;
 
-  LOOP: for my $k (1 .. 2*log($n)**2) {
+  LOOP: for my $k (2 .. min($n-1, 2*log($n)**2)) {
 
         my $x = powmod($k, $d, $n);
         next if $x == 1 or $x == $n - 1;
