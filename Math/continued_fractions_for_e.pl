@@ -11,8 +11,6 @@
 use 5.010;
 use strict;
 
-#use Math::BigNum qw(:constant);
-
 sub e_1 {
     my ($i, $limit) = @_;
     $limit > 0 ? ($i / ($i + e_1($i + 1, $limit - 1))) : 0;
