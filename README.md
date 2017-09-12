@@ -339,6 +339,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Factorial in half steps](./Math/factorial_in_half_steps.pl)
     * [Factorization with difference of prime factors](./Math/factorization_with_difference_of_prime_factors.pl)
     * [Faulhaber's formula](./Math/faulhaber_s_formula.pl)
+    * [Fermat factorization algorithm](./Math/fermat_factorization_algorithm.pl)
     * [Fibonacci closed form](./Math/fibonacci_closed_form.pl)
     * [Fibonacci closed form 2](./Math/fibonacci_closed_form_2.pl)
     * [Find least common denominator](./Math/find_least_common_denominator.pl)
