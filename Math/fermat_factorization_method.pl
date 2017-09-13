@@ -23,15 +23,6 @@ use warnings;
 
 use ntheory qw(sqrtint is_prime is_power);
 
-sub integer_quadratic_formula {
-    my ($x, $y, $z) = @_;
-
-    (
-        ((-$y + sqrtint($y**2 - 4 * $x * $z)) / (2 * $x)),
-        ((-$y - sqrtint($y**2 - 4 * $x * $z)) / (2 * $x)),
-    );
-}
-
 sub fermat_factorization {
     my ($n) = @_;
 
@@ -39,14 +30,22 @@ sub fermat_factorization {
         return $n;
     }
 
+    my $t = $n << 2;
+
     for (my $d = 0 ; ; ++$d) {
-        if (is_power($d**2 + 4*$n, 2)) {
+        if (is_power($d*$d + $t, 2)) {
 
-            my ($x1, $x2) = map { abs($_) }
-                integer_quadratic_formula(1, $d, -$n);
+            my $q = sqrtint($d*$d + $t);
 
-            return sort { $a <=> $b }
-                (fermat_factorization($x1), fermat_factorization($x2));
+            my ($x1, $x2) = (
+                ($q - $d) >> 1,
+                ($q + $d) >> 1,
+            );
+
+            return sort { $a <=> $b } (
+                fermat_factorization($x1),
+                fermat_factorization($x2)
+            );
         }
     }
 }
