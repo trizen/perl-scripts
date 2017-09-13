@@ -21,7 +21,7 @@ use 5.010;
 use strict;
 use warnings;
 
-use ntheory qw(sqrtint is_prime);
+use ntheory qw(sqrtint is_prime is_power);
 
 sub integer_quadratic_formula {
     my ($x, $y, $z) = @_;
@@ -40,10 +40,11 @@ sub fermat_factorization {
     }
 
     for (my $d = 0 ; ; ++$d) {
-        my ($x1, $x2) = map { abs($_) }
-            integer_quadratic_formula(1, $d, -$n);
+        if (is_power($d**2 + 4*$n, 2)) {
 
-        if ($x1 * $x2 == $n) {
+            my ($x1, $x2) = map { abs($_) }
+                integer_quadratic_formula(1, $d, -$n);
+
             return sort { $a <=> $b }
                 (fermat_factorization($x1), fermat_factorization($x2));
         }
