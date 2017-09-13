@@ -4,7 +4,7 @@
 # Date: 12 September 2017
 # https://github.com/trizen
 
-# Fermat's factorization algorithm (derivation).
+# Fermat's factorization method (derivation).
 
 # Theorem:
 #   If the absolute difference between the prime factors of a
