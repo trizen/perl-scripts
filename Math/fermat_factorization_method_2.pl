@@ -41,8 +41,7 @@ sub fermat_factorization {
     my $q = $p * $p - $n;
 
     until (is_power($q, 2)) {
-        $q += 2 * $p + 1;
-        $p += 1;
+        $q += 2 * $p++ + 1;
     }
 
     my $k = sqrtint($q + $n);
