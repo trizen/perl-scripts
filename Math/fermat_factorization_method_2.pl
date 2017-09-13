@@ -44,12 +44,11 @@ sub fermat_factorization {
         $q += 2 * $p++ + 1;
     }
 
-    my $k = sqrtint($q + $n);
     my $s = sqrtint($q);
 
     my ($x1, $x2) = (
-        ($s + $k) >> 1,
-        ($k - $s) >> 1,
+        ($p + $s) >> 1,
+        ($p - $s) >> 1,
     );
 
     return sort { $a <=> $b } (
