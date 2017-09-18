@@ -29,3 +29,6 @@ foreach my $n (1 .. 2 * $primes->[-1]) {
 }
 
 say "$count numbers, from a total of ", 2 * $primes->[-1], ", CANNOT be written as the sum of two primes.";
+
+__END__
+8772 numbers, from a total of 19946, CANNOT be written as the sum of two primes.

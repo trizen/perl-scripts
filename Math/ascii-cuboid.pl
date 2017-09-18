@@ -31,4 +31,4 @@ sub cuboid {
     say $c, $h x $x, $c;
 }
 
-cuboid shift // rand 20, shift // rand 10, shift // rand 10;
+cuboid(shift() // rand(20), shift() // rand(10), shift() // rand(10));

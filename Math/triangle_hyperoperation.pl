@@ -31,5 +31,4 @@ sub triangle {
 forprimes {
     my $r = (triangle(10, 10, ${_}) + 23) % ${_};
     print "$_ divides z\n" if $r == 0;
-}
-1e5;
+} 1e5;
