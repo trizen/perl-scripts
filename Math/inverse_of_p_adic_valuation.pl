@@ -27,38 +27,16 @@ sub p_adic_valuation {
     return $s;
 }
 
-sub p_adic_inverse ($p, $k, $left = $k, $right = 1 << 63) {
+sub p_adic_inverse {
+    my ($p, $k) = @_;
 
-    my $middle;
-
-    while ($left <= $right) {
-
-        $middle = (($right + $left) >> 1);
-
-        my $cmp = p_adic_valuation($middle, $p) <=> $k;
-
-        if ($cmp == 0) {
-            last;
-        }
-        elsif ($cmp > 0) {
-            $right = $middle - 1;
-        }
-        else {
-            $left = $middle + 1;
-        }
+    my $n = $k * ($p - 1);
+    while (p_adic_valuation($n, $p) < $k) {
+        $n -= $n % $p;
+        $n += $p;
     }
 
-    # If `middle` is not the smallest, then search again.
-    if (p_adic_valuation($middle - 1, $p) >= $k) {
-        return p_adic_inverse($p, $k, $left, $middle - 1);
-    }
-
-    # While `middle` is too low, increment it. (usually, only once)
-    while (p_adic_valuation($middle, $p) < $k) {
-        ++$middle;
-    }
-
-    return $middle;
+    return $n;
 }
 
 say p_adic_inverse(2,  100);           #=> 104
