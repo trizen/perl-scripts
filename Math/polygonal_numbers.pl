@@ -14,12 +14,12 @@ use warnings;
 use experimental qw(signatures);
 use Math::AnyNum qw(:overload);
 
-sub polygonal_root ($n, $k) {
-    (sqrt(8 * ($k - 2) * $n + ($k - 4)**2) + $k - 4) / (2 * ($k - 2));
+sub polygonal_number ($n, $k) {
+    $n * ($k * ($n - 1) - 2 * ($n - 2)) / 2;
 }
 
-sub polygonal_number ($n, $k) {
-    ($n**2 * $k - 2 * $n**2 - $n * $k + 4 * $n) / 2;
+sub polygonal_root ($n, $k) {
+    (sqrt(8 * ($k - 2) * $n + ($k - 4)**2) + $k - 4) / (2 * ($k - 2));
 }
 
 sub is_polygonal ($n, $k) {
