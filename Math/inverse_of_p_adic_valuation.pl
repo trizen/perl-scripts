@@ -10,14 +10,13 @@
 #   https://projecteuler.net/problem=320
 #   https://en.wikipedia.org/wiki/Legendre%27s_formula
 
-use 5.010;
+use 5.020;
 use strict;
 use warnings;
 
 use experimental qw(signatures);
 
-sub p_adic_valuation {
-    my ($n, $p) = @_;
+sub p_adic_valuation ($n, $p) {
 
     my $s = 0;
     while ($n >= $p) {
@@ -27,8 +26,7 @@ sub p_adic_valuation {
     return $s;
 }
 
-sub p_adic_inverse {
-    my ($p, $k) = @_;
+sub p_adic_inverse ($p, $k) {
 
     my $n = $k * ($p - 1);
     while (p_adic_valuation($n, $p) < $k) {
