@@ -2,11 +2,14 @@
 
 # Given a number `n`, the algorithm finds all the numbers such that for each number `k` in the list, φ(k) = n.
 
+use utf8;
 use 5.010;
 use strict;
 use warnings;
 
 use ntheory qw(is_prime divisors valuation);
+
+binmode(STDOUT, ':utf8');
 
 # Based on Dana Jacobsen's code from Math::Prime::Util,
 # which in turn is based on invphi.gp v1.3 by Max Alekseyev.
@@ -14,6 +17,7 @@ use ntheory qw(is_prime divisors valuation);
 # See also:
 #   https://projecteuler.net/problem=248
 #   https://en.wikipedia.org/wiki/Euler%27s_totient_function
+#   https://github.com/danaj/Math-Prime-Util/blob/master/examples/inverse_totient.pl
 
 sub inverse_euler_phi {
     my ($n) = @_;
