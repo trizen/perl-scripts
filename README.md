@@ -360,6 +360,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Harmonic numbers from powers mpz](./Math/harmonic_numbers_from_powers_mpz.pl)
     * [Harmonic prime powers](./Math/harmonic_prime_powers.pl)
     * [Inverse of bernoulli numbers](./Math/inverse_of_bernoulli_numbers.pl)
+    * [Inverse of euler totient](./Math/inverse_of_euler_totient.pl)
     * [Inverse of factorial](./Math/inverse_of_factorial.pl)
     * [Inverse of factorial stirling](./Math/inverse_of_factorial_stirling.pl)
     * [Inverse of p adic valuation](./Math/inverse_of_p_adic_valuation.pl)
