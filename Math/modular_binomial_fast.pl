@@ -63,7 +63,8 @@ sub binomial_non_prime_part ($n, $k, $p, $e) {
         push @fact_pe, $acc;
     }
 
-    my $top = my $bottom = 1;
+    my $top         = 1;
+    my $bottom      = 1;
     my $is_negative = 0;
     my $digits      = 0;
 
