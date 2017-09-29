@@ -16,6 +16,8 @@ use 5.010;
 use strict;
 use warnings;
 
+use integer;
+
 use experimental qw(signatures);
 use ntheory qw(factor_exp chinese invmod mulmod powmod);
 
@@ -32,12 +34,15 @@ sub modular_binomial ($n, $k, $m) {
 
 sub factorial_prime_pow ($n, $p) {
 
-    my $s = 0;
-    while ($n >= $p) {
-        $s += int($n /= $p);
+    my $count = 0;
+    my $ppow  = $p;
+
+    while ($ppow <= $n) {
+        $count += $n / $ppow;
+        $ppow *= $p;
     }
 
-    return $s;
+    return $count;
 }
 
 sub binomial_prime_pow ($n, $k, $p) {
@@ -82,9 +87,9 @@ sub binomial_non_prime_part ($n, $k, $p, $e) {
         $bottom = mulmod($bottom, $fact_pe[$k % $pe], $pe);
 #>>>
 
-        $n = int($n / $p);
-        $r = int($r / $p);
-        $k = int($k / $p);
+        $n = $n / $p;
+        $r = $r / $p;
+        $k = $k / $p;
 
         ++$digits;
     }
@@ -107,6 +112,11 @@ sub modular_binomial_prime_power ($n, $k, $p, $e) {
 
     my $modpow = $e - $pow;
     my $r = binomial_non_prime_part($n, $k, $p, $modpow) % $p**$modpow;
+
+    if ($pow == 0) {
+        return ($r % $p**$e);
+    }
+
     return mulmod(powmod($p, $pow, $p**$e), $r, $p**$e);
 }
 
