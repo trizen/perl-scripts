@@ -17,7 +17,7 @@ use strict;
 use warnings;
 
 use experimental qw(signatures);
-use ntheory qw(factor_exp chinese invmod mulmod);
+use ntheory qw(factor_exp chinese invmod mulmod powmod);
 
 sub modular_binomial ($n, $k, $m) {
 
@@ -59,7 +59,7 @@ sub binomial_non_prime_part ($n, $k, $p, $e) {
         if ($x % $p == 0) {
             $x = 1;
         }
-        $acc = ($acc * $x) % $pe;
+        $acc = mulmod($acc, $x, $pe);
         push @fact_pe, $acc;
     }
 
@@ -70,12 +70,10 @@ sub binomial_non_prime_part ($n, $k, $p, $e) {
 
     while ($n) {
 
-        if ($acc != 1) {
-            if ($digits >= $e) {
-                $is_negative ^= $n & 1;
-                $is_negative ^= $r & 1;
-                $is_negative ^= $k & 1;
-            }
+        if ($acc != 1 and $digits >= $e) {
+            $is_negative ^= $n & 1;
+            $is_negative ^= $r & 1;
+            $is_negative ^= $k & 1;
         }
 
 #<<<
@@ -91,12 +89,10 @@ sub binomial_non_prime_part ($n, $k, $p, $e) {
         ++$digits;
     }
 
-    my $res = ($top * invmod($bottom, $pe)) % $pe;
+    my $res = mulmod($top, invmod($bottom, $pe), $pe);
 
-    if ($p != 2 or $e < 3) {
-        if ($is_negative) {
-            $res = $pe - $res;
-        }
+    if ($is_negative and ($p != 2 or $e < 3)) {
+        $res = $pe - $res;
     }
 
     return $res;
@@ -111,7 +107,7 @@ sub modular_binomial_prime_power ($n, $k, $p, $e) {
 
     my $modpow = $e - $pow;
     my $r = binomial_non_prime_part($n, $k, $p, $modpow) % $p**$modpow;
-    return mulmod($p**$pow, $r, $p**$e);
+    return mulmod(powmod($p, $pow, $p**$e), $r, $p**$e);
 }
 
 say modular_binomial(12,   5,   100000);     #=> 792
