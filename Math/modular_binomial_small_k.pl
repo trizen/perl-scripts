@@ -11,7 +11,7 @@ use 5.010;
 use strict;
 use warnings;
 
-use ntheory qw(forprimes mulmod factor_exp);
+use ntheory qw(mulmod factor_exp);
 
 sub power {
     my ($n, $p) = @_;
@@ -27,27 +27,29 @@ sub power {
 sub modular_binomial {
     my ($n, $k, $m) = @_;
 
+    my %kp;
     my $prod = 1;
-
-    my %div;
-    forprimes {
-        $div{$_} = power($k, $_);
-    } $k;
 
   OUTER: foreach my $r ($n - $k + 1 .. $n) {
 
         foreach my $pair (factor_exp($r)) {
-            if (exists($div{$pair->[0]})) {
-                my ($p, $v) = @$pair;
+            my ($p, $v) = @$pair;
 
-                if ($v >= $div{$p}) {
-                    $v = delete($div{$p});
+            if ($p <= $k) {
+                next if ((my $t = ($kp{$p} //= power($k, $p))) == 0);
+
+                if ($v >= $t) {
+                    $v = $t;
+                    $kp{$p} = 0;
                 }
                 else {
-                    $div{$p} -= $v;
+                    $kp{$p} -= $v;
                 }
 
                 next OUTER if (($r /= $p**$v) == 1);
+            }
+            else {
+                last;
             }
         }
 
