@@ -44,18 +44,13 @@ sub facmod2 {
             $f *= powmod($_ % $mod, $p, $mod);
             $f %= $mod;
         }
-    }
-    $n;
+    } $n;
 
     $f;
 }
 
-# This algorithm is fast and correct only when `mod` is larger than `n`, but no more than twice as large.
-#
-# In other words: n > mod/2
-#                 n < mod
-#
-# Which means that `mod` must be in the interval: (n, 2*n).
+# This algorithm is fast and correct only when `mod`
+# is larger than `n`, but no more than twice as large.
 
 # Algorithm from:
 #   http://stackoverflow.com/questions/9727962/fast-way-to-calculate-n-mod-m-where-m-is-prime
