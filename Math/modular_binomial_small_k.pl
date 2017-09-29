@@ -7,6 +7,9 @@
 
 # A decently efficient algorithm for computing `binomial(n, k) mod m`, where `k` is small (<~ 10^6).
 
+# Implemented using the identity:
+#    binomial(n, k) = Product_{r = n-k+1..n}(r) / k!
+
 use 5.010;
 use strict;
 use warnings;
