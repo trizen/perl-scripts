@@ -27,7 +27,7 @@ sub power {
 sub modular_binomial {
     my ($n, $k, $m) = @_;
 
-    my $j = $n - $k;
+    my $j    = $n - $k;
     my $prod = 1;
 
     forprimes {
@@ -50,4 +50,5 @@ sub modular_binomial {
     $prod;
 }
 
-say modular_binomial(100, 50, 139);     #=> 71
+say modular_binomial(100, 50, 139);        #=> 71
+say modular_binomial(124, 42, 1234567);    #=> 395154
