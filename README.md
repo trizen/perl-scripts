@@ -400,6 +400,8 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Miller-rabin deterministic primality test](./Math/miller-rabin_deterministic_primality_test.pl)
     * [Miller-rabin deterministic primality test mpz](./Math/miller-rabin_deterministic_primality_test_mpz.pl)
     * [Modular binomial](./Math/modular_binomial.pl)
+    * [Modular binomial ntheory](./Math/modular_binomial_ntheory.pl)
+    * [Modular binomial small k](./Math/modular_binomial_small_k.pl)
     * [Modular factorial](./Math/modular_factorial.pl)
     * [Modular fibonacci](./Math/modular_fibonacci.pl)
     * [Modular fibonacci mpz](./Math/modular_fibonacci_mpz.pl)
