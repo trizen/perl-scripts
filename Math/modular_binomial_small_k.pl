@@ -5,13 +5,13 @@
 # Date: 29 September 2017
 # Website: https://github.com/trizen
 
-# A decently efficient algorithm for computing `binomial(n, k) mod m`, where `k` is small (<~ 10^4).
+# A decently efficient algorithm for computing `binomial(n, k) mod m`, where `k` is small (<~ 10^6).
 
 use 5.010;
 use strict;
 use warnings;
 
-use ntheory qw(forprimes valuation mulmod);
+use ntheory qw(forprimes mulmod factor_exp);
 
 sub power {
     my ($n, $p) = @_;
@@ -34,24 +34,24 @@ sub modular_binomial {
         $div{$_} = power($k, $_);
     } $k;
 
-    OUTER: foreach my $t ($n - $k + 1 .. $n) {
-        foreach my $d (keys %div) {
+  OUTER: foreach my $r ($n - $k + 1 .. $n) {
 
-            if ($t % $d == 0) {
-                my $v = valuation($t, $d);
+        foreach my $pair (factor_exp($r)) {
+            if (exists($div{$pair->[0]})) {
+                my ($p, $v) = @$pair;
 
-                if ($v >= $div{$d}) {
-                    $v = delete($div{$d});
+                if ($v >= $div{$p}) {
+                    $v = delete($div{$p});
                 }
                 else {
-                    $div{$d} -= $v;
+                    $div{$p} -= $v;
                 }
 
-                next OUTER if ($t /= $d**$v) == 1;
+                next OUTER if (($r /= $p**$v) == 1);
             }
         }
 
-        $prod = mulmod($prod, $t, $m);
+        $prod = mulmod($prod, $r, $m);
     }
 
     return $prod;
@@ -63,3 +63,4 @@ say modular_binomial(100,  50,  139);        #=> 71
 say modular_binomial(1000, 10,  1243);       #=> 848
 say modular_binomial(124,  42,  1234567);    #=> 395154
 say modular_binomial(1e9,  1e4, 1234567);    #=> 833120
+say modular_binomial(1e10, 1e5, 1234567);    #=> 589372
