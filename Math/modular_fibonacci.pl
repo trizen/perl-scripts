@@ -1,35 +1,45 @@
 #!/usr/bin/perl
 
+# Daniel "Trizen" Șuteu
 # Date: 21 August 2016
-# Website: https://github.com/trizen
+# Edit: 30 September 2017
+# https://github.com/trizen
 
 # An efficient algorithm for computing large Fibonacci numbers, modulus some n.
-# Algorithm from: http://codeforces.com/blog/entry/14516
 
-use 5.010;
+# Algorithm from:
+#   http://codeforces.com/blog/entry/14516
+
+use 5.020;
 use strict;
-use integer;
 use warnings;
 
-use Memoize qw(memoize);
+use ntheory qw(mulmod addmod);
+use experimental qw(signatures);
 
-memoize('f');
+sub fibmod($n, $mod, $cache={}) {
 
-sub f {
-    my ($n, $mod) = @_;
-
-    $n <= 1 && return 1;
-    my $k = $n >> 1;
-
-    $n % 2 == 0
-        ? (f($k, $mod) * f($k    , $mod) + f($k - 1, $mod) * f($k - 1, $mod)) % $mod
-        : (f($k, $mod) * f($k + 1, $mod) + f($k - 1, $mod) * f($k    , $mod)) % $mod
-}
-
-sub fibmod {
-    my ($n, $mod) = @_;
     $n <= 1 && return $n;
-    f($n-1, $mod);
+
+    sub ($n) {
+
+        $n <= 1 && return 1;
+
+        if (exists($cache->{$n})) {
+            return $cache->{$n};
+        }
+
+        my $k = $n >> 1;
+
+#<<<
+        $cache->{$n} = (
+            ($n % 2 == 0)
+                ? addmod(mulmod(__SUB__->($k), __SUB__->($k    ), $mod), mulmod(__SUB__->($k - 1), __SUB__->($k - 1), $mod), $mod)
+                : addmod(mulmod(__SUB__->($k), __SUB__->($k + 1), $mod), mulmod(__SUB__->($k - 1), __SUB__->($k    ), $mod), $mod)
+        );
+#>>>
+
+    }->($n - 1);
 }
 
-say fibmod(1000, 10**4);
+say fibmod(329468, 10**10, {});     # 352786941

@@ -16,7 +16,7 @@ use warnings;
 use Math::GMPz qw();
 use experimental qw(signatures);
 
-sub fibmod($n, $mod, $cache) {
+sub fibmod($n, $mod, $cache={}) {
 
     $n <= 1 && return $n;
 
