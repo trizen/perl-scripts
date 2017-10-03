@@ -23,8 +23,9 @@ sub modular_lambda {
 
     my $sum  = 0;
     my $prev = 0;
-    my $eps  = 2**-$Math::AnyNum::PREC;
+
     my $q    = exp(pi * i * $x);
+    my $eps  = 2**-$Math::AnyNum::PREC;
 
     $q = $q->real if $q->is_real;
 
