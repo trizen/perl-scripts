@@ -171,7 +171,7 @@ sub encrypt {
         my $B = '1' . unpack('b*', $message);
 
         if ($bits != $len) {
-            $B .= join('', map { scalar urandomm(2) } 1 .. ($L - ($len << 3) - 8));
+            $B .= join('', map { urandomm("2") } 1 .. ($L - ($len << 3) - 8));
         }
 
         my $m = Math::AnyNum->new($B, 2);
