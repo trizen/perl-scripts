@@ -179,6 +179,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
         * [Tree](./GD/LSystem/tree.pl)
         * [Turtle.pm](./GD/LSystem/Turtle.pm)
     * [Magic triangle](./GD/magic_triangle.pl)
+    * [Mandelbrot like set](./GD/mandelbrot_like_set.pl)
     * [Mathematical butt](./GD/mathematical_butt.pl)
     * [Mirror shells](./GD/mirror_shells.pl)
     * [Mobius walking line](./GD/mobius_walking_line.pl)
