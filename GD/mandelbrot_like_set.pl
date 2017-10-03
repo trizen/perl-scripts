@@ -46,11 +46,12 @@ sub mandelbrot_like_set {
         }
     }
 
-    $img->write(file => 'mandelbrot_like_set2.png');
-
+    return $img;
 }
 
-mandelbrot_like_set();
+mandelbrot_like_set()->write(
+    file => 'mandelbrot_like_set.png'
+);
 
 __END__
 __C__
