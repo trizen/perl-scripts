@@ -13,7 +13,7 @@ use strict;
 use autodie;
 use warnings;
 
-use Math::AnyNum qw(:overload gcd irand powmod invmod powmod);
+use Math::AnyNum qw(:overload gcd irand powmod invmod);
 use Math::Prime::Util qw(random_strong_prime urandomm);
 
 use Config qw(%Config);
@@ -171,7 +171,7 @@ sub encrypt {
         my $B = '1' . unpack('b*', $message);
 
         if ($bits != $len) {
-            $B .= join('', map { urandomm(2) } 1 .. ($L - ($len << 3) - 8));
+            $B .= join('', map { scalar urandomm(2) } 1 .. ($L - ($len << 3) - 8));
         }
 
         my $m = Math::AnyNum->new($B, 2);
