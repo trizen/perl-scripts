@@ -24,9 +24,12 @@ sub modular_lambda {
     my $sum  = 0;
     my $prev = 0;
     my $eps  = 2**-$Math::AnyNum::PREC;
+    my $q    = exp(pi * i * $x);
+
+    $q = $q->real if $q->is_real;
 
     foreach my $i (0 .. $#A115977) {
-        $sum += $A115977[$i] * exp(pi * i * $x)**($i + 1);
+        $sum += $A115977[$i] * $q**($i + 1);
         last if ((abs($sum - $prev)) <= $eps);
         $prev = $sum;
     }
