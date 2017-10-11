@@ -432,6 +432,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Perfect numbers](./Math/perfect_numbers.pl)
     * [Period length of square roots](./Math/period_length_of_square_roots.pl)
     * [Pi from infinity](./Math/pi_from_infinity.pl)
+    * [Pisano periods](./Math/pisano_periods.pl)
     * [Polygonal numbers](./Math/polygonal_numbers.pl)
     * [Powers of primes in factorial](./Math/powers_of_primes_in_factorial.pl)
     * [Powers of primes modulus in factorial](./Math/powers_of_primes_modulus_in_factorial.pl)
