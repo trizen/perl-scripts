@@ -35,14 +35,15 @@ sub modular_fibonacci_polynomial ($n, $x, $m) {
 
             push @array, $sum;
 
-            if ($k > 20 and join(' ', @array[9              .. $#array/2])
-                         eq join(' ', @array[$#array/2 + 10 .. $#array])
+            ($f1, $f2) = ($f2, addmod($f1, $f2, $pp));
+
+            if ($f1 == 0 and $f2 == 1 and $k > 20 and
+                    join(' ', @array[9              .. $#array/2])
+                 eq join(' ', @array[$#array/2 + 10 .. $#array])
             ) {
                 $sum = $array[($n % $k) - 1];
                 last;
             }
-
-            ($f1, $f2) = ($f2, addmod($f1, $f2, $pp));
         }
 
         push @chinese, [$sum, $pp];
