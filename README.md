@@ -103,6 +103,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Locatepm](./Finders/locatepm)
     * [Longest substring](./Finders/longest_substring.pl)
     * [Model matching system](./Finders/model_matching_system.pl)
+    * [Path diff](./Finders/path_diff.pl)
     * [Plocate](./Finders/plocate.pl)
     * [Similar files levenshtein](./Finders/similar_files_levenshtein.pl)
 * Formatters
