@@ -201,8 +201,8 @@ while (@ARGV) {
 
                 $word !~ /^[\pL]+\z/          and next;
                 length($word) < $min_word_len and next;
-                $speller->check($word)        and next;
                 $seen{$word}++                and next;
+                $speller->check($word)        and next;
 
                 my @suggestions = $speller->suggest($word);
 

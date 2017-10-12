@@ -65,11 +65,10 @@ sub img2ascii {
         foreach my $x (0 .. $width - 1) {
             my $index = $img->getPixel($x, $y);
             push @averages, avg($img->rgb($index));
-            $avg += $averages[-1];
+            $avg += $averages[-1] / $width / $height;
         }
     }
 
-    $avg /= $width * $height;
     unpack("(A$width)*", join('', map { $_ < $avg ? 1 : 0 } @averages));
 }
 

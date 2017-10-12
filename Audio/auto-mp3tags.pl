@@ -1,9 +1,11 @@
 #!/usr/bin/perl
 
-# Adds auto tags to MP3 audio files from a directory and it's subdirectories
-# Coded by Trizen under the GPL.
-# First release on 15 August 2011
-# Contact email: <trizenx[@]gmail.com>
+# Daniel "Trizen" Șuteu
+# License: GPLv3
+# Date: 15 August 2011
+# https://github.com/trizen
+
+# Adds auto tags to MP3 audio files from a directory and its subdirectories.
 
 use strict 'refs';
 use warnings;

@@ -17,8 +17,7 @@ package Foo {
     }
 
     sub baz {
-        my $self = shift(@_);
-        $self->call_me(@_);
+        shift(@_)->call_me(@_);
     }
 }
 
@@ -43,6 +42,6 @@ cmpthese(
 );
 
 __END__
-               Rate with_range with_shift
-with_range 688127/s         --       -19%
-with_shift 849541/s        23%         --
+                Rate with_range with_shift
+with_range  721308/s         --       -33%
+with_shift 1071850/s        49%         --
