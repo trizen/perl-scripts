@@ -26,7 +26,8 @@ use 5.010;
 use utf8;
 use strict;
 use warnings;
-use encoding qw(UTF-8);
+
+use open IO => ':utf8';
 
 use Getopt::Std qw(getopts);
 
@@ -50,7 +51,7 @@ Options:
         -e         : exit program after the first match
         -s         : slurp the entire file into memory
         -r <regex> : define a regex to find something in a file
-                     for insensitive mode, use: (?^i:regex)
+                     for case-insensitive mode, use: (?^i:regex)
 
 Others:
         -v         : verbose mode\n
