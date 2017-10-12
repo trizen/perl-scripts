@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright (C) 2011 Daniel "Trizen" Șuteu <echo dHJpemVueEBnbWFpbC5jb20K | base64 -d>.
+# Copyright (C) 2011-2017 Daniel "Trizen" Șuteu <echo dHJpemVueEBnbWFpbC5jb20K | base64 -d>.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,13 +17,17 @@
 #
 #-------------------------------------------------------
 #  Appname: srt-delay
-#  Version: 0.0.3
+#  Version: 0.0.4
 #  Created on: 26 December 2011
-#  Latest edit on 02 January 2012
+#  Latest edit on: 12 October 2017
 #  https://github.com/trizen
 #-------------------------------------------------------
 
+use 5.014;
 use strict;
+
+use Scalar::Util qw(looks_like_number);
+use experimental qw(smartmatch);
 
 sub usage {
     print <<"USAGE";
@@ -57,13 +61,7 @@ sub sec2time {
     return @out;
 }
 
-sub _looks_like_number {
-    return 1 if $_[0] =~ /^[+-]?[0-9]+$/;
-    return 1 if $_[0] =~ /^[+-]?[0-9]+\.[0-9]+$/;
-    return 1 if $_[0] =~ /^[+-]?(?=[0-9]|\.[0-9])[0-9]*(?:\.[0-9]*)?(?:[Ee][+-]?[0-9]+)?$/;
-}
-
-my $addition = (grep { _looks_like_number($_) } @ARGV)[0] // usage();
+my $addition = (grep { looks_like_number($_) } @ARGV)[0] // usage();
 
 my $backup = do {
     (grep { $_ ~~ ['-b', '--backup'] } @ARGV) ? 1 : 0;

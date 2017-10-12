@@ -16,8 +16,8 @@ sub scramble {
 
     my $i = my $l = length($str);
 
-    $str =~ s/(.{$i})(.)/$2$1/g while --$i > 0;
-    $str =~ s/(.{$i})(.)/$2$1/g while ++$i < $l;
+    $str =~ s/(.{$i})(.)/$2$1/sg while --$i > 0;
+    $str =~ s/(.{$i})(.)/$2$1/sg while ++$i < $l;
 
     return $str;
 }
@@ -27,8 +27,8 @@ sub unscramble {
 
     my $i = my $l = length($str);
 
-    $str =~ s/(.)(.{$i})/$2$1/g while --$i > 0;
-    $str =~ s/(.)(.{$i})/$2$1/g while ++$i < $l;
+    $str =~ s/(.)(.{$i})/$2$1/sg while --$i > 0;
+    $str =~ s/(.)(.{$i})/$2$1/sg while ++$i < $l;
 
     return $str;
 }
