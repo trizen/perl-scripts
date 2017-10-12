@@ -205,6 +205,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Regular poligons](./GD/regular_poligons.pl)
     * [Reversed prime triangles](./GD/reversed_prime_triangles.pl)
     * [Right triangle primes](./GD/right_triangle_primes.pl)
+    * [Sierpinski fibonacci triangle](./GD/sierpinski_fibonacci_triangle.pl)
     * [Spinning shapes](./GD/spinning_shapes.pl)
     * [Spiral matrix primes](./GD/spiral_matrix_primes.pl)
     * [Spiral tree](./GD/spiral_tree.pl)
