@@ -17,9 +17,9 @@ use experimental qw(signatures);
 
 sub pseudo_square_root_mod ($n, $mod) {
 
-    my $max_log = log($n) / 2;
-    my @factors = factor($n);
-    my $end     = $#factors;
+    my $sqrt_log = log($n) / 2;
+    my @factors  = factor($n);
+    my $end      = $#factors;
 
     my $maximum_log = 0;
     my $maximum_num = 0;
@@ -35,7 +35,7 @@ sub pseudo_square_root_mod ($n, $mod) {
             return;
         }
 
-        if ($log + log($factors[$i]) < $max_log) {
+        if ($log + log($factors[$i]) <= $sqrt_log) {
             __SUB__->($i + 1, $log, $prod) if ($i < $end);
             __SUB__->($i + 1, $log + log($factors[$i]), mulmod($prod, $factors[$i], $mod));
         }
