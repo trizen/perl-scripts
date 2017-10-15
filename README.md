@@ -287,6 +287,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
 * Math
     * [1 over n is finite](./Math/1_over_n_is_finite.pl)
     * [1 over n period length](./Math/1_over_n_period_length.pl)
+    * [Additive binomial](./Math/additive_binomial.pl)
     * [Alexandrian integers](./Math/alexandrian_integers.pl)
     * [Area of triangle](./Math/area_of_triangle.pl)
     * [Arithmetic derivative](./Math/arithmetic_derivative.pl)

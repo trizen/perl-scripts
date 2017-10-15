@@ -12,7 +12,7 @@ use strict;
 use autodie;
 use warnings;
 
-use List::Util qw(first);
+use List::Util qw(any);
 use Getopt::Std qw(getopts);
 
 binmode(\*STDOUT, ':encoding(UTF-8)');
@@ -46,7 +46,7 @@ my @fhs = map {
     $fh;
 } @files;
 
-while (first { !eof($_) } @fhs) {
+while (any { !eof($_) } @fhs) {
     printf "%-$opt{s}s " x $#fhs . "%s\n", map {
         chomp(
               my $line =
