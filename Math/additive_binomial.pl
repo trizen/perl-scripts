@@ -11,6 +11,11 @@
 #                            = n*(n+1)/2 - (n-k)*(n-k+1)/2 - k*(k+1)/2
 #                            = n*k - k^2
 
+# Additionally:
+#   f(x, n) = Sum_{k=0, n} ( additive_binomial(n, k) + x*k )
+#           = x*n*(n+1)/2 + (n+1)/3 * n*(n-1)/2
+#           = x*(n^2 + n)/2 + (n^3 - n)/6
+
 use 5.022;
 use strict;
 use warnings;
