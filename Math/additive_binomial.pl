@@ -15,6 +15,10 @@
 #   f(x, n) = Sum_{k=0, n} ( additive_binomial(n, k) + x*k )
 #           = x*n*(n+1)/2 + (n+1)/3 * n*(n-1)/2
 #           = x*(n^2 + n)/2 + (n^3 - n)/6
+#           = {x, 3x+1, 6x+4, 10x+10, 15x+20, 21x+35, 28x+56, 36x+84, 45x+120, 55x+165, ...}
+
+# Where for x=1, we have:
+#   f(1, n) = {1, 4, 10, 20, 35, 56, 84, 120, 165, 220, 286, 364, 455, 560, 680, 816, 969, ...}
 
 use 5.022;
 use strict;
@@ -23,7 +27,7 @@ use warnings;
 use experimental qw(signatures);
 
 sub additive_binomial ($n, $k) {
-    $n*$k - $k**2
+    $n*$k - $k**2;
 }
 
 foreach my $n (0 .. 19) {
