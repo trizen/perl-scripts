@@ -4,7 +4,7 @@
 # Date: 01 August 2017
 # https://github.com/trizen
 
-# An efficient implementation of a new primilaty test, inspired from the AKS primality test.
+# An efficient implementation of a new primality test, inspired from the AKS primality test.
 
 # When n>2 is a (pseudo)prime:
 #
@@ -129,7 +129,7 @@ foreach my $n (1 .. 2500) {
     if (is_probably_prime($n)) {
 
         if (not is_prime($n)) {
-            warn "Counter-examples: $n\n";
+            warn "Counter-example: $n\n";
         }
     }
     elsif (is_prime($n)) {
