@@ -24,8 +24,10 @@ sub bitstring_prime_sieve {
     Math::GMPz::Rmpz_mul_2exp($c, $c, $n);
 
     foreach my $i (2 .. sqrt($n)) {
-        for (my $j = $i**2 ; $j <= $n ; $j += $i) {
-            Math::GMPz::Rmpz_setbit($c, $j);
+        if (!Math::GMPz::Rmpz_tstbit($c, $i)) {
+            for (my $j = $i**2 ; $j <= $n ; $j += $i) {
+                Math::GMPz::Rmpz_setbit($c, $j);
+            }
         }
     }
 
