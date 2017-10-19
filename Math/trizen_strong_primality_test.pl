@@ -4,7 +4,7 @@
 # Date: 02 August 2017
 # https://github.com/trizen
 
-# A very strong primilaty test, inspired by Fermat's Little Theorem and the AKS test.
+# A very strong primality test, inspired by Fermat's Little Theorem and the AKS test.
 
 # No counter-examples are known.
 
@@ -124,7 +124,7 @@ foreach my $n (1..3000) {
     if (is_probably_prime($n)) {
 
         if (not is_prime($n)) {
-            warn "Counter-examples: $n\n";
+            warn "Counter-example: $n\n";
         }
     }
     elsif (is_prime($n)) {
