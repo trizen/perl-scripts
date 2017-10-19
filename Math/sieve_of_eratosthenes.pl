@@ -16,8 +16,10 @@ sub sieve_primes {
 
     my @composite;
     foreach my $i (2 .. CORE::sqrt($n)) {
-        for (my $j = $i**2 ; $j <= $n ; $j += $i) {
-            $composite[$j] = 1;
+        if (!$composite[$i]) {
+            for (my $j = $i**2 ; $j <= $n ; $j += $i) {
+                $composite[$j] = 1;
+            }
         }
     }
 
