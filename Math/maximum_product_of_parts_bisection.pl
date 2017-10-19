@@ -13,7 +13,7 @@
 # See also:
 #   https://projecteuler.net/problem=183
 
-use 5.014;
+use 5.010;
 use strict;
 use warnings;
 
@@ -26,9 +26,9 @@ sub maximum_split {
     while ($min < $max) {
         my $mid = ($min + $max) >> 1;
 
-        my $x_prev = ($mid - 1) * log($n) - ($mid - 1) * log($mid - 1);
-        my $x_curr = ($mid + 0) * log($n) - ($mid + 0) * log($mid + 0);
-        my $x_next = ($mid + 1) * log($n) - ($mid + 1) * log($mid + 1);
+        my $x_prev = ($mid - 1) * (log($n) - log($mid - 1));
+        my $x_curr = ($mid + 0) * (log($n) - log($mid + 0));
+        my $x_next = ($mid + 1) * (log($n) - log($mid + 1));
 
         if ($x_prev < $x_curr and $x_curr > $x_next) {
             return $mid;
