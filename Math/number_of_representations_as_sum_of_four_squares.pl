@@ -18,10 +18,22 @@ use strict;
 use warnings;
 
 use experimental qw(signatures);
-use ntheory qw(divisors vecsum vecprod);
+use ntheory qw(is_prime divisor_sum);
 
 sub count_representations_as_four_squares($n) {
-    vecprod(8, vecsum(grep { $_ % 4 != 0 } divisors($n)));
+
+    # For a prime p, R(p) = 8*(p + 1)
+    if (is_prime($n)) {
+        return 8 * ($n + 1);
+    }
+
+    my $count = 8 * divisor_sum($n);
+
+    if ($n % 4 == 0) {
+        $count -= 32 * divisor_sum($n >> 2);
+    }
+
+    return $count;
 }
 
 foreach my $n (1 .. 20) {
