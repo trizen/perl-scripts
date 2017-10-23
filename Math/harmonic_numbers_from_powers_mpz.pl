@@ -46,8 +46,8 @@ sub harmonic_numbers_from_powers {
     my $gcd = Math::GMPz::Rmpz_init();
 
     Math::GMPz::Rmpz_gcd($gcd, $num, $den);
-    Math::GMPz::Rmpz_div($num, $num, $gcd);
-    Math::GMPz::Rmpz_div($den, $den, $gcd);
+    Math::GMPz::Rmpz_divexact($num, $num, $gcd);
+    Math::GMPz::Rmpz_divexact($den, $den, $gcd);
 
     return ($num, $den);
 }

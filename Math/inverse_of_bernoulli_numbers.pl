@@ -13,23 +13,22 @@
 # This gives us the following inverse formula:
 #   n ~ lgrt((2*pi)^(-1/(4*pi*e)) * (|Bn| / 2)^(1/(2*pi*e))) * 2*pi*e - 1/2
 
-use 5.010;
+use 5.022;
 use strict;
 use warnings;
 
+use experimental qw(signatures);
 use Math::AnyNum qw(:overload tau e LambertW lgrt log bernreal);
 
-use constant S => tau->sqrt->log;
-use constant T => tau->root(-2 * e * tau);
+use constant S => log(sqrt(tau));
+use constant T => tau**(-1/2 / e / tau);
 
-sub inv_bern_W {
-    my ($n) = @_;
+sub inv_bern_W ($n) {
     my $L = log($n / 2) - S;
-    $L / LambertW($L / (tau * e)) - 0.5;
+    $L / LambertW($L / tau / e) - 0.5;
 }
 
-sub inv_bern_lgrt {
-    my ($n) = @_;
+sub inv_bern_lgrt ($n) {
     lgrt(T * ($n / 2)**(1 / e / tau)) * e * tau - 0.5;
 }
 
