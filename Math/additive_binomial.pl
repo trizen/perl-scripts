@@ -10,6 +10,7 @@
 #    additive_binomial(n, k) = (Sum_{a = n-k+1..n} a) - (Sum_{b = 1..k} b)
 #                            = n*(n+1)/2 - (n-k)*(n-k+1)/2 - k*(k+1)/2
 #                            = n*k - k^2
+#                            = k*(n-k)
 
 # Additionally:
 #   f(x, n) = Sum_{k=0, n} ( additive_binomial(n, k) + x*k )
@@ -27,7 +28,7 @@ use warnings;
 use experimental qw(signatures);
 
 sub additive_binomial ($n, $k) {
-    $n*$k - $k**2;
+    $k * ($n - $k);
 }
 
 foreach my $n (0 .. 19) {
