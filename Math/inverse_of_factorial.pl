@@ -1,93 +1,71 @@
 #!/usr/bin/perl
 
-# Author: Daniel "Trizen" Șuteu
-# License: GPLv3
+# Daniel "Trizen" Șuteu
 # Date: 18 July 2016
-# Website: https://github.com/trizen
+# Edit: 23 October 2017
+# https://github.com/trizen
 
 # Compute the inverse of n-factorial.
 # The function is defined only for factorial numbers.
 # It may return non-sense for non-factorials.
 
+# See also:
+#   https://oeis.org/A090368
+
 use 5.010;
 use strict;
 use warnings;
 
-use ntheory qw(primes);
-use List::Util qw(all);
-use Math::AnyNum qw(:overload);
+use experimental qw(signatures);
+use ntheory qw(valuation factor factorial);
 
-sub power {
-    my ($n, $p) = @_;
+sub factorial_prime_pow ($n, $p) {
 
-    my $s = 0;
-    while ($n >= $p) {
-        $s += int($n /= $p);
+    my $count = 0;
+    my $ppow  = $p;
+
+    while ($ppow <= $n) {
+        $count += int($n / $ppow);
+        $ppow *= $p;
     }
 
-    $s;
+    return $count;
 }
 
-sub inverse_of_factorial {
-    my ($f) = @_;
+sub p_adic_inverse ($p, $k) {
 
-    return 1 if ($f == 1);
-    return 2 if ($f == 2);
-    return 3 if ($f == 6);
-    return 4 if ($f == 24);
-    return 5 if ($f == 120);
-
-    my $bin = $f->as_bin;
-    my $t = length($bin) - rindex($bin, '1') - 1;
-
-    my $c = $t->ilog2;
-    my $p = 1 << $c;
-    my $d = int($t * ($p / ($p - 1)));
-
-    $d->is_real || return;
-
-    for my $x (reverse(0 .. $c)) {
-        if (power($d + $x, 2) == $t) {
-
-            my $n = $d + $x;
-            my $primes = primes(3, $n);
-
-            my $bool = all {
-                $f->is_div($_**power($n, $_));
-            }
-            @{$primes};
-
-            return ($bool ? $n : $n - 1);
-        }
+    my $n = $k * ($p - 1);
+    while (factorial_prime_pow($n, $p) < $k) {
+        $n -= $n % $p;
+        $n += $p;
     }
 
-    return;
+    return $n;
 }
 
-my @factorials = (
+sub inverse_of_factorial ($f) {
 
-    # 7!
-    5040,
+    return 1 if $f == 1;
 
-    # 11!
-    39916800,
+    my $t = valuation($f, 2);         # largest power of 2 in f
+    my $z = p_adic_inverse(2, $t);    # smallest number z such that 2^t divides z!
+    my $d = (factor($z + 1))[0];      # smallest factor of z+1
 
-    # 22!
-    1124000727777607680000,
+    if (valuation($f, $d) != factorial_prime_pow($z + 1, $d)) {
+        return $z;
+    }
 
-    # 31!
-    8222838654177922817725562880000000,
+    return $z + 1;
+}
 
-    # 33!
-    8683317618811886495518194401280000000,
+foreach my $n (1 .. 30) {
 
-    # 82!
-    475364333701284174842138206989404946643813294067993328617160934076743994734899148613007131808479167119360000000000000000000,
+    my $f = factorial($n);
+    my $i = inverse_of_factorial($f);
 
-    # 90!
-    1485715964481761497309522733620825737885569961284688766942216863704985393094065876545992131370884059645617234469978112000000000000000000000,
-);
+    say "$i! = $f";
 
-foreach my $f (@factorials) {
-    say inverse_of_factorial($f);
+    if ($i != $n) {
+        die "error: $i != $n";
+    }
 }
