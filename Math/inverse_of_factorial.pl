@@ -49,7 +49,7 @@ sub inverse_of_factorial ($f) {
 
     my $t = valuation($f, 2);         # largest power of 2 in f
     my $z = p_adic_inverse(2, $t);    # smallest number z such that 2^t divides z!
-    my $d = (factor($z + 1))[0];      # smallest factor of z+1
+    my $d = (factor($z + 1))[-1];     # largest factor of z+1
 
     if (valuation($f, $d) != factorial_prime_pow($z + 1, $d)) {
         return $z;
