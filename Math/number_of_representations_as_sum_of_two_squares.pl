@@ -20,7 +20,7 @@ use warnings;
 use experimental qw(signatures);
 use ntheory qw(divisors valuation factor_exp vecsum vecprod);
 
-sub count_representations_as_four_squares($n) {
+sub count_representations_as_two_squares($n) {
 
     my $count = 4;
     foreach my $p (factor_exp($n)) {
@@ -40,7 +40,7 @@ sub count_representations_as_four_squares($n) {
 }
 
 foreach my $n (1 .. 30) {
-    my $count = count_representations_as_four_squares($n);
+    my $count = count_representations_as_two_squares($n);
 
     if ($count != 0) {
         say "R($n) = $count";
