@@ -430,6 +430,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Nth root recurrence constant](./Math/nth_root_recurrence_constant.pl)
     * [Number numbers](./Math/number_numbers.pl)
     * [Number of divisions](./Math/number_of_divisions.pl)
+    * [Number of representations as sum of four squares](./Math/number_of_representations_as_sum_of_four_squares.pl)
     * [Numbers with pow 2 divisors](./Math/numbers_with_pow_2_divisors.pl)
     * [Partitions count](./Math/partitions_count.pl)
     * [Partitions count abs](./Math/partitions_count_abs.pl)
