@@ -459,6 +459,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Prime zeta](./Math/prime_zeta.pl)
     * [Primes diff](./Math/primes_diff.pl)
     * [Primes sum of pair product](./Math/primes_sum_of_pair_product.pl)
+    * [Primitive sum of two squares](./Math/primitive_sum_of_two_squares.pl)
     * [Primorial](./Math/primorial.pl)
     * [Pseudo square root](./Math/pseudo_square_root.pl)
     * [Pythagorean triples](./Math/pythagorean_triples.pl)
