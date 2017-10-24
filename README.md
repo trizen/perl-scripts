@@ -504,6 +504,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Sum of the sum of squared divisors](./Math/sum_of_the_sum_of_squared_divisors.pl)
     * [Sum of three cubes problem](./Math/sum_of_three_cubes_problem.pl)
     * [Sum of two primes](./Math/sum_of_two_primes.pl)
+    * [Sum of two squares multiple solutions](./Math/sum_of_two_squares_multiple_solutions.pl)
     * [Sum of two squares solution](./Math/sum_of_two_squares_solution.pl)
     * [Sum x](./Math/sum_x.pl)
     * [Super pandigital numbers](./Math/super_pandigital_numbers.pl)
