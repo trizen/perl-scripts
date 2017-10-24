@@ -50,7 +50,7 @@ sub solve_quadratic_congruence {
         push @solutions, chinese(@list);
     }
 
-    return sort {$a <=> $b}@solutions;
+    return sort {$a <=> $b} @solutions;
 }
 
 is(join(' ', solve_quadratic_congruence(15)), '1 4 11 14');

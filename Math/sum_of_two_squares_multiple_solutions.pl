@@ -62,7 +62,7 @@ sub sum_of_two_squares_solution ($n) {
     $prod1 == 2 and return [$prod2, $prod2];
 
     my %table;
-    foreach my $pp(@prime_powers) {
+    foreach my $pp (@prime_powers) {
         my $r = sqrtmod($pp - 1, $pp);
         push @{$table{$pp}}, [$r, $pp], [$pp - $r, $pp];
     }

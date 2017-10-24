@@ -487,6 +487,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Sigma of factorial](./Math/sigma_of_factorial.pl)
     * [Sigma p adic](./Math/sigma_p_adic.pl)
     * [Smarandache function](./Math/smarandache_function.pl)
+    * [Solutions to x^2 = -1 (mod n)](./Math/solutions_to_x^2%20=%20-1%20(mod%20n).pl)
     * [Solutions to x^2 = 1 (mod n)](./Math/solutions_to_x^2%20=%201%20(mod%20n).pl)
     * [Solve congruence equation example](./Math/solve_congruence_equation_example.pl)
     * [Solve pell equation](./Math/solve_pell_equation.pl)
