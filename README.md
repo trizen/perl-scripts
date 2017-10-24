@@ -499,6 +499,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Squarefree count](./Math/squarefree_count.pl)
     * [Stern brocot sequence](./Math/stern_brocot_sequence.pl)
     * [Sum factorial](./Math/sum_factorial.pl)
+    * [Sum of an even number of positive squares](./Math/sum_of_an_even_number_of_positive_squares.pl)
     * [Sum of natural powers in constant base](./Math/sum_of_natural_powers_in_constant_base.pl)
     * [Sum of the number of divisors](./Math/sum_of_the_number_of_divisors.pl)
     * [Sum of the sum of divisors](./Math/sum_of_the_sum_of_divisors.pl)
