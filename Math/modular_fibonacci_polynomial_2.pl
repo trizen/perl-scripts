@@ -16,7 +16,7 @@ use strict;
 use warnings;
 
 use experimental qw(signatures);
-use ntheory qw(addmod mulmod powmod factor_exp factorial chinese);
+use ntheory qw(addmod mulmod powmod factor_exp chinese);
 
 sub modular_fibonacci_polynomial ($n, $x, $m) {
 
