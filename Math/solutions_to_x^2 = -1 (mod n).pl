@@ -13,8 +13,8 @@ use 5.010;
 use strict;
 use warnings;
 
-use ntheory qw(sqrtmod factor_exp chinese);
-use Algorithm::Loops qw(NestedLoops);
+use Set::Product::XS qw(product);
+use ntheory qw(sqrtmod factor_exp chinese mulmod);
 
 sub solve_quadratic_congruence {
     my ($n) = @_;
@@ -26,23 +26,26 @@ sub solve_quadratic_congruence {
         push @{$table{$pp}}, [$r, $pp], [$pp - $r, $pp];
     }
 
-    my $iter = NestedLoops([values(%table)]);
+    my %solutions;
 
-    my @solutions;
-    while (my @list = $iter->()) {
-        push @solutions, chinese(@list);
-    }
+    product {
+        undef $solutions{chinese(@_)};
+    } values %table;
 
-    return do {
-        my %seen;
-        sort { $a <=> $b }
-        grep { !$seen{$_}++ } @solutions;
-    };
+    return sort { $a <=> $b } keys %solutions;
 }
 
-foreach my $n(1..1e5) {
-    my @solutions = solve_quadratic_congruence($n);
-    say "x^2 = -1 (mod $n); x = { ",join(', ', @solutions), ' }' if @solutions;
+foreach my $n (1 .. 1e5) {
+    (my @solutions = solve_quadratic_congruence($n)) || next;
+
+    say "x^2 = -1 (mod $n); x = { ", join(', ', @solutions), ' }';
+
+    # Verify solutions
+    foreach my $solution (@solutions) {
+        if (mulmod($solution, $solution, $n) != $n - 1) {
+            die "error for $n: $solution\n";
+        }
+    }
 }
 
 __END__

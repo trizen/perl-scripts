@@ -25,7 +25,7 @@ use warnings;
 
 use experimental qw(signatures);
 
-use Algorithm::Loops qw(NestedLoops);
+use Set::Product::XS qw(product);
 use ntheory qw(sqrtmod factor_exp chinese);
 
 sub sum_of_two_squares_solution ($n) {
@@ -67,12 +67,11 @@ sub sum_of_two_squares_solution ($n) {
         push @{$table{$pp}}, [$r, $pp], [$pp - $r, $pp];
     }
 
-    my $iter = NestedLoops([values(%table)]);
-
     my @square_roots;
-    while (my @list = $iter->()) {
-        push @square_roots, chinese(@list);
-    }
+
+    product {
+        push @square_roots, chinese(@_);
+    } values %table;
 
     my @solutions;
     foreach my $r (@square_roots) {
@@ -87,7 +86,7 @@ sub sum_of_two_squares_solution ($n) {
         push @solutions, [$prod2 * $s, $prod2 * ($q % $s)];
     }
 
-    return do {
+    return sort { $a->[0] <=> $b->[0] } do {
         my %seen;
         grep { !$seen{$_->[0]}++ } map {
             [sort { $a <=> $b } @$_]
@@ -100,7 +99,7 @@ foreach my $n (1 .. 1e5) {
 
     say "$n = " . join(' = ', map { "$_->[0]^2 + $_->[1]^2" } @solutions);
 
-    # Check solutions
+    # Verify solutions
     foreach my $solution (@solutions) {
         if ($n != $solution->[0]**2 + $solution->[1]**2) {
             die "error for $n: (@$solution)\n";

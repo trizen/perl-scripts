@@ -15,8 +15,9 @@ use strict;
 use warnings;
 
 use Test::More;
+
+use Set::Product::XS qw(product);
 use ntheory qw(factor_exp chinese);
-use Algorithm::Loops qw(NestedLoops);
 
 plan tests => 8;
 
@@ -43,23 +44,22 @@ sub solve_quadratic_congruence {
         }
     }
 
-    my $iter = NestedLoops([values(%table)]);
-
     my @solutions;
-    while (my @list = $iter->()) {
-        push @solutions, chinese(@list);
-    }
 
-    return sort {$a <=> $b} @solutions;
+    product {
+        push @solutions, chinese(@_);
+    } values %table;
+
+    return sort { $a <=> $b } @solutions;
 }
 
-is(join(' ', solve_quadratic_congruence(15)), '1 4 11 14');
-is(join(' ', solve_quadratic_congruence(77)), '1 34 43 76');
-is(join(' ', solve_quadratic_congruence(100)), '1 49 51 99');
-is(join(' ', solve_quadratic_congruence(175)), '1 76 99 174');
-is(join(' ', solve_quadratic_congruence(266)), '1 113 153 265');
-is(join(' ', solve_quadratic_congruence(299)), '1 116 183 298');
-is(join(' ', solve_quadratic_congruence(48)), '1 7 17 23 25 31 41 47');
+is(join(' ', solve_quadratic_congruence(15)),   '1 4 11 14');
+is(join(' ', solve_quadratic_congruence(77)),   '1 34 43 76');
+is(join(' ', solve_quadratic_congruence(100)),  '1 49 51 99');
+is(join(' ', solve_quadratic_congruence(175)),  '1 76 99 174');
+is(join(' ', solve_quadratic_congruence(266)),  '1 113 153 265');
+is(join(' ', solve_quadratic_congruence(299)),  '1 116 183 298');
+is(join(' ', solve_quadratic_congruence(48)),   '1 7 17 23 25 31 41 47');
 is(join(' ', solve_quadratic_congruence(1800)), '1 199 251 449 451 649 701 899 901 1099 1151 1349 1351 1549 1601 1799');
 
 say "Solutions to x^2 = 1 (mod 5040): {", join(', ', solve_quadratic_congruence(5040)), '}';
