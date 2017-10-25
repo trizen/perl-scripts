@@ -2,7 +2,7 @@
 
 # Daniel "Trizen" Șuteu
 # Date: 11 August 2017
-# Edit: 12 August 2017
+# Edit: 26 October 2017
 # https://github.com/trizen
 
 # An efficient algorithm for finding solutions to the equation:
@@ -20,7 +20,7 @@ use 5.010;
 use strict;
 use warnings;
 
-use ntheory qw(divisors sqrtint);
+use ntheory qw(divisors);
 
 sub difference_of_three_squares_solutions {
     my ($n) = @_;
@@ -38,8 +38,8 @@ sub difference_of_three_squares_solutions {
 
         ($k % 4 == 0) ? ($k >>= 2) : next;
 
-        my $x1 = 3*$k - sqrtint(4 * $k**2 - $n);
-        my $x2 = 3*$k + sqrtint(4 * $k**2 - $n);
+        my $x1 = 3*$k - (($q - $p) >> 1);
+        my $x2 = 3*$k + (($q - $p) >> 1);
 
         if (($x1 - 2*$k) > 0) {
             push @solutions, [$x1, $k];
@@ -57,6 +57,7 @@ my $n         = 900;
 my @solutions = difference_of_three_squares_solutions($n);
 
 foreach my $solution (@solutions) {
+
     my $x = $solution->[0];
     my $k = $solution->[1];
 
