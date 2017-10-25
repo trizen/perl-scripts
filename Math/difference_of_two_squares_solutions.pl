@@ -9,15 +9,15 @@
 #
 #   x^2 - y^2 = n
 #
-# where only `n` is known.
+# where `n` is known (along with its prime factorization).
 
-# This algorithm uses the divisors of `n` to generate all the positive integer solutions.
+# The algorithm uses the divisors of `n` to generate all the non-negative integer solutions.
 
 use 5.010;
 use strict;
 use warnings;
 
-use ntheory qw(divisors sqrtint);
+use ntheory qw(divisors);
 
 sub difference_of_two_squares_solutions {
     my ($n) = @_;
@@ -25,16 +25,15 @@ sub difference_of_two_squares_solutions {
     my @solutions;
     foreach my $divisor (divisors($n)) {
 
-        last if $divisor >= sqrt($n);
+        last if $divisor > sqrt($n);
 
         my $p = $divisor;
         my $q = $n / $divisor;
-        my $d = $q - $p;
 
-        $d % 2 == 0 or next;
+        ($p + $q) % 2 == 0 or next;
 
-        my $x = sqrtint($d**2 + 4 * $n) >> 1;
-        my $y = $d >> 1;
+        my $x = ($q + $p) >> 1;
+        my $y = ($q - $p) >> 1;
 
         unshift @solutions, [$x, $y];
     }
