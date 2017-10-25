@@ -22,10 +22,8 @@ use ntheory qw(divisors sqrtint);
 sub difference_of_two_squares_solutions {
     my ($n) = @_;
 
-    my @divisors = divisors($n);
-
     my @solutions;
-    foreach my $divisor (@divisors) {
+    foreach my $divisor (divisors($n)) {
 
         last if $divisor >= sqrt($n);
 
