@@ -58,23 +58,6 @@ sub sum_of_two_squares_solutions ($n) {
     $prod1 == 1 and return [$prod2, 0];
     $prod1 == 2 and return [$prod2, $prod2];
 
-    my @solutions;
-    foreach my $f (@prime_powers) {
-        foreach my $i (0 .. $f->[1] - 1) {
-            if (($f->[1] - $i) % 2 == 0) {
-
-                my $sq = $f->[0]**(($f->[1] - $i) >> 1);
-                my $pp = $f->[0]**($f->[1] - $i);
-
-                if ($prod1 >= $pp) {
-                    push @solutions, map {
-                        [map { $sq * $prod2 * $_ } @$_]
-                    } __SUB__->($prod1 / $pp);
-                }
-            }
-        }
-    }
-
     my %table;
     foreach my $f (@prime_powers) {
         my $pp = $f->[0]**$f->[1];
@@ -88,6 +71,8 @@ sub sum_of_two_squares_solutions ($n) {
         push @square_roots, chinese(@_);
     } values %table;
 
+    my @solutions;
+
     foreach my $r (@square_roots) {
 
         my $s = $r;
@@ -98,6 +83,18 @@ sub sum_of_two_squares_solutions ($n) {
         }
 
         push @solutions, [$prod2 * $s, $prod2 * ($q % $s)];
+    }
+
+    foreach my $f (@prime_powers) {
+        for (my $i = $f->[1] % 2; $i < $f->[1]; $i += 2) {
+
+            my $sq = $f->[0]**(($f->[1] - $i) >> 1);
+            my $pp = $f->[0]**($f->[1] - $i);
+
+            push @solutions, map {
+                [map { $sq * $prod2 * $_ } @$_]
+            } __SUB__->($prod1 / $pp);
+        }
     }
 
     return sort { $a->[0] <=> $b->[0] } do {
