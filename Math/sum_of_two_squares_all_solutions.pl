@@ -13,6 +13,9 @@
 
 # This algorithm is efficient when the factorization of `n` can be computed.
 
+# Blog post:
+#   https://trizenx.blogspot.com/2017/10/representing-integers-as-sum-of-two.html
+
 # See also:
 #   https://oeis.org/A001481
 

@@ -11,7 +11,7 @@
 # See also:
 #   https://projecteuler.net/problem=435
 
-use 5.024;
+use 5.020;
 use strict;
 use warnings;
 

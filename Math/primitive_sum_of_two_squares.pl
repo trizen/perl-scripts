@@ -7,10 +7,13 @@
 # Find a solution to x^2 + y^2 = n, for numbers `n` whose prime divisors are
 # all congruent to 1 mod 4, with the exception of at most a single factor of 2.
 
+# Blog post:
+#   https://trizenx.blogspot.com/2017/10/representing-integers-as-sum-of-two.html
+
 # See also:
 #   https://oeis.org/A008784
 
-use 5.022;
+use 5.020;
 use strict;
 use warnings;
 

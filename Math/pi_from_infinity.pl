@@ -8,7 +8,7 @@
 # Generic implementations for infinite sums, infinite
 # products, continued fractions and nested radicals.
 
-use 5.022;
+use 5.020;
 use warnings;
 
 no warnings 'recursion';

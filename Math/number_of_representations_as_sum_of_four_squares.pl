@@ -13,7 +13,7 @@
 #   https://oeis.org/A000118
 #   https://en.wikipedia.org/wiki/Lagrange's_four-square_theorem
 
-use 5.022;
+use 5.020;
 use strict;
 use warnings;
 

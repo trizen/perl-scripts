@@ -10,7 +10,7 @@
 #   https://projecteuler.net/problem=258
 #   https://en.wikipedia.org/wiki/Sierpinski_triangle
 
-use 5.024;
+use 5.020;
 use strict;
 use warnings;
 

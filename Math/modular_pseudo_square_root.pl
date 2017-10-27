@@ -9,7 +9,7 @@
 # See also:
 #   https://projecteuler.net/problem=266
 
-use 5.024;
+use 5.020;
 use warnings;
 
 use ntheory qw(factor mulmod);

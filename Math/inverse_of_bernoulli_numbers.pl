@@ -13,7 +13,7 @@
 # This gives us the following inverse formula:
 #   n ~ lgrt((2*pi)^(-1/(4*pi*e)) * (|Bn| / 2)^(1/(2*pi*e))) * 2*pi*e - 1/2
 
-use 5.022;
+use 5.020;
 use strict;
 use warnings;
 

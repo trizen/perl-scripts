@@ -10,11 +10,11 @@
 #   https://oeis.org/A001175
 #   https://en.wikipedia.org/wiki/Pisano_period
 
-use 5.026;
+use 5.020;
 use strict;
 use warnings;
 
-use experimental qw(signatures);
+use experimental qw(signatures lexical_subs);
 use ntheory qw(addmod factor_exp lcm);
 
 sub pisano_period($mod) {

@@ -11,6 +11,9 @@
 #
 # where `n` is known (along with its prime factorization).
 
+# Blog post:
+#   https://trizenx.blogspot.com/2017/10/representing-integers-as-difference-of.html
+
 use 5.010;
 use strict;
 use warnings;

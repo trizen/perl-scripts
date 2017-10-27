@@ -11,11 +11,11 @@
 # See also:
 #   https://projecteuler.net/problem=435
 
-use 5.026;
+use 5.020;
 use strict;
 use warnings;
 
-use experimental qw(signatures);
+use experimental qw(signatures lexical_subs);
 use ntheory qw(lcm addmod mulmod factor_exp powmod);
 
 sub pisano_period($mod) {

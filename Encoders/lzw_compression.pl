@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-use 5.022;
+use 5.020;
 use strict;
 use warnings;
 
