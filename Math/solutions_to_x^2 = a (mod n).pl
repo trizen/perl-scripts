@@ -21,7 +21,7 @@ use warnings;
 use Set::Product::XS qw(product);
 use ntheory qw(sqrtmod factor_exp chinese mulmod);
 
-sub solve_quadratic_congruence {
+sub modular_square_root {
     my ($k, $n) = @_;
 
     my %table;
@@ -43,7 +43,7 @@ sub solve_quadratic_congruence {
 foreach my $n (2 .. 1000) {
 
     my $k = 1+int(rand($n));
-    (my @solutions = solve_quadratic_congruence($k, $n)) || next;
+    (my @solutions = modular_square_root($k, $n)) || next;
 
     say "x^2 = $k (mod $n); x = { ", join(', ', @solutions), ' }';
 
