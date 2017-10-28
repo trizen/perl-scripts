@@ -5,7 +5,7 @@
 # Date: 17 September 2016
 # Website: https://github.com/trizen
 
-# A decently efficient algorithm for computing the results of the Kempner/Smarandache function.
+# A decently efficient algorithm for computing the results of the Kempner-Smarandache function.
 
 # See also: https://projecteuler.net/problem=549
 #           https://en.wikipedia.org/wiki/Kempner_function
@@ -21,7 +21,7 @@ use strict;
 use warnings;
 
 use List::Util qw(max sum);
-use ntheory qw(factor_exp factorial is_prime);
+use ntheory qw(factor_exp factorialmod is_prime);
 
 binmode(STDOUT, ':utf8');
 
@@ -49,11 +49,9 @@ sub smarandache {
           && return $cache{$n};
 
         my $m = $ϕ * $Ω;
-        my $f = factorial($m - $ϕ);
 
-        while ($f % $n == 0) {
+        while (factorialmod($m - $ϕ, $n) == 0) {
             $m -= $ϕ;
-            $f /= $m;
         }
 
         return ($cache{$n} = $m);
