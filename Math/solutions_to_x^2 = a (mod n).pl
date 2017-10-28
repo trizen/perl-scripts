@@ -6,10 +6,12 @@
 
 # Find (almost) all the positive solutions to the quadratic congruence: x^2 = a (mod n), where `n` and `a` are known.
 
-# For a = 1, not all the solutions are generated to `x`.
-
-# To find all the solutions to `x` for the special case `a = 1`, see:
+# For finding all the solutions for the special case `a = 1`, see:
 #   https://github.com/trizen/perl-scripts/blob/master/Math/solutions_to_x%5E2%20=%201%20(mod%20n).pl
+
+# For finding all the solutions to `x^2 = a (mod n)`, see:
+#   https://github.com/trizen/sidef-scripts/blob/master/Math/square_root_modulo_n.sf
+#   https://github.com/trizen/sidef-scripts/blob/master/Math/square_root_modulo_n_tonelli-shanks.sf
 
 # See also:
 #   https://en.wikipedia.org/wiki/Quadratic_residue
