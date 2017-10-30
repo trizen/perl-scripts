@@ -84,7 +84,8 @@ sub sqrt_mod_n ($a, $n) {
     $a %= $n;
 
     if (($n & ($n - 1)) == 0) {    # n is a power of 2
-        if (($n < 8 ? ($a % $n) : ($a % 8)) == 1) {
+
+        if ($a % 8 == 1) {
 
             my $k = valuation($n, 2);
 
