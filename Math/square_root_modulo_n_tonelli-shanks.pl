@@ -125,24 +125,24 @@ sub sqrt_mod_n ($a, $n) {
         kronecker($a, $p) == 1 or return;
 
         my $r = tonelli_shanks($a, $p);
-        my @roots = ($r, $n - $r);
+        my ($r1, $r2) = ($r, $n - $r);
 
         my $pk = $p;
         my $pi = $p * $p;
 
         for (1 .. $pe[0][1]-1) {
 
-            my $x = $roots[0];
+            my $x = $r1;
             my $y = invmod(2, $pk) * invmod($x, $pk);
 
-            $roots[0] = ($pi + $x - $y * ($x * $x - $a + $pi)) % $pi;
-            $roots[1] = ($pi - $roots[0]);
+            $r1 = ($pi + $x - $y * ($x * $x - $a + $pi)) % $pi;
+            $r2 = ($pi - $r1);
 
             $pk *= $p;
             $pi *= $p;
         }
 
-        return @roots;
+        return ($r1, $r2);
     }
 
     my @chinese;
