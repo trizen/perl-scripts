@@ -120,7 +120,6 @@ sub sqrt_mod_n ($a, $n) {
     if (@pe == 1) {             # `n` is an odd prime power
 
         my $p = Math::AnyNum->new($pe[0][0]);
-        my $k = Math::AnyNum->new($pe[0][1]);
 
         kronecker($a, $p) == 1 or return;
 
@@ -130,7 +129,7 @@ sub sqrt_mod_n ($a, $n) {
         my $pk = $p;
         my $pi = $p * $p;
 
-        for (1 .. $k - 1) {
+        for (1 .. $pe[0][1]-1) {
 
             my $x = $roots[0];
             my $y = invmod(2, $pk) * invmod($x, $pk);
