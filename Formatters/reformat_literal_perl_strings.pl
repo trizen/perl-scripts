@@ -40,12 +40,11 @@ perl_tokens {
 
         my $eval_code = join(
                              ';',
-                             'my $str = quotemeta(qq{' . quotemeta($str) . '})',    # escape string
-                             'die if $str =~ /\\\\[\$\@]/',                         # skip strings with interpolation
-                             '$str =~ s/\\\\(.)/$1/gs',                             # unescape string
-                             '$str = eval $str',                                    # evaluate string
-                             'die if $@',                                           # check the status of evaluation
-                             '$str',                                                # print the string
+                             'my $str = qq{' . quotemeta($str) . '}',    # quoted string
+                             'die if $str =~ tr/@$//',                   # skip strings with interpolation
+                             '$str = eval $str',                         # evaluate string
+                             'die if $@',                                # check the status of eval()
+                             '$str',                                     # string content
                             );
 
         my $raw_str = eval($eval_code);
