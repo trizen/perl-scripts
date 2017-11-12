@@ -539,6 +539,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
 * Regex
     * [Possitive-negative matching](./Regex/possitive-negative_matching.pl)
     * [Prime regexp](./Regex/prime_regexp.pl)
+    * [Regex optimizer in source](./Regex/regex_optimizer_in_source.pl)
     * [Regex pair factors](./Regex/regex_pair_factors.pl)
     * [Regexp to strings](./Regex/regexp_to_strings.pl)
 * Socket
