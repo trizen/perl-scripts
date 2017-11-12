@@ -22,11 +22,8 @@ use warnings;
 
 use open IO => ':encoding(UTF-8)', ':std';
 
-use Symbol qw(gensym);
 use Data::Dump qw(pp);
-use IPC::Open3 qw(open3);
 use Perl::Tokenizer qw(perl_tokens);
-use Encode qw(encode_utf8 decode_utf8);
 
 # usage: perl script.pl < source.pl
 my $code = join('', <>);
@@ -43,27 +40,19 @@ perl_tokens {
 
         my $eval_code = join(
                              ';',
-                             'binmode STDOUT, ":utf8"',                             # encode as UTF-8
-                             'my $str = quotemeta(qq{' . quotemeta($str) . '})',    # escaped string
+                             'my $str = quotemeta(qq{' . quotemeta($str) . '})',    # escape string
                              'die if $str =~ /\\\\[\$\@]/',                         # skip strings with interpolation
                              '$str =~ s/\\\\(.)/$1/gs',                             # unescape string
                              '$str = eval $str',                                    # evaluate string
                              'die if $@',                                           # check the status of evaluation
-                             'print $str',                                          # print the string
+                             '$str',                                                # print the string
                             );
 
-        my $in  = gensym();
-        my $out = gensym();
-        my $err = gensym();
+        my $raw_str = eval($eval_code);
 
-        if (open3($in, $out, $err, $^X, '-Mutf8', '-Mstrict', '-e', encode_utf8($eval_code))) {
-            my $err_msg = join('', <$err>);
-
-            if ($err_msg eq '') {
-                my $raw_str = decode_utf8(join('', <$out>));
-                print scalar pp($raw_str);
-                return;
-            }
+        if (defined($raw_str) and !$@) {
+            print scalar pp($raw_str);
+            return;
         }
     }
 
