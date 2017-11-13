@@ -42,9 +42,9 @@ sub bern_from_primes {
 
     my $z = 1.0;
     for (my $p = 2 ; $p <= $N ; $p = next_prime($p)) {
-        $z *= (1.0 - float($p)**(-$n));
+        my $u = float($p)**$n;
+        $z *= $u / ($u-1);
     }
-    $z = 1.0 / $z;
 
     (-1)**($n / 2 + 1) * int(ceil($d * $K * $z)) / $d;
 }
