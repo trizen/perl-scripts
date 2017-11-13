@@ -49,8 +49,10 @@ sub bern_from_primes {
     {  # Sieve the primes <= n+1
         my @composite;
         foreach my $i (2 .. sqrt($n) + 1) {
-            for (my $j = $i**2 ; $j <= $n + 1 ; $j += $i) {
-                $composite[$j] = 1;
+            if (!$composite[$i]) {
+                for (my $j = $i**2 ; $j <= $n + 1 ; $j += $i) {
+                    $composite[$j] = 1;
+                }
             }
         }
 
