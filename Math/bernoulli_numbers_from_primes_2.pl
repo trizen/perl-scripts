@@ -80,7 +80,27 @@ sub bern_from_primes {
 
     Math::MPFR::Rmpfr_set_ui($z, 1, $round);                # z = 1
 
+    #~ my $t1 = Math::MPFR::Rmpfr_init2($prec);
+    #~ my $t2 = Math::MPFR::Rmpfr_init2($prec);
+
     for (my $i = 0 ; $primes[$i] <= $N ; ++$i) {            # primes <= N
+
+        #~ # Version 1
+        #~ # 1 min, 45.29s for bern(200_000)
+        #~ Math::MPFR::Rmpfr_ui_pow_ui($t1, $primes[$i], $n, $round);    # t1 = p^n
+        #~ Math::MPFR::Rmpfr_sub_ui($t2, $t1, 1, $round);                # t2 = t1 - 1
+        #~ Math::MPFR::Rmpfr_div($t1, $t1, $t2, $round);                 # t1 = t1 / t2
+        #~ Math::MPFR::Rmpfr_mul($z, $z, $t1, $round);                   # z  = z * t1
+
+        #~ # Version 2
+        #~ # 1 min, 42.54s for bern(200_000)
+        #~ Math::MPFR::Rmpfr_ui_pow_ui($t1, $primes[$i], $n, $round);    # t1 = p^n
+        #~ Math::MPFR::Rmpfr_mul($z, $z, $t1, $round);                   # z  = z*t1
+        #~ Math::MPFR::Rmpfr_sub_ui($t1, $t1, 1, $round);                # t1 = t1-1
+        #~ Math::MPFR::Rmpfr_div($z, $z, $t1, $round);                   # z  = z/t1
+
+        # Version 3 (fastest)
+        # 1 min, 39.23s for bern(200_000)
         Math::GMPz::Rmpz_ui_pow_ui($u, $primes[$i], $n);    # u = p^n
         Math::MPFR::Rmpfr_mul_z($z, $z, $u, $round);        # z = z*u
         Math::GMPz::Rmpz_sub_ui($u, $u, 1);                 # u = u-1
