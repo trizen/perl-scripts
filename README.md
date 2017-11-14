@@ -241,6 +241,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Mp3grep](./Greppers/mp3grep.pl)
     * [Scgrep](./Greppers/scgrep)
 * GTK+
+    * [Mouse position](./GTK+/mouse_position.pl)
     * [Tray-file-browser](./GTK+/tray-file-browser.pl)
 * HAL
     * HAL3736
