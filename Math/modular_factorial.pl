@@ -7,29 +7,22 @@
 
 # An efficient algorithm for computing factorial of a large number, modulus a larger number.
 
-use 5.010;
+use 5.020;
 use strict;
 use integer;
 use warnings;
 
-use ntheory qw(invmod powmod forprimes random_prime);
+use experimental qw(signatures);
+use ntheory qw(invmod powmod forprimes random_prime todigits vecsum);
 
-sub power {
-    my ($n, $p) = @_;
-
-    my $s = 0;
-    while ($n >= $p) {
-        $s += int($n /= $p);
-    }
-
-    $s;
+sub factorial_power ($n, $p) {
+    ($n - vecsum(todigits($n, $p))) / ($p - 1);
 }
 
 # This algorithm uses powers of primes to efficiently
 # compute `n! mod k`. It works correctly in all cases.
 
-sub facmod2 {
-    my ($n, $mod) = @_;
+sub facmod2 ($n, $mod) {
 
     my $p = 0;
     my $f = 1;
@@ -40,7 +33,7 @@ sub facmod2 {
             $f %= $mod;
         }
         else {
-            $p = power($n, $_);
+            $p = factorial_power($n, $_);
             $f *= powmod($_ % $mod, $p, $mod);
             $f %= $mod;
         }
@@ -55,8 +48,7 @@ sub facmod2 {
 # Algorithm from:
 #   http://stackoverflow.com/questions/9727962/fast-way-to-calculate-n-mod-m-where-m-is-prime
 
-sub facmod1 {
-    my ($n, $mod) = @_;
+sub facmod1 ($n, $mod) {
 
     if ($n <= $mod / 2 or $mod <= $n) {
         return facmod2($n, $mod);

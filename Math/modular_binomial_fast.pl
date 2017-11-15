@@ -19,7 +19,7 @@ use warnings;
 use integer;
 
 use experimental qw(signatures);
-use ntheory qw(factor_exp chinese invmod mulmod powmod);
+use ntheory qw(factor_exp chinese invmod mulmod powmod todigits vecsum);
 
 sub modular_binomial ($n, $k, $m) {
 
@@ -33,16 +33,7 @@ sub modular_binomial ($n, $k, $m) {
 }
 
 sub factorial_prime_pow ($n, $p) {
-
-    my $count = 0;
-    my $ppow  = $p;
-
-    while ($ppow <= $n) {
-        $count += $n / $ppow;
-        $ppow *= $p;
-    }
-
-    return $count;
+    ($n - vecsum(todigits($n, $p))) / ($p - 1);
 }
 
 sub binomial_prime_pow ($n, $k, $p) {

@@ -9,7 +9,7 @@
 
 # For example:
 #
-#   power(100, 3) = 48
+#   factorial_power(100, 3) = 48
 #
 # because 100! contains 48 factors of 3.
 
@@ -17,15 +17,18 @@ use 5.010;
 use strict;
 use warnings;
 
-sub power {
+sub factorial_power {
     my ($n, $p) = @_;
 
-    my $s = 0;
-    while ($n >= $p) {
-        $s += int($n /= $p);
+    my $count = 0;
+    my $ppow  = $p;
+
+    while ($ppow <= $n) {
+        $count += int($n / $ppow);
+        $ppow *= $p;
     }
 
-    $s;
+    return $count;
 }
 
-say power(100, 3);    #=> 48
+say factorial_power(100, 3);    #=> 48

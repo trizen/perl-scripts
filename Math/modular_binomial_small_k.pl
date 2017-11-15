@@ -10,25 +10,18 @@
 # Implemented using the identity:
 #    binomial(n, k) = Product_{r = n-k+1..n}(r) / k!
 
-use 5.010;
+use 5.020;
 use strict;
 use warnings;
 
-use ntheory qw(mulmod factor_exp);
+use experimental qw(signatures);
+use ntheory qw(mulmod factor_exp vecsum todigits);
 
-sub power {
-    my ($n, $p) = @_;
-
-    my $s = 0;
-    while ($n >= $p) {
-        $s += int($n /= $p);
-    }
-
-    return $s;
+sub factorial_power ($n, $p) {
+    ($n - vecsum(todigits($n, $p))) / ($p - 1);
 }
 
-sub modular_binomial {
-    my ($n, $k, $m) = @_;
+sub modular_binomial ($n, $k, $m) {
 
     my %kp;
     my $prod = 1;
@@ -39,7 +32,7 @@ sub modular_binomial {
             my ($p, $v) = @$pair;
 
             if ($p <= $k) {
-                next if ((my $t = ($kp{$p} //= power($k, $p))) == 0);
+                next if ((my $t = ($kp{$p} //= factorial_power($k, $p))) == 0);
 
                 if ($v >= $t) {
                     $v = $t;

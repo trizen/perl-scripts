@@ -11,32 +11,25 @@
 # Example:
 #  The factors of 6! are [2, 2, 2, 2, 3, 3, 5].
 
-use 5.010;
+use 5.020;
 use strict;
 use warnings;
 
-use ntheory qw(forprimes);
+use experimental qw(signatures);
+use ntheory qw(forprimes vecsum todigits);
 
-sub power {
-    my ($n, $p) = @_;
-
-    my $s = 0;
-    while ($n >= $p) {
-        $s += int($n /= $p);
-    }
-
-    $s;
+sub factorial_power ($n, $p) {
+    ($n - vecsum(todigits($n, $p))) / ($p - 1);
 }
 
-sub factorial_factors {
-    my ($n) = @_;
+sub factorial_factors ($n) {
     my @factors;
 
     forprimes {
-        push @factors, ($_) x power($n, $_);
+        push @factors, ($_) x factorial_power($n, $_);
     } $n;
 
-    @factors;
+    return @factors;
 }
 
 for (1 .. 10) {

@@ -7,21 +7,15 @@
 
 # An efficient algorithm for prime factorization of binomial coefficients.
 
-use 5.010;
+use 5.020;
 use strict;
 use warnings;
 
-use ntheory qw(forprimes);
+use experimental qw(signatures);
+use ntheory qw(forprimes todigits vecsum);
 
-sub power {
-    my ($n, $p) = @_;
-
-    my $s = 0;
-    while ($n >= $p) {
-        $s += int($n /= $p);
-    }
-
-    $s;
+sub factorial_power ($n, $p) {
+    ($n - vecsum(todigits($n, $p))) / ($p - 1);
 }
 
 #
@@ -39,14 +33,14 @@ my $j = $n - $k;
 my @factors;
 
 forprimes {
-    my $p = power($n, $_);
+    my $p = factorial_power($n, $_);
 
     if ($_ <= $k) {
-        $p -= power($k, $_);
+        $p -= factorial_power($k, $_);
     }
 
     if ($_ <= $j) {
-        $p -= power($j, $_);
+        $p -= factorial_power($j, $_);
     }
 
     if ($p > 0) {

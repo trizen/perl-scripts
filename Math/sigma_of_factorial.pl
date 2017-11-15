@@ -6,22 +6,15 @@
 
 # An efficient algorithm for computing sigma_k(n!), where k > 0.
 
-use 5.010;
+use 5.020;
 use strict;
 use warnings;
 
-use ntheory qw(forprimes);
+use experimental qw(signatures);
+use ntheory qw(forprimes vecsum todigits);
 
-sub power {
-    my ($n, $p) = @_;
-
-    my $count = 0;
-
-    while ($n >= $p) {
-        $count += int($n /= $p);
-    }
-
-    return $count;
+sub factorial_power ($n, $p) {
+    ($n - vecsum(todigits($n, $p))) / ($p - 1);
 }
 
 sub sigma_of_factorial {
@@ -31,7 +24,7 @@ sub sigma_of_factorial {
 
     forprimes {
         my $p = $_;
-        my $k = power($n, $p);
+        my $k = factorial_power($n, $p);
         $sigma *= (($p**($a * ($k + 1)) - 1) / ($p**$a - 1));
     } $n;
 

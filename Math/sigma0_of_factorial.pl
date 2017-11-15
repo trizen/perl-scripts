@@ -6,22 +6,15 @@
 
 # An efficient algorithm for computing sigma0(n!).
 
-use 5.010;
+use 5.020;
 use strict;
 use warnings;
 
-use ntheory qw(forprimes);
+use experimental qw(signatures);
+use ntheory qw(forprimes todigits vecsum);
 
-sub power {
-    my ($n, $p) = @_;
-
-    my $count = 0;
-
-    while ($n >= $p) {
-        $count += int($n /= $p);
-    }
-
-    return $count;
+sub factorial_power ($n, $p) {
+    ($n - vecsum(todigits($n, $p))) / ($p - 1);
 }
 
 sub sigma0_of_factorial {
@@ -30,7 +23,7 @@ sub sigma0_of_factorial {
     my $sigma0 = 1;
 
     forprimes {
-        $sigma0 *= 1 + power($n, $_);
+        $sigma0 *= 1 + factorial_power($n, $_);
     } $n;
 
     return $sigma0;

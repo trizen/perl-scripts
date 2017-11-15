@@ -15,25 +15,18 @@
 #   https://en.wikipedia.org/wiki/P-adic_order
 #   https://en.wikipedia.org/wiki/Legendre%27s_formula
 
-use 5.010;
+use 5.020;
 use strict;
 use warnings;
 
-use ntheory qw(divisors forcomposites);
+use experimental qw(signatures);
+use ntheory qw(divisors forcomposites todigits vecsum);
 
-sub p_adic {
-    my ($p, $n) = @_;
-
-    my $s = 0;
-    while ($n >= $p) {
-        $s += int($n /= $p);
-    }
-
-    $s;
+sub factorial_power ($n, $p) {
+    ($n - vecsum(todigits($n, $p))) / ($p - 1);
 }
 
-sub sigma_p_adic {
-    my ($n) = @_;
+sub sigma_p_adic ($n) {
 
     my @d = divisors($n);
 
@@ -42,7 +35,7 @@ sub sigma_p_adic {
 
     my $s = 0;
     foreach my $d (@d) {
-        $s += $d**p_adic($d, $n);
+        $s += $d**factorial_power($n, $d);
     }
 
     return $s;
