@@ -353,6 +353,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Fibonacci closed form 2](./Math/fibonacci_closed_form_2.pl)
     * [Fibonacci polynomials closed form](./Math/fibonacci_polynomials_closed_form.pl)
     * [Find least common denominator](./Math/find_least_common_denominator.pl)
+    * [Floor and ceil functions fourier series](./Math/floor_and_ceil_functions_fourier_series.pl)
     * [Fraction approximation](./Math/fraction_approximation.pl)
     * [Fraction to decimal expansion](./Math/fraction_to_decimal_expansion.pl)
     * [Fractional pi](./Math/fractional_pi.pl)
