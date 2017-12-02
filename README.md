@@ -302,6 +302,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Bernoulli denominators](./Math/bernoulli_denominators.pl)
     * [Bernoulli numbers](./Math/bernoulli_numbers.pl)
     * [Bernoulli numbers from factorials](./Math/bernoulli_numbers_from_factorials.pl)
+    * [Bernoulli numbers from factorials mpq](./Math/bernoulli_numbers_from_factorials_mpq.pl)
     * [Bernoulli numbers from primes](./Math/bernoulli_numbers_from_primes.pl)
     * [Bernoulli numbers from primes 2](./Math/bernoulli_numbers_from_primes_2.pl)
     * [Bernoulli numbers from primes 3](./Math/bernoulli_numbers_from_primes_3.pl)
