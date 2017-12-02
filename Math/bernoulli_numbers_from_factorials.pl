@@ -25,7 +25,7 @@ sub bernoulli_numbers {
 
     foreach my $i (1 .. $n) {
         foreach my $k (0 .. $i - 1) {
-            $B[$i] -= $B[$k] / factorial(abs($k - $i - 1));
+            $B[$i] -= $B[$k] / factorial($i - $k + 1);
         }
     }
 
