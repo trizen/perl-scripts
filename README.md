@@ -361,6 +361,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Fraction approximation](./Math/fraction_approximation.pl)
     * [Fraction to decimal expansion](./Math/fraction_to_decimal_expansion.pl)
     * [Fractional pi](./Math/fractional_pi.pl)
+    * [Fubini numbers](./Math/fubini_numbers.pl)
     * [Function graph](./Math/function_graph.pl)
     * [Gamma function](./Math/gamma_function.pl)
     * [General binary multiplier](./Math/general_binary_multiplier.pl)
