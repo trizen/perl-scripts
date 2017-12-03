@@ -308,6 +308,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Bernoulli numbers from primes 3](./Math/bernoulli_numbers_from_primes_3.pl)
     * [Bernoulli numbers from primes gmpf](./Math/bernoulli_numbers_from_primes_gmpf.pl)
     * [Bernoulli numbers from zeta](./Math/bernoulli_numbers_from_zeta.pl)
+    * [Bernoulli numbers ramanujan congruences](./Math/bernoulli_numbers_ramanujan_congruences.pl)
     * [Bernoulli numbers recursive](./Math/bernoulli_numbers_recursive.pl)
     * [Bernoulli numbers recursive 2](./Math/bernoulli_numbers_recursive_2.pl)
     * [Bernoulli numbers seidel](./Math/bernoulli_numbers_seidel.pl)
