@@ -441,6 +441,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Nth prime approx](./Math/nth_prime_approx.pl)
     * [Nth root recurrence constant](./Math/nth_root_recurrence_constant.pl)
     * [Number numbers](./Math/number_numbers.pl)
+    * [Number of connected permutations](./Math/number_of_connected_permutations.pl)
     * [Number of divisions](./Math/number_of_divisions.pl)
     * [Number of representations as sum of four squares](./Math/number_of_representations_as_sum_of_four_squares.pl)
     * [Number of representations as sum of two squares](./Math/number_of_representations_as_sum_of_two_squares.pl)
