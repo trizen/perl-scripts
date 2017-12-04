@@ -401,6 +401,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Logarithmic root mpfr](./Math/logarithmic_root_mpfr.pl)
     * [Long division](./Math/long_division.pl)
     * [Long multiplication](./Math/long_multiplication.pl)
+    * [LUP decomposition](./Math/LUP_decomposition.pl)
     * [Magic 3-gon ring](./Math/magic_3-gon_ring.pl)
     * [Magic 5-gon ring](./Math/magic_5-gon_ring.pl)
     * [Map num](./Math/map_num.pl)
