@@ -12,6 +12,7 @@ use strict;
 use warnings;
 
 use Imager;
+use Math::GComplex;
 
 my $file = shift(@ARGV) // die "usage: $0 [image]\n";
 
@@ -35,21 +36,15 @@ my $height = $img->getheight;
 sub transform {
     my ($x, $y) = @_;
 
-    use Math::Complex;
-
 #<<<
-    my $z = Math::Complex->make(
+    my $z = Math::GComplex->new(
         (2 * $x - $width ) / $width,
         (2 * $y - $height) / $height,
     );
 #>>>
 
     # Complex function
-    my $t = $z->sin;
-
-    ref($t) eq 'Math::Complex'
-      ? ($t->Re, $t->Im)
-      : ($t, 0);
+    $z->sin->reals;
 }
 
 my @matrix;
