@@ -327,6 +327,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Cartesian product rec](./Math/cartesian_product_rec.pl)
     * [Coin change](./Math/coin_change.pl)
     * [Complex exponentiation in real numbers](./Math/complex_exponentiation_in_real_numbers.pl)
+    * [Complex logarithm in real numbers](./Math/complex_logarithm_in_real_numbers.pl)
     * [Complex zeta in real numbers](./Math/complex_zeta_in_real_numbers.pl)
     * [Continued fractions](./Math/continued_fractions.pl)
     * [Continued fractions for e](./Math/continued_fractions_for_e.pl)
