@@ -63,7 +63,7 @@ my $main_dir     = File::Spec->curdir;
             my $title = $file->{name} =~ tr/_/ /r =~ s/ s /'s /gr;
 
             if ($file->{name} =~ /\.(\w{2,3})\z/) {
-                next if $1 !~ /^(?:pl|csv|pm)\z/i;
+                next if $1 !~ /^(?:p[lm])\z/i;
             }
 
             if (-d $file->{path}) {

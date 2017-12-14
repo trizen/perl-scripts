@@ -12,7 +12,6 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [First letter top](./Analyzers/first_letter_top.pl)
     * kcal
         * [Kcal](./Analyzers/kcal/kcal.pl)
-        * [Products.csv](./Analyzers/kcal/products.csv)
     * [Kernel config diff](./Analyzers/kernel_config_diff.pl)
     * [Perl code analyzer](./Analyzers/perl_code_analyzer.pl)
     * [Perl code spellcheck](./Analyzers/perl_code_spellcheck.pl)
