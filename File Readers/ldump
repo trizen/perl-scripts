@@ -20,6 +20,9 @@ USAGE
 my @lines = map { /^(\d+)(?>-|\.\.)(\d+)\z/ ? ($1 .. $2) : $_ }
   split /\s*,\s*/, pop;
 
+my %lookup;
+@lookup{@lines} = ();
+
 while (<>) {
-    print if $. ~~ \@lines;
+    print if exists($lookup{$.});
 }
