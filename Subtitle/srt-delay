@@ -17,9 +17,9 @@
 #
 #-------------------------------------------------------
 #  Appname: srt-delay
-#  Version: 0.0.4
+#  Version: 0.0.5
 #  Created on: 26 December 2011
-#  Latest edit on: 12 October 2017
+#  Latest edit on: 23 December 2017
 #  https://github.com/trizen
 #-------------------------------------------------------
 
@@ -27,7 +27,6 @@ use 5.014;
 use strict;
 
 use Scalar::Util qw(looks_like_number);
-use experimental qw(smartmatch);
 
 sub usage {
     print <<"USAGE";
@@ -63,9 +62,7 @@ sub sec2time {
 
 my $addition = (grep { looks_like_number($_) } @ARGV)[0] // usage();
 
-my $backup = do {
-    (grep { $_ ~~ ['-b', '--backup'] } @ARGV) ? 1 : 0;
-};
+my $backup = (grep { $_ eq '-b' or $_ eq '--backup' } @ARGV) ? 1 : 0;
 
 foreach my $file (grep { -f $_ } @ARGV) {
     my @output;
