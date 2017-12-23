@@ -16,13 +16,13 @@ use strict;
 use warnings;
 
 use open IO => ':utf8', ':std';
-no warnings 'experimental::smartmatch';
 
 #use lib qw(../lib);
 use Perl::Tokenizer qw(perl_tokens);
 
-use Term::ANSIColor qw(color);
+use List::Util qw(any);
 use Getopt::Std qw(getopts);
+use Term::ANSIColor qw(color);
 
 my %opts;
 getopts('hnlpcNb:a:t', \%opts);
@@ -83,7 +83,9 @@ perl_tokens {
         return;
     }
 
-    if ($opts{n} ? (not $token ~~ \@types) : ($token ~~ \@types)) {
+    my $matches = any { $token =~ $_ } @types;
+
+    if ($opts{n} ? !$matches : $matches) {
 
         if ($opts{p}) {
             print "[$token] pos($from, $to): ";
