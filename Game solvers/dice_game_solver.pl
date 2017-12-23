@@ -60,14 +60,23 @@ while (1) {
 
     foreach my $num (1 .. @{$board}**2) {
 
-        my $dir =
-          exists $map{$current_num}
-          ? $map{$current_num}
-          : do {
-            my $d;
-            do { $d = $directions[rand @directions] } while ($d ~~ [values %map]);
-            $d;
-          };
+        my $dir = (
+            exists $map{$current_num}
+            ? $map{$current_num}
+            : do {
+
+                my %table;
+                @table{values %map} = ();
+
+                my $d;
+
+                do {
+                    $d = $directions[rand @directions];
+                } while (exists($table{$d}));
+
+                $d;
+              }
+        );
 
         my $pos = $moves{$dir};
         my $row = $current_pos->[0] + $pos->[0];
