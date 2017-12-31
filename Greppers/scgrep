@@ -1,8 +1,5 @@
 #!/usr/bin/perl
 
-eval 'exec /usr/bin/perl  -S $0 ${1+"$@"}'
-    if 0; # not running under some shell
-
 # Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 04 February 2013
@@ -11,6 +8,7 @@ eval 'exec /usr/bin/perl  -S $0 ${1+"$@"}'
 
 # Perl source code extractor.
 
+use utf8;
 use 5.018;
 use strict;
 use warnings;
@@ -161,7 +159,7 @@ pfilter extracts tokens from a Perl script that match a given regular expression
 
 =head1 AUTHOR
 
-Daniel "Trizen" Șuteu, E<lt>trizenx@gmail.comE<gt>
+Daniel "Trizen" Șuteu, E<lt>trizen@protonmail.comE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
