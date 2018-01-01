@@ -13,13 +13,13 @@ use warnings;
 use Math::AnyNum qw(:overload binomial);
 
 sub imaginary_binomial_sum {
-    my ($c, $n) = @_;
+    my ($c, $d, $n) = @_;
 
     my $re = 0;
     my $im = 0;
 
     foreach my $k (0 .. $n) {
-        my $t = binomial($n, $k) * $c**($n - $k);
+        my $t = binomial($n, $k) * $c**($n - $k) * $d**$k;
 
         if ($k % 4 == 0) {
             $re += $t;
@@ -39,12 +39,13 @@ sub imaginary_binomial_sum {
 }
 
 #
-## Example for: (2 + sqrt(-1))^10
+## Example for: (2 + 3*sqrt(-1))^10
 #
 
 my $c = 2;
+my $d = 3;
 my $n = 10;
 
-my ($re, $im) = imaginary_binomial_sum($c, $n);
+my ($re, $im) = imaginary_binomial_sum($c, $d, $n);
 
-say "($c + sqrt(-1))^$n = ($re, $im)";
+say "($c + $d*sqrt(-1))^$n = ($re, $im)";       #=> (-341525, -145668)
