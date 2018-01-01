@@ -19,17 +19,15 @@
 #  Appname: wimp-viewer
 #  License: GPLv3
 #  Created on: 24 August 2010
-#  Latest edit on: 31 May 2014
+#  Latest edit on: 01 January 2018
 #  https://github.com/trizen
 #-------------------------------------------------------
 
-# Requires 'youtube-viewer' and 'universal-streamer'
+# Requires 'youtube-viewer' and 'mpv'
 
 use 5.010;
 use strict;
 use warnings;
-
-no if $] >= 5.018, warnings => 'experimental::smartmatch';
 
 use LWP::Simple qw(get);
 use XML::Fast qw(xml2hash);
@@ -39,7 +37,7 @@ use Getopt::Std qw(getopts);
 my $appname = 'wimp-viewer';
 my $version = '0.32';
 
-my $BASE_URL = 'http://www.wimp.com';
+my $BASE_URL = 'https://www.wimp.com';
 
 require Term::ReadLine;
 my $term = Term::ReadLine->new($appname);
@@ -108,16 +106,17 @@ foreach my $url (@ARGV) {
 sub play {
     my ($url) = @_;
 
-    my $req = $mech->get($url);
+    my $req     = $mech->get($url);
     my $content = $req->decoded_content // $req->content;
 
     my $real_url = $mech->uri;
 
-    if ($content =~ m{\byoutube\.com/watch\?v=([\w-]{11})"}) {
+    if (   $content =~ m{\byoutube\.com/watch\?v=([\w-]{11})"}
+        or $content =~ m{<div data-autoplay='1' data-start='0' data-id='([\w-]{11})'}) {
         system 'youtube-viewer', "--no-interactive", "--id=$1", ($opt{f} ? '-fs' : ());
     }
-    elsif ($content =~ /"file"\h*,\h*".*?"/) {
-        system 'universal-streamer', $real_url, ($opt{f} ? ('-mplayer=-fs') : ());
+    elsif ($content =~ /"file"\h*,\h*"(.*?)"/) {
+        system('mpv', ($opt{f} ? '--fullscreen' : ()), $1);
     }
     else {
         warn "error: can't find any streaming URL for: $real_url\n";
@@ -166,9 +165,9 @@ sub parse_date {
     }
 
     {
-        given ($term->readline(colored("\n=>> Insert a number ('?' for help)", 'bold') . "\n> ")) {
-            when (['help', '?']) {
-                print "\n", <<'STDIN_HELP';
+        my $line = $term->readline(colored("\n=>> Insert a number ('?' for help)", 'bold') . "\n> ");
+        if ($line eq 'help' or $line eq '?') {
+            print "\n", <<'STDIN_HELP';
 i               : play the corresponding video
 all             : play all the video results
 3-8, 3..8       : same as 3 4 5 6 7 8
@@ -176,39 +175,39 @@ http://URL      : play a specific video by URL
 /my?[regex]*$/  : play videos matched by a regex (/i)
 q, quit, exit   : exit application
 STDIN_HELP
+            redo;
+        }
+        elsif ($line =~ /^(?:q|quit|exit)\z/) {
+            exit 0;
+        }
+        elsif ($line eq 'all') {
+            play_picked_videos(1 .. @results);
+        }
+        elsif ($line =~ m{^/(.*?)/\h*$}) {
+            my $match = eval { qr/$1/i };
+
+            if ($@) {
+                warn "\nError in regex: $@\n";
                 redo;
             }
-            when (['q', 'quit', 'exit']) {
-                exit 0;
-            }
-            when (['all']) {
-                play_picked_videos(1 .. @results);
-            }
-            when (/\d/ and not /(?>\s|^)[^\d-]/) {
-                s/(\d+)(?>-|\.\.)(\d+)/join q{ }, $1 .. $2;/eg;    # '2..5' or '2-5' to '2 3 4 5'
-                play_picked_videos(grep { $_ > 0 and $_ <= @results if /^\d+$/ } split /[\s[:punct:]]+/)
-                  || continue;
-            }
-            when (['r', 'random']) {
-                play_random_video();
+
+            play_picked_videos(grep { $results[$_ - 1]->{'title'} =~ /$match/ } 1 .. @results) || do {
+                warn "\n(X_X) No video matched by the regex: /$match/\n";
                 redo;
-            }
-            when (m{^/(.*?)/\h*$}) {
-                my $match = eval { qr/$1/i };
+            };
+        }
 
-                if ($@) {
-                    warn "\nError in regex: $@\n";
-                    continue;
-                }
+        elsif ($line =~ /\d/ and not $line =~ /(?>\s|^)[^\d-]/) {
+            $line =~ s/(\d+)(?>-|\.\.)(\d+)/join q{ }, $1 .. $2;/eg;    # '2..5' or '2-5' to '2 3 4 5'
+            play_picked_videos(grep { $_ > 0 and $_ <= @results if /^\d+$/ } split(/[\s[:punct:]]+/, $line));
+        }
 
-                play_picked_videos(grep { $results[$_ - 1]->{'title'} =~ /$match/ } 1 .. @results) || do {
-                    warn "\n(X_X) No video matched by the regex: /$match/\n";
-                    redo;
-                };
-            }
-            when (m{^https?://.}) {
-                play($_);
-            }
+        elsif ($line =~ /^(?:r|random)\z/) {
+            play_random_video();
+        }
+
+        elsif ($line =~ m{^https?://.}) {
+            play($_);
         }
     }
     redo;
