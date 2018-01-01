@@ -2,9 +2,10 @@
 
 # Daniel "Trizen" Șuteu
 # Date: 31 July 2017
+# Edit: 01 January 2018
 # https://github.com/trizen
 
-# Binomial summation in integers of an expression of the form: (a + sqrt(-1))^n
+# Binomial summation in integers of an expression of the form: (a + b*sqrt(-1))^n
 
 use 5.010;
 use strict;
