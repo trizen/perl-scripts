@@ -397,6 +397,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Lanczos approximation](./Math/lanczos_approximation.pl)
     * [Legendary question six](./Math/legendary_question_six.pl)
     * [Length of shortest addition chain](./Math/length_of_shortest_addition_chain.pl)
+    * [Lerch zeta function](./Math/lerch_zeta_function.pl)
     * [Logarithmic integral asymptotic formula](./Math/logarithmic_integral_asymptotic_formula.pl)
     * [Logarithmic root](./Math/logarithmic_root.pl)
     * [Logarithmic root complex](./Math/logarithmic_root_complex.pl)
