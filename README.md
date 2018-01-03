@@ -297,6 +297,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Arithmetic geometric mean complex](./Math/arithmetic_geometric_mean_complex.pl)
     * [Arithmetic sum closed form](./Math/arithmetic_sum_closed_form.pl)
     * [Ascii cuboid](./Math/ascii_cuboid.pl)
+    * [Ascii julia set](./Math/ascii_julia_set.pl)
     * [Ascii mandelbrot set](./Math/ascii_mandelbrot_set.pl)
     * [Batir factorial asymptotic formula mpfr](./Math/batir_factorial_asymptotic_formula_mpfr.pl)
     * [Bernoulli denominators](./Math/bernoulli_denominators.pl)
