@@ -134,6 +134,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Circular prime triangle](./GD/circular_prime_triangle.pl)
     * [Circular triangle](./GD/circular_triangle.pl)
     * [Collatz triangle](./GD/collatz_triangle.pl)
+    * [Color wheel](./GD/color_wheel.pl)
     * [Complex square](./GD/complex_square.pl)
     * [Cuboid turtle](./GD/cuboid_turtle.pl)
     * [Cuboid turtle2](./GD/cuboid_turtle2.pl)
