@@ -111,6 +111,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Fstab beautifier](./Formatters/fstab_beautifier.pl)
     * [Js beautify](./Formatters/js_beautify)
     * [Reformat literal perl strings](./Formatters/reformat_literal_perl_strings.pl)
+    * [Replace html links](./Formatters/replace_html_links.pl)
     * [Word columner](./Formatters/word_columner.pl)
 * Game solvers
     * [Dice game solver](./Game%20solvers/dice_game_solver.pl)
