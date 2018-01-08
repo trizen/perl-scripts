@@ -3,10 +3,11 @@
 # Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 01 January 2012
-# Edit: 15 February 2013
+# Edit: 08 January 2018
 # https://github.com/trizen
 
-# Find and list duplicated files from one or more paths
+# Find and list duplicate files from one or more paths, with options for
+# deleting or replacing duplicate files with symbolic links to the main file.
 
 use 5.005;
 use strict;
@@ -21,17 +22,18 @@ die <<"HELP" if !@dirs;
 usage: $0 [options] /my/path [...]
 
 Options:
-        -f  : keep only the first duplicated file
-        -l  : keep only the last duplicated file
+    -f  : keep only the first duplicated file
+    -l  : keep only the last duplicated file
+    -s  : replace duplicate files with symbolic links (with -f or -l)
 HELP
 
-my %opts;
+my %opt;
 if (@ARGV) {
-    getopts("fl", \%opts);
+    getopts("fls", \%opt);
 }
 
 sub find_duplicated_files (&@) {
-    my $code = shift;
+    my $callback = shift;
 
     my %files;
     find {
@@ -39,8 +41,8 @@ sub find_duplicated_files (&@) {
         wanted   => sub {
             lstat;
             (-f _) && (not -l _) && push @{$files{-s _}}, $_;
-          }
-         } => @_;
+        }
+    } => @_;
 
     foreach my $files (values %files) {
 
@@ -56,7 +58,7 @@ sub find_duplicated_files (&@) {
         }
 
         while (my ($fparent, $fdups) = each %dups) {
-            $code->(sort $fparent, @{$fdups});
+            $callback->(sort $fparent, @{$fdups});
         }
     }
 
@@ -66,17 +68,34 @@ sub find_duplicated_files (&@) {
 {
     local $, = "\n";
     local $\ = "\n";
+
     find_duplicated_files {
+        my (@files) = @_;
 
-        print @_, "-" x 80 if @_;
+        print @files, "-" x 80;
 
-        foreach my $i (
-                         $opts{f} ? (1 .. $#_)
-                       : $opts{l} ? (0 .. $#_ - 1)
-                       :            ()
-          ) {
-            unlink $_[$i] or warn "[error]: Can't delete: $!\n";
+        my $main_file = (
+                           $opt{f} ? shift(@files)
+                         : $opt{l} ? pop(@files)
+                         :           return
+                        );
+
+        foreach my $file (@files) {
+
+            print ":: Removing: `$file`";
+
+            unlink($file) or do {
+                warn "error: can't delete file `$file': $!\n";
+                next;
+            };
+
+            if ($opt{s}) {
+                print ":: Symlinking: `$main_file` <- `$file`";
+                symlink($main_file, $file) or do {
+                    warn "error: can't create symbolic link for `$file': $!\n";
+                    next;
+                };
+            }
         }
-    }
-    @dirs;
+    } @dirs;
 }
