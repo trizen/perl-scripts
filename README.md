@@ -169,6 +169,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Julia set complex](./GD/julia_set_complex.pl)
     * [Julia set random](./GD/julia_set_random.pl)
     * [Julia set rperl](./GD/julia_set_rperl.pl)
+    * [Koch snowflakes](./GD/koch_snowflakes.pl)
     * [Langton's ant gd](./GD/langton_s_ant_gd.pl)
     * [Line pattern triangles](./GD/line_pattern_triangles.pl)
     * LSystem
