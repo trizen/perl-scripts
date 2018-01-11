@@ -3,7 +3,7 @@
 # Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 01 January 2012
-# Edit: 08 January 2018
+# Edit: 11 January 2018
 # https://github.com/trizen
 
 # Find and list duplicate files from one or more paths, with options for
@@ -15,21 +15,51 @@ use warnings;
 
 use File::Find qw(find);
 use File::Compare qw(compare);
-use Getopt::Std qw(getopts);
+use File::Basename qw(basename);
+use Getopt::Long qw(GetOptions);
+
+my %order_callbacks = (
+    path => sub { sort @_ },
+    name => sub {
+        map    { $_->[1] }
+          sort { $a->[0] cmp $b->[0] }
+          map  { [basename($_), $_] } @_;
+    },
+    time => sub {
+        map    { $_->[1] }
+          sort { $a->[0] <=> $b->[0] }
+          map  { [-M $_, $_] } @_;
+    },
+);
 
 my @dirs = grep { (-d) or (-f) } @ARGV;
 die <<"HELP" if !@dirs;
 usage: $0 [options] /my/path [...]
 
 Options:
-    -f  : keep only the first duplicated file
-    -l  : keep only the last duplicated file
-    -s  : replace duplicate files with symbolic links (with -f or -l)
+  -f, --first      : keep only the first duplicated file
+  -l, --last       : keep only the last duplicated file
+  -s, --symlink    : replace duplicate files with symbolic links (with -f or -l)
+  -o, --order=type : order the results by: path, name or time
+
 HELP
 
-my %opt;
-if (@ARGV) {
-    getopts("fls", \%opt);
+my $keep_first;
+my $keep_last;
+my $create_symlinks;
+my $order_by = 'time';
+
+GetOptions(
+           'f|first!'           => \$keep_first,
+           'l|last!'            => \$keep_last,
+           's|symlink!'         => \$create_symlinks,
+           'o|order|order-by=s' => \$order_by,
+          )
+  or die("$0: error in command line arguments\n");
+
+if (not exists $order_callbacks{$order_by}) {
+    local $" = ", ";
+    die "$0: invalid value `$order_by` for `--order`: valid values are: @{[sort keys %order_callbacks]}\n";
 }
 
 sub find_duplicated_files (&@) {
@@ -58,7 +88,7 @@ sub find_duplicated_files (&@) {
         }
 
         while (my ($fparent, $fdups) = each %dups) {
-            $callback->(sort $fparent, @{$fdups});
+            $callback->($order_callbacks{$order_by}($fparent, @{$fdups}));
         }
     }
 
@@ -75,9 +105,9 @@ sub find_duplicated_files (&@) {
         print @files, "-" x 80;
 
         my $main_file = (
-                           $opt{f} ? shift(@files)
-                         : $opt{l} ? pop(@files)
-                         :           return
+                           $keep_first ? shift(@files)
+                         : $keep_last  ? pop(@files)
+                         :               return
                         );
 
         foreach my $file (@files) {
@@ -89,7 +119,7 @@ sub find_duplicated_files (&@) {
                 next;
             };
 
-            if ($opt{s}) {
+            if ($create_symlinks) {
                 print ":: Symlinking: `$main_file` <- `$file`";
                 symlink($main_file, $file) or do {
                     warn "error: can't create symbolic link for `$file': $!\n";
