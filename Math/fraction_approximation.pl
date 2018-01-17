@@ -17,11 +17,11 @@ use experimental qw(signatures);
 use Test::More;
 plan tests => 11;
 
-use Math::AnyNum qw(:overload float floor);
+use Math::AnyNum qw(:overload float round);
 
 sub num2cfrac ($callback, $n) {
     while (1) {
-        my $m = int(floor($n));
+        my $m = int(round($n));
         $callback->($m) && return 1;
         $n = 1 / (($n - $m) || last);
     }
