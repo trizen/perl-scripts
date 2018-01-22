@@ -537,6 +537,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Sum of two squares solution](./Math/sum_of_two_squares_solution.pl)
     * [Super pandigital numbers](./Math/super_pandigital_numbers.pl)
     * [Triangle hyperoperation](./Math/triangle_hyperoperation.pl)
+    * [Triangle interior angles](./Math/triangle_interior_angles.pl)
     * [Trip2mars](./Math/trip2mars.pl)
     * [Trizen primality test](./Math/trizen_primality_test.pl)
     * [Trizen strong primality test](./Math/trizen_strong_primality_test.pl)
