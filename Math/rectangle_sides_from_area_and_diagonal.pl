@@ -4,8 +4,8 @@
 # Date: 22 January 2018
 # https://github.com/trizen
 
-# Formula for finding the length of the sides of a rectangle when only
-# the product of the sides and the length of the hypothenuse are known.
+# Formula for finding the length of the sides of a rectangle
+# when only its area and the length of its diagonal are known.
 
 # See also:
 #   https://en.wikipedia.org/wiki/Fermat%27s_factorization_method
@@ -28,7 +28,7 @@ sub extract_rectangle_sides {
 my $p = 43;
 my $q = 97;
 
-my $n = $p * $q;          # product of the side lengths
-my $h = $p**2 + $q**2;    # length of the hypothenuse, squared
+my $n = $p * $q;          # rectangle area
+my $h = $p**2 + $q**2;    # diagonal length, squared
 
 say join(' ', extract_rectangle_sides($n, $h));
