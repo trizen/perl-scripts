@@ -14,7 +14,7 @@ use experimental qw(signatures);
 use Math::AnyNum qw(:trig :overload);
 
 sub rectangle_sides_from_angle ($theta) {
-    map { sqrt($_) } (tan($theta)**2)->rat_approx->nude;
+    tan($theta)->rat_approx->nude;
 }
 
 my $x = 43;    # side 1
