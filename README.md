@@ -495,6 +495,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Rational summation of fractions](./Math/rational_summation_of_fractions.pl)
     * [Rectangle sides from area and diagonal](./Math/rectangle_sides_from_area_and_diagonal.pl)
     * [Rectangle sides from diagonal angles](./Math/rectangle_sides_from_diagonal_angles.pl)
+    * [Rectangle sides from one diagonal angle](./Math/rectangle_sides_from_one_diagonal_angle.pl)
     * [Recursive matrix multiplication](./Math/recursive_matrix_multiplication.pl)
     * [Rest calc](./Math/rest_calc.pl)
     * [Reversed number triangle](./Math/reversed_number_triangle.pl)

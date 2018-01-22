@@ -4,7 +4,7 @@
 # Date: 22 January 2018
 # https://github.com/trizen
 
-# Formula for finding the smallest sides of a rectangle, given the internal angles of its diagonal.
+# Formula for finding the smallest integer sides of a rectangle, given the internal angles of its diagonal.
 
 use 5.020;
 use strict;
@@ -26,7 +26,7 @@ sub rectangle_side_from_angle ($theta) {
 
 my $x = 43;                         # side 1
 my $y = 97;                         # side 2
-my $z = sqrt($x**2 + $y**2);        # digonal
+my $z = sqrt($x**2 + $y**2);        # diagonal
 
 my ($a1, $a2) = diagonal_angles($x, $y, $z);
 
