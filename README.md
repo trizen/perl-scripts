@@ -493,6 +493,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Rational continued fractions](./Math/rational_continued_fractions.pl)
     * [Rational prime product](./Math/rational_prime_product.pl)
     * [Rational summation of fractions](./Math/rational_summation_of_fractions.pl)
+    * [Rectangle side lengths extraction](./Math/rectangle_side_lengths_extraction.pl)
     * [Recursive matrix multiplication](./Math/recursive_matrix_multiplication.pl)
     * [Rest calc](./Math/rest_calc.pl)
     * [Reversed number triangle](./Math/reversed_number_triangle.pl)
