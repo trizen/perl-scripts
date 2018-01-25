@@ -41,7 +41,7 @@ sub mandelbrot_like_set {
             );
 
             my $i = $I;
-            my $c = sqrt(1/$z);
+            my $c = 1/sqrt($z);
 
             while (abs($z) < $L && --$i) {
                 $z **= $c;
