@@ -2,7 +2,7 @@
 
 # Daniel "Trizen" Șuteu
 # License: GPLv3
-# Date: 04 October 2017
+# Date: 25 January 2018
 # https://github.com/trizen
 
 # Generates a Mandelbrot-like set, using the formula: z = z^(1/c).
@@ -16,11 +16,11 @@ use strict;
 use warnings;
 
 use Imager;
-use Inline 'C';
+use Math::GComplex qw(cplx);
 
 sub mandelbrot_like_set {
 
-    my ($w, $h) = (800, 800);
+    my ($w, $h) = (1000, 1000);
 
     my $zoom  = 1;    # the zoom factor
     my $moveX = 0;    # the amount of shift on the x axis
@@ -35,13 +35,19 @@ sub mandelbrot_like_set {
     foreach my $x (1 .. $w) {
         foreach my $y (1 .. $h) {
 
-            my $i = iterate(
+            my $z = cplx(
                 (2 * $x - $w) / ($w * $zoom) + $moveX,
                 (2 * $y - $h) / ($h * $zoom) + $moveY,
-                $L, $I,
             );
 
-            $color->set(hsv => [$i / $I * 360 - 120, 1, $i / $I]);
+            my $i = $I;
+            my $c = sqrt(1/$z);
+
+            while (abs($z) < $L && --$i) {
+                $z **= $c;
+            }
+
+            $color->set(hsv => [$i / $I * 360 + 120, 1, $i / $I]);
             $img->setpixel(x => $x - 1, y => $y - 1, color => $color);
         }
     }
@@ -52,17 +58,3 @@ sub mandelbrot_like_set {
 mandelbrot_like_set()->write(
     file => 'mandelbrot_like_set.png'
 );
-
-__END__
-__C__
-
-#include <complex.h>
-
-int iterate(double zx, double zy, int L, int i) {
-    double complex z = zx + zy * I;
-    double complex c = 1/z;
-    while (cabs(z) < L && --i) {
-        z = cpow(z, c);
-    }
-    return i;
-}
