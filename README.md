@@ -265,6 +265,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Diff negative](./Image/diff_negative.pl)
     * [Edge detector](./Image/edge_detector.pl)
     * [Fractal frame](./Image/fractal_frame.pl)
+    * [Fractal frame transparent](./Image/fractal_frame_transparent.pl)
     * [Gd similar images](./Image/gd_similar_images.pl)
     * [Gd star trails](./Image/gd_star_trails.pl)
     * [Image2matrix](./Image/image2matrix.pl)
