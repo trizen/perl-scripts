@@ -50,10 +50,8 @@ sub complex_transform ($file) {
     my $min_x = min(map { $_->[2] } grep { $_->[2] =~ /[0-9]/ } @vals);
     my $min_y = min(map { $_->[3] } grep { $_->[3] =~ /[0-9]/ } @vals);
 
-    say "min X: $min_x";
-    say "min Y: $min_y";
-    say "max X: $max_x";
-    say "max Y: $max_y";
+    say "X: [$min_x, $max_x]";
+    say "Y: [$min_y, $max_y]";
 
     my $new_img = Imager->new(
         xsize => $width,
@@ -62,12 +60,10 @@ sub complex_transform ($file) {
 
     foreach my $val (@vals) {
 
-        my $pixel = $img->getpixel(x => $val->[0], y => $val->[1]);
-
         $new_img->setpixel(
             x     => sprintf('%.0f', map_range($val->[2], $min_x, $max_x, 0, $width  - 1)),
             y     => sprintf('%.0f', map_range($val->[3], $min_y, $max_y, 0, $height - 1)),
-            color => $pixel,
+            color => $img->getpixel(x => $val->[0], y => $val->[1]),
         );
     }
 

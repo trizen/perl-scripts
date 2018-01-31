@@ -11,6 +11,7 @@ use 5.020;
 use strict;
 use warnings;
 
+use feature qw(lexical_subs);
 use experimental qw(signatures);
 
 use Imager;
