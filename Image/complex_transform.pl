@@ -2,96 +2,83 @@
 
 # Daniel "Trizen" Șuteu
 # License: GPLv3
-# Date: 11 March 2017
+# Date: 31 January 2018
 # https://github.com/trizen
 
 # Complex transform of an image, by mapping each pixel position to a complex function.
 
-use 5.010;
+use 5.020;
 use strict;
 use warnings;
 
+use feature qw(lexical_subs);
+use experimental qw(signatures);
+
 use Imager;
-use Math::GComplex;
+use List::Util qw(min max);
+use Math::GComplex qw(cplx);
 
-my $file = shift(@ARGV) // die "usage: $0 [image]\n";
-
-sub map_val {
-    my ($value, $in_min, $in_max, $out_min, $out_max) = @_;
-
-#<<<
-    ($value - $in_min)
-        * ($out_max - $out_min)
-        / ($in_max - $in_min)
-    + $out_min;
-#>>>
+sub map_range ($this, $in_min, $in_max, $out_min, $out_max) {
+    $this =~ /[0-9]/ or return 0;
+    ($this - $in_min) * ($out_max - $out_min) / ($in_max - $in_min) + $out_min;
 }
 
-my $img = Imager->new(file => $file)
-  or die Imager->errstr();
+sub complex_transform ($file) {
 
-my $width  = $img->getwidth;
-my $height = $img->getheight;
+    my $img = Imager->new(file => $file);
 
-sub transform {
-    my ($x, $y) = @_;
+    my $width  = $img->getwidth;
+    my $height = $img->getheight;
 
-#<<<
-    my $z = Math::GComplex->new(
-        (2 * $x - $width ) / $width,
-        (2 * $y - $height) / $height,
-    );
-#>>>
+    my @vals;
 
-    # Complex function
-    $z->sin->reals;
-}
+    foreach my $y (0 .. $height - 1) {
+        foreach my $x (0 .. $width - 1) {
 
-my @matrix;
+            my $z = cplx(
+                (2 * $x - $width) / $width,
+                (2 * $y - $height) / $height,
+            );
 
-my ($min_x, $min_y) = ( 'inf') x 2;
-my ($max_x, $max_y) = (-'inf') x 2;
-
-foreach my $y (0 .. $height - 1) {
-    foreach my $x (0 .. $width - 1) {
-        my ($new_x, $new_y) = transform($x, $y);
-
-        $matrix[$y][$x] = [$new_x, $new_y];
-
-        if ($new_x < $min_x) {
-            $min_x = $new_x;
-        }
-        if ($new_y < $min_y) {
-            $min_y = $new_y;
-        }
-        if ($new_x > $max_x) {
-            $max_x = $new_x;
-        }
-        if ($new_y > $max_y) {
-            $max_y = $new_y;
+            push @vals, [$x, $y, $z->sin->reals];
         }
     }
-}
 
-say "X: [$min_x, $max_x]";
-say "Y: [$min_y, $max_y]";
+    my $max_x = max(map { $_->[2] } grep { $_->[2] =~ /[0-9]/ } @vals);
+    my $max_y = max(map { $_->[3] } grep { $_->[3] =~ /[0-9]/ } @vals);
 
-my $out_img = Imager->new(xsize => $width,
-                          ysize => $height);
+    my $min_x = min(map { $_->[2] } grep { $_->[2] =~ /[0-9]/ } @vals);
+    my $min_y = min(map { $_->[3] } grep { $_->[3] =~ /[0-9]/ } @vals);
 
-foreach my $y (0 .. $height - 1) {
-    foreach my $x (0 .. $width - 1) {
-        my ($new_x, $new_y) = @{$matrix[$y][$x]};
+    say "min X: $min_x";
+    say "min Y: $min_y";
+    say "max X: $max_x";
+    say "max Y: $max_y";
 
-        $new_x = map_val($new_x, $min_x, $max_x, 0, $width  - 1);
-        $new_y = map_val($new_y, $min_y, $max_y, 0, $height - 1);
+    my $new_img = Imager->new(
+        xsize => $width,
+        ysize => $height,
+    );
 
-        $out_img->setpixel(
-            x => sprintf('%.0f', $new_x),
-            y => sprintf('%.0f', $new_y),
-            color => $img->getpixel(x => $x, y => $y),
+    foreach my $val (@vals) {
+
+        my $pixel = $img->getpixel(x => $val->[0], y => $val->[1]);
+
+        $new_img->setpixel(
+            x     => sprintf('%.0f', map_range($val->[2], $min_x, $max_x, 0, $width  - 1)),
+            y     => sprintf('%.0f', map_range($val->[3], $min_y, $max_y, 0, $height - 1)),
+            color => $pixel,
         );
     }
+
+    return $new_img;
 }
 
-$out_img->write(file => 'complex_transform.png');
+sub usage {
+    die "usage: $0 [input image] [output image]\n";
+}
+
+my $input  = shift(@ARGV) // usage();
+my $output = shift(@ARGV) // 'fractal_frame.png';
+
+complex_transform($input)->write(file => $output);
