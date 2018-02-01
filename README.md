@@ -442,6 +442,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Modular pseudo square root](./Math/modular_pseudo_square_root.pl)
     * [Modular sigma of unitary divisors of factorial](./Math/modular_sigma_of_unitary_divisors_of_factorial.pl)
     * [Multi sqrt nums](./Math/multi_sqrt_nums.pl)
+    * [Multinomial coefficient](./Math/multinomial_coefficient.pl)
     * [Multivariate gamma function](./Math/multivariate_gamma_function.pl)
     * [Mysterious sum-pentagonal numbers](./Math/mysterious_sum-pentagonal_numbers.pl)
     * [Mysterious sum-pentagonal numbers 2](./Math/mysterious_sum-pentagonal_numbers_2.pl)
