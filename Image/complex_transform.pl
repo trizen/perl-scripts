@@ -75,6 +75,6 @@ sub usage {
 }
 
 my $input  = shift(@ARGV) // usage();
-my $output = shift(@ARGV) // 'fractal_frame.png';
+my $output = shift(@ARGV) // 'complex_transform.png';
 
 complex_transform($input)->write(file => $output);
