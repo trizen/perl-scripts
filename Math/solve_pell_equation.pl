@@ -6,7 +6,7 @@
 # License: GPLv3
 # https://github.com/trizen
 
-# Find the smallest solution in positive integers to the Pell equation: x^2 - d*y^2 = 1, where `d` is known.
+# Find the smallest solution in positive integers to the Pell equation: x^2 - d*y^2 = ±1, where `d` is known.
 
 # See also:
 #   https://en.wikipedia.org/wiki/Pell%27s_equation
