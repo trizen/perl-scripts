@@ -53,27 +53,20 @@ sub solve_pell {
 
     return if is_square($d);
 
-    my ($k, @c) = sqrt_convergents($d);
+    my ($k, @period) = sqrt_convergents($d);
 
     my @solutions;
-    my @period = @c;
 
-    {
-        my $x = cfrac_denominator($k, @period);
+    my $x = cfrac_denominator($k, @period);
+    my $p1 = 4 * $d * ($x * $x + 1);
 
-        my $p1 = 4 * $d * ($x * $x + 1);
-        my $p2 = 4 * $d * ($x * $x - 1);
-
-        if (is_square($p1)) {
-            push @period, @c;
-            push @solutions, [$x, isqrt($p1) / (2 * $d)];
-            redo;
-        }
-
-        if (is_square($p2)) {
-            push @solutions, [$x, isqrt($p2) / (2 * $d)];
-        }
+    if (is_square($p1)) {
+        push @solutions, [$x, isqrt($p1) / (2 * $d)];
+        $x = cfrac_denominator($k, @period, @period);
     }
+
+    my $p2 = 4 * $d * ($x * $x - 1);
+    push @solutions, [$x, isqrt($p2) / (2 * $d)];
 
     return @solutions;
 }
