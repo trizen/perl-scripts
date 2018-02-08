@@ -355,6 +355,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [E primorial](./Math/e_primorial.pl)
     * [Ethiopian multiplication](./Math/ethiopian_multiplication.pl)
     * [Ethiopian multiplication binary](./Math/ethiopian_multiplication_binary.pl)
+    * [Factorial dsc algorithm](./Math/factorial_dsc_algorithm.pl)
     * [Factorial from primes](./Math/factorial_from_primes.pl)
     * [Factorial from primes simple](./Math/factorial_from_primes_simple.pl)
     * [Factorial in half steps](./Math/factorial_in_half_steps.pl)
