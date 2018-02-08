@@ -359,6 +359,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Factorial from primes simple](./Math/factorial_from_primes_simple.pl)
     * [Factorial in half steps](./Math/factorial_in_half_steps.pl)
     * [Factorization with difference of prime factors](./Math/factorization_with_difference_of_prime_factors.pl)
+    * [Farey rational approximation](./Math/farey_rational_approximation.pl)
     * [Faulhaber's formula](./Math/faulhaber_s_formula.pl)
     * [Fermat factorization method](./Math/fermat_factorization_method.pl)
     * [Fermat factorization method 2](./Math/fermat_factorization_method_2.pl)
