@@ -358,6 +358,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Factorial dsc algorithm](./Math/factorial_dsc_algorithm.pl)
     * [Factorial from primes](./Math/factorial_from_primes.pl)
     * [Factorial from primes simple](./Math/factorial_from_primes_simple.pl)
+    * [Factorial from trinomial coefficients](./Math/factorial_from_trinomial_coefficients.pl)
     * [Factorial in half steps](./Math/factorial_in_half_steps.pl)
     * [Factorization with difference of prime factors](./Math/factorization_with_difference_of_prime_factors.pl)
     * [Farey rational approximation](./Math/farey_rational_approximation.pl)
