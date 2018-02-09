@@ -23,7 +23,7 @@ sub cauchy_numbers {
 
     foreach my $i (1 .. $n) {
         foreach my $k (0 .. $i - 1) {
-            $C[$i] += $C[$k] / ($k - $i - 1);
+            $C[$i] -= $C[$k] / ($i - $k + 1);
         }
     }
 
