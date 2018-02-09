@@ -13,11 +13,9 @@ use warnings;
 use Math::GMPz;
 use experimental qw(signatures);
 
-sub trinomial {
-    my ($m, $n, $o) = @_;
+sub trinomial ($m, $n, $o) {
 
     my $prod = Math::GMPz::Rmpz_init();
-
     Math::GMPz::Rmpz_bin_uiui($prod, $m + $n + $o, $o);
 
     if ($n) {
