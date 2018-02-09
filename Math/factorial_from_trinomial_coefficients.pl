@@ -29,7 +29,7 @@ sub trinomial ($m, $n, $o) {
 
 sub Factorial($n) {
     return 1 if ($n < 2);
-    Factorial($n >> 1)**2 * trinomial(int($n / 2), $n % 2, int($n / 2));
+    Factorial($n >> 1)**2 * trinomial($n >> 1, $n % 2, $n >> 1);
 }
 
 foreach my $n (0 .. 30) {
