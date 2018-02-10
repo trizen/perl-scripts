@@ -11,45 +11,32 @@ use strict;
 use warnings;
 
 use GD::Simple;
-use Math::AnyNum;
+use Math::AnyNum qw(abs);
 use experimental qw(signatures);
 
-sub farey_approximation ($r, $rep) {
+sub farey_approximation ($r) {
 
-    use Math::AnyNum qw(:overload);
-    my ($a, $b, $c, $d) = (0, 1, 1, 0);
+    my ($m, $n) = abs($r)->rat_approx->nude;
 
-    my $eps = 2.0**-($Math::AnyNum::PREC / '1.5');
+    my $enc = '';
 
-    my $turns = '';
-
-    foreach (1 .. $rep) {
-        my $m = ($a + $c) / ($b + $d);
-
-        if ($m < $r) {
-            ($a, $b) = $m->nude;
-            $turns .= '0';
-        }
-        elsif ($m > $r) {
-            ($c, $d) = $m->nude;
-            $turns .= '1';
+    for (; ;) {
+        if ((($m <=> $n) || last) < 0) {
+            $enc .= '0';
+            $n -= $m;
         }
         else {
-            last;
-        }
-
-        if (abs($m - $r) <= $eps) {
-            say "Reached target precision... Breaking...";
-            last;
+            $enc .= '1';
+            $m -= $n;
         }
     }
 
-    return $turns;
+    return $enc;
 }
 
 my $turns = do {
     local $Math::AnyNum::PREC = 30000;
-    farey_approximation(Math::AnyNum::tau(), 80000);
+    farey_approximation(Math::AnyNum::tau());
 };
 
 say substr($turns, 0, 50);
@@ -59,7 +46,7 @@ my $height = 2000;
 
 my $img = 'GD::Simple'->new($width, $height);
 
-$img->moveTo($width >> 1, $height >> 2);
+$img->moveTo($width / 1.75, $height / 1.25);
 
 my $angle = 60;
 
