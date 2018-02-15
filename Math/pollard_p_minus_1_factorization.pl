@@ -11,7 +11,7 @@ use warnings;
 
 use Math::AnyNum qw(:overload powmod gcd lcm valuation is_prime);
 
-sub pollard_p1_random {
+sub pollard_p1_factor {
     my ($n) = @_;
 
     return () if $n <= 1;
@@ -19,28 +19,29 @@ sub pollard_p1_random {
 
     if ($n % 2 == 0) {
         my $v = valuation($n, 2);
-        return ((2) x $v, pollard_p1_random($n >> $v));
+        return ((2) x $v, pollard_p1_factor($n >> $v));
     }
 
-    for (
-        my ($i, $k) = (1, 1);
-        $k = lcm($k, ++$i);
-    ) {
+    my ($i, $k) = (1, 1);
+
+    for (;;) {
 
         my $x = powmod(2, $k, $n);
         my $g = gcd($x-1, $n);
 
         if ($g != 1 and $g != $n) {
-            return sort {$a <=> $b} (
-                pollard_p1_random($g),
-                pollard_p1_random($n/$g)
+            return sort { $a <=> $b } (
+                pollard_p1_factor($g),
+                pollard_p1_factor($n/$g)
             );
         }
+
+        $k = lcm($k, ++$i);
     }
 }
 
-say join(', ', pollard_p1_random(25889*46511));
-say join(', ', pollard_p1_random(419763345));
-say join(', ', pollard_p1_random(5040));
-say join(', ', pollard_p1_random(12129569695640600539));
-say join(', ', pollard_p1_random(38568900844635025971879799293495379321));
+say join(', ', pollard_p1_factor(25889*46511));
+say join(', ', pollard_p1_factor(419763345));
+say join(', ', pollard_p1_factor(5040));
+say join(', ', pollard_p1_factor(12129569695640600539));
+say join(', ', pollard_p1_factor(38568900844635025971879799293495379321));
