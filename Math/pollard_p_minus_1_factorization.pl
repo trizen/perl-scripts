@@ -22,14 +22,19 @@ sub pollard_p1_factor {
         return ((2) x $v, pollard_p1_factor($n >> $v));
     }
 
-    my ($i, $k) = (1, 1);
+    my ($t, $i, $k) = (2, 1, 1);
 
     for (;;) {
 
-        my $x = powmod(2, $k, $n);
+        my $x = powmod($t, $k, $n);
         my $g = gcd($x-1, $n);
 
-        if ($g != 1 and $g != $n) {
+        if ($g != 1) {
+
+            if ($g == $n) {
+                ++$t; next;
+            }
+
             return sort { $a <=> $b } (
                 pollard_p1_factor($g),
                 pollard_p1_factor($n/$g)
@@ -44,4 +49,5 @@ say join(', ', pollard_p1_factor(25889*46511));
 say join(', ', pollard_p1_factor(419763345));
 say join(', ', pollard_p1_factor(5040));
 say join(', ', pollard_p1_factor(12129569695640600539));
+say join(', ', pollard_p1_factor(2**64 + 1));
 say join(', ', pollard_p1_factor(38568900844635025971879799293495379321));
