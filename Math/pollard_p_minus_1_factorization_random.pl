@@ -28,7 +28,7 @@ sub pollard_p1_factor {
     for (;;) {
 
         do {
-            $k = irand(2, $t);
+            $k = (irand(2, $t) - 2) * 16 + 2;
         } while (gcd($n, $k) != 1);
 
         $t = powmod($t, $k, $n);

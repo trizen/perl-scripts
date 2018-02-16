@@ -23,7 +23,7 @@ sub pollard_p1_factor {
         return ((2) x $v, pollard_p1_factor($n >> $v));
     }
 
-    for (my ($t, $k) = (2, 2) ; ; ++$k) {
+    for (my ($t, $k) = (2, 2) ; ; $k += 16) {
 
         $t = powmod($t, $k, $n);
         my $g = gcd($t - 1, $n);
@@ -31,7 +31,7 @@ sub pollard_p1_factor {
         next if $g == 1;
 
         if ($g == $n) {
-            $t = $k;
+            $t = $k+1;
             next;
         }
 

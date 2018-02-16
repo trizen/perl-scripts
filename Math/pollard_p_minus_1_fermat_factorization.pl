@@ -11,7 +11,7 @@ use strict;
 use warnings;
 
 use experimental qw(signatures);
-use Math::AnyNum qw(:overload powmod irand isqrt);
+use Math::AnyNum qw(:overload powmod isqrt);
 use ntheory qw(vecprod is_prime gcd is_square valuation);
 
 sub pollard_p1_fermat_factor ($n) {
@@ -27,7 +27,7 @@ sub pollard_p1_fermat_factor ($n) {
     my $p = isqrt(4 * $n);
     my $q = $p * $p - 4 * $n;
 
-    for (my ($t, $k) = (2, 2) ; ; ++$k) {
+    for (my ($t, $k) = (2, 2) ; ; $k += 16) {
 
         $q += 2 * $p++ + 1;
 
@@ -52,7 +52,7 @@ sub pollard_p1_fermat_factor ($n) {
         next if $g == 1;
 
         if ($g == $n) {
-            $t = $k;
+            $t = $k+1;
             next;
         }
 
