@@ -28,18 +28,17 @@ sub pollard_p1_factor {
         $t = powmod($t, $k, $n);
         my $g = gcd($t - 1, $n);
 
-        if ($g != 1) {
+        next if $g == 1;
 
-            if ($g == $n) {
-                $t *= $k;
-                next;
-            }
-
-            return sort { $a <=> $b } (
-                pollard_p1_factor($g),
-                pollard_p1_factor($n / $g)
-            );
+        if ($g == $n) {
+            $t *= $k;
+            next;
         }
+
+        return sort { $a <=> $b } (
+            pollard_p1_factor($g),
+            pollard_p1_factor($n / $g)
+        );
     }
 }
 
