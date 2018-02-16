@@ -37,7 +37,7 @@ sub pollard_p1_factor {
         next if $g == 1;
 
         if ($g == $n) {
-            $t *= $k;
+            $t = $k;
             next;
         }
 

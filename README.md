@@ -476,6 +476,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Pisano periods](./Math/pisano_periods.pl)
     * [Pollard p minus 1 factorization](./Math/pollard_p_minus_1_factorization.pl)
     * [Pollard p minus 1 factorization random](./Math/pollard_p_minus_1_factorization_random.pl)
+    * [Pollard p minus 1 fermat factorization](./Math/pollard_p_minus_1_fermat_factorization.pl)
     * [Polygonal numbers](./Math/polygonal_numbers.pl)
     * [Power of factorial ramanujan](./Math/power_of_factorial_ramanujan.pl)
     * [Powers of primes in factorial](./Math/powers_of_primes_in_factorial.pl)
