@@ -515,6 +515,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Reversed number triangle](./Math/reversed_number_triangle.pl)
     * [Reversed number triangles](./Math/reversed_number_triangles.pl)
     * [Riemann's J function](./Math/riemann_s_J_function.pl)
+    * [Roots on the rise](./Math/roots_on_the_rise.pl)
     * [RSA example](./Math/RSA_example.pl)
     * [RSA PRNG](./Math/RSA_PRNG.pl)
     * [Semiprime equationization](./Math/semiprime_equationization.pl)
