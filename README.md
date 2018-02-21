@@ -349,6 +349,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Cosmic calendar](./Math/cosmic_calendar.pl)
     * [Count subtriangles](./Math/count_subtriangles.pl)
     * [Cuboid](./Math/cuboid.pl)
+    * [Definite integral numerical approximation](./Math/definite_integral_numerical_approximation.pl)
     * [Difference of k powers](./Math/difference_of_k_powers.pl)
     * [Difference of three squares solutions](./Math/difference_of_three_squares_solutions.pl)
     * [Difference of two squares solutions](./Math/difference_of_two_squares_solutions.pl)
