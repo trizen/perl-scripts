@@ -549,6 +549,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Sum of the sum of divisors](./Math/sum_of_the_sum_of_divisors.pl)
     * [Sum of the sum of squared divisors](./Math/sum_of_the_sum_of_squared_divisors.pl)
     * [Sum of three cubes problem](./Math/sum_of_three_cubes_problem.pl)
+    * [Sum of triangular numbers solutions](./Math/sum_of_triangular_numbers_solutions.pl)
     * [Sum of two primes](./Math/sum_of_two_primes.pl)
     * [Sum of two squares all solutions](./Math/sum_of_two_squares_all_solutions.pl)
     * [Sum of two squares multiple solutions](./Math/sum_of_two_squares_multiple_solutions.pl)
