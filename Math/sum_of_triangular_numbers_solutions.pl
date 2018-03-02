@@ -7,7 +7,7 @@
 # Find representations for a given number (n) as a sum of three triangular
 # numbers, where the index (k) of one triangular number is also given.
 
-# Find solutions for `x` and `y` in the equation:
+# Equivalent with finding solutions to `x` and `y` in the following equation:
 #
 #   n = k*(k+1)/2 + x*(x+1)/2 + y*(y+1)/2
 #
@@ -27,6 +27,7 @@
 
 # See also:
 #   https://projecteuler.net/problem=621
+#   https://trizenx.blogspot.com/2017/10/representing-integers-as-sum-of-two.html
 
 use 5.020;
 use strict;
@@ -35,10 +36,9 @@ use warnings;
 use experimental qw(signatures);
 
 use Set::Product::XS qw(product);
-use Math::AnyNum qw(ipolygonal_root);
-use ntheory qw(sqrtmod factor_exp chinese);
+use ntheory qw(sqrtmod factor_exp chinese is_polygonal);
 
-sub sum_of_two_squares_solutions ($n) {
+sub sum_of_two_squares ($n) {
 
     $n == 0 and return [0, 0];
 
@@ -125,13 +125,14 @@ sub sum_of_triangles ($n, $k) {
     return if $z <= 0;
 
     my @result;
-    my @solutions = sum_of_two_squares_solutions($z + 1);
+    my @solutions = sum_of_two_squares($z + 1);
 
-    foreach my $solution (@solutions) {
-        push @result, [
-            ipolygonal_root(($solution->[0]**2 - 1) / 8, 3),
-            ipolygonal_root(($solution->[1]**2 - 1) / 8, 3),
-        ];
+    foreach my $s (@solutions) {
+
+        is_polygonal(($s->[0]**2 - 1)/8, 3, \my $x);
+        is_polygonal(($s->[1]**2 - 1)/8, 3, \my $y);
+
+        push @result, [$x, $y];
     }
 
     return @result;
