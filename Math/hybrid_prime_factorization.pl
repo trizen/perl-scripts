@@ -171,7 +171,7 @@ foreach my $k (1 .. 100) {
 foreach my $k (1 .. 100) {
 
     my $p = random_prime(2**(100 + $k));
-    my $n = $p * next_prime($p + irand(10**15));
+    my $n = next_prime($p + irand(10**15)) * $p;
     my @f = fermat_hybrid_factorization($n);
 
     #say join(' * ', @f), " = $n";
