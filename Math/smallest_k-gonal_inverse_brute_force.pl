@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 
-# Find the smallest polygonal representation for a given number.
+# Given an integer `n`, find the smallest integer k>=3 such that `n` is a k-gonal number.
 
 # Example:
-#  12 = P(3, 5) since 12 is a pentagonal number, but not a square or triangular.
+#  a(12) = 5 since 12 is a pentagonal number, but not a square or triangular.
 
 # Based on code by Chai Wah Wu.
 
