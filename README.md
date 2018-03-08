@@ -537,6 +537,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Sorting algorithms](./Math/sorting_algorithms.pl)
     * [Sphere volume](./Math/sphere_volume.pl)
     * [Sqrt n](./Math/sqrt_n.pl)
+    * [Square product subsets](./Math/square_product_subsets.pl)
     * [Square root convergents](./Math/square_root_convergents.pl)
     * [Square root method](./Math/square_root_method.pl)
     * [Square root modulo n tonelli-shanks](./Math/square_root_modulo_n_tonelli-shanks.pl)
