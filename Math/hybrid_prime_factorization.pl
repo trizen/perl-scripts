@@ -53,7 +53,7 @@ sub fermat_hybrid_factorization ($n) {
 
     my $t = 1;
     my $h = 1;
-    my $z = random_prime($n);
+    my $z = Math::AnyNum->new(random_prime($n));
 
     my $g = 1;
     my $c = $q + $p;
@@ -120,7 +120,7 @@ sub fermat_hybrid_factorization ($n) {
 
             if ($g == $n) {
                 $h = 1;
-                $z = random_prime($n);
+                $z = Math::AnyNum->new(random_prime($n));
                 next;
             }
 
