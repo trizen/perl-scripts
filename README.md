@@ -391,6 +391,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Harmonic numbers from powers](./Math/harmonic_numbers_from_powers.pl)
     * [Harmonic numbers from powers mpz](./Math/harmonic_numbers_from_powers_mpz.pl)
     * [Harmonic prime powers](./Math/harmonic_prime_powers.pl)
+    * [Hybrid prime factorization](./Math/hybrid_prime_factorization.pl)
     * [Inverse of bernoulli numbers](./Math/inverse_of_bernoulli_numbers.pl)
     * [Inverse of euler totient](./Math/inverse_of_euler_totient.pl)
     * [Inverse of factorial](./Math/inverse_of_factorial.pl)

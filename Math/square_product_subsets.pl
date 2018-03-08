@@ -93,7 +93,7 @@ sub find_square_subsets(@set) {
     }
 
     if (@rows < prime_count($max_prime)) {
-        push @rows, (0) x (prime_count($max_prime) - @rows + 1);
+        push @rows, (0) x (prime_count($max_prime) - @rows);
     }
 
     my ($A, $I) = gaussian_elimination(\@rows, prime_count($max_prime) - 1);
