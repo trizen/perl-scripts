@@ -30,7 +30,7 @@ sub fibonacci_encoding ($n) {
     return '0' if ($n == 0);
 
     my $phi = sqrt(1.25) + 0.5;
-    my $log = int(log($n * sqrt(5)) / log($phi));
+    my $log = int((log($n) + log(5)/2) / log($phi));
 
     my ($f1, $f2) = (fib($log), fib($log - 1));
 

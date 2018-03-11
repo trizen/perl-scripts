@@ -19,7 +19,7 @@ use warnings;
 use experimental qw(signatures);
 
 use ntheory qw(divisors);
-use Math::AnyNum qw(:overload polygonal);
+use Math::AnyNum qw(:overload);
 
 sub smallest_k_gonal_inverse ($n) {
 
