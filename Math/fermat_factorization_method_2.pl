@@ -4,9 +4,7 @@
 # Date: 13 September 2017
 # https://github.com/trizen
 
-# Fermat's factorization method (derivation).
-
-# This is a generalized version of Fermat's method, which works for any input.
+# Fermat's factorization method.
 
 # Theorem:
 #   If the absolute difference between the prime factors of a
@@ -22,47 +20,49 @@
 # See also:
 #   https://en.wikipedia.org/wiki/Fermat%27s_factorization_method
 
-use 5.010;
+use 5.020;
 use strict;
 use warnings;
 
-use ntheory qw(sqrtint is_prime is_power);
+use experimental qw(signatures);
+use ntheory qw(vecprod sqrtint is_prime is_square valuation);
 
-sub fermat_factorization {
-    my ($n) = @_;
+sub fermat_factorization ($n) {
 
-    if ($n <= 1 or is_prime($n)) {
-        return $n;
+    # Check for primes and negative numbers
+    return ()   if ($n <= 1);
+    return ($n) if is_prime($n);
+
+    # Check for divisibility by 2
+    if (!($n & 1)) {
+        my $v = valuation($n, 2);
+        return ((2) x $v, __SUB__->($n >> $v));
     }
-
-    $n <<= 2;  # multiply by 4
 
     my $p = sqrtint($n);
     my $q = $p * $p - $n;
 
-    until (is_power($q, 2)) {
+    until (is_square($q)) {
         $q += 2 * $p++ + 1;
     }
 
     my $s = sqrtint($q);
 
     my ($x1, $x2) = (
-        ($p + $s) >> 1,
-        ($p - $s) >> 1,
+        ($p + $s),
+        ($p - $s),
     );
 
     return sort { $a <=> $b } (
-        fermat_factorization($x1),
-        fermat_factorization($x2)
+        __SUB__->($x1),
+        __SUB__->($x2)
     );
 }
 
 foreach my $n (160587846247027, 5040, 65127835124, 6469693230) {
-    say join(' * ', fermat_factorization($n)), " = $n";
-}
 
-__END__
-12672269 * 12672383 = 160587846247027
-2 * 2 * 2 * 2 * 3 * 3 * 5 * 7 = 5040
-2 * 2 * 11 * 19 * 6359 * 12251 = 65127835124
-2 * 3 * 5 * 7 * 11 * 13 * 17 * 19 * 23 * 29 = 6469693230
+    my @f = fermat_factorization($n);
+    say join(' * ', @f), " = $n";
+
+    die 'error' if vecprod(@f) != $n;
+}

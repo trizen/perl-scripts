@@ -1,61 +1,53 @@
 #!/usr/bin/perl
 
 # Daniel "Trizen" Șuteu
-# Date: 12 September 2017
+# Date: 16 March 2018
 # https://github.com/trizen
 
-# Fermat's factorization method (derivation).
+# A simple implementation of Fermat's factorization method.
 
-# Theorem:
-#   If the absolute difference between the prime factors of a
-#   semiprime `n` is known, then `n` can be factored in polynomial time.
+# See also:
+#   https://en.wikipedia.org/wiki/Fermat%27s_factorization_method
 
-# Based on the following quadratic equation:
-#   x^2 + (a - b)*x - a*b = 0
-#
-# which has the solutions:
-#   x₁ = -a
-#   x₂ = +b
-
-use 5.010;
+use 5.020;
 use strict;
 use warnings;
 
-use ntheory qw(sqrtint is_prime is_power);
+use experimental qw(signatures);
 
-sub fermat_factorization {
-    my ($n) = @_;
+use ntheory qw(is_prime vecprod);
+use Math::AnyNum qw(:overload isqrt is_square valuation);
 
-    if ($n <= 1 or is_prime($n)) {
-        return $n;
+sub fermat_factorization ($n) {
+
+    # Check for primes and negative numbers
+    return ()   if ($n <= 1);
+    return ($n) if is_prime($n);
+
+    # Check for divisibility by 2
+    if (!($n & 1)) {
+        my $v = valuation($n, 2);
+        return ((2) x $v, __SUB__->($n >> $v));
     }
 
-    my $t = $n << 2;
+    my $q = 2 * isqrt($n);
 
-    for (my $d = 0 ; ; ++$d) {
-        if (is_power($d*$d + $t, 2)) {
-
-            my $q = sqrtint($d*$d + $t);
-
-            my ($x1, $x2) = (
-                ($q - $d) >> 1,
-                ($q + $d) >> 1,
-            );
-
-            return sort { $a <=> $b } (
-                fermat_factorization($x1),
-                fermat_factorization($x2)
-            );
-        }
+    while (!is_square($q * $q - 4 * $n)) {
+        $q += 2;
     }
+
+    my $p = ($q + isqrt($q * $q - 4 * $n)) >> 1;
+
+    return sort { $a <=> $b } (
+        __SUB__->($p),
+        __SUB__->($n / $p),
+    );
 }
 
 foreach my $n (160587846247027, 5040, 65127835124, 6469693230) {
-    say join(' * ', fermat_factorization($n)), " = $n";
-}
 
-__END__
-12672269 * 12672383 = 160587846247027
-2 * 2 * 2 * 2 * 3 * 3 * 5 * 7 = 5040
-2 * 2 * 11 * 19 * 6359 * 12251 = 65127835124
-2 * 3 * 5 * 7 * 11 * 13 * 17 * 19 * 23 * 29 = 6469693230
+    my @f = fermat_factorization($n);
+    say join(' * ', @f), " = $n";
+
+    die 'error' if vecprod(@f) != $n;
+}
