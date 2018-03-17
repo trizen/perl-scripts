@@ -448,6 +448,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Modular fibonacci polynomial](./Math/modular_fibonacci_polynomial.pl)
     * [Modular fibonacci polynomial 2](./Math/modular_fibonacci_polynomial_2.pl)
     * [Modular hyperoperation](./Math/modular_hyperoperation.pl)
+    * [Modular inverse](./Math/modular_inverse.pl)
     * [Modular pseudo square root](./Math/modular_pseudo_square_root.pl)
     * [Modular sigma of unitary divisors of factorial](./Math/modular_sigma_of_unitary_divisors_of_factorial.pl)
     * [Multi sqrt nums](./Math/multi_sqrt_nums.pl)
