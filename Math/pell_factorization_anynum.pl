@@ -45,14 +45,14 @@ sub pell_factorization ($n) {
     my $y = $x;
     my $z = 1;
 
-    my $r = 1;
+    my $r = round(($x + $y) / $z);
 
     my ($e1, $e2) = (1, 0);
     my ($f1, $f2) = (0, 1);
 
     for (; ;) {
 
-        $y = round(($x + $y) / $z) * $z - $y;
+        $y = $r * $z - $y;
         $z = round(($n - $y * $y) / $z);
         $r = round(($x + $y) / $z);
 
