@@ -65,6 +65,8 @@ sub fermat_hybrid_factorization ($n) {
     my $c1 = $p;
     my $c2 = 1;
 
+    my $r = $p + $p;
+
     my ($e1, $e2) = (1, 0);
     my ($f1, $f2) = (0, 1);
 
@@ -88,7 +90,7 @@ sub fermat_hybrid_factorization ($n) {
 
         # Simple version of the continued-fraction factorization method.
         # Efficient for numbers that have factors relatively close to sqrt(n)
-        $c1 = idiv($p + $c1,       $c2) * $c2 - $c1;
+        $c1 = $r * $c2 - $c1;
         $c2 = idiv($n - $c1 * $c1, $c2);
 
         my $x1 = ($p * $f2 + $e2) % $n;
@@ -105,7 +107,7 @@ sub fermat_hybrid_factorization ($n) {
             }
         }
 
-        my $r = idiv($p + $c1, $c2);
+        $r = idiv($p + $c1, $c2);
 
         ($f1, $f2) = ($f2, ($r * $f2 + $f1) % $n);
         ($e1, $e2) = ($e2, ($r * $e2 + $e1) % $n);
