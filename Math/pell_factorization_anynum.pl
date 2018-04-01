@@ -20,7 +20,7 @@ use warnings;
 use experimental qw(signatures);
 
 use ntheory qw(is_prime vecprod vecany);
-use Math::AnyNum qw(:overload irand isqrt idiv is_square valuation gcd);
+use Math::AnyNum qw(:overload irand isqrt is_square valuation gcd round);
 
 sub pell_factorization ($n) {
 
@@ -52,9 +52,9 @@ sub pell_factorization ($n) {
 
     for (; ;) {
 
-        $y = idiv($x + $y, $z) * $z - $y;
-        $z = idiv($n - $y * $y,  $z);
-        $r = idiv($x + $y, $z);
+        $y = round(($x + $y) / $z) * $z - $y;
+        $z = round(($n - $y * $y) / $z);
+        $r = round(($x + $y) / $z);
 
         foreach my $t (
             $e2 + $e2 + $f2 + $x,
