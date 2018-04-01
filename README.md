@@ -475,6 +475,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Partitions count simple](./Math/partitions_count_simple.pl)
     * [Pascal's triangle multiples](./Math/pascal_s_triangle_multiples.pl)
     * [Pattern mixing](./Math/pattern_mixing.pl)
+    * [Pell factorization](./Math/pell_factorization.pl)
     * [Perfect numbers](./Math/perfect_numbers.pl)
     * [Period length of square roots](./Math/period_length_of_square_roots.pl)
     * [Pi from infinity](./Math/pi_from_infinity.pl)
