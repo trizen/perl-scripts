@@ -95,7 +95,7 @@ sub pell_factorization ($n) {
     }
 }
 
-foreach my $k (2..48) {
+foreach my $k (2..62) {
     my $n = urandomm(1 << $k) + 2;
 
     my @factors = pell_factorization($n);

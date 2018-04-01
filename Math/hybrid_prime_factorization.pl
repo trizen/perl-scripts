@@ -21,6 +21,7 @@ use strict;
 use warnings;
 
 use experimental qw(signatures);
+
 use ntheory qw(is_prime random_prime vecprod);
 
 use Math::AnyNum qw(:overload
@@ -49,6 +50,7 @@ sub fermat_hybrid_factorization ($n) {
     }
 
     my $p = isqrt($n);
+    my $x = $p;
     my $q = ($p * $p - $n);
 
     my $t = 1;
@@ -93,7 +95,7 @@ sub fermat_hybrid_factorization ($n) {
         $c1 = $r * $c2 - $c1;
         $c2 = idiv($n - $c1 * $c1, $c2);
 
-        my $x1 = ($p * $f2 + $e2) % $n;
+        my $x1 = ($x * $f2 + $e2) % $n;
         my $y1 = ($x1 * $x1) % $n;
 
         if (is_square($y1)) {
@@ -107,7 +109,7 @@ sub fermat_hybrid_factorization ($n) {
             }
         }
 
-        $r = idiv($p + $c1, $c2);
+        $r = idiv($x + $c1, $c2);
 
         ($f1, $f2) = ($f2, ($r * $f2 + $f1) % $n);
         ($e1, $e2) = ($e2, ($r * $e2 + $e1) % $n);
