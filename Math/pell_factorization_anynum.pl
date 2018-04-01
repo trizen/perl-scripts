@@ -17,13 +17,10 @@ use 5.020;
 use strict;
 use warnings;
 
-use integer;
 use experimental qw(signatures);
 
-use ntheory qw(
-    is_prime gcd mulmod addmod sqrtint
-    is_square vecprod vecany valuation urandomm
-);
+use ntheory qw(is_prime vecprod vecany);
+use Math::AnyNum qw(:overload irand isqrt idiv is_square valuation gcd);
 
 sub pell_factorization ($n) {
 
@@ -34,7 +31,7 @@ sub pell_factorization ($n) {
     # Check for perfect squares
     if (is_square($n)) {
         return sort { $a <=> $b } (
-            (__SUB__->(sqrtint($n))) x 2
+            (__SUB__->(isqrt($n))) x 2
         );
     }
 
@@ -44,7 +41,7 @@ sub pell_factorization ($n) {
         return ((2) x $v, __SUB__->($n >> $v));
     }
 
-    my $x = sqrtint($n);
+    my $x = isqrt($n);
     my $y = $x;
     my $z = 1;
 
@@ -55,15 +52,15 @@ sub pell_factorization ($n) {
 
     for (; ;) {
 
-        $y = int(($x + $y) / $z) * $z - $y;
-        $z = int(($n - $y * $y) / $z);
-        $r = int(($x + $y) / $z);
+        $y = idiv($x + $y, $z) * $z - $y;
+        $z = idiv($n - $y * $y,  $z);
+        $r = idiv($x + $y, $z);
 
         foreach my $t (
-            addmod(addmod(addmod($e2, $e2, $n), $f2, $n), $x, $n),
-            addmod(addmod($e2, $f2, $n), $f2, $n),
-            addmod($e2, mulmod($f2, $x, $n), $n),
-            addmod($e2, $f2, $n),
+            $e2 + $e2 + $f2 + $x,
+            $e2 + $f2 + $f2,
+            $e2 + $f2 * $x,
+            $e2 + $f2,
             $e2,
         ) {
             my $g = gcd($t, $n);
@@ -76,13 +73,13 @@ sub pell_factorization ($n) {
             }
         }
 
-        ($f1, $f2) = ($f2, addmod(mulmod($r, $f2, $n), $f1, $n));
-        ($e1, $e2) = ($e2, addmod(mulmod($r, $e2, $n), $e1, $n));
+        ($f1, $f2) = ($f2, ($r * $f2 + $f1) % $n);
+        ($e1, $e2) = ($e2, ($r * $e2 + $e1) % $n);
     }
 }
 
-foreach my $k (2..48) {
-    my $n = urandomm(1 << $k) + 2;
+foreach my $k (2 .. 48) {
+    my $n = irand(2, 1 << $k);
 
     my @factors = pell_factorization($n);
 

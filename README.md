@@ -476,6 +476,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Pascal's triangle multiples](./Math/pascal_s_triangle_multiples.pl)
     * [Pattern mixing](./Math/pattern_mixing.pl)
     * [Pell factorization](./Math/pell_factorization.pl)
+    * [Pell factorization anynum](./Math/pell_factorization_anynum.pl)
     * [Perfect numbers](./Math/perfect_numbers.pl)
     * [Period length of square roots](./Math/period_length_of_square_roots.pl)
     * [Pi from infinity](./Math/pi_from_infinity.pl)
