@@ -91,11 +91,11 @@ sub fermat_hybrid_factorization ($n) {
         $c1 = idiv($p + $c1,       $c2) * $c2 - $c1;
         $c2 = idiv($n - $c1 * $c1, $c2);
 
-        my $x1 = (($p * $f2 + $e2) % $n);
-        my $y1 = (($x1 * $x1 - $n * $f2 * $f2) % $n);
+        my $x1 = ($p * $f2 + $e2) % $n;
+        my $y1 = ($x1 * $x1) % $n;
 
         if (is_square($y1)) {
-            $g = gcd(isqrt($y1) - $x1, $n);
+            $g = gcd($x1 - isqrt($y1), $n);
 
             if ($g > 1 and $g < $n) {
                 return sort { $a <=> $b } (
