@@ -48,7 +48,7 @@ sub pell_factorization ($n) {
     my $y = $x;
     my $z = 1;
 
-    my $r = int(($x + $y) / $z);
+    my $r = $x + $y;
 
     my ($e1, $e2) = (1, 0);
     my ($f1, $f2) = (0, 1);
@@ -58,6 +58,20 @@ sub pell_factorization ($n) {
         $y = $r * $z - $y;
         $z = int(($n - $y * $y) / $z);
         $r = int(($x + $y) / $z);
+
+        my $a0 = addmod(mulmod($x, $f2, $n), $e2, $n);
+        my $b0 = mulmod($a0, $a0, $n);
+
+        if (is_square($b0)) {
+            my $g = gcd($a0 - sqrtint($b0), $n);
+
+            if ($g > 1 and $g < $n) {
+                return sort { $a <=> $b } (
+                    __SUB__->($g),
+                    __SUB__->($n/$g)
+                );
+            }
+        }
 
         foreach my $t (
             addmod(addmod(addmod($e2, $e2, $n), $f2, $n), $x, $n),
