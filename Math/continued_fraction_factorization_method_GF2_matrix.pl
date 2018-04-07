@@ -128,7 +128,7 @@ sub cffm ($n) {
         $r = idiv($x + $y, $z);
 
         my $u = ($x * $f2 + $e2) % $n;
-        my $v = ($u * $u - $n * $f2 * $f2) % $n;
+        my $v = ($u * $u) % $n;
 
         if (exists $S{$v}) {
             my $g = gcd($v - $u * $S{$v}, $n);
@@ -188,7 +188,7 @@ sub cffm ($n) {
             getbit($solution, $i) || next;
 
             ($solution_X *= $Q[$i][0]) %= $n;
-            ($solution_Y *= $Q[$i][1]) %= $n;
+            ($solution_Y *= $Q[$i][1]); #%= $n;
 
             is_square($solution_Y) || next;
 
