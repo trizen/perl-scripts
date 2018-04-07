@@ -109,6 +109,8 @@ sub cffm ($n) {
     my $z = 1;
     my $w = 2 * $x;
 
+    my $r = $x + $x;
+
     my ($e1, $e2) = (1, 0);
     my ($f1, $f2) = (0, 1);
 
@@ -121,8 +123,9 @@ sub cffm ($n) {
 
     do {
 
-        $y = idiv($x + $y,      $z) * $z - $y;
+        $y = $r * $z - $y;
         $z = idiv($n - $y * $y, $z);
+        $r = idiv($x + $y, $z);
 
         my $u = ($x * $f2 + $e2) % $n;
         my $v = ($u * $u - $n * $f2 * $f2) % $n;
@@ -161,8 +164,6 @@ sub cffm ($n) {
             push @A, exponents_signature(@factors);
             push @Q, [$u, $v];
         }
-
-        my $r = idiv($x + $y, $z);
 
         ($f1, $f2) = ($f2, ($r * $f2 + $f1) % $n);
         ($e1, $e2) = ($e2, ($r * $e2 + $e1) % $n);
