@@ -46,6 +46,7 @@ sub pell_cfrac ($n) {
     my $y = $x;
     my $z = 1;
     my $w = 2 * $x;
+    my $k = isqrt($w);
 
     my $r = $x + $x;
 
@@ -77,7 +78,7 @@ sub pell_cfrac ($n) {
             }
         }
 
-        my @factors    = factor_exp($c);
+        my @factors = factor_exp($c);
         my @odd_powers = grep { $factors[$_][1] % 2 == 1 } 0 .. $#factors;
 
         if (@odd_powers <= 3) {
@@ -99,27 +100,55 @@ sub pell_cfrac ($n) {
             }
 
             push @{$table{$key}}, {c => $c, u => $u};
+
+            # Create easier building blocks for building squares
+            if (@odd_powers >= 2) {
+                foreach my $i (0 .. $#odd_powers) {
+                    my $key = join(' ', map { $_->[0] } @factors[@odd_powers[0 .. $i - 1, $i + 1 .. $#odd_powers]]);
+
+                    if (exists($table{$key}) and @{$table{$key}} < 5) {
+
+                        my $missing_factor = $factors[$odd_powers[$i]][0];
+
+                        next if ($missing_factor > $k);
+
+                        foreach my $d (@{$table{$key}}) {
+                            push @{$table{$missing_factor}},
+                              {
+                                c => $c * $d->{c},
+                                u => $u * $d->{u},
+                              };
+                        }
+                    }
+                }
+            }
         }
 
-        ($f1, $f2) = ($f2, ($r * $f2 + $f1) % $n);
-        ($e1, $e2) = ($e2, ($r * $e2 + $e1) % $n);
+        my $the_end = ($z == 1);
 
-        # Pell factorization
-        foreach my $t (
-            $e2 + $e2 + $f2 + $x,
-            $e2 + $f2 + $f2,
-            $e2 + $f2 * $x,
-            $e2 + $f2,
-            $e2,
-        ) {
-            my $g = gcd($t, $n);
+        {
+            ($f1, $f2) = ($f2, ($r * $f2 + $f1) % $n);
+            ($e1, $e2) = ($e2, ($r * $e2 + $e1) % $n);
 
-            if ($g > 1 and $g < $n) {
-                return sort { $a <=> $b } (
-                    __SUB__->($g),
-                    __SUB__->($n / $g)
-                );
+            # Pell factorization
+            foreach my $t (
+                $e2 + $e2 + $f2 + $x,
+                $e2 + $f2 + $f2,
+                $e2 + $f2 * $x,
+                $e2 + $f2,
+                $e2,
+            ) {
+                my $g = gcd($t, $n);
+
+                if ($g > 1 and $g < $n) {
+                    return sort { $a <=> $b } (
+                        __SUB__->($g),
+                        __SUB__->($n / $g)
+                    );
+                }
             }
+
+            redo if $the_end;
         }
     }
 }
