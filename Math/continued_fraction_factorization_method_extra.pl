@@ -3,6 +3,9 @@
 # A simple implementation of the continued fraction factorization method,
 # combined with modular arithmetic (variation of the Brillhart-Morrison algorithm).
 
+# This version does a little bit of extra work, trying to
+# find a congruence of squares before the matrix is filled up.
+
 # See also:
 #   https://en.wikipedia.org/wiki/Continued_fraction_factorization
 
