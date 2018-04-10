@@ -16,14 +16,16 @@ use warnings;
 use experimental qw(signatures);
 
 use List::Util qw(first);
-use ntheory qw(is_prime factor_exp random_prime prime_count vecprod);
-use Math::AnyNum qw(:overload is_square isqrt irand idiv gcd valuation getbit setbit);
+use ntheory qw(is_prime factor_exp prime_count vecprod);
+use Math::AnyNum qw(is_square isqrt irand idiv gcd valuation getbit setbit);
+
+use constant { ONE => Math::AnyNum->new(1) };
 
 sub gaussian_elimination ($rows, $n) {
 
     my @A = @$rows;
     my $m = $#A;
-    my @I = map { 1 << $_ } 0 .. $m;
+    my @I = map { ONE << $_ } 0 .. $m;
 
     my $nrow = -1;
     my $mcol = $m < $n ? $m : $n;
@@ -100,18 +102,17 @@ sub cffm ($n) {
     my $y = $x;
     my $z = 1;
     my $w = 2 * $x;
+    my $k = isqrt($w);
 
     my $r = $x + $x;
 
     my ($e1, $e2) = (1, 0);
     my ($f1, $f2) = (0, 1);
 
-    my (@A, @Q, %S);
+    my (@A, @Q, %table);
 
-    my $L = 500;    # maximum number of matrix-rows
-    my $B = 100;    # B-smooth limit
-
-    my $pi_B = prime_count($B);
+    my $B = 2 * int(exp(sqrt(log($n) * log(log($n))))**(sqrt(2) / 4));    # B-smooth limit
+    my $L = prime_count($B) + int(log($n));                               # maximum number of matrix-rows
 
     do {
 
@@ -121,57 +122,88 @@ sub cffm ($n) {
 
         my $u = ($x * $f2 + $e2) % $n;
         my $v = ($u * $u) % $n;
-
-        if (exists $S{$v}) {
-            my $g = gcd($v - $u * $S{$v}, $n);
-
-            if ($g > 1 and $g < $n) {
-                return sort { $a <=> $b } (
-                    __SUB__->($g),
-                    __SUB__->($n / $g),
-                );
-            }
-
-            $S{$v} = $u;
-        }
-        else {
-            $S{$v} = $u;
-        }
-
-        if (is_square($v)) {
-            my $g = gcd(isqrt($v) - $u, $n);
-
-            if ($g > 1 and $g < $n) {
-                return sort { $a <=> $b } (
-                    __SUB__->($g),
-                    __SUB__->($n / $g),
-                );
-            }
-        }
-
         my $c = ($v > $w ? $n - $v : $v);
+
+        if (is_square($c)) {
+            my $g = gcd($u - isqrt($c), $n);
+
+            if ($g > 1 and $g < $n) {
+                return sort { $a <=> $b } (
+                    __SUB__->($g),
+                    __SUB__->($n / $g)
+                );
+            }
+        }
+
         my @factors = factor_exp($c);
 
         if (@factors and $factors[-1][0] <= $B) {
             push @A, exponents_signature(@factors);
-            push @Q, [$u, $v];
+            push @Q, [$u, $c];
+        }
+
+        my @odd_powers = grep { $factors[$_][1] % 2 == 1 } 0 .. $#factors;
+
+        if (@odd_powers <= 3) {
+            my $key = join(' ', map { $_->[0] } @factors[@odd_powers]);
+
+            # Congruence of squares by creating a square from previous terms
+            if (exists $table{$key}) {
+                foreach my $d (@{$table{$key}}) {
+
+                    my $g = gcd($d->{u} * $u - isqrt($d->{c} * $c), $n);
+
+                    if ($g > 1 and $g < $n) {
+                        return sort { $a <=> $b } (
+                            __SUB__->($g),
+                            __SUB__->($n / $g)
+                        );
+                    }
+                }
+            }
+
+            push @{$table{$key}}, {c => $c, u => $u};
+
+            # Create more building blocks for building squares
+            if (@odd_powers >= 2) {
+                foreach my $i (0 .. $#odd_powers) {
+                    my $key = join(' ', map { $_->[0] } @factors[@odd_powers[0 .. $i - 1, $i + 1 .. $#odd_powers]]);
+
+                    if (exists($table{$key}) and @{$table{$key}} < 5) {
+
+                        my $missing_factor = $factors[$odd_powers[$i]][0];
+
+                        next if ($missing_factor > $k);
+
+                        foreach my $d (@{$table{$key}}) {
+                            push @{$table{$missing_factor}},
+                              {
+                                c => $c * $d->{c},
+                                u => $u * $d->{u},
+                              };
+                        }
+                    }
+                }
+            }
         }
 
         ($f1, $f2) = ($f2, ($r * $f2 + $f1) % $n);
         ($e1, $e2) = ($e2, ($r * $e2 + $e1) % $n);
 
-    } while ($z > 1 and @A < $L);
+    } while ($z > 1 and @A <= $L);
 
-    if (@A < $pi_B) {
-        push @A, (0) x ($pi_B - @A + 1);
+    if (@A < $L) {
+        push @A, (0) x ($L - @A + 1);
     }
 
-    my ($A, $I) = gaussian_elimination(\@A, $pi_B - 1);
+    my ($A, $I) = gaussian_elimination(\@A, $L - 1);
 
-    my $LR = (first { $A->[-$_] } 1 .. @$A) - 1;
+    my $LR = ((first { $A->[-$_] } 1 .. @$A) // 0) - 1;
 
     foreach my $solution (@{$I}[@$I - $LR .. $#$I]) {
 
+        my $solution_A = 1;
+        my $solution_B = 1;
         my $solution_X = 1;
         my $solution_Y = 1;
 
@@ -179,18 +211,27 @@ sub cffm ($n) {
 
             getbit($solution, $i) || next;
 
-            ($solution_X *= $Q[$i][0]) %= $n;
-            ($solution_Y *= $Q[$i][1]); #%= $n;
+            ($solution_A *= $Q[$i][0]) %= $n;
+            ($solution_B *= $Q[$i][0]);
 
-            is_square($solution_Y) || next;
+            ($solution_X *= $Q[$i][1]) %= $n;
+            ($solution_Y *= $Q[$i][1]);
 
-            my $g = gcd(isqrt($solution_Y) + $solution_X, $n);
+            foreach my $pair (
+                [$solution_A, $solution_X],
+                [$solution_A, $solution_Y],
+                [$solution_B, $solution_X],
+                [$solution_B, $solution_Y],
+            ) {
+                my ($X, $Y) = @$pair;
+                my $g = gcd($X - isqrt($Y), $n);
 
-            if ($g > 1 and $g < $n) {
-                return sort { $a <=> $b } (
-                    __SUB__->($g),
-                    __SUB__->($n / $g),
-                );
+                if ($g > 1 and $g < $n) {
+                    return sort { $a <=> $b } (
+                        __SUB__->($g),
+                        __SUB__->($n / $g)
+                    );
+                }
             }
         }
     }
@@ -198,17 +239,9 @@ sub cffm ($n) {
     return ($n);
 }
 
-say join ' ', cffm(50754640);
-say join ' ', cffm(4882742467);
-say join ' ', cffm(25570266803);
-say join ' ', cffm(2**62 - 1);
-say join ' ', cffm(2758006706116313);
+foreach my $k (2 .. 60) {
 
-say '';
-
-foreach my $k (2 .. 20) {
-
-    my $n = irand(2, 1 << $k) * random_prime(1 << $k) * random_prime(1 << $k);
+    my $n = irand(2, 1 << $k);
     my @f = cffm($n);
 
     if (grep { !is_prime($_) } @f) {
