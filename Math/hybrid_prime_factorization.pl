@@ -24,10 +24,10 @@ use experimental qw(signatures);
 
 use ntheory qw(is_prime random_prime vecprod);
 
-use Math::AnyNum qw(:overload
-    gcd valuation powmod irand
+use Math::AnyNum qw(
+    gcd valuation powmod irand ipow
     isqrt idiv is_square next_prime
-  );
+);
 
 sub fermat_hybrid_factorization ($n) {
 
@@ -144,11 +144,11 @@ sub fermat_hybrid_factorization ($n) {
     );
 }
 
-my @tests = (
-             160587846247027, 5040, 65127835124, 6469693230,
-             12129569695640600539, 38568900844635025971879799293495379321,
-             5057557777500469647488909553014309710588182149566739774380944488183531188525863600127265768146701283
-            );
+my @tests = map { Math::AnyNum->new($_) } qw(
+     160587846247027 5040 65127835124 6469693230
+     12129569695640600539 38568900844635025971879799293495379321
+     5057557777500469647488909553014309710588182149566739774380944488183531188525863600127265768146701283
+);
 
 foreach my $n (@tests) {
 
@@ -163,7 +163,7 @@ say "\n=> Factoring 2^k+1";
 
 foreach my $k (1 .. 100) {
 
-    my $n = 2**$k + 1;
+    my $n = ipow(2, $k) + 1;
     my @f = fermat_hybrid_factorization($n);
 
     say "2^$k + 1 = ", join(' * ', @f);
@@ -174,7 +174,7 @@ foreach my $k (1 .. 100) {
 # Test the continued-fraction method with factors relatively close to sqrt(n)
 foreach my $k (1 .. 100) {
 
-    my $p = random_prime(2**(100 + $k));
+    my $p = random_prime(ipow(2, 100 + $k));
     my $n = next_prime($p + irand(10**15)) * $p;
     my @f = fermat_hybrid_factorization($n);
 
