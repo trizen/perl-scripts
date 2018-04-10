@@ -17,15 +17,7 @@ use experimental qw(signatures);
 
 use List::Util qw(first);
 use ntheory qw(is_prime factor_exp random_prime prime_count vecprod);
-use Math::AnyNum qw(:overload is_square isqrt irand idiv gcd valuation);
-
-sub getbit ($n, $k) {
-    ($n >> $k) & 1;
-}
-
-sub setbit ($n, $k) {
-    (1 << $k) | $n;
-}
+use Math::AnyNum qw(:overload is_square isqrt irand idiv gcd valuation getbit setbit);
 
 sub gaussian_elimination ($rows, $n) {
 
