@@ -20,7 +20,7 @@ use warnings;
 use experimental qw(signatures);
 
 use ntheory qw(is_prime vecprod vecany);
-use Math::AnyNum qw(:overload irand isqrt is_square valuation gcd round);
+use Math::AnyNum qw(irand isqrt is_square valuation gcd round);
 
 sub pell_factorization ($n) {
 
