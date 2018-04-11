@@ -102,7 +102,6 @@ sub cffm ($n) {
     my $y = $x;
     my $z = 1;
     my $w = 2 * $x;
-    my $k = isqrt($w);
 
     my $r = $x + $x;
 
