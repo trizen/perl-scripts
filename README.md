@@ -536,6 +536,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Sigma function](./Math/sigma_function.pl)
     * [Sigma of factorial](./Math/sigma_of_factorial.pl)
     * [Sigma p adic](./Math/sigma_p_adic.pl)
+    * [Siqs factorization](./Math/siqs_factorization.pl)
     * [Smallest k-gonal inverse](./Math/smallest_k-gonal_inverse.pl)
     * [Smallest k-gonal inverse brute force](./Math/smallest_k-gonal_inverse_brute_force.pl)
     * [Smarandache function](./Math/smarandache_function.pl)

@@ -101,9 +101,9 @@ sub cffm ($n) {
     my $x = isqrt($n);
     my $y = $x;
     my $z = 1;
-    my $w = 2 * $x;
 
-    my $r = $x + $x;
+    my $w = $x+$x;
+    my $r = $w;
 
     my ($e1, $e2) = (1, 0);
     my ($f1, $f2) = (0, 1);
