@@ -21,15 +21,13 @@ use 5.020;
 use strict;
 use warnings;
 
-use experimental qw(signatures);
-
 use Math::GMPz;
-use List::Util qw(uniq);
+use experimental qw(signatures);
 
 use ntheory qw(
   gcd sqrtmod invmod is_prime kronecker
-  vecmin vecsum urandomm valuation sqrtint
-  primes vecprod logint powmod next_prime
+  vecmin vecsum vecprod urandomm valuation
+  sqrtint primes logint powmod next_prime
   is_power fromdigits rootint random_prime
   is_square
   );
@@ -186,7 +184,7 @@ sub siqs_find_first_poly ($n, $m, $factor_base) {
     my ($best_q, $best_a, $best_ratio);
 
     for (1 .. 30) {
-        my $A = $ONE;    # may need to be a big integer
+        my $A = $ONE;
         my %q;
 
         while ("$A" < $target1) {
@@ -445,17 +443,17 @@ sub siqs_calc_sqrts ($square_indices, $smooth_relations) {
     # the corresponding smooth relations, calculate the pair [a, b], such
     # that a^2 = b^2 (mod n).
 
-    my $r1 = $ONE;    # may need to be big integers
-    my $r2 = $ONE;    # =//=
+    my $r1 = $ONE;
+    my $r2 = $ONE;
 
     foreach my $i (@$square_indices) {
         $r1 *= $smooth_relations->[$i][0];
         $r2 *= $smooth_relations->[$i][1];
     }
 
-    $r2 = sqrtint($r2);
+    $r2 = Math::GMPz->new(sqrtint($r2));
 
-    return map { ref($_) ? $_ : Math::GMPz->new($_) } ($r1, $r2);
+    return ($r1, $r2);
 }
 
 sub siqs_factor_from_square ($n, $square_indices, $smooth_relations) {
@@ -468,6 +466,7 @@ sub siqs_factor_from_square ($n, $square_indices, $smooth_relations) {
     my ($sqrt1, $sqrt2) = siqs_calc_sqrts($square_indices, $smooth_relations);
 
     #(($sqrt1 * $sqrt1) % $n == ($sqrt2 * $sqrt2) % $n) or die 'error';
+
     return Math::GMPz->new(gcd($sqrt1 - $sqrt2, $n));
 }
 
@@ -578,23 +577,28 @@ sub siqs_find_factors ($n, $perfect_squares, $smooth_relations) {
     return @factors;
 }
 
-sub siqs_choose_range ($d) {
+sub siqs_choose_range ($n) {
 
     # Choose m for sieving in [-m, m].
 
-    my $m = 65536;
+    $n = "$n";
 
-    if ($d >= 94) {
-        $m *= 9;
-    }
-    elsif ($d >= 75) {
-        $m *= 3;
-    }
-    elsif ($d >= 56) {
-        $m *= 2;
-    }
+    return int(exp(sqrt(log($n) * log(log($n))) / 2));
 
-    return $m;
+    #~ my $d = length($n);
+    #~ my $m = 65536;
+
+    #~ if ($d >= 94) {
+    #~ $m *= 9;
+    #~ }
+    #~ elsif ($d >= 75) {
+    #~ $m *= 3;
+    #~ }
+    #~ elsif ($d >= 56) {
+    #~ $m *= 2;
+    #~ }
+
+    #~ return $m;
 }
 
 sub siqs_choose_nf($n) {
@@ -619,7 +623,9 @@ sub siqs_factorize ($n, $nf) {
     # one or more non-trivial factors of the given number n. Return the
     # factors as a list.
 
-    my $m = siqs_choose_range(length($n));
+    my $m = siqs_choose_range($n);
+
+    say "SIQS sieving range: [-$m, $m]";
 
     my @factors;
     my $factor_base = siqs_factor_base_primes($n, $nf);
@@ -911,15 +917,15 @@ sub simple_cfrac_find_factor ($n, $max_iter) {
     my $w = $x + $x;
     my $r = $w;
 
-    my $c1 = $x;
-    my $c2 = 1;
+    my $y = $x;
+    my $z = 1;
 
     my ($e1, $e2) = (1, 0);
     my ($f1, $f2) = (0, 1);
 
     foreach (1 .. $max_iter) {
-        $c1 = $r * $c2 - $c1;
-        $c2 = ($n - $c1 * $c1) / $c2;    # integer division
+        $y = $r * $z - $y;
+        $z = ($n - $y * $y) / $z;    # integer division
 
         my $u = ($x * $f2 + $e2) % $n;
         my $v = ($u * $u) % $n;
@@ -933,12 +939,12 @@ sub simple_cfrac_find_factor ($n, $max_iter) {
             }
         }
 
-        $r = ($x + $c1) / $c2;    # integer division
+        $r = ($x + $y) / $z;    # integer division
 
         ($f1, $f2) = ($f2, ($r * $f2 + $f1) % $n);
         ($e1, $e2) = ($e2, ($r * $e2 + $e1) % $n);
 
-        last if ($c2 == 1);
+        last if ($z == 1);
     }
 
     return undef;
@@ -1058,14 +1064,14 @@ sub find_prime_factors($n) {
     # the global small_primes has already been initialized. Do not return
     # duplicate factors.
 
-    my @factors;
+    my %factors;
 
     say "Checking whether $n is a perfect power...";
 
     if (my $exp = is_power($n)) {
-        my $root = rootint($n, $exp);
+        my $root = Math::GMPz->new(rootint($n, $exp));
         say "$n is $root^$exp";
-        push @factors, $root;
+        $factors{$root} = $root;
     }
     else {
         say "Not a perfect power.";
@@ -1074,11 +1080,13 @@ sub find_prime_factors($n) {
         say("Using Self-Initializing Quadratic Sieve to factorize" . " $n ($digits digits)...");
 
         my $nf = siqs_choose_nf($n);
-        push @factors, siqs_factorize($n, $nf);
+        my @sf = siqs_factorize($n, $nf);
+
+        @factors{@sf} = @sf;
     }
 
     my @prime_factors;
-    foreach my $f (uniq(@factors)) {
+    foreach my $f (values %factors) {
         push @prime_factors, find_all_prime_factors($f);
     }
 
@@ -1105,10 +1113,11 @@ sub find_all_prime_factors($n) {
         }
 
         foreach my $f (find_prime_factors($rem)) {
-            say("Prime factor found: ", $f);
 
+            $rem % $f == 0 or next;
             is_prime($f)   or die 'error';
-            $rem % $f == 0 or die 'error';
+
+            say("Prime factor found: ", $f);
 
             while ($rem % $f == 0) {
                 $rem /= $f;
