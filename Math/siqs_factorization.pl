@@ -184,7 +184,7 @@ sub siqs_find_first_poly ($n, $m, $factor_base) {
     my ($best_q, $best_a, $best_ratio);
 
     for (1 .. 30) {
-        my $A = $ONE;    # may need to be a big integer
+        my $A = $ONE;
         my %q;
 
         while ("$A" < $target1) {
@@ -443,17 +443,17 @@ sub siqs_calc_sqrts ($square_indices, $smooth_relations) {
     # the corresponding smooth relations, calculate the pair [a, b], such
     # that a^2 = b^2 (mod n).
 
-    my $r1 = $ONE;    # may need to be big integers
-    my $r2 = $ONE;    # =//=
+    my $r1 = $ONE;
+    my $r2 = $ONE;
 
     foreach my $i (@$square_indices) {
         $r1 *= $smooth_relations->[$i][0];
         $r2 *= $smooth_relations->[$i][1];
     }
 
-    $r2 = sqrtint($r2);
+    $r2 = Math::GMPz->new(sqrtint($r2));
 
-    return map { ref($_) ? $_ : Math::GMPz->new($_) } ($r1, $r2);
+    return ($r1, $r2);
 }
 
 sub siqs_factor_from_square ($n, $square_indices, $smooth_relations) {
