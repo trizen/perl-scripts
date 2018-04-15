@@ -39,6 +39,8 @@ local $| = 1;
 
 # Some tuning parameters
 use constant {
+              LOOK_FOR_SMALL_FACTORS      => 1,
+              SMOOTH_TRIAL_DIVISION       => 0,
               POLLARD_PM1_BOUND           => next_prime(2_000_000),
               TRIAL_DIVISION_LIMIT        => next_prime(1_000_000),
               POLLARD_RHO_ITERATIONS      => 16,
@@ -186,8 +188,9 @@ sub siqs_find_first_poly ($n, $m, $factor_base) {
         my $A     = $ONE;
         my $log_A = 0;
 
-        my (%Q, @Q);
+        my %Q;
         while ($log_A < $target1) {
+
             my $p_i = 0;
             while ($p_i == 0 or exists $Q{$p_i}) {
                 $p_i = $p_min_i + urandomm($p_max_i - $p_min_i + 1);
@@ -196,8 +199,7 @@ sub siqs_find_first_poly ($n, $m, $factor_base) {
             my $fb = $factor_base->[$p_i];
             $A *= $fb->{p};
             $log_A += log($fb->{p});
-            $Q{$p_i} = 1;
-            push @Q, $p_i;
+            $Q{$p_i} = $fb;
         }
 
         my $ratio = exp($log_A - $target);
@@ -206,7 +208,7 @@ sub siqs_find_first_poly ($n, $m, $factor_base) {
         if (   !defined($best_ratio)
             or ($ratio >= 0.9 and $ratio < $best_ratio)
             or ($best_ratio < 0.9 and $ratio > $best_ratio)) {
-            $best_q     = \@Q;
+            $best_q     = \%Q;
             $best_a     = $A;
             $best_ratio = $ratio;
         }
@@ -217,9 +219,8 @@ sub siqs_find_first_poly ($n, $m, $factor_base) {
 
     my @B;
 
-    foreach my $i (@$best_q) {
-        my $fb = $factor_base->[$i];
-        my $p  = $fb->{p};
+    foreach my $fb (values %$best_q) {
+        my $p = $fb->{p};
 
         #($A % $p == 0) or die 'error';
 
@@ -301,6 +302,25 @@ sub siqs_trial_divide ($n, $factor_base) {
     # primes from the factors base. If so, return the indices of the
     # factors from the factor base. If not, return undef.
 
+    if (SMOOTH_TRIAL_DIVISION) {
+        my @divisors_idx;
+        foreach my $i (0 .. $#{$factor_base}) {
+
+            my $fb = $factor_base->[$i];
+            if ($n % $fb->{p} == 0) {
+                my $v = valuation($n, $fb->{p});
+                $n /= $fb->{p}**$v;
+                push @divisors_idx, [$i, $v];
+            }
+
+            if ($n == 1) {
+                return \@divisors_idx;
+            }
+        }
+
+        return undef;
+    }
+
     my @factors = factor_exp($n);
 
     if (@factors and $factors[-1][0] <= $factor_base->[-1]{p}) {
@@ -316,25 +336,6 @@ sub siqs_trial_divide ($n, $factor_base) {
         }
 
         return \@divisors_idx;
-    }
-
-    return undef;
-
-    # Alternatively, we can do trial division, but this is slower.
-
-    my @divisors_idx;
-    foreach my $i (0 .. $#{$factor_base}) {
-
-        my $fb = $factor_base->[$i];
-        if ($n % $fb->{p} == 0) {
-            my $v = valuation($n, $fb->{p});
-            $n /= $fb->{p}**$v;
-            push @divisors_idx, [$i, $v];
-        }
-
-        if ($n == 1) {
-            return \@divisors_idx;
-        }
     }
 
     return undef;
@@ -810,7 +811,7 @@ sub pollard_brent_find_factor ($n, $max_iter) {
     if ($g == $n) {
         for (; ;) {
             $ys = pollard_brent_f($c, $n, $ys);
-            $g = gcd(abs($x - $ys), $n);
+            $g = gcd($x - $ys, $n);
 
             if ($g > 1) {
                 return undef if ($g == $n);
@@ -877,7 +878,7 @@ sub pollard_rho2_find_factor ($n, $max_iter) {
 
 sub pollard_rho_sqrt_find_factor ($n, $max_iter) {
 
-    my $p = sqrtint($n);
+    my $p = Math::GMPz->new(sqrtint($n));
     my $q = ($p * $p - $n);
 
     my $c = $q + $p;
@@ -905,7 +906,7 @@ sub pollard_rho_sqrt_find_factor ($n, $max_iter) {
 
 sub fermat_find_factor ($n, $max_iter) {
 
-    my $p = sqrtint($n);
+    my $p = Math::GMPz->new(sqrtint($n));
     my $q = $p * $p - $n;
 
     foreach my $i (1 .. $max_iter) {
@@ -977,7 +978,7 @@ sub store_factor ($rem, $f, $factors) {
     }
 }
 
-sub find_small_factors ($n, $factors) {
+sub find_small_factors ($rem, $factors) {
 
     # Perform up to max_iter iterations of Brent's variant of the
     # Pollard rho factorization algorithm to attempt to find small
@@ -986,7 +987,6 @@ sub find_small_factors ($n, $factors) {
     # prime factors were found, or otherwise the remaining factor.
 
     my $f;
-    my $rem = $n;
 
     for (; ;) {
 
@@ -1164,9 +1164,14 @@ sub factorize($n) {
     }
 
     if ($rem != 1) {
-        say("Trying to find slightly larger factors...");
 
-        $rem = find_small_factors($rem, $factors);
+        if (LOOK_FOR_SMALL_FACTORS) {
+            say "Trying to find more small factors...";
+            $rem = find_small_factors($rem, $factors);
+        }
+        else {
+            say "Skipping the search for more small factors...";
+        }
 
         if ($rem > 1) {
             push @$factors, find_all_prime_factors($rem);
