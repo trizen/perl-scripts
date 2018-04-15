@@ -26,15 +26,14 @@ use experimental qw(signatures);
 
 use ntheory qw(
   gcd sqrtmod invmod is_prime kronecker
-  vecmin vecsum vecprod urandomm valuation
-  sqrtint primes logint powmod next_prime
-  is_power fromdigits rootint random_prime
-  is_square
+  vecmin vecprod urandomm valuation logint
+  sqrtint primes powmod next_prime is_power
+  fromdigits rootint random_prime is_square
+  factor_exp
   );
 
 my $ZERO = Math::GMPz->new(0);
 my $ONE  = Math::GMPz->new(1);
-my $TWO  = Math::GMPz->new(2);
 
 local $| = 1;
 
@@ -46,7 +45,7 @@ use constant {
               POLLARD_RHO2_ITERATIONS     => 50_000,
               POLLARD_RHO_SQRT_ITERATIONS => 25_000,
               FERMAT_ITERATIONS           => 500,
-              CFRAC_ITERATIONS            => 35_000,
+              CFRAC_ITERATIONS            => 15_000,
               SIQS_TRIAL_DIVISION_EPS     => 25,
               SIQS_MIN_PRIME_POLYNOMIAL   => 400,
               SIQS_MAX_PRIME_POLYNOMIAL   => 4000,
@@ -106,7 +105,7 @@ sub siqs_factor_base_primes ($n, $nf) {
     my @factor_base;
 
     foreach my $p (@small_primes) {
-        if (kronecker($n, $p) == 1) {
+        if (kronecker($n, $p) == 1 or $p == 2) {
 
             my $t = sqrtmod($n, $p) // next;
             my $lp = sprintf('%0.f', log($p) / log(2));
@@ -125,7 +124,7 @@ sub siqs_create_poly ($A, $B, $n, $factor_base, $first) {
 
     my $B_orig = $B;
 
-    if (2 * $B > $A) {
+    if (($B << 1) > $A) {
         $B = $A - $B;
     }
 
@@ -133,18 +132,18 @@ sub siqs_create_poly ($A, $B, $n, $factor_base, $first) {
     # 2 * $B <= $A             or die 'error';
     # ($B * $B - $n) % $A == 0 or die 'error';
 
-    my $g = Polynomial->new([$B * $B - $n, 2 * $A * $B, $A * $A], $A, $B_orig);
+    my $g = Polynomial->new([$B * $B - $n, ($A * $B) << 1, $A * $A], $A, $B_orig);
     my $h = Polynomial->new([$B, $A]);
 
     foreach my $fb (@$factor_base) {
-        if ($A % $fb->{p} != 0) {
+        if (not Math::GMPz::Rmpz_divisible_ui_p($A, $fb->{p})) {
 
             if ($first) {
-                $fb->{ainv} = invmod($A, $fb->{p});
+                $fb->{ainv} = int(invmod($A, $fb->{p}));
             }
 
-            $fb->{soln1} = ($fb->{ainv} * ($fb->{tmem} - $B)) % $fb->{p};
-            $fb->{soln2} = ($fb->{ainv} * (-$fb->{tmem} - $B)) % $fb->{p};
+            $fb->{soln1} = int(($fb->{ainv} * ($fb->{tmem} - $B)) % $fb->{p});
+            $fb->{soln2} = int(($fb->{ainv} * (-$fb->{tmem} - $B)) % $fb->{p});
         }
     }
 
@@ -176,64 +175,72 @@ sub siqs_find_first_poly ($n, $m, $factor_base) {
         $p_min_i = vecmin($p_min_i, 5);
     }
 
-    my $target  = sqrt(2 * "$n") / $m;
-    my $target1 = $target / sqrt(($factor_base->[$p_min_i]{p} + $factor_base->[$p_max_i]{p}) / 2);
+    my $target  = (log("$n") + log(2)) / 2 - log("$m");
+    my $target1 = $target - log(($factor_base->[$p_min_i]{p} + $factor_base->[$p_max_i]{p}) / 2) / 2;
 
     # find q such that the product of factor_base[q_i] is approximately
     # sqrt(2 * n) / m; try a few different sets to find a good one
     my ($best_q, $best_a, $best_ratio);
 
     for (1 .. 30) {
-        my $A = $ONE;
-        my %q;
+        my $A     = $ONE;
+        my $log_A = 0;
 
-        while ("$A" < $target1) {
+        my (%Q, @Q);
+        while ($log_A < $target1) {
             my $p_i = 0;
-            while ($p_i == 0 or exists $q{$p_i}) {
+            while ($p_i == 0 or exists $Q{$p_i}) {
                 $p_i = $p_min_i + urandomm($p_max_i - $p_min_i + 1);
             }
 
-            my $p = $factor_base->[$p_i]{p};
-            $A *= $p;
-            $q{$p_i} = $p;
+            my $fb = $factor_base->[$p_i];
+            $A *= $fb->{p};
+            $log_A += log($fb->{p});
+            $Q{$p_i} = 1;
+            push @Q, $p_i;
         }
 
-        my $ratio = "$A" / $target;
+        my $ratio = exp($log_A - $target);
 
         # ratio too small seems to be not good
         if (   !defined($best_ratio)
             or ($ratio >= 0.9 and $ratio < $best_ratio)
             or ($best_ratio < 0.9 and $ratio > $best_ratio)) {
-            $best_q     = \%q;
+            $best_q     = \@Q;
             $best_a     = $A;
             $best_ratio = $ratio;
         }
     }
 
     my $A = $best_a;
+    my $B = $ZERO;
+
     my @B;
 
-    foreach my $l (keys %$best_q) {
-        my $fb_l = $factor_base->[$l];
-        my $q_l  = $fb_l->{p};
+    foreach my $i (@$best_q) {
+        my $fb = $factor_base->[$i];
+        my $p  = $fb->{p};
 
-        # ($A % $q_l == 0) or die 'error';
+        #($A % $p == 0) or die 'error';
 
-        my $r = $A / $q_l;
+        my $r = $A / $p;
 
-        #$fb_l->{tmem} // next;
-        #gcd($r, $q_l) == 1 or next;
+        #$fb->{tmem} // die 'error';
+        #gcd($r, $p) == 1 or die 'error';
 
-        my $gamma = ($fb_l->{tmem} * invmod($r, $q_l)) % $q_l;
-        if ($gamma > ($q_l >> 1)) {
-            $gamma = $q_l - $gamma;
+        my $gamma = ($fb->{tmem} * int(invmod($r, $p))) % $p;
+
+        if ($gamma > ($p >> 1)) {
+            $gamma = $p - $gamma;
         }
-        push @B, $r * $gamma;
+
+        my $t = $r * $gamma;
+
+        $B += $t;
+        push @B, $t;
     }
 
-    my $B = vecsum(@B) % $A;
-
-    my ($g, $h) = siqs_create_poly($A, $B, $n, $factor_base, '1');
+    my ($g, $h) = siqs_create_poly($A, $B, $n, $factor_base, 1);
 
     return ($g, $h, \@B);
 }
@@ -251,7 +258,7 @@ sub siqs_find_next_poly ($n, $factor_base, $i, $g, $W) {
     my $A = $g->{a};
     my $B = ($g->{b} + 2 * $z * $W->[$v - 1]) % $A;
 
-    return siqs_create_poly($A, $B, $n, $factor_base, '0');
+    return siqs_create_poly($A, $B, $n, $factor_base, 0);
 }
 
 sub siqs_sieve ($factor_base, $m) {
@@ -262,28 +269,26 @@ sub siqs_sieve ($factor_base, $m) {
 
     foreach my $fb (@$factor_base) {
 
+        $fb->{p} > 100 or next;
         $fb->{soln1} // next;
 
         my $p = $fb->{p};
 
-        if ($p > 100) {
+        my $lp  = $fb->{lp};
+        my $end = 2 * $m;
 
-            my $lp  = $fb->{lp};
-            my $end = $m << 1;
+        my $i_start_1 = -int(($m + $fb->{soln1}) / $p);
+        my $a_start_1 = int($fb->{soln1} + $i_start_1 * $p);
 
-            my $i_start_1 = -int(($m + $fb->{soln1}) / $p);
-            my $a_start_1 = $fb->{soln1} + $i_start_1 * $p;
+        for (my $i = $a_start_1 + $m ; $i <= $end ; $i += $p) {
+            $sieve_array[$i] += $lp;
+        }
 
-            for (my $i = $a_start_1 + $m ; $i <= $end ; $i += $p) {
-                $sieve_array[$i] += $lp;
-            }
+        my $i_start_2 = -int(($m + $fb->{soln2}) / $p);
+        my $a_start_2 = int($fb->{soln2} + $i_start_2 * $p);
 
-            my $i_start_2 = -int(($m + $fb->{soln2}) / $p);
-            my $a_start_2 = $fb->{soln2} + $i_start_2 * $p;
-
-            for (my $i = $a_start_2 + $m ; $i <= $end ; $i += $p) {
-                $sieve_array[$i] += $lp;
-            }
+        for (my $i = $a_start_2 + $m ; $i <= $end ; $i += $p) {
+            $sieve_array[$i] += $lp;
         }
     }
 
@@ -295,6 +300,27 @@ sub siqs_trial_divide ($n, $factor_base) {
     # Determine whether the given number a can be fully factorized into
     # primes from the factors base. If so, return the indices of the
     # factors from the factor base. If not, return undef.
+
+    my @factors = factor_exp($n);
+
+    if (@factors and $factors[-1][0] <= $factor_base->[-1]{p}) {
+
+        my @divisors_idx;
+
+        foreach my $i (0 .. $#{$factor_base}) {
+            if ($factor_base->[$i]{p} == $factors[0][0]) {
+                my $p = shift @factors;
+                push @divisors_idx, [$i, $p->[1]];
+                @factors || last;
+            }
+        }
+
+        return \@divisors_idx;
+    }
+
+    return undef;
+
+    # Alternatively, we can do trial division, but this is slower.
 
     my @divisors_idx;
     foreach my $i (0 .. $#{$factor_base}) {
@@ -318,7 +344,7 @@ sub siqs_trial_division ($n, $sieve_array, $factor_base, $smooth_relations, $g, 
 
     # Perform the trial division step of the Self-Initializing Quadratic Sieve.
 
-    my $limit = logint($m, 2) + (logint($n, 2) >> 1) - SIQS_TRIAL_DIVISION_EPS;
+    my $limit = (log("$m") + log("$n") / 2) / log(2) - SIQS_TRIAL_DIVISION_EPS;
 
     foreach my $i (0 .. $#{$sieve_array}) {
         my $sa = $sieve_array->[$i];
@@ -382,12 +408,12 @@ sub siqs_build_matrix_opt($M) {
     return ([map { Math::GMPz->new(fromdigits(scalar reverse($_), 2)) } @cols_binary], scalar(@$M), $m);
 }
 
-sub find_pivot_column_opt ($M_opt, $j) {
+sub find_pivot_column_opt ($M, $j) {
 
     # For a matrix produced by siqs_build_matrix_opt, return the row of
     # the first non-zero entry in column j, or None if no such row exists.
 
-    my $v = $M_opt->[$j];
+    my $v = $M->[$j];
 
     if ($v == 0) {
         return undef;
@@ -396,7 +422,7 @@ sub find_pivot_column_opt ($M_opt, $j) {
     return lowest_set_bit($v);
 }
 
-sub siqs_solve_matrix_opt ($M_opt, $n, $m) {
+sub siqs_solve_matrix_opt ($M, $n, $m) {
 
     # Perform the linear algebra step of the SIQS. Perform fast
     # Gaussian elimination to determine pairs of perfect squares mod n.
@@ -411,12 +437,12 @@ sub siqs_solve_matrix_opt ($M_opt, $n, $m) {
     my @pivots        = (-1) x $m;
 
     foreach my $j (0 .. $m - 1) {
-        my $i = find_pivot_column_opt($M_opt, $j) // next;
+        my $i = find_pivot_column_opt($M, $j) // next;
         $pivots[$j]        = $i;
         $row_is_marked[$i] = 1;
         foreach my $k (0 .. $m - 1) {
-            if ($k != $j and (($M_opt->[$k] >> $i) & 1)) {
-                $M_opt->[$k] ^= $M_opt->[$j];
+            if ($k != $j and Math::GMPz::Rmpz_tstbit($M->[$k], $i)) {
+                Math::GMPz::Rmpz_xor($M->[$k], $M->[$k], $M->[$j]);
             }
         }
     }
@@ -426,7 +452,7 @@ sub siqs_solve_matrix_opt ($M_opt, $n, $m) {
         if (not $row_is_marked[$i]) {
             my @perfect_sq_indices = ($i);
             foreach my $j (0 .. $m - 1) {
-                if (($M_opt->[$j] >> $i) & 1) {
+                if (Math::GMPz::Rmpz_tstbit($M->[$j], $i)) {
                     push @perfect_sq_indices, $pivots[$j];
                 }
             }
@@ -546,7 +572,7 @@ sub siqs_find_factors ($n, $perfect_squares, $smooth_relations) {
             }
             else {
                 if (not exists $non_prime_factors{$fact}) {
-                    say("SIQS: Non-prime factor found: ", $fact);
+                    say("SIQS: Composite factor found: ", $fact);
                     $non_prime_factors{$fact} = $fact;
                 }
             }
@@ -583,30 +609,16 @@ sub siqs_choose_range ($n) {
 
     $n = "$n";
 
-    return int(exp(sqrt(log($n) * log(log($n))) / 2));
-
-    #~ my $d = length($n);
-    #~ my $m = 65536;
-
-    #~ if ($d >= 94) {
-    #~ $m *= 9;
-    #~ }
-    #~ elsif ($d >= 75) {
-    #~ $m *= 3;
-    #~ }
-    #~ elsif ($d >= 56) {
-    #~ $m *= 2;
-    #~ }
-
-    #~ return $m;
+    return sprintf('%.0f', exp(sqrt(log($n) * log(log($n))) / 2));
 }
 
 sub siqs_choose_nf($n) {
 
     # Choose parameters nf (sieve of factor base)
+
     $n = "$n";
 
-    return int(exp(sqrt(log($n) * log(log($n))))**(sqrt(2) / 4));
+    return sprintf('%.0f', exp(sqrt(log($n) * log(log($n))))**(sqrt(2) / 4));
 }
 
 sub siqs_choose_nf2($n) {
@@ -614,7 +626,7 @@ sub siqs_choose_nf2($n) {
     # Choose parameters nf (sieve of factor base)
     $n = "$n";
 
-    return int(exp(sqrt(log($n) * log(log($n))) / 2));
+    return sprintf('%.0f', exp(sqrt(log($n) * log(log($n))) / 2));
 }
 
 sub siqs_factorize ($n, $nf) {
@@ -654,7 +666,7 @@ sub siqs_factorize ($n, $nf) {
                 ($g, $h) = siqs_find_next_poly($n, $factor_base, $i_poly, $g, $B);
             }
 
-            if (++$i_poly >= (1 << (scalar(@$B) - 1))) {
+            if (++$i_poly >= (1 << $#{$B})) {
                 $i_poly = 0;
             }
 
