@@ -39,6 +39,8 @@ local $| = 1;
 
 # Some tuning parameters
 use constant {
+              LOOK_FOR_SMALL_FACTORS      => 1,
+              SMOOTH_TRIAL_DIVISION       => 0,
               POLLARD_PM1_BOUND           => next_prime(2_000_000),
               TRIAL_DIVISION_LIMIT        => next_prime(1_000_000),
               POLLARD_RHO_ITERATIONS      => 16,
@@ -165,10 +167,13 @@ sub siqs_find_first_poly ($n, $m, $factor_base) {
         }
     }
 
-    # The following may happen if the factor base is small, make sure
-    # that we have enough primes.
+    # The following may happen if the factor base is small
     if (not defined($p_max_i)) {
         $p_max_i = $#{$factor_base};
+    }
+
+    if (not defined($p_min_i)) {
+        $p_min_i = 5;
     }
 
     if ($p_max_i - $p_min_i < 20) {
@@ -186,8 +191,9 @@ sub siqs_find_first_poly ($n, $m, $factor_base) {
         my $A     = $ONE;
         my $log_A = 0;
 
-        my (%Q, @Q);
+        my %Q;
         while ($log_A < $target1) {
+
             my $p_i = 0;
             while ($p_i == 0 or exists $Q{$p_i}) {
                 $p_i = $p_min_i + urandomm($p_max_i - $p_min_i + 1);
@@ -196,8 +202,7 @@ sub siqs_find_first_poly ($n, $m, $factor_base) {
             my $fb = $factor_base->[$p_i];
             $A *= $fb->{p};
             $log_A += log($fb->{p});
-            $Q{$p_i} = 1;
-            push @Q, $p_i;
+            $Q{$p_i} = $fb;
         }
 
         my $ratio = exp($log_A - $target);
@@ -206,7 +211,7 @@ sub siqs_find_first_poly ($n, $m, $factor_base) {
         if (   !defined($best_ratio)
             or ($ratio >= 0.9 and $ratio < $best_ratio)
             or ($best_ratio < 0.9 and $ratio > $best_ratio)) {
-            $best_q     = \@Q;
+            $best_q     = \%Q;
             $best_a     = $A;
             $best_ratio = $ratio;
         }
@@ -217,9 +222,8 @@ sub siqs_find_first_poly ($n, $m, $factor_base) {
 
     my @B;
 
-    foreach my $i (@$best_q) {
-        my $fb = $factor_base->[$i];
-        my $p  = $fb->{p};
+    foreach my $fb (values %$best_q) {
+        my $p = $fb->{p};
 
         #($A % $p == 0) or die 'error';
 
@@ -301,6 +305,25 @@ sub siqs_trial_divide ($n, $factor_base) {
     # primes from the factors base. If so, return the indices of the
     # factors from the factor base. If not, return undef.
 
+    if (SMOOTH_TRIAL_DIVISION) {
+        my @divisors_idx;
+        foreach my $i (0 .. $#{$factor_base}) {
+
+            my $fb = $factor_base->[$i];
+            if ($n % $fb->{p} == 0) {
+                my $v = valuation($n, $fb->{p});
+                $n /= $fb->{p}**$v;
+                push @divisors_idx, [$i, $v];
+            }
+
+            if ($n == 1) {
+                return \@divisors_idx;
+            }
+        }
+
+        return undef;
+    }
+
     my @factors = factor_exp($n);
 
     if (@factors and $factors[-1][0] <= $factor_base->[-1]{p}) {
@@ -316,25 +339,6 @@ sub siqs_trial_divide ($n, $factor_base) {
         }
 
         return \@divisors_idx;
-    }
-
-    return undef;
-
-    # Alternatively, we can do trial division, but this is slower.
-
-    my @divisors_idx;
-    foreach my $i (0 .. $#{$factor_base}) {
-
-        my $fb = $factor_base->[$i];
-        if ($n % $fb->{p} == 0) {
-            my $v = valuation($n, $fb->{p});
-            $n /= $fb->{p}**$v;
-            push @divisors_idx, [$i, $v];
-        }
-
-        if ($n == 1) {
-            return \@divisors_idx;
-        }
     }
 
     return undef;
@@ -499,15 +503,17 @@ sub siqs_factor_from_square ($n, $square_indices, $smooth_relations) {
 sub siqs_find_more_factors_gcd($numbers) {
     my %res;
 
-    foreach my $n (@$numbers) {
+    foreach my $i (0 .. $#{$numbers}) {
+        my $n = $numbers->[$i];
         $res{$n} = $n;
-        foreach my $m (@$numbers) {
-            next if ($n == $m);
+        foreach my $k ($i + 1 .. $#{$numbers}) {
+            my $m = $numbers->[$k];
 
             my $fact = gcd($n, $m);
             if ($fact != 1 and $fact != $n and $fact != $m) {
-                if (not exists $res{$fact}) {
-                    say("SIQS: GCD found non-trivial factor: $fact");
+
+                if (not exists($res{$fact})) {
+                    say "SIQS: GCD found non-trivial factor: $fact";
                     $res{$fact} = $fact;
                 }
 
@@ -543,14 +549,11 @@ sub siqs_find_factors ($n, $perfect_squares, $smooth_relations) {
             if (is_prime($fact)) {
 
                 if (not exists $prime_factors{$fact}) {
-                    say("SIQS: Prime factor found: ", $fact);
+                    say "SIQS: Prime factor found: $fact";
                     $prime_factors{$fact} = $fact;
                 }
 
-                while ($rem % $fact == 0) {
-                    push @factors, $fact;
-                    $rem /= $fact;
-                }
+                $rem = check_factor($rem, $fact, \@factors);
 
                 if ($rem == 1) {
                     last;
@@ -562,9 +565,8 @@ sub siqs_find_factors ($n, $perfect_squares, $smooth_relations) {
                     last;
                 }
 
-                if (my $exp = is_power($rem)) {
-                    my $root = rootint($rem, $exp);
-                    say("SIQS: Found a perfect power factor: $root^$exp");
+                if (defined(my $root = check_perfect_power($rem))) {
+                    say "SIQS: Perfect power detected with root: $root";
                     push @factors, $root;
                     $rem = 1;
                     last;
@@ -572,7 +574,7 @@ sub siqs_find_factors ($n, $perfect_squares, $smooth_relations) {
             }
             else {
                 if (not exists $non_prime_factors{$fact}) {
-                    say("SIQS: Composite factor found: ", $fact);
+                    say "SIQS: Composite factor found: $fact";
                     $non_prime_factors{$fact} = $fact;
                 }
             }
@@ -582,12 +584,23 @@ sub siqs_find_factors ($n, $perfect_squares, $smooth_relations) {
     if ($rem != 1 and keys(%non_prime_factors)) {
         $non_prime_factors{$rem} = $rem;
 
-        foreach my $fact (siqs_find_more_factors_gcd([values %non_prime_factors])) {
+        my @primes;
+        my @composites;
 
-            while ($fact > 1 and $rem % $fact == 0) {
-                say "SIQS: Prime factor found from GCD: $fact";
-                push @factors, $fact;
-                $rem /= $fact;
+        foreach my $fact (siqs_find_more_factors_gcd([values %non_prime_factors])) {
+            if (is_prime($fact)) {
+                push @primes, $fact;
+            }
+            else {
+                push @composites, $fact;
+            }
+        }
+
+        foreach my $fact (@primes, @composites) {
+
+            if ($fact > 1 and $fact != $rem and $rem % $fact == 0) {
+                say "SIQS: Using non-trivial factor from GCD: $fact";
+                $rem = check_factor($rem, $fact, \@factors);
             }
 
             if ($rem == 1 or is_prime($rem)) {
@@ -637,8 +650,6 @@ sub siqs_factorize ($n, $nf) {
 
     my $m = siqs_choose_range($n);
 
-    say "SIQS sieving range: [-$m, $m]";
-
     my @factors;
     my $factor_base = siqs_factor_base_primes($n, $nf);
 
@@ -654,8 +665,10 @@ sub siqs_factorize ($n, $nf) {
     while (not $success) {
 
         say "*** Step 1/2: Finding smooth relations ***";
+        say "SIQS sieving range: [-$m, $m]";
+
         my $required_relations = sprintf('%.0f', (scalar(@$factor_base) + 1) * $required_relations_ratio);
-        printf("Target: %d relations\n", $required_relations);
+        say "Target: $required_relations relations.";
         my $enough_relations = 0;
 
         while (not $enough_relations) {
@@ -677,21 +690,21 @@ sub siqs_factorize ($n, $nf) {
 
             if (   scalar(@$smooth_relations) >= $required_relations
                 or scalar(@$smooth_relations) > $prev_cnt) {
-                printf("Total %d/%d relations.\r", scalar(@$smooth_relations), $required_relations);
+                printf("Progress: %d/%d relations.\r", scalar(@$smooth_relations), $required_relations);
                 $prev_cnt = scalar(@$smooth_relations);
             }
         }
 
-        say "*** Step 2/2: Linear Algebra ***";
+        say "\n\n*** Step 2/2: Linear Algebra ***";
         say "Building matrix for linear algebra step...";
 
         my $M = siqs_build_matrix($factor_base, $smooth_relations);
         my ($M_opt, $M_n, $M_m) = siqs_build_matrix_opt($M);
 
-        say "Finding perfect squares using matrix...";
+        say "Finding perfect squares using Gaussian elimination...";
         my $perfect_squares = siqs_solve_matrix_opt($M_opt, $M_n, $M_m);
 
-        say "Finding factors from perfect squares...";
+        say "Finding factors from perfect squares...\n";
         @factors = siqs_find_factors($n, $perfect_squares, $smooth_relations);
 
         if (scalar(@factors) > 1) {
@@ -715,7 +728,7 @@ sub check_factor ($n, $i, $factors) {
 
         if (is_prime($n)) {
             push @$factors, $n;
-            $n = 1;
+            return 1;
         }
     }
 
@@ -731,7 +744,7 @@ sub trial_div_init_primes ($n) {
     # remaining factor. If rem = 1, the function terminates early, without
     # fully initializing small_primes.
 
-    say "Trial division and initializing small primes...";
+    say "[*] Trial division and initializing small primes...";
 
     if (not @small_primes) {
         @small_primes = @{primes(TRIAL_DIVISION_LIMIT)};
@@ -741,10 +754,9 @@ sub trial_div_init_primes ($n) {
     my $rem     = $n;
 
     foreach my $p (@small_primes) {
-        $rem = check_factor($rem, $p, $factors);
-
-        if ($rem == 1) {
-            return ($factors, 1);
+        if (Math::GMPz::Rmpz_divisible_ui_p($rem, $p)) {
+            $rem = check_factor($rem, $p, $factors);
+            last if ($rem == 1);
         }
     }
 
@@ -810,7 +822,7 @@ sub pollard_brent_find_factor ($n, $max_iter) {
     if ($g == $n) {
         for (; ;) {
             $ys = pollard_brent_f($c, $n, $ys);
-            $g = gcd(abs($x - $ys), $n);
+            $g = gcd($x - $ys, $n);
 
             if ($g > 1) {
                 return undef if ($g == $n);
@@ -868,7 +880,7 @@ sub pollard_rho2_find_factor ($n, $max_iter) {
 
         if ($g != 1) {
             return undef if ($g == $n);
-            return $g;
+            return Math::GMPz->new($g);
         }
     }
 
@@ -877,7 +889,7 @@ sub pollard_rho2_find_factor ($n, $max_iter) {
 
 sub pollard_rho_sqrt_find_factor ($n, $max_iter) {
 
-    my $p = sqrtint($n);
+    my $p = Math::GMPz->new(sqrtint($n));
     my $q = ($p * $p - $n);
 
     my $c = $q + $p;
@@ -892,7 +904,7 @@ sub pollard_rho_sqrt_find_factor ($n, $max_iter) {
 
         if ($g != 1) {
             return undef if ($g == $n);
-            return $g;
+            return Math::GMPz->new($g);
         }
 
         $a1 = (($a1 * $a1 + $c) % $n);
@@ -905,7 +917,7 @@ sub pollard_rho_sqrt_find_factor ($n, $max_iter) {
 
 sub fermat_find_factor ($n, $max_iter) {
 
-    my $p = sqrtint($n);
+    my $p = Math::GMPz->new(sqrtint($n));
     my $q = $p * $p - $n;
 
     foreach my $i (1 .. $max_iter) {
@@ -947,7 +959,7 @@ sub simple_cfrac_find_factor ($n, $max_iter) {
             my $g = gcd($u - sqrtint($c), $n);
 
             if ($g > 1 and $g < $n) {
-                return $g;
+                return Math::GMPz->new($g);
             }
         }
 
@@ -977,7 +989,7 @@ sub store_factor ($rem, $f, $factors) {
     }
 }
 
-sub find_small_factors ($n, $factors) {
+sub find_small_factors ($rem, $factors) {
 
     # Perform up to max_iter iterations of Brent's variant of the
     # Pollard rho factorization algorithm to attempt to find small
@@ -986,7 +998,6 @@ sub find_small_factors ($n, $factors) {
     # prime factors were found, or otherwise the remaining factor.
 
     my $f;
-    my $rem = $n;
 
     for (; ;) {
 
@@ -1000,7 +1011,18 @@ sub find_small_factors ($n, $factors) {
             last;
         }
 
-        say "Fermat's method: $rem";
+        my $digits = length($rem);
+        say "\n[*] Factoring $rem ($digits digits)...\n";
+
+        say "=> Perfect power check...";
+        $f = check_perfect_power($rem);
+
+        if (defined($f)) {
+            store_factor(\$rem, $f, $factors);
+            next;
+        }
+
+        say "=> Fermat's method...";
         $f = fermat_find_factor($rem, FERMAT_ITERATIONS);
 
         if (defined($f) and $f < $rem) {
@@ -1008,7 +1030,7 @@ sub find_small_factors ($n, $factors) {
             next;
         }
 
-        say "Pollard rho-sqrt: $rem";
+        say "=> Pollard rho-sqrt...";
         $f = pollard_rho_sqrt_find_factor($rem, POLLARD_RHO_SQRT_ITERATIONS);
 
         if (defined($f) and $f < $rem) {
@@ -1016,7 +1038,7 @@ sub find_small_factors ($n, $factors) {
             next;
         }
 
-        say "Pollard p-1: $rem";
+        say "=> Pollard p-1...";
         $f = pollard_pm1_find_factor($rem, POLLARD_PM1_BOUND);
 
         if (defined($f) and $f < $rem) {
@@ -1024,7 +1046,7 @@ sub find_small_factors ($n, $factors) {
             next;
         }
 
-        say "Pollard rho2: $rem";
+        say "=> Pollard rho2...";
         $f = pollard_rho2_find_factor($rem, POLLARD_RHO2_ITERATIONS);
 
         if (defined($f) and $f < $rem) {
@@ -1032,7 +1054,7 @@ sub find_small_factors ($n, $factors) {
             next;
         }
 
-        say "Pollard rho (Brent): $rem";
+        say "=> Pollard rho (Brent)...";
         $f = pollard_brent_find_factor($rem, POLLARD_RHO_ITERATIONS);
 
         if (defined($f) and $f < $rem) {
@@ -1040,7 +1062,7 @@ sub find_small_factors ($n, $factors) {
             next;
         }
 
-        say "Simple CFRAC: $rem";
+        say "=> CFRAC simple...";
         $f = simple_cfrac_find_factor($rem, CFRAC_ITERATIONS);
 
         if (defined($f) and $f < $rem) {
@@ -1048,7 +1070,6 @@ sub find_small_factors ($n, $factors) {
             next;
         }
 
-        say "No (more) small factors found.";
         last;
     }
 
@@ -1060,8 +1081,8 @@ sub check_perfect_power ($n) {
     # Check whether n is a perfect and return its perfect root.
     # Returns undef otherwise.
 
-    if (my $exp = is_power($n)) {
-        my $root = rootint($n, $exp);
+    if ((my $exp = is_power($n)) > 1) {
+        my $root = Math::GMPz->new(rootint($n, $exp));
         say "$n is $root^$exp";
         return $root;
     }
@@ -1078,18 +1099,13 @@ sub find_prime_factors($n) {
 
     my %factors;
 
-    say "Checking whether $n is a perfect power...";
-
-    if (my $exp = is_power($n)) {
-        my $root = Math::GMPz->new(rootint($n, $exp));
-        say "$n is $root^$exp";
+    if (defined(my $root = check_perfect_power($n))) {
         $factors{$root} = $root;
     }
     else {
-        say "Not a perfect power.";
         my $digits = length($n);
 
-        say("Using Self-Initializing Quadratic Sieve to factorize" . " $n ($digits digits)...");
+        say("\n[*] Using SIQS to factorize" . " $n ($digits digits)...\n");
 
         my $nf = siqs_choose_nf($n);
         my @sf = siqs_factorize($n, $nf);
@@ -1119,6 +1135,7 @@ sub find_all_prime_factors($n) {
     my @factors;
 
     while ($rem > 1) {
+
         if (is_prime($rem)) {
             push @factors, $rem;
             last;
@@ -1126,15 +1143,13 @@ sub find_all_prime_factors($n) {
 
         foreach my $f (find_prime_factors($rem)) {
 
-            $rem % $f == 0 or next;
+            $rem != $f     or die 'error';
+            $rem % $f == 0 or die 'error';
             is_prime($f)   or die 'error';
 
-            say("Prime factor found: ", $f);
+            $rem = check_factor($rem, $f, \@factors);
 
-            while ($rem % $f == 0) {
-                $rem /= $f;
-                push @factors, $f;
-            }
+            last if ($rem == 1);
         }
     }
 
@@ -1149,7 +1164,7 @@ sub factorize($n) {
         die "Number needs to be an integer >= 1";
     }
 
-    printf("Factorizing %s (%d digits)...\n", $n, length($n));
+    printf("[*] Factoring %s (%d digits)...\n", $n, length($n));
 
     return ()   if ($n <= 1);
     return ($n) if is_prime($n);
@@ -1157,16 +1172,21 @@ sub factorize($n) {
     my ($factors, $rem) = trial_div_init_primes($n);
 
     if (@$factors) {
-        say("Prime factors found so far: ", join(', ', @$factors));
+        say("[*] Prime factors found so far: ", join(', ', @$factors));
     }
     else {
-        say("No small factors found.");
+        say("[*] No small factors found.");
     }
 
     if ($rem != 1) {
-        say("Trying to find slightly larger factors...");
 
-        $rem = find_small_factors($rem, $factors);
+        if (LOOK_FOR_SMALL_FACTORS) {
+            say "[*] Trying to find more small factors...";
+            $rem = find_small_factors($rem, $factors);
+        }
+        else {
+            say "[*] Skipping the search for more small factors...";
+        }
 
         if ($rem > 1) {
             push @$factors, find_all_prime_factors($rem);
