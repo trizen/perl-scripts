@@ -25,11 +25,10 @@ use Math::GMPz;
 use experimental qw(signatures);
 
 use ntheory qw(
-  gcd sqrtmod invmod is_prime kronecker
+  gcd sqrtmod invmod is_prime factor_exp
   vecmin vecprod urandomm valuation logint
   sqrtint primes powmod next_prime is_power
   fromdigits rootint random_prime is_square
-  factor_exp
   );
 
 my $ZERO = Math::GMPz->new(0);
@@ -107,15 +106,12 @@ sub siqs_factor_base_primes ($n, $nf) {
     my @factor_base;
 
     foreach my $p (@small_primes) {
-        if (kronecker($n, $p) == 1 or $p == 2) {
+        my $t = sqrtmod($n, $p) // next;
+        my $lp = sprintf('%0.f', log($p) / log(2));
+        push @factor_base, FactorBasePrime->new($p, $t, $lp);
 
-            my $t = sqrtmod($n, $p) // next;
-            my $lp = sprintf('%0.f', log($p) / log(2));
-            push @factor_base, FactorBasePrime->new($p, $t, $lp);
-
-            if (scalar(@factor_base) >= $nf) {
-                last;
-            }
+        if (scalar(@factor_base) >= $nf) {
+            last;
         }
     }
 
@@ -351,25 +347,23 @@ sub siqs_trial_division ($n, $sieve_array, $factor_base, $smooth_relations, $g, 
     my $limit = (log("$m") + log("$n") / 2) / log(2) - SIQS_TRIAL_DIVISION_EPS;
 
     foreach my $i (0 .. $#{$sieve_array}) {
-        my $sa = $sieve_array->[$i];
 
-        if ($sa >= $limit) {
+        next if ((my $sa = $sieve_array->[$i]) < $limit);
 
-            my $x  = $i - $m;
-            my $gx = abs($g->eval($x));
+        my $x  = $i - $m;
+        my $gx = abs($g->eval($x));
 
-            my $divisors_idx = siqs_trial_divide($gx, $factor_base) // next;
+        my $divisors_idx = siqs_trial_divide($gx, $factor_base) // next;
 
-            my $u = $h->eval($x);
-            my $v = $gx;
+        my $u = $h->eval($x);
+        my $v = $gx;
 
-            #(($u * $u) % $n == ($v % $n)) or die 'error';
+        #(($u * $u) % $n == ($v % $n)) or die 'error';
 
-            push @$smooth_relations, [$u, $v, $divisors_idx];
+        push @$smooth_relations, [$u, $v, $divisors_idx];
 
-            if (scalar(@$smooth_relations) >= $req_relations) {
-                return 1;
-            }
+        if (scalar(@$smooth_relations) >= $req_relations) {
+            return 1;
         }
     }
 
@@ -500,14 +494,14 @@ sub siqs_factor_from_square ($n, $square_indices, $smooth_relations) {
     return Math::GMPz->new(gcd($sqrt1 - $sqrt2, $n));
 }
 
-sub siqs_find_more_factors_gcd($numbers) {
+sub siqs_find_more_factors_gcd(@numbers) {
     my %res;
 
-    foreach my $i (0 .. $#{$numbers}) {
-        my $n = $numbers->[$i];
+    foreach my $i (0 .. $#numbers) {
+        my $n = $numbers[$i];
         $res{$n} = $n;
-        foreach my $k ($i + 1 .. $#{$numbers}) {
-            my $m = $numbers->[$k];
+        foreach my $k ($i + 1 .. $#numbers) {
+            my $m = $numbers[$k];
 
             my $fact = gcd($n, $m);
             if ($fact != 1 and $fact != $n and $fact != $m) {
@@ -587,18 +581,18 @@ sub siqs_find_factors ($n, $perfect_squares, $smooth_relations) {
         my @primes;
         my @composites;
 
-        foreach my $fact (siqs_find_more_factors_gcd([values %non_prime_factors])) {
+        foreach my $fact (siqs_find_more_factors_gcd(values %non_prime_factors)) {
             if (is_prime($fact)) {
                 push @primes, $fact;
             }
-            else {
+            elsif ($fact > 1) {
                 push @composites, $fact;
             }
         }
 
         foreach my $fact (@primes, @composites) {
 
-            if ($fact > 1 and $fact != $rem and $rem % $fact == 0) {
+            if ($fact != $rem and $rem % $fact == 0) {
                 say "SIQS: Using non-trivial factor from GCD: $fact";
                 $rem = check_factor($rem, $fact, \@factors);
             }
