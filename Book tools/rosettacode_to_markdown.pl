@@ -350,7 +350,7 @@ usage: $0 [options]
 
 options:
     --lang=s        : the programming language name (default: $lang)
-    --base_dir=s    : where to save the files (default: $base_dir)
+    --base-dir=s    : where to save the files (default: $base_dir)
     --overwrite!    : overwrite existent files (default: $overwrite)
 
     --cache-dir=s   : cache directory (default: $cache_dir)
@@ -359,7 +359,7 @@ options:
     --help          : print this message and exit
 
 example:
-    $0 --lang=Perl --base_dir=perl_tasks
+    $0 --lang=Perl --base-dir=perl_tasks
 EOT
 
     exit;
