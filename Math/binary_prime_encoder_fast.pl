@@ -22,7 +22,7 @@ sub encode_primes {
 
     my $sum = 0;
     foreach my $i (1 .. $n) {
-        $sum += 1 << nth_prime($i);
+        $sum |= 1 << nth_prime($i);
     }
 
     $sum >> 2;
