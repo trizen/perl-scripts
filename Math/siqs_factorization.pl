@@ -1175,7 +1175,7 @@ sub factorize($n) {
         say("[*] Prime factors found so far: ", join(', ', @$factors));
     }
     else {
-        say("[*] No small factors found.");
+        say("[*] No small factors found...");
     }
 
     if ($rem != 1) {
