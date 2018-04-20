@@ -463,6 +463,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Newton's method recursive](./Math/newton_s_method_recursive.pl)
     * [Next power of two](./Math/next_power_of_two.pl)
     * [Nth order fibonacci](./Math/nth_order_fibonacci.pl)
+    * [Nth order fibonacci odd primes indices](./Math/nth_order_fibonacci_odd_primes_indices.pl)
     * [Nth prime approx](./Math/nth_prime_approx.pl)
     * [Nth root recurrence constant](./Math/nth_root_recurrence_constant.pl)
     * [Number numbers](./Math/number_numbers.pl)
