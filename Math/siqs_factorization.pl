@@ -52,7 +52,7 @@ use constant {
               SIQS_MAX_PRIME_POLYNOMIAL   => 4000,
              };
 
-my @small_primes;
+my @small_primes = @{primes(TRIAL_DIVISION_LIMIT)};
 
 package Polynomial {
 
@@ -717,7 +717,7 @@ sub check_factor ($n, $i, $factors) {
     return $n;
 }
 
-sub trial_div_init_primes ($n) {
+sub trial_division_small_primes ($n) {
 
     # Perform trial division on the given number n using all primes up
     # to upper_bound. Initialize the global variable small_primes with a
@@ -726,11 +726,7 @@ sub trial_div_init_primes ($n) {
     # remaining factor. If rem = 1, the function terminates early, without
     # fully initializing small_primes.
 
-    say "[*] Trial division and initializing small primes...";
-
-    if (not @small_primes) {
-        @small_primes = @{primes(TRIAL_DIVISION_LIMIT)};
-    }
+    say "[*] Trial division...";
 
     my $factors = [];
     my $rem     = $n;
@@ -1151,7 +1147,7 @@ sub factorize($n) {
     return ()   if ($n <= 1);
     return ($n) if is_prime($n);
 
-    my ($factors, $rem) = trial_div_init_primes($n);
+    my ($factors, $rem) = trial_division_small_primes($n);
 
     if (@$factors) {
         say("[*] Prime factors found so far: ", join(', ', @$factors));
