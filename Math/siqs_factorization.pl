@@ -90,18 +90,6 @@ package FactorBasePrime {
     }
 }
 
-sub lowest_set_bit ($x) {
-    my $y       = ($x & -$x);
-    my $low_bit = -1;
-
-    while ($y) {
-        $y >>= 1;
-        $low_bit++;
-    }
-
-    return $low_bit;
-}
-
 sub siqs_factor_base_primes ($n, $nf) {
     my @factor_base;
 
@@ -250,7 +238,7 @@ sub siqs_find_next_poly ($n, $factor_base, $i, $g, $W) {
     # Compute the (i+1)-th polynomials for the Self-Initializing
     # Quadratic Sieve, given that g is the i-th polynomial.
 
-    my $v = lowest_set_bit($i) + 1;
+    my $v = valuation($i, 2) + 1;
     my $z = ((($i >> $v) & 1) == 0) ? -1 : 1;
 
     #my $z = (ceil($i / (1 << $v)) % 2 == 1) ? -1 : 1;
@@ -417,7 +405,7 @@ sub find_pivot_column_opt ($M, $j) {
         return undef;
     }
 
-    return lowest_set_bit($v);
+    return valuation($v, 2);
 }
 
 sub siqs_solve_matrix_opt ($M, $n, $m) {
