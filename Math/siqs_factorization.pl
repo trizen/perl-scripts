@@ -67,7 +67,7 @@ package Polynomial {
     sub eval ($self, $x) {
         my $res = $ZERO;
 
-        foreach my $k (reverse @{$self->{coeff}}) {
+        foreach my $k (@{$self->{coeff}}) {
             $res *= $x;
             $res += $k;
         }
@@ -118,19 +118,16 @@ sub siqs_create_poly ($A, $B, $n, $factor_base, $first) {
     # 2 * $B <= $A             or die 'error';
     # ($B * $B - $n) % $A == 0 or die 'error';
 
-    my $g = Polynomial->new([$B * $B - $n, ($A * $B) << 1, $A * $A], $A, $B_orig);
-    my $h = Polynomial->new([$B, $A]);
+    my $g = Polynomial->new([$A * $A, ($A * $B) << 1, $B * $B - $n], $A, $B_orig);
+    my $h = Polynomial->new([$A, $B]);
 
     foreach my $fb (@$factor_base) {
-        if (not Math::GMPz::Rmpz_divisible_ui_p($A, $fb->{p})) {
 
-            if ($first) {
-                $fb->{ainv} = int(invmod($A, $fb->{p}));
-            }
+        next if Math::GMPz::Rmpz_divisible_ui_p($A, $fb->{p});
 
-            $fb->{soln1} = int(($fb->{ainv} * ($fb->{tmem} - $B)) % $fb->{p});
-            $fb->{soln2} = int(($fb->{ainv} * (-$fb->{tmem} - $B)) % $fb->{p});
-        }
+        $fb->{ainv} = int(invmod($A, $fb->{p})) if $first;
+        $fb->{soln1} = int(($fb->{ainv} * ($fb->{tmem} - $B)) % $fb->{p});
+        $fb->{soln2} = int(($fb->{ainv} * (-$fb->{tmem} - $B)) % $fb->{p});
     }
 
     return ($g, $h);
