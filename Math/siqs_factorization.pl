@@ -164,8 +164,8 @@ sub siqs_find_first_poly ($n, $m, $factor_base) {
         $p_min_i = vecmin($p_min_i, 5);
     }
 
-    my $target  = (log("$n") + log(2)) / 2 - log("$m");
-    my $target1 = $target - log(($factor_base->[$p_min_i]{p} + $factor_base->[$p_max_i]{p}) / 2) / 2;
+    my $target0 = (log("$n") + log(2)) / 2 - log("$m");
+    my $target1 = $target0 - log(($factor_base->[$p_min_i]{p} + $factor_base->[$p_max_i]{p}) / 2) / 2;
 
     # find q such that the product of factor_base[q_i] is approximately
     # sqrt(2 * n) / m; try a few different sets to find a good one
@@ -189,7 +189,7 @@ sub siqs_find_first_poly ($n, $m, $factor_base) {
             $Q{$p_i} = $fb;
         }
 
-        my $ratio = exp($log_A - $target);
+        my $ratio = exp($log_A - $target0);
 
         # ratio too small seems to be not good
         if (   !defined($best_ratio)
@@ -421,9 +421,12 @@ sub siqs_solve_matrix_opt ($M, $n, $m) {
     my @pivots        = (-1) x $m;
 
     foreach my $j (0 .. $m - 1) {
+
         my $i = find_pivot_column_opt($M, $j) // next;
+
         $pivots[$j]        = $i;
         $row_is_marked[$i] = 1;
+
         foreach my $k (0 .. $m - 1) {
             if ($k != $j and Math::GMPz::Rmpz_tstbit($M->[$k], $i)) {
                 Math::GMPz::Rmpz_xor($M->[$k], $M->[$k], $M->[$j]);
