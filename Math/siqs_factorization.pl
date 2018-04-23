@@ -78,12 +78,12 @@ package Polynomial {
 
 package FactorBasePrime {
 
-    sub new ($class, $p, $tmem, $lp) {
+    sub new ($class, $p, $t, $lp) {
         bless {
                p     => $p,
                soln1 => undef,
                soln2 => undef,
-               tmem  => $tmem,
+               t     => $t,
                lp    => $lp,
                ainv  => undef,
               }, $class;
@@ -125,9 +125,12 @@ sub siqs_create_poly ($A, $B, $n, $factor_base, $first) {
 
         next if Math::GMPz::Rmpz_divisible_ui_p($A, $fb->{p});
 
-        $fb->{ainv} = int(invmod($A, $fb->{p})) if $first;
-        $fb->{soln1} = int(($fb->{ainv} * ($fb->{tmem} - $B)) % $fb->{p});
-        $fb->{soln2} = int(($fb->{ainv} * (-$fb->{tmem} - $B)) % $fb->{p});
+#<<<
+        $fb->{ainv}  = int(invmod($A, $fb->{p}))                         if $first;
+        $fb->{soln1} = int(($fb->{ainv} * ( $fb->{t} - $B)) % $fb->{p});
+        $fb->{soln2} = int(($fb->{ainv} * (-$fb->{t} - $B)) % $fb->{p});
+#>>>
+
     }
 
     return ($g, $h);
@@ -201,7 +204,7 @@ sub siqs_find_first_poly ($n, $m, $factor_base) {
     my $A = $best_a;
     my $B = $ZERO;
 
-    my @B;
+    my @arr;
 
     foreach my $fb (values %$best_q) {
         my $p = $fb->{p};
@@ -210,10 +213,10 @@ sub siqs_find_first_poly ($n, $m, $factor_base) {
 
         my $r = $A / $p;
 
-        #$fb->{tmem} // die 'error';
+        #$fb->{t} // die 'error';
         #gcd($r, $p) == 1 or die 'error';
 
-        my $gamma = ($fb->{tmem} * int(invmod($r, $p))) % $p;
+        my $gamma = ($fb->{t} * int(invmod($r, $p))) % $p;
 
         if ($gamma > ($p >> 1)) {
             $gamma = $p - $gamma;
@@ -222,26 +225,24 @@ sub siqs_find_first_poly ($n, $m, $factor_base) {
         my $t = $r * $gamma;
 
         $B += $t;
-        push @B, $t;
+        push @arr, $t;
     }
 
     my ($g, $h) = siqs_create_poly($A, $B, $n, $factor_base, 1);
 
-    return ($g, $h, \@B);
+    return ($g, $h, \@arr);
 }
 
-sub siqs_find_next_poly ($n, $factor_base, $i, $g, $W) {
+sub siqs_find_next_poly ($n, $factor_base, $i, $g, $arr) {
 
     # Compute the (i+1)-th polynomials for the Self-Initializing
     # Quadratic Sieve, given that g is the i-th polynomial.
 
-    my $v = valuation($i, 2) + 1;
-    my $z = ((($i >> $v) & 1) == 0) ? -1 : 1;
-
-    #my $z = (ceil($i / (1 << $v)) % 2 == 1) ? -1 : 1;
+    my $v = valuation($i, 2);
+    my $z = ((($i >> ($v + 1)) & 1) == 0) ? -1 : 1;
 
     my $A = $g->{a};
-    my $B = ($g->{b} + 2 * $z * $W->[$v - 1]) % $A;
+    my $B = ($g->{b} + 2 * $z * $arr->[$v]) % $A;
 
     return siqs_create_poly($A, $B, $n, $factor_base, 0);
 }
@@ -379,7 +380,7 @@ sub siqs_build_matrix_opt($M) {
     # The j-th number encodes the j-th column of matrix M in binary:
     # The i-th bit of m[i] is equal to M[i][j].
 
-    my $m           = @{$M->[0]};
+    my $m           = scalar(@{$M->[0]});
     my @cols_binary = ("") x $m;
 
     foreach my $mi (@$M) {
@@ -639,7 +640,7 @@ sub siqs_factorize ($n, $nf) {
     my $prev_cnt = 0;
     my $i_poly   = 0;
 
-    my ($g, $h, $B);
+    my ($g, $h, $arr);
 
     while (not $success) {
 
@@ -652,13 +653,13 @@ sub siqs_factorize ($n, $nf) {
 
         while (not $enough_relations) {
             if ($i_poly == 0) {
-                ($g, $h, $B) = siqs_find_first_poly($n, $m, $factor_base);
+                ($g, $h, $arr) = siqs_find_first_poly($n, $m, $factor_base);
             }
             else {
-                ($g, $h) = siqs_find_next_poly($n, $factor_base, $i_poly, $g, $B);
+                ($g, $h) = siqs_find_next_poly($n, $factor_base, $i_poly, $g, $arr);
             }
 
-            if (++$i_poly >= (1 << $#{$B})) {
+            if (++$i_poly >= (1 << $#{$arr})) {
                 $i_poly = 0;
             }
 
