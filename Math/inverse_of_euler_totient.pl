@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Given a number `n`, the algorithm finds all the numbers such that for each number `k` in the list, φ(k) = n.
+# Given a positive integer `n`, this algorithm finds all the numbers k such that φ(k) = n.
 
 use utf8;
 use 5.010;
@@ -25,24 +25,24 @@ sub inverse_euler_phi {
     my %r = (1 => [1]);
 
     foreach my $d (divisors($n)) {
-        if (is_prime($d + 1)) {
 
-            my %temp;
-            foreach my $k (1 .. (valuation($n, $d + 1) + 1)) {
+        is_prime($d + 1) || next;
 
-                my $u = $d * ($d + 1)**($k - 1);
-                my $v = ($d + 1)**$k;
+        my %temp;
+        foreach my $k (1 .. (valuation($n, $d + 1) + 1)) {
 
-                foreach my $f (divisors($n / $u)) {
-                    if (exists $r{$f}) {
-                        push @{$temp{$f * $u}}, map { $v * $_ } @{$r{$f}};
-                    }
+            my $u = $d * ($d + 1)**($k - 1);
+            my $v = ($d + 1)**$k;
+
+            foreach my $f (divisors($n / $u)) {
+                if (exists $r{$f}) {
+                    push @{$temp{$f * $u}}, map { $v * $_ } @{$r{$f}};
                 }
             }
+        }
 
-            while (my ($i, $v) = each(%temp)) {
-                push @{$r{$i}}, @$v;
-            }
+        while (my ($i, $v) = each(%temp)) {
+            push @{$r{$i}}, @$v;
         }
     }
 

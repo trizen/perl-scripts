@@ -19,13 +19,13 @@ use Math::AnyNum qw(:overload tau e factorial);
 use constant S => tau->sqrt->log;
 use constant T => tau->root(-2.0 * e);
 
-sub inv_fac_W {
+sub inverse_factorial_W {
     my ($n) = @_;
     my $L = log($n) - S;
     $L / ($L / e)->LambertW - 0.5;
 }
 
-sub inv_fac_lgrt {
+sub inverse_factorial_lgrt {
     my ($n) = @_;
     (T * $n**(1 / e))->lgrt * e - 0.5;
 }
@@ -33,8 +33,8 @@ sub inv_fac_lgrt {
 for my $n (1 .. 100) {
 
     my $f = factorial($n);
-    my $i = inv_fac_W($f);
-    my $j = inv_fac_lgrt($f);
+    my $i = inverse_factorial_W($f);
+    my $j = inverse_factorial_lgrt($f);
 
     printf("F(%2s!) =~ %s\n", $n, $i);
 

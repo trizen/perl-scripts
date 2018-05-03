@@ -12,12 +12,13 @@ use 5.020;
 use strict;
 use warnings;
 
-use Math::AnyNum qw(:overload);
 use experimental qw(signatures);
-use ntheory qw(forprimes todigits vecsum);
+
+use ntheory qw(forprimes);
+use Math::AnyNum qw(:overload sumdigits);
 
 sub factorial_power ($n, $p) {
-    ($n - vecsum(todigits($n, $p))) / ($p - 1);
+    ($n - sumdigits($n, $p)) / ($p - 1);
 }
 
 sub factorial ($n) {

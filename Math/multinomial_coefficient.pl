@@ -16,10 +16,10 @@ use warnings;
 
 use experimental qw(signatures);
 use ntheory qw(forprimes vecsum);
-use Math::AnyNum qw(:overload digits);
+use Math::AnyNum qw(:overload sumdigits);
 
 sub factorial_power ($n, $p) {
-    ($n - vecsum(digits($n, $p))) / ($p - 1);
+    ($n - sumdigits($n, $p)) / ($p - 1);
 }
 
 sub multinomial (@mset) {
