@@ -550,6 +550,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Solutions to x^2 = a (mod n)](./Math/solutions_to_x^2%20=%20a%20(mod%20n).pl)
     * [Solve congruence equation example](./Math/solve_congruence_equation_example.pl)
     * [Solve pell equation](./Math/solve_pell_equation.pl)
+    * [Solve pell equation fast](./Math/solve_pell_equation_fast.pl)
     * [Sorting algorithms](./Math/sorting_algorithms.pl)
     * [Sphere volume](./Math/sphere_volume.pl)
     * [Sqrt mod p tonelli-shanks mpz](./Math/sqrt_mod_p_tonelli-shanks_mpz.pl)
