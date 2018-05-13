@@ -31,9 +31,14 @@ sub bernoulli_numbers {
     my $t = Math::GMPq::Rmpq_init();
 
     foreach my $i (1 .. $n) {
+
+        if ($i % 2 != 0 and $i > 1) {
+            next;
+        }
+
         foreach my $k (0 .. $i - 1) {
 
-            if ($i % 2 != 0 and $i > 1) {
+            if ($k % 2 != 0 and $k > 1) {
                 next;
             }
 
