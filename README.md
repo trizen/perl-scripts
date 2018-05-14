@@ -332,6 +332,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Binomial sum with imaginary term](./Math/binomial_sum_with_imaginary_term.pl)
     * [Binomial theorem](./Math/binomial_theorem.pl)
     * [Bitstring prime sieve](./Math/bitstring_prime_sieve.pl)
+    * [Bitstring prime sieve 2](./Math/bitstring_prime_sieve_2.pl)
     * [Brown numbers](./Math/brown_numbers.pl)
     * [Cartesian product iter](./Math/cartesian_product_iter.pl)
     * [Cartesian product rec](./Math/cartesian_product_rec.pl)
