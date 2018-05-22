@@ -21,7 +21,7 @@ sub binary_prime_sieve {
     my $t = Math::GMPz::Rmpz_init_set_ui(1);
     my $c = Math::GMPz::Rmpz_init_set_ui(1);
 
-    Math::GMPz::Rmpz_mul_2exp($c, $c, $n);
+    Math::GMPz::Rmpz_setbit($c, $n);
 
     foreach my $i (2 .. sqrt($n)) {
         Math::GMPz::Rmpz_mul_2exp($t, $t, $n - $i**2);
