@@ -534,6 +534,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Roots on the rise](./Math/roots_on_the_rise.pl)
     * [RSA example](./Math/RSA_example.pl)
     * [RSA PRNG](./Math/RSA_PRNG.pl)
+    * [Secant numbers](./Math/secant_numbers.pl)
     * [Semiprime equationization](./Math/semiprime_equationization.pl)
     * [Semiprime equationization uncached](./Math/semiprime_equationization_uncached.pl)
     * [Sequence analyzer](./Math/sequence_analyzer.pl)
