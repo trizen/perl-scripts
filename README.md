@@ -315,6 +315,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Bernoulli numbers from primes 2](./Math/bernoulli_numbers_from_primes_2.pl)
     * [Bernoulli numbers from primes 3](./Math/bernoulli_numbers_from_primes_3.pl)
     * [Bernoulli numbers from primes gmpf](./Math/bernoulli_numbers_from_primes_gmpf.pl)
+    * [Bernoulli numbers from tangent numbers](./Math/bernoulli_numbers_from_tangent_numbers.pl)
     * [Bernoulli numbers from zeta](./Math/bernoulli_numbers_from_zeta.pl)
     * [Bernoulli numbers ramanujan congruences](./Math/bernoulli_numbers_ramanujan_congruences.pl)
     * [Bernoulli numbers ramanujan congruences unreduced](./Math/bernoulli_numbers_ramanujan_congruences_unreduced.pl)
