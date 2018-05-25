@@ -17,7 +17,7 @@ use experimental qw(signatures);
 use Test::More;
 plan tests => 11;
 
-use Math::AnyNum qw(:overload float round);
+use Math::AnyNum qw(:overload float real round);
 
 sub num2cfrac ($callback, $n) {
     while (1) {
@@ -35,7 +35,7 @@ sub cfrac2num (@f) {
 
 sub fraction_approximation($dec) {
 
-    $dec = float($dec);
+    $dec = real(float($dec));
 
     my ($rat, @nums);
     my $str = "$dec";

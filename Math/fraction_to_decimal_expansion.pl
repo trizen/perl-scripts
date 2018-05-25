@@ -10,7 +10,7 @@ use 5.020;
 use warnings;
 
 use experimental qw(signatures);
-use Math::AnyNum qw(bernfrac ilog10 float);
+use Math::AnyNum qw(bernfrac ilog10);
 
 sub frac2dec ($x, $p = 32) {
     my $size = ilog10(abs($x)) + 1;
