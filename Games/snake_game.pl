@@ -33,11 +33,11 @@ use constant {
               DOWN  => [+1, +0],
              };
 
-use constant {BG_COLOR => "on_black"};
+use constant {BG_COLOR => 'on_black'};
 
 use constant {
-              SNAKE_COLOR => ('bold green ' . BG_COLOR),
-              FOOD_COLOR  => ('red ' . BG_COLOR),
+              SNAKE_COLOR => ('bold green' . ' ' . BG_COLOR),
+              FOOD_COLOR  => ('red' . ' ' . BG_COLOR),
              };
 
 use constant {
@@ -60,13 +60,13 @@ use constant {
     A_FOOD => colored('❇', FOOD_COLOR),
              };
 
-my $sleep    = 0.03;    # sleep duration between displays
+my $sleep    = 0.05;    # sleep duration between displays
 my $food_num = 1;       # number of initial food sources
 
 local $| = 1;
 
-my $w = `tput cols`;
-my $h = `tput lines`;
+my $w = eval { `tput cols` }  || 80;
+my $h = eval { `tput lines` } || 24;
 my $r = "\033[H";
 
 my @grid = map {
@@ -94,8 +94,6 @@ sub create_food {
 create_food() for (1 .. $food_num);
 
 sub display {
-    state $i = 0;
-
     print $r, join(
         "\n",
         map {
@@ -103,15 +101,13 @@ sub display {
                 "",
                 map {
                     my $t = $_->[0];
+                    my $p = $_->[1] // '';
 
-                    if ($t != FOOD and $t != VOID) {
-                        my $p = $_->[1];
-                        $i =
-                            $p eq UP   ? 0
-                          : $p eq DOWN ? 1
-                          : $p eq LEFT ? 2
-                          :              3;
-                    }
+                    my $i =
+                        $p eq UP   ? 0
+                      : $p eq DOWN ? 1
+                      : $p eq LEFT ? 2
+                      :              3;
 
                         $t == HEAD ? (U_HEAD, D_HEAD, L_HEAD, R_HEAD)[$i]
                       : $t == BODY ? (U_BODY, D_BODY, L_BODY, R_BODY)[$i]
@@ -119,8 +115,8 @@ sub display {
                       : $t == FOOD ? (A_FOOD)
                       :              (A_VOID);
 
-                  } @{$_}
-                )
+                } @{$_}
+              )
           } @grid
     );
 }
