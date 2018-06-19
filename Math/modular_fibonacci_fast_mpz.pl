@@ -26,51 +26,49 @@ sub modular_fibonacci ($n, $m) {
 
     my $a = Math::GMPz::Rmpz_init_set_ui(0);
     my $b = Math::GMPz::Rmpz_init_set_ui(1);
-    my $c = Math::GMPz::Rmpz_init_set_ui(1);
-    my $d = Math::GMPz::Rmpz_init_set_ui(1);
 
     for (; ;) {
 
         if (Math::GMPz::Rmpz_odd_p($n)) {
 
-            Math::GMPz::Rmpz_mul($t, $f, $a);
-            Math::GMPz::Rmpz_addmul($t, $g, $c);
+            # (f, g) = (f*a + g*b, f*b + g*(a+b))  mod m
 
-            Math::GMPz::Rmpz_mul($g, $g, $d);
+            Math::GMPz::Rmpz_mul($u, $g, $b);
+            Math::GMPz::Rmpz_mul($t, $f, $a);
+            Math::GMPz::Rmpz_mul($g, $g, $a);
+
+            Math::GMPz::Rmpz_add($t, $t, $u);
+            Math::GMPz::Rmpz_add($g, $g, $u);
+
             Math::GMPz::Rmpz_addmul($g, $f, $b);
 
-            Math::GMPz::Rmpz_mod($g, $g, $m);
             Math::GMPz::Rmpz_mod($f, $t, $m);
+            Math::GMPz::Rmpz_mod($g, $g, $m);
         }
+
+        # (a, b) = (a*a + b*b, a*b + b*(a+b))  mod m
 
         Math::GMPz::Rmpz_div_2exp($n, $n, 1);
         Math::GMPz::Rmpz_sgn($n) || last;
 
-        Math::GMPz::Rmpz_mul($u, $b, $c);
+        Math::GMPz::Rmpz_mul($t, $a, $a);
+        Math::GMPz::Rmpz_mul($u, $b, $b);
+        Math::GMPz::Rmpz_mul($b, $b, $a);
 
-        Math::GMPz::Rmpz_mul($t, $b, $d);
-        Math::GMPz::Rmpz_addmul($t, $b, $a);
-        Math::GMPz::Rmpz_mod($b, $t, $m);
+        Math::GMPz::Rmpz_mul_2exp($b, $b, 1);
 
-        Math::GMPz::Rmpz_mul($t, $c, $a);
-        Math::GMPz::Rmpz_addmul($t, $c, $d);
-        Math::GMPz::Rmpz_mod($c, $t, $m);
+        Math::GMPz::Rmpz_add($b, $b, $u);
+        Math::GMPz::Rmpz_add($t, $t, $u);
 
-        Math::GMPz::Rmpz_mul($a, $a, $a);
-        Math::GMPz::Rmpz_mul($d, $d, $d);
-
-        Math::GMPz::Rmpz_add($a, $a, $u);
-        Math::GMPz::Rmpz_add($d, $d, $u);
-
-        Math::GMPz::Rmpz_mod($a, $a, $m);
-        Math::GMPz::Rmpz_mod($d, $d, $m);
+        Math::GMPz::Rmpz_mod($a, $t, $m);
+        Math::GMPz::Rmpz_mod($b, $b, $m);
     }
 
     return $f;
 }
 
 say "=> Last 20 digits of the 10^100-th Fibonacci number:";
-say modular_fibonacci(Math::GMPz->new(10)**100, Math::GMPz->new(10)**20);    #=> 59183788299560546875
+say modular_fibonacci(Math::GMPz->new(10)**100, Math::GMPz->new(10)**20);
 
 say "\n=> First few Fibonacci numbers:";
 say join(' ', map { modular_fibonacci($_, 10**9) } 0 .. 25);

@@ -13,12 +13,12 @@ use Math::AnyNum qw(:overload ilog2 getbit);
 
 sub fibonacci_number($n, $m) {
 
-    my ($f, $g)         = (0, 1);
-    my ($a, $b, $c, $d) = (0, 1, 1, 1);
+    my ($f, $g) = (0, 1);
+    my ($a, $b) = (0, 1);
 
-    foreach my $i (0 .. ilog2($n)||0) {
-        ($f, $g)         = (($f*$a + $g*$c)%$m, ($f*$b + $g*$d)%$m) if getbit($n, $i);
-        ($a, $b, $c, $d) = (($a*$a + $b*$c)%$m, ($a*$b + $b*$d)%$m, ($c*$a + $d*$c)%$m, ($c*$b + $d*$d)%$m);
+    foreach my $k (0 .. ilog2($n)||0) {
+        ($f, $g) = (($f*$a + $g*$b)%$m, ($f*$b + $g*($a+$b))%$m) if getbit($n, $k);
+        ($a, $b) = (($a*$a + $b*$b)%$m, ($a*$b + $b*($a+$b))%$m);
     }
 
     return $f;

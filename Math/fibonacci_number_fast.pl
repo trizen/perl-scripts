@@ -13,15 +13,16 @@ use Math::AnyNum qw(:overload ilog2 getbit);
 
 sub fibonacci_number($n) {
 
-    my ($f, $g)         = (0, 1);
-    my ($a, $b, $c, $d) = (0, 1, 1, 1);
+    my ($f, $g) = (0, 1);
+    my ($a, $b) = (0, 1);
 
-    foreach my $i (0 .. ilog2($n)||0) {
-        ($f, $g)         = ($f*$a + $g*$c, $f*$b + $g*$d) if getbit($n, $i);
-        ($a, $b, $c, $d) = ($a*$a + $b*$c, $a*$b + $b*$d, $c*$a + $d*$c, $c*$b + $d*$d);
+    foreach my $k (0 .. ilog2($n)||0) {
+        ($f, $g) = ($f*$a + $g*$b, $f*$b + $g*($a+$b)) if getbit($n, $k);
+        ($a, $b) = ($a*$a + $b*$b, $a*$b + $b*($a+$b));
     }
 
     return $f;
 }
 
-say fibonacci_number(100);       #=> 354224848179261915075
+say fibonacci_number(100);                              #=> 354224848179261915075
+say join(' ', map { fibonacci_number($_) } 0 .. 15);    #=> 0 1 1 2 3 5 8 13 21 34 55 89 144 233 377 610
