@@ -2,11 +2,17 @@
 
 # Daniel "Trizen" Șuteu
 # Date: 02 August 2017
+# Edit: 20 June 2018
 # https://github.com/trizen
 
-# A very strong primality test, inspired by Fermat's Little Theorem and the AKS test.
+# A very strong primality test (v2), inspired by Fermat's Little Theorem and the AKS test.
 
 # No counter-examples are known.
+
+# See also:
+#   https://oeis.org/A175530
+#   https://oeis.org/A175531
+#   https://oeis.org/A299799
 
 use 5.020;
 use strict;
@@ -29,11 +35,11 @@ sub mulmod {
 ## Creates the `modulo_test*` subroutines.
 #
 foreach my $g (
-    [1, 1,  4,  5],
-    [2, 1,  3,  5],
-    [3, 1,  5,  3],
-    [4, 1,  3, 17],
-    [5, 1, 11, 43],
+    [1, 1,  4,    5],
+    [2, 1,  3,   -5],
+    [3, 1, -5,    2],
+    [4, 1, -3,   17],
+    [5, 1, -23, -29],
 ) {
 
     no strict 'refs';
@@ -66,11 +72,13 @@ foreach my $g (
 sub is_probably_prime($n) {
 
     $n <=  1 && return 0;
+
     $n ==  2 && return 1;
     $n ==  3 && return 1;
-    $n == 11 && return 1;
-    $n == 13 && return 1;
+    $n ==  5 && return 1;
     $n == 17 && return 1;
+    $n == 29 && return 1;
+    $n == 43 && return 1;
     $n == 59 && return 1;
 
     powmod(2, $n-1, $n) == 1 or return 0;
@@ -107,7 +115,10 @@ eval {
     say is_probably_prime(Math::GMPz->new('6297842947207644396587450668076662882608856575233692384596461'))      ? 'prime' : 'error';    #=> prime
     say is_probably_prime(Math::GMPz->new('396090926269155174167385236415542573007935497117155349994523806173')) ? 'prime' : 'error';    #=> prime
 
-    say "=> Testing large Mersenne primes...";
+    say is_probably_prime(Math::GMPz->new('2380296518909971201')) ? 'error' : 'composite';
+    say is_probably_prime(Math::GMPz->new('3188618003602886401')) ? 'error' : 'composite';
+
+    say "=> Testing a few large Mersenne primes...";
 
     # Mersenne primes
     say is_probably_prime(Math::GMPz->new(2)**127  - 1) ? 'prime' : 'error';   #=> prime
@@ -120,7 +131,7 @@ eval {
 say "=> Searching for counter-examples...";
 
 # Look for counter-examples
-foreach my $n (1..3000) {
+foreach my $n (1..10000) {
     if (is_probably_prime($n)) {
 
         if (not is_prime($n)) {
