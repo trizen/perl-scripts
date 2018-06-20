@@ -361,6 +361,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Discrete root](./Math/discrete_root.pl)
     * [E from binomial](./Math/e_from_binomial.pl)
     * [E primorial](./Math/e_primorial.pl)
+    * [Elliptic-curve factorization method](./Math/elliptic-curve_factorization_method.pl)
     * [Ethiopian multiplication](./Math/ethiopian_multiplication.pl)
     * [Ethiopian multiplication binary](./Math/ethiopian_multiplication_binary.pl)
     * [Factorial dsc algorithm](./Math/factorial_dsc_algorithm.pl)
