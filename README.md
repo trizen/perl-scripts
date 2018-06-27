@@ -593,6 +593,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Trip2mars](./Math/trip2mars.pl)
     * [Trizen primality test](./Math/trizen_primality_test.pl)
     * [Trizen strong primality test](./Math/trizen_strong_primality_test.pl)
+    * [Unitary squarefree divisors](./Math/unitary_squarefree_divisors.pl)
     * [Wilson prime formula](./Math/wilson_prime_formula.pl)
     * [Yahtzee](./Math/yahtzee.pl)
     * [Zequals](./Math/zequals.pl)
