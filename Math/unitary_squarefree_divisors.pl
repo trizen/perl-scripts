@@ -13,22 +13,16 @@ use 5.010;
 use strict;
 use warnings;
 
-use ntheory qw(factor_exp gcd);
+use ntheory qw(factor_exp);
 
 sub unitary_squarefree_divisors {
     my ($n) = @_;
 
-    my @d = (1);
-    foreach my $p (map { $_->[0] } factor_exp($n)) {
+    my @d  = (1);
+    my @pp = map { $_->[0] } grep { $_->[1] == 1 } factor_exp($n);
 
-        my @t;
-        foreach my $d (@d) {
-            if (gcd($n / ($p * $d), $p * $d) == 1) {
-                push @t, $p * $d;
-            }
-        }
-
-        push @d, @t;
+    foreach my $p (@pp) {
+        push @d, map { $_ * $p } @d;
     }
 
     return sort { $a <=> $b } @d;
