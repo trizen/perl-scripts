@@ -9,11 +9,10 @@
 # See also:
 #   https://en.wikipedia.org/wiki/Unitary_divisor
 
-use 5.014;
+use 5.010;
 use strict;
 use warnings;
 
-use experimental qw(signatures);
 use ntheory qw(forcomb factor_exp vecprod);
 
 # This algorithm nicely illustrates the identity:
@@ -22,7 +21,8 @@ use ntheory qw(forcomb factor_exp vecprod);
 #
 # which is the number of divisors of a squarefree number that is the product of `n` primes.
 
-sub udivisors ($n) {
+sub udivisors {
+    my ($n) = @_;
 
     my @pp  = map { $_->[0]**$_->[1] } factor_exp($n);
     my $len = scalar(@pp);
@@ -34,7 +34,7 @@ sub udivisors ($n) {
         } $len, $k;
     }
 
-    sort { $a <=> $b } @d;
+    return sort { $a <=> $b } @d;
 }
 
 say join(' ', udivisors(5040));
