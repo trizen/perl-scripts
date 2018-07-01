@@ -18,12 +18,8 @@ use ntheory qw(factor_exp gcd);
 sub unitary_squarefree_divisors {
     my ($n) = @_;
 
-    my @factors = map { $_->[0] } factor_exp($n);
-
     my @d = (1);
-
-    my %seen;
-    while (my $p = shift(@factors)) {
+    foreach my $p (map { $_->[0] } factor_exp($n)) {
 
         my @t;
         foreach my $d (@d) {
