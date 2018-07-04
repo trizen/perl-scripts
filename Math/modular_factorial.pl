@@ -5,7 +5,7 @@
 # Date: 21 August 2016
 # Website: https://github.com/trizen
 
-# An efficient algorithm for computing factorial of a large number, modulus a larger number.
+# An efficient algorithm for computing factorial of a large number, modulo a larger number.
 
 use 5.020;
 use strict;

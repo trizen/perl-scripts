@@ -5,7 +5,7 @@
 # Edit: 30 September 2017
 # https://github.com/trizen
 
-# An efficient algorithm for computing large Fibonacci numbers, modulus some n.
+# An efficient algorithm for computing large Fibonacci numbers, modulo some n.
 
 # Algorithm from:
 #   http://codeforces.com/blog/entry/14516

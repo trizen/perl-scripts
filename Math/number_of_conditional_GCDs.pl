@@ -5,7 +5,7 @@
 # https://github.com/trizen
 
 # Find the number of k = 1..n for which GCD(n,k) satisfies a certain condition (e.g.:
-# GCD(n,k) is a prime number), using the divisors of `n` and Euler totient function.
+# GCD(n,k) is a prime number), using the divisors of `n` and the Euler totient function.
 
 # See also:
 #   https://oeis.org/A117494 -- Number of k = 1..n for which GCD(n, k) is a prime

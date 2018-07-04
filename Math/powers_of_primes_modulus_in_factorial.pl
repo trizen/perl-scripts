@@ -5,7 +5,7 @@
 # Date: 15 September 2016
 # Website: https://github.com/trizen
 
-# Count the number of factors of p modulus p^k in (p^n)! with k <= n.
+# Count the number of factors of p modulo p^k in (p^n)! with k <= n.
 
 # Example:
 #           p   n  k
