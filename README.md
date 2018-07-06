@@ -339,6 +339,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Cartesian product rec](./Math/cartesian_product_rec.pl)
     * [Cauchy numbers of first type](./Math/cauchy_numbers_of_first_type.pl)
     * [Coin change](./Math/coin_change.pl)
+    * [Collatz function](./Math/collatz_function.pl)
     * [Complex exponentiation in real numbers](./Math/complex_exponentiation_in_real_numbers.pl)
     * [Complex logarithm in real numbers](./Math/complex_logarithm_in_real_numbers.pl)
     * [Complex zeta in real numbers](./Math/complex_zeta_in_real_numbers.pl)
