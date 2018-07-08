@@ -570,6 +570,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Square root method](./Math/square_root_method.pl)
     * [Square root modulo n tonelli-shanks](./Math/square_root_modulo_n_tonelli-shanks.pl)
     * [Squarefree count](./Math/squarefree_count.pl)
+    * [Squarefree divisors](./Math/squarefree_divisors.pl)
     * [Stern brocot encoding](./Math/stern_brocot_encoding.pl)
     * [Stern brocot sequence](./Math/stern_brocot_sequence.pl)
     * [Sum factorial](./Math/sum_factorial.pl)
