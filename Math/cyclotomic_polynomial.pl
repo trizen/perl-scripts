@@ -25,13 +25,11 @@ use Math::AnyNum qw(:overload prod);
 sub cyclotomic_polynomial {
     my ($n, $x) = @_;
 
-    my @d;
-    my @pp = map { $_->[0] } factor_exp($n);
-
     # Generate the squarefree divisors of n, along
     # with the number of prime factors of each divisor
-    foreach my $p (@pp) {
-        push @d, map { [$d[$_][0] * $p, $d[$_][1] + 1] } 0 .. $#d;
+    my @d;
+    foreach my $p (map { $_->[0] } factor_exp($n)) {
+        push @d, map { [$_->[0] * $p, $_->[1] + 1] } @d;
         push @d, [$p, 1];
     }
 
