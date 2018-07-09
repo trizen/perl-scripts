@@ -464,6 +464,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Modular inverse](./Math/modular_inverse.pl)
     * [Modular pseudo square root](./Math/modular_pseudo_square_root.pl)
     * [Modular sigma of unitary divisors of factorial](./Math/modular_sigma_of_unitary_divisors_of_factorial.pl)
+    * [Modular square root](./Math/modular_square_root.pl)
     * [Multi sqrt nums](./Math/multi_sqrt_nums.pl)
     * [Multinomial coefficient](./Math/multinomial_coefficient.pl)
     * [Multinomial coefficient from binomial](./Math/multinomial_coefficient_from_binomial.pl)
