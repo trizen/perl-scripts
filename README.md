@@ -411,6 +411,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Inverse of fibonacci](./Math/inverse_of_fibonacci.pl)
     * [Inverse of p adic valuation](./Math/inverse_of_p_adic_valuation.pl)
     * [Invert transform of factorials](./Math/invert_transform_of_factorials.pl)
+    * [Is chernick carmichael number](./Math/is_chernick_carmichael_number.pl)
     * [Is even perfect](./Math/is_even_perfect.pl)
     * [Is even perfect 2](./Math/is_even_perfect_2.pl)
     * [Is even perfect 3](./Math/is_even_perfect_3.pl)
