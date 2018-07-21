@@ -336,6 +336,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Bitstring prime sieve](./Math/bitstring_prime_sieve.pl)
     * [Bitstring prime sieve 2](./Math/bitstring_prime_sieve_2.pl)
     * [Brown numbers](./Math/brown_numbers.pl)
+    * [Carmichael numbers random](./Math/carmichael_numbers_random.pl)
     * [Cartesian product iter](./Math/cartesian_product_iter.pl)
     * [Cartesian product rec](./Math/cartesian_product_rec.pl)
     * [Cauchy numbers of first type](./Math/cauchy_numbers_of_first_type.pl)
