@@ -187,7 +187,7 @@ foreach my $n (1 .. 100) {
     my @a2 = bf_sqrtmod($z, $m);
 
     if ("@a1" ne "@a2") {
-        die "\nerror for ($z, $m):\n\t(@a1) != (@a2)\n\n";
+        warn "\nerror for ($z, $m):\n\t(@a1) != (@a2)\n";
     }
 }
 
