@@ -5,15 +5,10 @@
 # Edit: 21 July 2018
 # https://github.com/trizen
 
-# A very strong primality test (v2), inspired by Fermat's Little Theorem and the AKS test.
+# A very strong primality test (v3), inspired by Fermat's Little Theorem and the AKS test.
 
-# Only the following list of counter-examples are known (but, most likely, there exists infinitely many of them):
-#           843347325974413121
-#           883253991797747461
-#        229386598589242644481
-#       3104745148145953757281
-#     407333160866845741098841
-#    1107852524534142074314801
+# Only one counter-example is known:
+#   83143326880201568435669099604552661
 
 # See also:
 #   https://oeis.org/A175530
@@ -37,15 +32,22 @@ sub mulmod {
         : ntheory::mulmod($n, $k, $mod);
 }
 
+# Additional matrix of parameters (also only with one counter-example known: 5902446537594114481):
+#   [1, 1,  617, -127],
+#   [2, 1, -647,  163],
+#   [3, 1, -967,  953],
+#   [4, 1, -263, -691],
+#   [5, 1, -743,  241],
+
 #
 ## Creates the `modulo_test*` subroutines.
 #
 foreach my $g (
-    [1, 1,  4,    5],
-    [2, 1,  3,   -5],
-    [3, 1, -5,    2],
-    [4, 1, -3,   17],
-    [5, 1, -23, -29],
+    [1, 1, -353, -829],
+    [2, 1, -983, -911],
+    [3, 1,  149,   83],
+    [4, 1,  271,  191],
+    [5, 1, -461, -491],
 ) {
 
     no strict 'refs';
@@ -77,23 +79,27 @@ foreach my $g (
 
 sub is_probably_prime($n) {
 
-    $n <=  1 && return 0;
+    $n <= 1 && return 0;
 
-    $n ==  2 && return 1;
-    $n ==  3 && return 1;
-    $n ==  5 && return 1;
-    $n == 17 && return 1;
-    $n == 29 && return 1;
-    $n == 43 && return 1;
-    $n == 59 && return 1;
+    $n == 2     && return 1;
+    $n == 3     && return 1;
+    $n == 5     && return 1;
+    $n == 7     && return 1;
+    $n == 11    && return 1;
+    $n == 17    && return 1;
+    $n == 19    && return 1;
+    $n == 23    && return 1;
+    $n == 43    && return 1;
+    $n == 79    && return 1;
+    $n == 181   && return 1;
+    $n == 1151  && return 1;
+    $n == 6607  && return 1;
+    $n == 14057 && return 1;
 
     powmod(2, $n-1, $n) == 1 or return 0;
 
-    # Here we can use the Fibonacci primality test when n is congruent to 2 or 3 mod 5:
-    #   fibmod(n+1, n) = 0 when n is prime
-
     my $r1 = modulo_test1($n, $n);
-    (($n % 4 == 3) ? ($r1 == $n-1) : ($r1 == 1)) or return 0;
+    ($r1 == 1) or ($r1 == $n-1) or return 0;
 
     my $r2 = modulo_test2($n, $n);
     ($r2 == 1) or ($r2 == $n-1) or return 0;
@@ -121,16 +127,10 @@ say is_probably_prime(904935283655003749) ? 'prime' : 'error';    #=> prime
 eval {
     require Math::GMPz;
 
-    say "\n=> Testing known counter-examples...";
+    say "\n=> Testing a few Carmichael numbers...";
 
-    foreach my $n (qw(
-        843347325974413121
-        883253991797747461
-        229386598589242644481
-        3104745148145953757281
-        407333160866845741098841
-        1107852524534142074314801
-    )) {
+    while (defined(my $n = <DATA>)) {
+        chomp($n);
         if (is_probably_prime(Math::GMPz->new($n))) {
             say "Counter-example: $n";
         }
@@ -161,7 +161,7 @@ eval {
 say "\n=> Searching for small counter-examples...";
 
 # Look for counter-examples
-foreach my $n (1..10000) {
+foreach my $n (1 .. 15000) {
     if (is_probably_prime($n)) {
 
         if (not is_prime($n)) {
@@ -172,3 +172,73 @@ foreach my $n (1..10000) {
         warn "Missed a prime: $n\n";
     }
 }
+
+__END__
+208969201
+1027334881
+1574601601
+3711456001
+23562188821
+30304281601
+30680814529
+58891472641
+120871699201
+260245228321
+359505020161
+373523673601
+377555665201
+774558925921
+860293156801
+986308202881
+1352358402913
+3226057632001
+6477654268801
+6615533841841
+7954028515441
+9049836479041
+9173203300801
+9599057610241
+27192146983681
+40395626998273
+46843949912257
+52451136349921
+74820786179329
+122570307044209
+227291059980601
+360570785364001
+443372888629441
+539956339242241
+921259517831137
+1428360123889921
+1543272305769601
+1738925896140049
+5539588182853381
+11674038748806721
+26857102685439041
+32334452526861101
+39671149333495681
+598963244103226621
+842526563598720001
+843347325974413121
+883253991797747461
+934216077330841537
+2380296518909971201
+3188618003602886401
+5151560903656250449
+5902446537594114481
+9610653088766378881
+10021721082510591541
+13938032454972692851
+64296323802158793601
+99270776480238208441
+229386598589242644481
+512617191379440810961
+3104745148145953757281
+8273838687436582743601
+25214682289344970125061
+176639720841995571276421
+407333160866845741098841
+594984649904873169943321
+1107852524534142074314801
+5057462719726630861278061
+83143326880201568435669099604552661
