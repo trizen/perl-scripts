@@ -2,12 +2,18 @@
 
 # Daniel "Trizen" Șuteu
 # Date: 02 August 2017
-# Edit: 20 June 2018
+# Edit: 21 July 2018
 # https://github.com/trizen
 
 # A very strong primality test (v2), inspired by Fermat's Little Theorem and the AKS test.
 
-# No counter-examples are known.
+# Only the following list of counter-examples are known (but, most likely, there exists infinitely many of them):
+#           843347325974413121
+#           883253991797747461
+#        229386598589242644481
+#       3104745148145953757281
+#     407333160866845741098841
+#    1107852524534142074314801
 
 # See also:
 #   https://oeis.org/A175530
@@ -83,6 +89,9 @@ sub is_probably_prime($n) {
 
     powmod(2, $n-1, $n) == 1 or return 0;
 
+    # Here we can use the Fibonacci primality test when n is congruent to 2 or 3 mod 5:
+    #   fibmod(n+1, n) = 0 when n is prime
+
     my $r1 = modulo_test1($n, $n);
     (($n % 4 == 3) ? ($r1 == $n-1) : ($r1 == 1)) or return 0;
 
@@ -103,6 +112,7 @@ sub is_probably_prime($n) {
 ## Run a few tests
 #
 
+say "=> Testing a few small prime numbers";
 say is_probably_prime(6760517005636313)   ? 'prime' : 'error';    #=> prime
 say is_probably_prime(204524538079257577) ? 'prime' : 'error';    #=> prime
 say is_probably_prime(904935283655003749) ? 'prime' : 'error';    #=> prime
@@ -110,15 +120,35 @@ say is_probably_prime(904935283655003749) ? 'prime' : 'error';    #=> prime
 # Big integers
 eval {
     require Math::GMPz;
+
+    say "\n=> Testing known counter-examples...";
+
+    foreach my $n (qw(
+        843347325974413121
+        883253991797747461
+        229386598589242644481
+        3104745148145953757281
+        407333160866845741098841
+        1107852524534142074314801
+    )) {
+        if (is_probably_prime(Math::GMPz->new($n))) {
+            say "Counter-example: $n";
+        }
+    }
+
+    say "\n=> Testing larger prime numbers...";
+
     say is_probably_prime(Math::GMPz->new('90123127846128741241234935283655003749'))                             ? 'prime' : 'error';    #=> prime
     say is_probably_prime(Math::GMPz->new('793534607085486631526003804503819188867498912352777'))                ? 'prime' : 'error';    #=> prime
     say is_probably_prime(Math::GMPz->new('6297842947207644396587450668076662882608856575233692384596461'))      ? 'prime' : 'error';    #=> prime
     say is_probably_prime(Math::GMPz->new('396090926269155174167385236415542573007935497117155349994523806173')) ? 'prime' : 'error';    #=> prime
 
+    say "\n=> Testing a few composite numbers...";
+
     say is_probably_prime(Math::GMPz->new('2380296518909971201')) ? 'error' : 'composite';
     say is_probably_prime(Math::GMPz->new('3188618003602886401')) ? 'error' : 'composite';
 
-    say "=> Testing a few large Mersenne primes...";
+    say "\n=> Testing a few large Mersenne primes...";
 
     # Mersenne primes
     say is_probably_prime(Math::GMPz->new(2)**127  - 1) ? 'prime' : 'error';   #=> prime
@@ -128,7 +158,7 @@ eval {
     say is_probably_prime(Math::GMPz->new(2)**4423 - 1) ? 'prime' : 'error';   #=> prime
 };
 
-say "=> Searching for counter-examples...";
+say "\n=> Searching for small counter-examples...";
 
 # Look for counter-examples
 foreach my $n (1..10000) {
