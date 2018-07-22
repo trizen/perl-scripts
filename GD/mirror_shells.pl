@@ -42,12 +42,8 @@ for my $j (1 .. $loop) {
     t $j;
 }
 
-my $image_name = "turtle.png";
+my $image_name = "mirror_shells.png";
 
 open my $fh, '>', $image_name or die $!;
 print {$fh} $img->png;
 close $fh;
-
-## View the image as soon as it is generated
-system "gliv", $image_name;    # edit this line
-$? == 0 or die "Non-zero exit code of the image viewer: $?";

@@ -1,10 +1,11 @@
 #!/usr/bin/perl
 
 use strict;
+use warnings;
+
 use GD::Simple;
 
 my $img = 'GD::Simple'->new(2503, 2500);
-
 $img->moveTo(540, 1980);
 
 my $nr = 360;
@@ -155,10 +156,8 @@ foreach $_ (0 .. 410) {
     $img->line($nr);
 }
 
-my $image_name = 'turtle.png';
-die $! unless open my $fh, '>', $image_name;
+my $image_name = 'trizen_text_art.png';
 
+open my $fh, '>:raw', $image_name or die $!;
 print $fh $img->png;
 close $fh;
-
-system 'geeqie', $image_name;

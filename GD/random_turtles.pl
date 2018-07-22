@@ -1,13 +1,19 @@
 #!/usr/bin/perl
 
+use strict;
+use warnings;
+
 use GD::Simple;
 
 #use ntheory ('is_prime');
 print "** Generating image...\n";
-$img = 'GD::Simple'->new(10000, 6000);
+
+my $img = 'GD::Simple'->new(10000, 6000);
+
 $img->fgcolor('blue');
 $img->moveTo(1000, 2000);
-for ($nr = 200 ; $nr <= 300 ; $nr += int rand 7) {
+
+for (my $nr = 200 ; $nr <= 300 ; $nr += int rand 7) {
     $img->fgcolor('white');
 
     #$img->turn(-$nr);
@@ -109,8 +115,8 @@ for ($nr = 200 ; $nr <= 300 ; $nr += int rand 7) {
     #$img->line($nr);
 }
 
-open FILE, '>test.png';
-print FILE $img->png;
-close FILE;
+open(my $fh, '>:raw', 'random_turtles.png') or die $!;
+print {$fh} $img->png;
+close $fh;
+
 print "** Done\n";
-`gliv test.png`;

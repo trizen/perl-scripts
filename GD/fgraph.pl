@@ -124,6 +124,3 @@ while (my ($k, $row) = each @{$matrix}) {
 open my $fh, '>', $imgFile;
 print {$fh} $img->png;
 close $fh;
-
-# Display the graph
-system('gliv', $imgFile);

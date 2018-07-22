@@ -27,8 +27,7 @@ my $to   = abs($from);
 my $v = !1;
 my $f = sub { my ($x) = @_; $x**2 + 1 };
 
-my $output_file  = 'graph.png';
-my $image_viewer = 'gliv';
+my $output_file = 'function_graph.png';
 
 GetOptions(
     'size|s=f'     => \$size,
@@ -37,7 +36,6 @@ GetOptions(
     'to|t=f'       => \$to,
     'verbose|v!'   => \$v,
     'output|o=s'   => \$output_file,
-    'viewer|iv=s'  => \$image_viewer,
     'function|f=s' => sub {
         my (undef, $value) = @_;
         $f = eval("sub {my(\$x) = \@_; $value}") // die "Invalid function '$value': $@";
@@ -121,9 +119,6 @@ while (my ($k, $row) = each @{$matrix}) {
 }
 
 # Create the PNG file
-open my $fh, '>', $output_file;
+open my $fh, '>', $output_file or die "$output_file: $!";
 print {$fh} $img->png;
 close $fh;
-
-# Display the graph
-system($image_viewer, $output_file);

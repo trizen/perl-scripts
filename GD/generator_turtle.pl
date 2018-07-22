@@ -2,8 +2,8 @@
 
 use GD::Simple;
 
-$img = 'GD::Simple'->new(2500, 2500);
-$img->moveTo(1370, 1580);
+$img = 'GD::Simple'->new(1000, 1000);
+$img->moveTo(445, 275);
 
 my $nr = 124;
 
@@ -50,10 +50,8 @@ for (0 .. 125) {
     #last;
 }
 
-my $image_name = 'turtle.png';
+my $image_name = 'turtle_generator.png';
 
 open my $fh, '>', $image_name or die $!;
 print {$fh} $img->png;
 close $fh;
-
-system "gliv", $image_name;

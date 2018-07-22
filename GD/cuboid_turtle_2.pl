@@ -1,8 +1,11 @@
 #!/usr/bin/perl
 
+use strict;
+use warnings;
+
 use GD::Simple;
 
-$img = 'GD::Simple'->new(3000, 3000);
+my $img = 'GD::Simple'->new(3000, 3000);
 $img->moveTo(1660, 1780);
 
 my $nr = 314.9;
@@ -41,10 +44,8 @@ for (0 .. 44) {
     $img->line(-$nr);
 }
 
-my $image_name = 'turtle.png';
+my $image_name = 'cuboid_turtle_2.png';
 
 open my $fh, '>', $image_name or die $!;
 print {$fh} $img->png;
 close $fh;
-
-system "geeqie", $image_name;

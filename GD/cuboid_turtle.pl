@@ -1,8 +1,11 @@
 #!/usr/bin/perl
 
+use strict;
+use warnings;
+
 use GD::Simple;
 
-$img = 'GD::Simple'->new(2000, 2000);
+my $img = 'GD::Simple'->new(2000, 2000);
 $img->moveTo(670, 800);
 
 my $pi = atan2(1, -'inf');
@@ -38,10 +41,8 @@ for (0 .. 280) {
     $img->line(-$nr);
 }
 
-my $image_name = 'turtle.png';
+my $image_name = 'cuboid_turtle.png';
 
 open my $fh, '>', $image_name or die $!;
 print {$fh} $img->png;
 close $fh;
-
-system "geeqie", $image_name;

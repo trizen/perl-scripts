@@ -1,12 +1,10 @@
 #!/usr/bin/perl
 
-# Author: Daniel "Trizen" Șuteu
-# License: GPLv3
+# Daniel "Trizen" Șuteu
 # Date: 20 December 2014
-# Website: https://github.com/trizen
+# https://github.com/trizen
 
-# Graphical representation of a Sierpinski triangle
-# Usage: perl gd_sierpinski_tr.pl [size]
+# Generate a graphical Sierpinski triangle of a given size.
 
 use 5.010;
 use strict;
@@ -26,7 +24,7 @@ sub sierpinski {
 
 my @lines = sierpinski(8);
 
-my $size = shift() // 2;
+my $size = $ARGV[0] // 2;
 my $img = GD::Simple->new(length($lines[0]) * $size, scalar(@lines) * $size);
 
 foreach my $i (0 .. $#lines) {
@@ -52,5 +50,3 @@ foreach my $i (0 .. $#lines) {
 open my $fh, '>:raw', 'triangle.png';
 print $fh $img->png;
 close $fh;
-
-system 'geeqie', 'triangle.png';

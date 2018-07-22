@@ -1,9 +1,12 @@
 #!/usr/bin/perl
 
 use integer;
+use strict;
+use warnings;
+
 use GD::Simple;
 
-$img = 'GD::Simple'->new(1000, 1000);
+my $img = 'GD::Simple'->new(1000, 1000);
 $img->moveTo(700, 500);
 
 my $nr = 442;
@@ -30,10 +33,8 @@ for (0 .. $nr) {
     l $nr+ $_;
 }
 
-my $image_name = 'turtle.png';
+my $image_name = 'black_star_turtle.png';
 
 open my $fh, '>', $image_name or die $!;
 print {$fh} $img->png;
 close $fh;
-
-system "gliv", $image_name;

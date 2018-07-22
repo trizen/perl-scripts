@@ -24,23 +24,17 @@ sub c($) {
     $img->fgcolor(shift);
 }
 
-{
-    $img->clear;
-    $img->moveTo(250, 300);    # hopefully, at the center of the image
+$img->clear;
+$img->moveTo(250, 300);    # hopefully, at the center of the image
 
-    my $loop = 5;
-    for (my $j = 0.01 ; $j <= $loop ; $j += 0.01) {
-        l $j;
-        t $loop- $j + 1;
-    }
-
-    my $image_name = "turtle.png";
-
-    open my $fh, '>', $image_name or die $!;
-    print {$fh} $img->png;
-    close $fh;
-
-    ## View the image as soon as it is generated
-    system "gliv", $image_name;    # edit this line
-    $? == 0 or die "Non-zero exit code of the image viewer: $?";
+my $loop = 5;
+for (my $j = 0.01 ; $j <= $loop ; $j += 0.01) {
+    l $j;
+    t $loop- $j + 1;
 }
+
+my $image_name = "shell.png";
+
+open my $fh, '>', $image_name or die $!;
+print {$fh} $img->png;
+close $fh;

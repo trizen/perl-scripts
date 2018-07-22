@@ -74,10 +74,6 @@ for ($move = 0 ; $x >= 0 && $x < $size && $y >= 0 && $y < $size ; $move++) {
     $y += $dirs[$dir][1];
 }
 
-open my $fh, '>', $img_file
-  or die "$img_file: $!";
+open my $fh, '>', $img_file or die "$img_file: $!";
 print {$fh} $p->png;
 close $fh;
-
-system "gliv", $img_file;
-$? && exit $? << 8;

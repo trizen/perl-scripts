@@ -1,8 +1,11 @@
 #!/usr/bin/perl
 
+use strict;
+use warnings;
+
 use GD::Simple;
 
-$img = 'GD::Simple'->new(1000, 1000);
+my $img = 'GD::Simple'->new(1000, 1000);
 $img->moveTo(285, 80);
 
 my $nr = 257;
@@ -31,10 +34,8 @@ for (0 .. 100) {
     $img->line(-$nr);
 }
 
-my $image_name = 'turtle.png';
+my $image_name = 'trizen_old_logo.png';
 
 open my $fh, '>', $image_name or die $!;
 print {$fh} $img->png;
 close $fh;
-
-system "gliv", $image_name;

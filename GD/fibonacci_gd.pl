@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 
-# Author: Trizen
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 18 May 2014
-# Website: http://github.com/trizen
+# https://github.com/trizen
 
 use 5.010;
 use strict;
@@ -35,10 +35,8 @@ sub fib {
 
 fib(14);
 
-my $image_name = 'turtle.png';
+my $image_name = 'fibonacci_turtle.png';
 
 open my $fh, '>', $image_name or die $!;
 print {$fh} $img->png;
 close $fh;
-
-system "gliv", $image_name;
