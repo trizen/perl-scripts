@@ -25,7 +25,7 @@ for (my $k = 3 ; ; ++$k) {
 
     # We can stop the search when:
     #   (6*m + 1) * (12*m + 1) * Product_{i=1..k-2} (9 * 2^i * m + 1)
-    # is greater than the largest term of A033502, for m=1.
+    # is greater than the limit, for m=1.
     last if prod(chernick_carmichael_factors(1, $k)) > $limit;
 
     # Generate the extended Chernick numbers with k distinct prime factors,
