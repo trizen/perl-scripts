@@ -368,6 +368,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Elliptic-curve factorization method](./Math/elliptic-curve_factorization_method.pl)
     * [Ethiopian multiplication](./Math/ethiopian_multiplication.pl)
     * [Ethiopian multiplication binary](./Math/ethiopian_multiplication_binary.pl)
+    * [Extended Chernick Carmichael numbers](./Math/extended_Chernick_Carmichael_numbers.pl)
     * [Factorial dsc algorithm](./Math/factorial_dsc_algorithm.pl)
     * [Factorial from primes](./Math/factorial_from_primes.pl)
     * [Factorial from primes simple](./Math/factorial_from_primes_simple.pl)

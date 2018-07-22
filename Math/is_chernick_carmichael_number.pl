@@ -6,10 +6,11 @@
 
 # Efficient algorithm for factoring (and identifying) an extended Chernick-Carmichael number.
 
-# First few extended Chernick-Carmichael numbers are:
-#   1729, 63973, 294409, 56052361
+# The first few extended Chernick-Carmichael numbers are:
+#   1729, 63973, 294409, 56052361, 118901521, 172947529, 216821881
 
 # See also:
+#   https://oeis.org/A317126
 #   https://projecteuclid.org/euclid.bams/1183501763
 #   https://oeis.org/wiki/Carmichael_numbers
 #   https://en.wikipedia.org/wiki/Carmichael_number
