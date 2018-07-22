@@ -21,13 +21,13 @@ use experimental qw(signatures);
 
 use List::Util qw(all);
 use ntheory qw(is_prob_prime);
-use Math::AnyNum qw(bsearch iroot ipow2 ilog2 prod);
+use Math::AnyNum qw(bsearch iroot ipow2 ilog2 is_div prod);
 
 sub chernick_carmichael_factors ($k, $r) {
     (6 * $k + 1, 12 * $k + 1, 18 * $k + 1, (map { ipow2($_ - 2) * 9 * $k + 1 } 4 .. $r));
 }
 
-sub is_chernick_carmichael ($n) {
+sub is_chernick_number ($n) {
 
     foreach my $r (3 .. ilog2($n)) {
 
@@ -47,14 +47,23 @@ sub is_chernick_carmichael ($n) {
     return 0;
 }
 
+sub is_chernick_carmichael_number ($n) {
+    if (my $indices = is_chernick_number($n)) {
+        my ($r, $k) = @$indices;
+        is_div($k, Math::AnyNum->new(2)**($r-4)) || return 0;
+        return $indices;
+    }
+    return 0;
+}
+
 while (defined(my $n = <DATA>)) {
 
     $n =~ /\S/ or do { say ''; next };
     $n = Math::AnyNum->new($n);
 
-    if (my $indices = is_chernick_carmichael($n)) {
+    if (my $indices = is_chernick_number($n)) {
         my ($r, $k) = @$indices;
-        say "C($r, $k) = $n";
+        say "C($r, $k) = $n" . (is_chernick_carmichael_number($n) ? '' : ' -- not a Carmichael number');
     }
     else {
         say "Not a Chernick-Carmichael number: $n";
