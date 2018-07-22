@@ -1,9 +1,10 @@
 #!/usr/bin/perl
 
-# Author: Trizen
-# License: GPLv3
+# Daniel "Trizen" Șuteu
 # Date: 29 April 2014
-# Website: http://github.com/trizen
+# https://github.com/trizen
+
+# A funny fanny shape. :-)
 
 use strict;
 use warnings;
@@ -33,7 +34,7 @@ for my $i (1 .. 180) {
     t 0;
 }
 
-my $image_name = 'turtle.png';
+my $image_name = 'mathematical_butt.png';
 
 open my $fh, '>:raw', $image_name or die $!;
 print {$fh} $img->png;

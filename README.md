@@ -181,7 +181,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Mathematical butt](./GD/mathematical_butt.pl)
     * [Mathematical shapes](./GD/mathematical_shapes.pl)
     * [Mirror shells](./GD/mirror_shells.pl)
-    * [Mobius walking line](./GD/mobius_walking_line.pl)
+    * [Moebius walking line](./GD/moebius_walking_line.pl)
     * [Number triangles](./GD/number_triangles.pl)
     * [Numeric circles](./GD/numeric_circles.pl)
     * [Pascal's triangle multiples](./GD/pascal_s_triangle_multiples.pl)

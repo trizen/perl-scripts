@@ -41,6 +41,6 @@ foreach my $u (moebius(1, $width)) {
     $img->line(1);
 }
 
-open my $fh, '>:raw', 'output.png';
+open my $fh, '>:raw', 'moebius_walking_like.png';
 print $fh $img->png;
 close $fh;
