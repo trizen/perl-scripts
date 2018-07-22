@@ -53,8 +53,8 @@ while (length($pi)) {
     }
 }
 
-my $i = 'pi_art_turtle.png';
-open my $p, '>:raw', $i;
+my $image_name = 'pi_art_turtle.png';
+open my $p, '>:raw', $image_name or die $!;
 print $p $img->png;
 close $p;
 
