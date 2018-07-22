@@ -3,6 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 24 April 2015
+# Edit: 22 July 2018
 # Website: https://github.com/trizen
 
 # Extract markdown code from each task for a given programming language.
@@ -59,7 +60,7 @@ sub tags_to_markdown {
             $out .= "*" . tags_to_markdown($1, 1) . "*";
         }
         elsif ($t =~ m{\G<code>(.*?)</code>}gcs) {
-            $out .= "`$1`";
+            $out .= "`" . decode_entities($1) . "`";
         }
         elsif ($t =~ m{\G<tt>(.*?)</tt>}gcs) {
             $out .= "`" . decode_entities($1) . "`";
@@ -196,8 +197,8 @@ sub extract_lang {
     # remove <script> tags
     $part =~ s{<script\b.+?</script>}{}gsi;
 
-    # replace [email protected] with 'email@example.com'
-    $part =~ s{<a class="__cf_email__".+?</a>}{email\@example.com}gsi;
+    # replace [email protected] with 'email@example.net'
+    $part =~ s{<a class="__cf_email__".+?</a>}{email\@example.net}gsi;
 
     my @data;
     until ($part =~ /\G\z/gc) {
@@ -208,6 +209,15 @@ sub extract_lang {
                          lang => $1,
                          data => $2,
                         }
+              };
+        }
+        elsif ($part =~ m{\G<h([1-4])>(.*?)</h[1-4]>}sgc) {
+            push @data,
+              {
+                header => {
+                           n    => $1,
+                           data => $2,
+                          }
               };
         }
         elsif ($part =~ m{\G<p>(.*?)</p>}sgc) {
@@ -259,7 +269,17 @@ sub to_markdown {
 
     my $text = '';
     foreach my $item (@{$lang_data}) {
-        if (exists $item->{text}) {
+
+        if (exists $item->{header}) {
+
+            my $n    = $item->{header}{n};
+            my $data = $item->{header}{data};
+
+            my $t = strip_tags(tags_to_markdown(strip_space($data), 1));
+            $t =~ s/\[\[edit\].*//s;
+            $text .= "\n\n" . ('#' x $n) . ' ' . $t . "\n\n";
+        }
+        elsif (exists $item->{text}) {
 
             my $data = $item->{text}{data};
             my $tag  = $item->{text}{tag};
