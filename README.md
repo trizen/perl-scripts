@@ -281,6 +281,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Magick similar images](./Image/magick_similar_images.pl)
     * [Magick star trails](./Image/magick_star_trails.pl)
     * [Matrix visual](./Image/matrix_visual.pl)
+    * [Nearest neighbor interpolation](./Image/nearest_neighbor_interpolation.pl)
     * [Photo mosaic from images](./Image/photo_mosaic_from_images.pl)
     * [Sharp 2x zoom](./Image/sharp_2x_zoom.pl)
 * JAPH
