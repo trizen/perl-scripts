@@ -572,6 +572,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Sphere volume](./Math/sphere_volume.pl)
     * [Sqrt mod p tonelli-shanks mpz](./Math/sqrt_mod_p_tonelli-shanks_mpz.pl)
     * [Sqrt n](./Math/sqrt_n.pl)
+    * [Square divisors](./Math/square_divisors.pl)
     * [Square product subsets](./Math/square_product_subsets.pl)
     * [Square root convergents](./Math/square_root_convergents.pl)
     * [Square root method](./Math/square_root_method.pl)
