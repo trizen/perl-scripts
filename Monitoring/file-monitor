@@ -12,6 +12,7 @@ use strict;
 use warnings;
 
 use File::Find qw(find);
+use Time::HiRes qw(sleep);
 use Getopt::Std qw(getopts);
 use File::Spec::Functions qw(rel2abs);
 
