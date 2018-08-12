@@ -380,6 +380,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Faulhaber's formula](./Math/faulhaber_s_formula.pl)
     * [Fermat factorization method](./Math/fermat_factorization_method.pl)
     * [Fermat factorization method 2](./Math/fermat_factorization_method_2.pl)
+    * [Fermat frobenius quadratic primality test](./Math/fermat_frobenius_quadratic_primality_test.pl)
     * [Fibonacci closed form](./Math/fibonacci_closed_form.pl)
     * [Fibonacci closed form 2](./Math/fibonacci_closed_form_2.pl)
     * [Fibonacci encoding](./Math/fibonacci_encoding.pl)
