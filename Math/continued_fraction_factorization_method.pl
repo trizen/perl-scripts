@@ -110,8 +110,8 @@ sub cffm ($n) {
 
     my (@A, @Q);
 
-    my $B = 2 * int(exp(sqrt(log($n) * log(log($n))) / 2));    # B-smooth limit
-    my $L = prime_count($B) + int(log($n));                    # maximum number of matrix-rows
+    my $B = int(exp(sqrt(log($n) * log(log($n))) / 2));    # B-smooth limit
+    my $L = prime_count($B) + 1;                           # maximum number of matrix-rows
 
     do {
 
