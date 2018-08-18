@@ -15,11 +15,14 @@ use warnings;
 
 use experimental qw(signatures);
 
+use Math::GMPz qw();
 use List::Util qw(first);
 use ntheory qw(is_prime factor_exp prime_count vecprod);
-use Math::AnyNum qw(is_square isqrt irand idiv gcd valuation getbit setbit);
+use Math::Prime::Util::GMP qw(is_square is_power sqrtint rootint valuation gcd urandomb);
 
-use constant { ONE => Math::AnyNum->new(1) };
+use constant {
+    ONE => Math::GMPz::Rmpz_init_set_ui(1),
+};
 
 sub gaussian_elimination ($rows, $n) {
 
@@ -34,7 +37,7 @@ sub gaussian_elimination ($rows, $n) {
         my $npivot = -1;
 
         foreach my $row ($nrow + 1 .. $m) {
-            if (getbit($A[$row], $col)) {
+            if (Math::GMPz::Rmpz_tstbit($A[$row], $col)) {
                 $npivot = $row;
                 $nrow++;
                 last;
@@ -49,7 +52,7 @@ sub gaussian_elimination ($rows, $n) {
         }
 
         foreach my $row ($nrow + 1 .. $m) {
-            if (getbit($A[$row], $col)) {
+            if (Math::GMPz::Rmpz_tstbit($A[$row], $col)) {
                 $A[$row] ^= $A[$nrow];
                 $I[$row] ^= $I[$nrow];
             }
@@ -60,15 +63,31 @@ sub gaussian_elimination ($rows, $n) {
 }
 
 sub exponents_signature (@factors) {
-    my $sig = 0;
+    my $sig = Math::GMPz::Rmpz_init_set_ui(0);
 
     foreach my $p (@factors) {
         if ($p->[1] & 1) {
-            $sig = setbit($sig, prime_count($p->[0]) - 1);
+            Math::GMPz::Rmpz_setbit($sig, prime_count($p->[0]) - 1);
         }
     }
 
     return $sig;
+}
+
+sub check_factor ($n, $g, $factors) {
+
+    while ($n % $g == 0) {
+
+        $n /= $g;
+        push @$factors, $g;
+
+        if (is_prime($n)) {
+            push @$factors, $n;
+            return 1;
+        }
+    }
+
+    return $n;
 }
 
 sub cffm ($n) {
@@ -77,10 +96,10 @@ sub cffm ($n) {
     return ()   if $n <= 1;
     return ($n) if is_prime($n);
 
-    # Check for perfect squares
-    if (is_square($n)) {
-        my @factors = __SUB__->(isqrt($n));
-        return sort { $a <=> $b } ((@factors) x 2);
+    # Check for perfect powers
+    if (my $k = is_power($n)) {
+        my @factors = __SUB__->(Math::GMPz->new(rootint($n, $k)));
+        return sort { $a <=> $b } ((@factors) x $k);
     }
 
     # Check for divisibility by 2
@@ -98,11 +117,11 @@ sub cffm ($n) {
         return @factors;
     }
 
-    my $x = isqrt($n);
+    my $x = Math::GMPz->new(sqrtint($n));
     my $y = $x;
     my $z = 1;
 
-    my $w = $x+$x;
+    my $w = $x + $x;
     my $r = $w;
 
     my ($e1, $e2) = (1, 0);
@@ -110,21 +129,21 @@ sub cffm ($n) {
 
     my (@A, @Q);
 
-    my $B = int(exp(sqrt(log($n) * log(log($n))) / 2));    # B-smooth limit
-    my $L = prime_count($B) + 1;                           # maximum number of matrix-rows
+    my $B = 2 * int(exp(sqrt(log("$n") * log(log("$n"))) / 2));    # B-smooth limit
+    my $L = prime_count($B) + 1;                                   # maximum number of matrix-rows
 
     do {
 
         $y = $r * $z - $y;
-        $z = idiv($n - $y * $y, $z);
-        $r = idiv($x + $y, $z);
+        $z = ($n - $y * $y) / $z;
+        $r = ($x + $y) / $z;
 
         my $u = ($x * $f2 + $e2) % $n;
         my $v = ($u * $u) % $n;
         my $c = ($v > $w ? $n - $v : $v);
 
         if (is_square($c)) {
-            my $g = gcd($u - isqrt($c), $n);
+            my $g = Math::GMPz->new(gcd($u - Math::GMPz->new(sqrtint($c)), $n));
 
             if ($g > 1 and $g < $n) {
                 return sort { $a <=> $b } (
@@ -147,14 +166,17 @@ sub cffm ($n) {
     } while ($z > 1 and @A <= $L);
 
     if (@A < $L) {
-        push @A, (0) x ($L - @A + 1);
+        push @A, map { Math::GMPz::Rmpz_init_set_ui(0) } 1..($L - @A + 1);
     }
 
     my ($A, $I) = gaussian_elimination(\@A, $L - 1);
 
     my $LR = ((first { $A->[-$_] } 1 .. @$A) // 0) - 1;
 
-    foreach my $solution (@{$I}[@$I - $LR .. $#$I]) {
+    my @factors;
+    my $rem = $n;
+
+  SOLUTIONS: foreach my $solution (@{$I}[@$I - $LR .. $#$I]) {
 
         my $solution_A = 1;
         my $solution_B = 1;
@@ -163,7 +185,7 @@ sub cffm ($n) {
 
         foreach my $i (0 .. $#Q) {
 
-            getbit($solution, $i) || next;
+            Math::GMPz::Rmpz_tstbit($solution, $i) || next;
 
             ($solution_A *= $Q[$i][0]) %= $n;
             ($solution_B *= $Q[$i][0]);
@@ -178,32 +200,55 @@ sub cffm ($n) {
                 [$solution_B, $solution_Y],
             ) {
                 my ($X, $Y) = @$pair;
-                my $g = gcd($X - isqrt($Y), $n);
+                my $g = Math::GMPz->new(gcd($X - Math::GMPz->new(sqrtint($Y)), $rem));
 
-                if ($g > 1 and $g < $n) {
-                    return sort { $a <=> $b } (
-                        __SUB__->($g),
-                        __SUB__->($n / $g)
-                    );
+                if ($g > 1 and $g < $rem) {
+                    $rem = check_factor($rem, $g, \@factors);
+                    last SOLUTIONS if $rem == 1;
                 }
             }
         }
     }
 
-    return ($n);
+    my @final_factors;
+
+    foreach my $f (@factors) {
+        if (is_prime($f)) {
+            push @final_factors, $f;
+        }
+        else {
+            push @final_factors, __SUB__->($f);
+        }
+    }
+
+    if ($rem != 1) {
+        if ($rem != $n) {
+            push @final_factors, __SUB__->($rem);
+        }
+        else {
+            push @final_factors, $rem;
+        }
+    }
+
+    return sort { $a <=> $b } @final_factors;
 }
 
+# Support for using the program as a command-line tool
+if (@ARGV) {
+    my $n = $ARGV[0];
+    say "[*] Factoring $n (", length($n), ' digits)...';
+    my @f = cffm(Math::GMPz->new($n));
+    die "error" if vecprod(@f) != $n;
+    say "`-> ", join(', ', map { is_prime($_) ? $_ : "$_ (composite)" } @f);
+    exit;
+}
+
+# Run some tests when no argument is provided
 foreach my $k (2 .. 60) {
 
-    my $n = irand(2, 1 << $k);
+    my $n = Math::GMPz->new(urandomb($k) + 2);
     my @f = cffm($n);
 
-    if (grep { !is_prime($_) } @f) {
-        say "$n = ", join(' * ', @f), ' (incomplete factorization)';
-    }
-    else {
-        say "$n = ", join(' * ', @f);
-    }
-
+    say "$n = ", join(' * ', map { is_prime($_) ? $_ : "$_ (composite)" } @f);
     die 'error' if vecprod(@f) != $n;
 }
