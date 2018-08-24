@@ -7,15 +7,16 @@
 
 # Adds auto tags to MP3 audio files from a directory and its subdirectories.
 
-use strict 'refs';
+use 5.010;
+use strict;
 use warnings;
-use File::Find ('find');
+
+use MP3::Tag;
+use File::Find qw(find);
 
 my @dirs = grep { -d $_ } @ARGV;
 
 die "Usage: $0 <dir>\n" unless @dirs;
-
-require MP3::Tag;
 
 my @mp3_files;
 
@@ -23,10 +24,12 @@ find(\&wanted_files, @dirs);
 
 sub wanted_files {
     my $file = $File::Find::name;
-    push @mp3_files, $file if $file =~ /\.mp3$/io;
+    push @mp3_files, $file if $file =~ /\.mp3\z/i;
 }
 
 foreach my $filename (@mp3_files) {
+
+    say "Processing: $filename";
 
     my $mp3 = 'MP3::Tag'->new($filename);
 
