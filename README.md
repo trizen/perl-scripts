@@ -223,6 +223,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Trizen new logo](./GD/trizen_new_logo.pl)
     * [Trizen old logo](./GD/trizen_old_logo.pl)
     * [Trizen text art](./GD/trizen_text_art.pl)
+    * [Tupper's self-referential formula](./GD/tupper_s_self-referential_formula.pl)
     * [Wavy triangle](./GD/wavy_triangle.pl)
     * [XOR pattern](./GD/XOR_pattern.pl)
     * [Zeta real half terms](./GD/zeta_real_half_terms.pl)
