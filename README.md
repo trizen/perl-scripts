@@ -260,6 +260,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
         * [HAL9000](./HAL/HAL9000/HAL9000.pl)
 * Image
     * [2x zoom](./Image/2x_zoom.pl)
+    * [Bitmap monochrome encoding decoding](./Image/bitmap_monochrome_encoding_decoding.pl)
     * [Complex transform](./Image/complex_transform.pl)
     * [Cyan vision](./Image/cyan_vision.pl)
     * [Darken image](./Image/darken_image.pl)
