@@ -872,7 +872,7 @@ sub fibmod ($n, $m) {
 
 sub fibonacci_factorization ($n, $upper_bound) {
 
-    my $bound = 2 * logint($n, 2)**2;
+    my $bound = 5 * logint($n, 2)**2;
     $bound = $upper_bound if ($bound > $upper_bound);
 
     for (; ;) {
@@ -931,7 +931,7 @@ sub pollard_pm1_find_factor ($n, $bound) {
 sub pollard_rho2_find_factor ($n, $max_iter) {
 
     my $x = 2;
-    my $y = 2;
+    my $y = 3;
 
     foreach (1 .. $max_iter) {
 
