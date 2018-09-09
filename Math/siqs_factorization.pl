@@ -31,6 +31,8 @@ use ntheory qw(
   fromdigits rootint random_prime is_square
   );
 
+use Math::Prime::Util::GMP qw(consecutive_integer_lcm);
+
 my $ZERO = Math::GMPz->new(0);
 my $ONE  = Math::GMPz->new(1);
 
@@ -40,8 +42,9 @@ local $| = 1;
 use constant {
               LOOK_FOR_SMALL_FACTORS      => 1,
               SMOOTH_TRIAL_DIVISION       => 0,
-              POLLARD_PM1_BOUND           => next_prime(2_000_000),
-              TRIAL_DIVISION_LIMIT        => next_prime(1_000_000),
+              FIBONACCI_BOUND             => 300_000,
+              POLLARD_PM1_BOUND           => 2_000_000,
+              TRIAL_DIVISION_LIMIT        => 1_000_000,
               POLLARD_RHO_ITERATIONS      => 16,
               POLLARD_RHO2_ITERATIONS     => 50_000,
               POLLARD_RHO_SQRT_ITERATIONS => 25_000,
@@ -813,6 +816,86 @@ sub pollard_brent_find_factor ($n, $max_iter) {
     return Math::GMPz->new($g);
 }
 
+sub fibmod ($n, $m) {
+
+    $n = Math::GMPz->new("$n");
+    $m = Math::GMPz->new("$m");
+
+    my $t = Math::GMPz::Rmpz_init();
+    my $u = Math::GMPz::Rmpz_init();
+
+    my $f = Math::GMPz::Rmpz_init_set_ui(0);    # set to 2 for Lucas numbers
+    my $g = Math::GMPz::Rmpz_init_set_ui(1);
+
+    my $a = Math::GMPz::Rmpz_init_set_ui(0);
+    my $b = Math::GMPz::Rmpz_init_set_ui(1);
+
+    for (; ;) {
+
+        if (Math::GMPz::Rmpz_odd_p($n)) {
+
+            # (f, g) = (f*a + g*b, f*b + g*(a+b))  mod m
+
+            Math::GMPz::Rmpz_mul($u, $g, $b);
+            Math::GMPz::Rmpz_mul($t, $f, $a);
+            Math::GMPz::Rmpz_mul($g, $g, $a);
+
+            Math::GMPz::Rmpz_add($t, $t, $u);
+            Math::GMPz::Rmpz_add($g, $g, $u);
+
+            Math::GMPz::Rmpz_addmul($g, $f, $b);
+
+            Math::GMPz::Rmpz_mod($f, $t, $m);
+            Math::GMPz::Rmpz_mod($g, $g, $m);
+        }
+
+        # (a, b) = (a*a + b*b, a*b + b*(a+b))  mod m
+
+        Math::GMPz::Rmpz_div_2exp($n, $n, 1);
+        Math::GMPz::Rmpz_sgn($n) || last;
+
+        Math::GMPz::Rmpz_mul($t, $a, $a);
+        Math::GMPz::Rmpz_mul($u, $b, $b);
+        Math::GMPz::Rmpz_mul($b, $b, $a);
+
+        Math::GMPz::Rmpz_mul_2exp($b, $b, 1);
+
+        Math::GMPz::Rmpz_add($b, $b, $u);
+        Math::GMPz::Rmpz_add($t, $t, $u);
+
+        Math::GMPz::Rmpz_mod($a, $t, $m);
+        Math::GMPz::Rmpz_mod($b, $b, $m);
+    }
+
+    return $f;
+}
+
+sub fibonacci_factorization ($n, $upper_bound) {
+
+    my $bound = 2 * logint($n, 2)**2;
+    $bound = $upper_bound if ($bound > $upper_bound);
+
+    for (; ;) {
+        return undef if $bound <= 1;
+
+        my $B = consecutive_integer_lcm($bound);
+        my $F = fibmod($B, $n);
+
+        my $g = gcd($F, $n);
+
+        if ($g == $n) {
+            $bound >>= 1;
+            next;
+        }
+
+        if ($g > 1) {
+            return Math::GMPz->new($g);
+        }
+
+        return undef;
+    }
+}
+
 sub pollard_pm1_find_factor ($n, $bound) {
 
     my $max_tries = 3;
@@ -1011,6 +1094,14 @@ sub find_small_factors ($rem, $factors) {
 
         say "=> Pollard rho-sqrt...";
         $f = pollard_rho_sqrt_find_factor($rem, POLLARD_RHO_SQRT_ITERATIONS);
+
+        if (defined($f) and $f < $rem) {
+            store_factor(\$rem, $f, $factors);
+            next;
+        }
+
+        say "=> Fibonacci p±1...";
+        $f = fibonacci_factorization($rem, FIBONACCI_BOUND);
 
         if (defined($f) and $f < $rem) {
             store_factor(\$rem, $f, $factors);
