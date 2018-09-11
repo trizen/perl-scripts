@@ -386,6 +386,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Fibonacci closed form](./Math/fibonacci_closed_form.pl)
     * [Fibonacci closed form 2](./Math/fibonacci_closed_form_2.pl)
     * [Fibonacci encoding](./Math/fibonacci_encoding.pl)
+    * [Fibonacci factorization method](./Math/fibonacci_factorization_method.pl)
     * [Fibonacci number fast](./Math/fibonacci_number_fast.pl)
     * [Fibonacci polynomials closed form](./Math/fibonacci_polynomials_closed_form.pl)
     * [Find least common denominator](./Math/find_least_common_denominator.pl)
