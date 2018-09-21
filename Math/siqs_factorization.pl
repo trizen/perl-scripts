@@ -1000,8 +1000,7 @@ sub simple_cfrac_find_factor ($n, $max_iter) {
     # Efficient for numbers that have factors relatively close to sqrt(n)
 
     my $x = Math::GMPz->new(sqrtint($n));
-    my $w = $x + $x;
-    my $r = $w;
+    my $r = $x + $x;
 
     my $y = $x;
     my $z = 1;
@@ -1015,13 +1014,14 @@ sub simple_cfrac_find_factor ($n, $max_iter) {
 
         my $u = ($x * $f2 + $e2) % $n;
         my $v = ($u * $u) % $n;
-        my $c = ($v > $w ? $n - $v : $v);
 
-        if (is_square($c)) {
-            my $g = gcd($u - sqrtint($c), $n);
+        foreach my $c ($v, $n - $v) {
+            if (is_square($c)) {
+                my $g = gcd($u - sqrtint($c), $n);
 
-            if ($g > 1 and $g < $n) {
-                return Math::GMPz->new($g);
+                if ($g > 1 and $g < $n) {
+                    return Math::GMPz->new($g);
+                }
             }
         }
 
