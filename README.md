@@ -464,6 +464,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Modular factorial](./Math/modular_factorial.pl)
     * [Modular fibonacci](./Math/modular_fibonacci.pl)
     * [Modular fibonacci anynum](./Math/modular_fibonacci_anynum.pl)
+    * [Modular fibonacci cassini](./Math/modular_fibonacci_cassini.pl)
     * [Modular fibonacci fast mpz](./Math/modular_fibonacci_fast_mpz.pl)
     * [Modular fibonacci mpz](./Math/modular_fibonacci_mpz.pl)
     * [Modular fibonacci polynomial](./Math/modular_fibonacci_polynomial.pl)
