@@ -821,29 +821,31 @@ sub fibmod ($n, $m) {
     $n = Math::GMPz->new("$n");
     $m = Math::GMPz->new("$m");
 
-    my $t = Math::GMPz::Rmpz_init();
-    my $u = Math::GMPz::Rmpz_init();
+    state $t = Math::GMPz::Rmpz_init_nobless();
+    state $u = Math::GMPz::Rmpz_init_nobless();
 
-    my $f = Math::GMPz::Rmpz_init_set_ui(0);    # set to 2 for Lucas numbers
+    my $f = Math::GMPz::Rmpz_init_set_ui(0);
     my $g = Math::GMPz::Rmpz_init_set_ui(1);
 
-    my $a = Math::GMPz::Rmpz_init_set_ui(0);
-    my $b = Math::GMPz::Rmpz_init_set_ui(1);
+    my $A = Math::GMPz::Rmpz_init_set_ui(0);
+    my $B = Math::GMPz::Rmpz_init_set_ui(1);
 
-    for (; ;) {
+    my @bits = split(//, Math::GMPz::Rmpz_get_str($n, 2));
 
-        if (Math::GMPz::Rmpz_odd_p($n)) {
+    while (@bits) {
+
+        if (pop @bits) {
 
             # (f, g) = (f*a + g*b, f*b + g*(a+b))  mod m
 
-            Math::GMPz::Rmpz_mul($u, $g, $b);
-            Math::GMPz::Rmpz_mul($t, $f, $a);
-            Math::GMPz::Rmpz_mul($g, $g, $a);
+            Math::GMPz::Rmpz_mul($u, $g, $B);
+            Math::GMPz::Rmpz_mul($t, $f, $A);
+            Math::GMPz::Rmpz_mul($g, $g, $A);
 
             Math::GMPz::Rmpz_add($t, $t, $u);
             Math::GMPz::Rmpz_add($g, $g, $u);
 
-            Math::GMPz::Rmpz_addmul($g, $f, $b);
+            Math::GMPz::Rmpz_addmul($g, $f, $B);
 
             Math::GMPz::Rmpz_mod($f, $t, $m);
             Math::GMPz::Rmpz_mod($g, $g, $m);
@@ -851,20 +853,17 @@ sub fibmod ($n, $m) {
 
         # (a, b) = (a*a + b*b, a*b + b*(a+b))  mod m
 
-        Math::GMPz::Rmpz_div_2exp($n, $n, 1);
-        Math::GMPz::Rmpz_sgn($n) || last;
+        Math::GMPz::Rmpz_mul($t, $A, $A);
+        Math::GMPz::Rmpz_mul($u, $B, $B);
 
-        Math::GMPz::Rmpz_mul($t, $a, $a);
-        Math::GMPz::Rmpz_mul($u, $b, $b);
-        Math::GMPz::Rmpz_mul($b, $b, $a);
+        Math::GMPz::Rmpz_mul($B, $B, $A);
+        Math::GMPz::Rmpz_mul_2exp($B, $B, 1);
 
-        Math::GMPz::Rmpz_mul_2exp($b, $b, 1);
-
-        Math::GMPz::Rmpz_add($b, $b, $u);
+        Math::GMPz::Rmpz_add($B, $B, $u);
         Math::GMPz::Rmpz_add($t, $t, $u);
 
-        Math::GMPz::Rmpz_mod($a, $t, $m);
-        Math::GMPz::Rmpz_mod($b, $b, $m);
+        Math::GMPz::Rmpz_mod($A, $t, $m);
+        Math::GMPz::Rmpz_mod($B, $B, $m);
     }
 
     return $f;
