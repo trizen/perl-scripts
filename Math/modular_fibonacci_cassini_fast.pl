@@ -14,10 +14,7 @@ use warnings;
 use experimental qw(signatures);
 
 use Math::GMPz;
-use Math::Prime::Util::GMP qw(
-  is_prime gcd logint
-  random_prime consecutive_integer_lcm
-);
+use Math::Prime::Util::GMP qw(gcd consecutive_integer_lcm);
 
 sub fibmod ($n, $m) {
 
@@ -75,13 +72,3 @@ sub fibonacci_factorization ($n, $B = 10000) {
 
 say fibonacci_factorization("121095274043",             700);     #=> 470783           (p+1 is  700-smooth)
 say fibonacci_factorization("544812320889004864776853", 3000);    #=> 333732865481     (p-1 is 3000-smooth)
-
-foreach my $k (1 .. 50) {
-
-    my $n = Math::GMPz->new(random_prime(1 << $k)) * random_prime(1 << $k);
-    my $p = fibonacci_factorization($n, 2 * logint($n, 2)**2);
-
-    if (is_prime($p)) {
-        say "$n = $p * ", $n / $p;
-    }
-}

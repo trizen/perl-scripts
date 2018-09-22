@@ -4,7 +4,7 @@
 # Date: 19 June 2018
 # https://github.com/trizen
 
-# A very efficient algorithm for computing the nth-Fibonacci number (mod m).
+# An efficient algorithm for computing the nth-Fibonacci number (mod m).
 
 use 5.020;
 use warnings;
