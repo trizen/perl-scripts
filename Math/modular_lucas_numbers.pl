@@ -26,11 +26,7 @@ sub lucasmod ($n, $m) {
         Math::GMPz::Rmpz_init_set_ui(1),
     );
 
-    my @bits = split(//, Math::GMPz::Rmpz_get_str($n, 2));
-
-    shift @bits;
-
-    while (@bits) {
+    foreach my $bit (split(//, substr(Math::GMPz::Rmpz_get_str($n, 2), 1))) {
 
         Math::GMPz::Rmpz_powm_ui($g, $g, 2, $m);
         Math::GMPz::Rmpz_powm_ui($f, $f, 2, $m);
@@ -45,7 +41,7 @@ sub lucasmod ($n, $m) {
             Math::GMPz::Rmpz_sub_ui($f, $f, 2);
           };
 
-        if (shift @bits) {
+        if ($bit) {
             Math::GMPz::Rmpz_sub($g, $f, $g);
             $w = 0;
         }

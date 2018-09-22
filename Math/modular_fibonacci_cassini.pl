@@ -22,11 +22,7 @@ sub fibmod ($n, $m) {
 
     my ($f, $g, $a) = (0, 1, -2);
 
-    my @bits = split(//, Math::GMPz::Rmpz_get_str($n, 2));
-
-    shift @bits;
-
-    while (@bits) {
+    foreach my $bit (split(//, substr(Math::GMPz::Rmpz_get_str($n, 2), 1))) {
 
         ($g *= $g) %= $m;
         ($f *= $f) %= $m;
@@ -35,7 +31,7 @@ sub fibmod ($n, $m) {
 
         $f += $g;
 
-        if (shift @bits) {
+        if ($bit) {
             ($f, $g, $a) = ($t - $f, $t, -2);
         }
         else {

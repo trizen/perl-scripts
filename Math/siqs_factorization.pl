@@ -816,57 +816,45 @@ sub pollard_brent_find_factor ($n, $max_iter) {
     return Math::GMPz->new($g);
 }
 
-sub fibmod ($n, $m) {
+sub lucasmod ($n, $m) {
 
     $n = Math::GMPz->new("$n");
     $m = Math::GMPz->new("$m");
 
-    state $t = Math::GMPz::Rmpz_init_nobless();
-    state $u = Math::GMPz::Rmpz_init_nobless();
+#<<<
+    my ($f, $g, $w) = (
+        Math::GMPz::Rmpz_init_set_ui(3),
+        Math::GMPz::Rmpz_init_set_ui(1),
+    );
+#>>>
 
-    my $f = Math::GMPz::Rmpz_init_set_ui(0);
-    my $g = Math::GMPz::Rmpz_init_set_ui(1);
+    foreach my $bit (split(//, substr(Math::GMPz::Rmpz_get_str($n, 2), 1))) {
+        Math::GMPz::Rmpz_powm_ui($g, $g, 2, $m);
+        Math::GMPz::Rmpz_powm_ui($f, $f, 2, $m);
 
-    my $A = Math::GMPz::Rmpz_init_set_ui(0);
-    my $B = Math::GMPz::Rmpz_init_set_ui(1);
+        $w
+          ? do {
+            Math::GMPz::Rmpz_sub_ui($g, $g, 2);
+            Math::GMPz::Rmpz_add_ui($f, $f, 2);
+          }
+          : do {
+            Math::GMPz::Rmpz_add_ui($g, $g, 2);
+            Math::GMPz::Rmpz_sub_ui($f, $f, 2);
+          };
 
-    my @bits = split(//, Math::GMPz::Rmpz_get_str($n, 2));
-
-    while (@bits) {
-
-        if (pop @bits) {
-
-            # (f, g) = (f*a + g*b, f*b + g*(a+b))  mod m
-
-            Math::GMPz::Rmpz_mul($u, $g, $B);
-            Math::GMPz::Rmpz_mul($t, $f, $A);
-            Math::GMPz::Rmpz_mul($g, $g, $A);
-
-            Math::GMPz::Rmpz_add($t, $t, $u);
-            Math::GMPz::Rmpz_add($g, $g, $u);
-
-            Math::GMPz::Rmpz_addmul($g, $f, $B);
-
-            Math::GMPz::Rmpz_mod($f, $t, $m);
-            Math::GMPz::Rmpz_mod($g, $g, $m);
+        if ($bit) {
+            Math::GMPz::Rmpz_sub($g, $f, $g);
+            $w = 0;
         }
-
-        # (a, b) = (a*a + b*b, a*b + b*(a+b))  mod m
-
-        Math::GMPz::Rmpz_mul($t, $A, $A);
-        Math::GMPz::Rmpz_mul($u, $B, $B);
-
-        Math::GMPz::Rmpz_mul($B, $B, $A);
-        Math::GMPz::Rmpz_mul_2exp($B, $B, 1);
-
-        Math::GMPz::Rmpz_add($B, $B, $u);
-        Math::GMPz::Rmpz_add($t, $t, $u);
-
-        Math::GMPz::Rmpz_mod($A, $t, $m);
-        Math::GMPz::Rmpz_mod($B, $B, $m);
+        else {
+            Math::GMPz::Rmpz_sub($f, $f, $g);
+            $w = 1;
+        }
     }
 
-    return $f;
+    Math::GMPz::Rmpz_mod($g, $g, $m);
+
+    return $g;
 }
 
 sub fibonacci_factorization ($n, $upper_bound) {
@@ -878,9 +866,9 @@ sub fibonacci_factorization ($n, $upper_bound) {
         return undef if $bound <= 1;
 
         my $B = consecutive_integer_lcm($bound);
-        my $F = fibmod($B, $n);
+        my $L = lucasmod($B, $n);
 
-        my $g = gcd($F, $n);
+        my $g = gcd($L - 2, $n);
 
         if ($g == $n) {
             $bound >>= 1;
