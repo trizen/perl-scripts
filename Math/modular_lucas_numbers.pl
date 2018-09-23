@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# An efficient algorithm for computing the nth-Lucas number (mod m).
+# Efficient algorithm for computing the nth-Lucas number (mod m).
 
 # Algorithm from:
 #   https://metacpan.org/source/KRYDE/Math-NumSeq-72/lib/Math/NumSeq/LucasNumbers.pm
