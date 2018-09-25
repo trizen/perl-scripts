@@ -42,7 +42,7 @@ local $| = 1;
 use constant {
               LOOK_FOR_SMALL_FACTORS      => 1,
               SMOOTH_TRIAL_DIVISION       => 0,
-              FIBONACCI_BOUND             => 300_000,
+              FIBONACCI_BOUND             => 500_000,
               POLLARD_PM1_BOUND           => 2_000_000,
               TRIAL_DIVISION_LIMIT        => 1_000_000,
               POLLARD_RHO_ITERATIONS      => 16,
@@ -859,7 +859,7 @@ sub lucasmod ($n, $m) {
 
 sub fibonacci_factorization ($n, $upper_bound) {
 
-    my $bound = 5 * logint($n, 2)**2;
+    my $bound = 3 * logint($n, 2)**2;
     $bound = $upper_bound if ($bound > $upper_bound);
 
     for (; ;) {
@@ -1004,10 +1004,10 @@ sub simple_cfrac_find_factor ($n, $max_iter) {
 
         foreach my $c ($v, $n - $v) {
             if (is_square($c)) {
-                my $g = gcd($u - sqrtint($c), $n);
+                my $g = Math::GMPz->new(gcd($u - sqrtint($c), $n));
 
                 if ($g > 1 and $g < $n) {
-                    return Math::GMPz->new($g);
+                    return $g;
                 }
             }
         }
@@ -1033,8 +1033,25 @@ sub store_factor ($rem, $f, $factors) {
     }
     else {
         say("`-> composite factor: ", $f);
+
         $$rem /= $f;
-        $$rem *= find_small_factors($f, $factors);
+
+        # Try to find a small factor of f
+        my $f_factor = find_small_factors($f, $factors);
+
+        if ($f_factor < $f) {
+            $$rem *= $f_factor;
+        }
+        else {
+
+            # Use SIQS to factorize f
+            my @factors = find_prime_factors($f);
+
+            foreach my $p (@factors) {
+                $$rem = check_factor($$rem, $p, $factors);
+                last if $$rem == 1;
+            }
+        }
     }
 }
 
