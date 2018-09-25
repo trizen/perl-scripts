@@ -32,10 +32,10 @@ sub BPSW_primality_test ($n) {
 
     powmod(2, $n - 1, $n) == 1 or return 0;
 
-    my ($P, $Q, $D) = (1, 0);
+    my ($P, $Q) = (1, 0);
 
     for (my $k = 2 ; ; ++$k) {
-        $D = (-1)**$k * (2 * $k + 1);
+        my $D = (-1)**$k * (2 * $k + 1);
 
         if (kronecker($D, $n) == -1) {
             $Q = (1 - $D) / 4;
@@ -43,7 +43,7 @@ sub BPSW_primality_test ($n) {
         }
     }
 
-    my $d = $n - kronecker($D, $n);
+    my $d = $n + 1;
     my $s = valuation($d, 2);
 
     $d >>= $s;

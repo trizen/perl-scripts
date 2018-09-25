@@ -28,12 +28,12 @@ sub BPSW_primality_test ($n) {
     return 1 if Math::GMPz::Rmpz_cmp_ui($n, 2) == 0;
     return 0 if Math::GMPz::Rmpz_perfect_power_p($n);
 
-    my $v = Math::GMPz::Rmpz_init();
+    my $d = Math::GMPz::Rmpz_init();
     my $t = Math::GMPz::Rmpz_init_set_ui(2);
 
     # Fermat base-2 test
-    Math::GMPz::Rmpz_sub_ui($v, $n, 1);
-    Math::GMPz::Rmpz_powm($t, $t, $v, $n);
+    Math::GMPz::Rmpz_sub_ui($d, $n, 1);
+    Math::GMPz::Rmpz_powm($t, $t, $d, $n);
     Math::GMPz::Rmpz_cmp_ui($t, 1) and return 0;
 
     my ($Q, $D) = (1, 0);
@@ -47,17 +47,15 @@ sub BPSW_primality_test ($n) {
         }
     }
 
-    my $d = $n + 1;
+    Math::GMPz::Rmpz_add_ui($d, $d, 2);
+
     my $s = Math::GMPz::Rmpz_scan1($d, 0);
-
-    $d >>= $s;
-
     my $U1 = Math::GMPz::Rmpz_init_set_ui(1);
 
     my ($V1, $V2) = (Math::GMPz::Rmpz_init_set_ui(2), Math::GMPz::Rmpz_init_set_ui(1));
     my ($Q1, $Q2) = (Math::GMPz::Rmpz_init_set_ui(1), Math::GMPz::Rmpz_init_set_ui(1));
 
-    foreach my $bit (split(//, substr(Math::GMPz::Rmpz_get_str($d, 2), 0, -1))) {
+    foreach my $bit (split(//, substr(Math::GMPz::Rmpz_get_str($d, 2), 0, -$s - 1))) {
 
         Math::GMPz::Rmpz_mul($Q1, $Q1, $Q2);
         Math::GMPz::Rmpz_mod($Q1, $Q1, $n);
