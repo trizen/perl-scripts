@@ -11,10 +11,7 @@
 #   3. Perform a strong Lucas probable prime test on n using parameters D, P, and Q.
 
 # See also:
-#   https://oeis.org/A212424
 #   https://en.wikipedia.org/wiki/Lucas_pseudoprime
-#   https://en.wikipedia.org/wiki/Frobenius_pseudoprime
-#   https://en.wikipedia.org/wiki/Quadratic_Frobenius_test
 #   https://en.wikipedia.org/wiki/Baillie%E2%80%93PSW_primality_test
 
 use 5.020;
@@ -60,7 +57,10 @@ sub BPSW_primality_test ($n) {
     return 0;
 }
 
+my $from  = 1;
+my $to    = 1e6;
 my $count = 0;
+
 foreach my $n (1 .. 1e5) {
     if (BPSW_primality_test($n)) {
         if (not is_prime($n)) {
@@ -73,4 +73,4 @@ foreach my $n (1 .. 1e5) {
     }
 }
 
-say "There are $count primes bellow 10^6";
+say "There are $count primes between $from and $to.";
