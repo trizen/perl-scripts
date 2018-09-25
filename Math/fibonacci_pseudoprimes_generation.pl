@@ -42,8 +42,8 @@ sub fibonacci_pseudoprimes ($limit, $callback) {
         foreach my $k (2 .. $l) {
             forcomb {
                 my $n = prod(@{$arr}[@_]);
-                $callback->($n, @{$arr}) if !$seen{$n}++;
-            } $k, $l;
+                $callback->($n, @{$arr}[@_]) if !$seen{$n}++;
+            } $l, $k;
         }
     }
 }
@@ -52,6 +52,8 @@ sub is_fibonacci_pseudoprime($n) {
     fibmod($n - kronecker($n, 5), $n) == 0;
 }
 
+my @pseudoprimes;
+
 fibonacci_pseudoprimes(
     10_000,
     sub ($n, @f) {
@@ -59,7 +61,8 @@ fibonacci_pseudoprimes(
         is_fibonacci_pseudoprime($n)
             or die "Not a Fibonacci pseudoprime: $n";
 
-        say join(' * ', @f), " = $n";
+        #say join(' * ', @f), " = $n";
+        push @pseudoprimes, $n;
 
         if (kronecker($n, 5) == -1) {
             if (powmod(2, $n - 1, $n) == 1) {
@@ -68,3 +71,7 @@ fibonacci_pseudoprimes(
         }
     }
 );
+
+@pseudoprimes = sort {$a <=> $b} @pseudoprimes;
+
+say join(', ', @pseudoprimes);
