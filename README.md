@@ -549,6 +549,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Quadratic polynomial in terms of its zeros](./Math/quadratic_polynomial_in_terms_of_its_zeros.pl)
     * [Ramanujan sum](./Math/ramanujan_sum.pl)
     * [Ramanujan sum fast](./Math/ramanujan_sum_fast.pl)
+    * [Random carmichael fibonacci pseudoprimes](./Math/random_carmichael_fibonacci_pseudoprimes.pl)
     * [Random integer factorization](./Math/random_integer_factorization.pl)
     * [Rational continued fractions](./Math/rational_continued_fractions.pl)
     * [Rational prime product](./Math/rational_prime_product.pl)
