@@ -28,14 +28,9 @@ sub PSW_primality_test ($n) {
     # Fermat base-2 test
     powmod(2, $n - 1, $n) == 1 or return 0;
 
-    # When n = ±2 (mod 5) and Fibonacci(n+1) = 0 (mod n), then n is probably prime.
-    if (kronecker($n, 5) == -1) {
-        return ((lucas_sequence($n, 1, -1, $n + 1))[0] == 0);
-    }
-
-    # In general, we find P such that kronecker(n, P^2 + 4) = -1.
+    # Find P such that kronecker(n, P^2 + 4) = -1.
     my $P;
-    for (my $k = 2 ; ; ++$k) {
+    for (my $k = 1 ; ; ++$k) {
         if (kronecker($n, $k * $k + 4) == -1) {
             $P = $k;
             last;

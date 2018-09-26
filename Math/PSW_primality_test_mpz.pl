@@ -36,14 +36,9 @@ sub PSW_primality_test ($n) {
     Math::GMPz::Rmpz_powm($t, $t, $d, $n);
     Math::GMPz::Rmpz_cmp_ui($t, 1) and return 0;
 
-    # When n = ±2 (mod 5) and Fibonacci(n+1) = 0 (mod n), then n is probably prime.
-    if (Math::GMPz::Rmpz_kronecker_ui($n, 5) == -1) {
-        return ((lucas_sequence($n, 1, -1, $n + 1))[0] == 0);
-    }
-
-    # In general, we find P such that kronecker(n, P^2 + 4) = -1.
+    # Find P such that kronecker(n, P^2 + 4) = -1.
     my $P;
-    for (my $k = 2 ; ; ++$k) {
+    for (my $k = 1 ; ; ++$k) {
         if (Math::GMPz::Rmpz_kronecker_ui($n, $k * $k + 4) == -1) {
             $P = $k;
             last;
