@@ -94,11 +94,11 @@ sub BPSW_primality_test ($n) {
     Math::GMPz::Rmpz_sub($V1, $V1, $Q1);
     Math::GMPz::Rmpz_mul($Q1, $Q1, $Q2);
 
-    if (Math::GMPz::Rmpz_congruent_ui_p($U1, 0, $n)) {
+    if (Math::GMPz::Rmpz_divisible_p($U1, $n)) {
         return 1;
     }
 
-    if (Math::GMPz::Rmpz_congruent_ui_p($V1, 0, $n)) {
+    if (Math::GMPz::Rmpz_divisible_p($V1, $n)) {
         return 1;
     }
 
@@ -108,7 +108,7 @@ sub BPSW_primality_test ($n) {
         Math::GMPz::Rmpz_submul_ui($V1, $Q1, 2);
         Math::GMPz::Rmpz_powm_ui($Q1, $Q1, 2, $n);
 
-        if (Math::GMPz::Rmpz_congruent_ui_p($V1, 0, $n)) {
+        if (Math::GMPz::Rmpz_divisible_p($V1, $n)) {
             return 1;
         }
     }
