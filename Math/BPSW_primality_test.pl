@@ -16,24 +16,24 @@
 
 use 5.020;
 use warnings;
-
 use experimental qw(signatures);
 
 use Math::AnyNum qw(
-  valuation lucasUmod lucasVmod
-  is_power is_prime powmod kronecker
+    is_prime is_power is_congruent
+    kronecker powmod as_bin bit_scan1
 );
 
-sub BPSW_primality_test ($n) {
+sub BPSW_primality_test($n) {
 
-    return 0 if ($n <= 1);
-    return 1 if ($n == 2);
+    return 0 if $n <= 1;
+    return 1 if $n == 2;
     return 0 if is_power($n);
 
+    # Fermat base-2 test
     powmod(2, $n - 1, $n) == 1 or return 0;
 
-    my ($P, $Q) = (1, 0);
-
+    # Find first D for which kronecker(D, n) == -1
+    my $Q;
     for (my $k = 2 ; ; ++$k) {
         my $D = (-1)**$k * (2 * $k + 1);
 
@@ -43,25 +43,61 @@ sub BPSW_primality_test ($n) {
         }
     }
 
+    # Perform a strong Lucas probable test
     my $d = $n + 1;
-    my $s = valuation($d, 2);
+    my $s = bit_scan1($d, 0);
 
-    $d >>= $s;
+    my $U1 = 1;
+    my ($V1, $V2) = (2, 1);
+    my ($Q1, $Q2) = (1, 1);
 
-    return 1 if lucasUmod($P, $Q, $d, $n) == 0;
+    foreach my $bit (split(//, substr(as_bin($n), 0, -$s - 1))) {
 
-    foreach my $r (0 .. $s - 1) {
-        return 1 if lucasVmod($P, $Q, $d << ($s - $r - 1), $n) == 0;
+        $Q1 = ($Q1 * $Q2) % $n;
+
+        if ($bit) {
+            $Q2 = ($Q1 * $Q) % $n;
+            $U1 = ($U1 * $V2) % $n;
+            $V1 = ($V2 * $V1 - $Q1) % $n;
+            $V2 = ($V2 * $V2 - 2 * $Q2) % $n;
+        }
+        else {
+            $Q2 = $Q1;
+            $U1 = ($U1 * $V1 - $Q1) % $n;
+            $V2 = ($V2 * $V1 - $Q1) % $n;
+            $V1 = ($V1 * $V1 - 2 * $Q2) % $n;
+        }
+    }
+
+    $Q1 = ($Q1 * $Q2) % $n;
+    $Q2 = ($Q1 * $Q) % $n;
+    $U1 = ($U1 * $V1 - $Q1) % $n;
+    $V1 = ($V2 * $V1 - $Q1) % $n;
+    $Q1 = ($Q1 * $Q2) % $n;
+
+    return 1 if is_congruent($U1, 0, $n);
+    return 1 if is_congruent($V1, 0, $n);
+
+    for (1 .. $s) {
+
+        $V1 = ($V1 * $V1 - 2 * $Q1) % $n;
+        $Q1 = ($Q1 * $Q1) % $n;
+
+        return 1 if is_congruent($V1, 0, $n);
     }
 
     return 0;
 }
 
+#
+## Run some tests
+#
+
 my $from  = 1;
-my $to    = 1e6;
+my $to    = 1e5;
 my $count = 0;
 
-foreach my $n (1 .. 1e5) {
+foreach my $n ($from .. $to) {
     if (BPSW_primality_test($n)) {
         if (not is_prime($n)) {
             say "Counter-example: $n";
