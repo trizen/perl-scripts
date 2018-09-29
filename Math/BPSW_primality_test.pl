@@ -51,7 +51,7 @@ sub BPSW_primality_test($n) {
     my ($V1, $V2) = (2, 1);
     my ($Q1, $Q2) = (1, 1);
 
-    foreach my $bit (split(//, substr(as_bin($n), 0, -$s - 1))) {
+    foreach my $bit (split(//, substr(as_bin($d), 0, -$s - 1))) {
 
         $Q1 = ($Q1 * $Q2) % $n;
 
