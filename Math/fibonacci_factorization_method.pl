@@ -18,13 +18,13 @@ use warnings;
 
 use experimental qw(signatures);
 
-use Math::AnyNum qw(:overload fibmod gcd ilog2 is_prime);
-use Math::Prime::Util::GMP qw(consecutive_integer_lcm random_prime);
+use Math::AnyNum qw(:overload gcd ilog2 is_prime);
+use Math::Prime::Util::GMP qw(consecutive_integer_lcm random_prime lucas_sequence);
 
 sub fibonacci_factorization ($n, $B = 10000) {
 
-    my $k = consecutive_integer_lcm($B);    # lcm(1..B)
-    my $F = fibmod($k, $n);                 # Fibonacci(k) (mod n)
+    my $k = consecutive_integer_lcm($B);            # lcm(1..B)
+    my $F = (lucas_sequence($n, 1, -1, $k))[0];     # Fibonacci(k) (mod n)
 
     return gcd($F, $n);
 }
