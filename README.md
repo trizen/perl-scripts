@@ -600,6 +600,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Squarefree divisors](./Math/squarefree_divisors.pl)
     * [Stern brocot encoding](./Math/stern_brocot_encoding.pl)
     * [Stern brocot sequence](./Math/stern_brocot_sequence.pl)
+    * [Strong lucas pseudoprimes generation](./Math/strong_lucas_pseudoprimes_generation.pl)
     * [Sum factorial](./Math/sum_factorial.pl)
     * [Sum of an even number of positive squares](./Math/sum_of_an_even_number_of_positive_squares.pl)
     * [Sum of digits](./Math/sum_of_digits.pl)
