@@ -25,13 +25,12 @@ use Math::GMPz;
 use experimental qw(signatures);
 
 use ntheory qw(
-  gcd sqrtmod invmod is_prime factor_exp
-  vecmin vecprod urandomm valuation logint
-  sqrtint primes powmod next_prime is_power
-  fromdigits rootint random_prime is_square
+  sqrtmod invmod is_prime factor_exp
+  vecmin vecprod urandomm valuation
+  logint is_power fromdigits is_square
   );
 
-use Math::Prime::Util::GMP qw(consecutive_integer_lcm);
+use Math::Prime::Util::GMP qw(sqrtint rootint gcd random_prime sieve_primes consecutive_integer_lcm);
 
 my $ZERO = Math::GMPz->new(0);
 my $ONE  = Math::GMPz->new(1);
@@ -55,7 +54,7 @@ use constant {
               SIQS_MAX_PRIME_POLYNOMIAL   => 4000,
              };
 
-my @small_primes = @{primes(TRIAL_DIVISION_LIMIT)};
+my @small_primes = sieve_primes(2, TRIAL_DIVISION_LIMIT);
 
 package Polynomial {
 
@@ -495,7 +494,7 @@ sub siqs_find_more_factors_gcd(@numbers) {
         foreach my $k ($i + 1 .. $#numbers) {
             my $m = $numbers[$k];
 
-            my $fact = gcd($n, $m);
+            my $fact = Math::GMPz->new(gcd($n, $m));
             if ($fact != 1 and $fact != $n and $fact != $m) {
 
                 if (not exists($res{$fact})) {
@@ -773,7 +772,7 @@ sub pollard_brent_find_factor ($n, $max_iter) {
     my $i = 0;
     my ($x, $ys);
 
-    while ($g == 1) {
+    while ($g eq '1') {
         $x = $y;
 
         for (1 .. $r) {
@@ -782,7 +781,7 @@ sub pollard_brent_find_factor ($n, $max_iter) {
 
         my $k = 0;
 
-        while ($k < $r and $g == 1) {
+        while ($k < $r and $g eq '1') {
             $ys = $y;
 
             for (1 .. vecmin($m, $r - $k)) {
@@ -801,25 +800,25 @@ sub pollard_brent_find_factor ($n, $max_iter) {
         }
     }
 
+    $g = Math::GMPz->new($g);
+
     if ($g == $n) {
         for (; ;) {
             $ys = pollard_brent_f($c, $n, $ys);
             $g = gcd($x - $ys, $n);
 
-            if ($g > 1) {
+            if ($g ne '1') {
+                $g = Math::GMPz->new($g);
                 return undef if ($g == $n);
-                last;
+                return $g;
             }
         }
     }
 
-    return Math::GMPz->new($g);
+    return $g;
 }
 
 sub lucasmod ($n, $m) {
-
-    $n = Math::GMPz->new("$n");
-    $m = Math::GMPz->new("$m");
 
 #<<<
     my ($f, $g, $w) = (
@@ -859,16 +858,22 @@ sub lucasmod ($n, $m) {
 
 sub fibonacci_factorization ($n, $upper_bound) {
 
+    # The Fibonacci factorization method, taking
+    # advatange of the smoothness of `p - legendre(p, 5)`.
+
     my $bound = 3 * logint($n, 2)**2;
-    $bound = $upper_bound if ($bound > $upper_bound);
+
+    if ($bound > $upper_bound) {
+        $bound = $upper_bound;
+    }
 
     for (; ;) {
         return undef if $bound <= 1;
 
-        my $B = consecutive_integer_lcm($bound);
+        my $B = Math::GMPz::Rmpz_init_set_str(consecutive_integer_lcm($bound), 10);
         my $L = lucasmod($B, $n);
 
-        my $g = gcd($L - 2, $n);
+        my $g = Math::GMPz->new(gcd($L - 2, $n));
 
         if ($g == $n) {
             $bound >>= 1;
@@ -876,39 +881,137 @@ sub fibonacci_factorization ($n, $upper_bound) {
         }
 
         if ($g > 1) {
-            return Math::GMPz->new($g);
+            return $g;
         }
 
-        return undef;
+        return lucas_factorization($n, $B);
     }
+}
+
+sub lucas_factorization ($n, $d) {
+
+    # The Lucas factorization method, taking
+    # advantage of the smoothness of p-1 or p+1.
+
+    my $Q;
+    for (my $k = 2 ; ; ++$k) {
+        my $D = (-1)**$k * (2 * $k + 1);
+
+        if (Math::GMPz::Rmpz_si_kronecker($D, $n) == -1) {
+            $Q = (1 - $D) / 4;
+            last;
+        }
+    }
+
+    my $s = Math::GMPz::Rmpz_scan1($d, 0);
+    my $U1 = Math::GMPz::Rmpz_init_set_ui(1);
+
+    my ($V1, $V2) = (Math::GMPz::Rmpz_init_set_ui(2), Math::GMPz::Rmpz_init_set_ui(1));
+    my ($Q1, $Q2) = (Math::GMPz::Rmpz_init_set_ui(1), Math::GMPz::Rmpz_init_set_ui(1));
+
+    foreach my $bit (split(//, substr(Math::GMPz::Rmpz_get_str($d, 2), 0, -$s - 1))) {
+
+        Math::GMPz::Rmpz_mul($Q1, $Q1, $Q2);
+        Math::GMPz::Rmpz_mod($Q1, $Q1, $n);
+
+        if ($bit) {
+            Math::GMPz::Rmpz_mul_si($Q2, $Q1, $Q);
+            Math::GMPz::Rmpz_mul($U1, $U1, $V2);
+            Math::GMPz::Rmpz_mul($V1, $V1, $V2);
+
+            Math::GMPz::Rmpz_powm_ui($V2, $V2, 2, $n);
+            Math::GMPz::Rmpz_sub($V1, $V1, $Q1);
+            Math::GMPz::Rmpz_submul_ui($V2, $Q2, 2);
+
+            Math::GMPz::Rmpz_mod($V1, $V1, $n);
+            Math::GMPz::Rmpz_mod($U1, $U1, $n);
+        }
+        else {
+            Math::GMPz::Rmpz_set($Q2, $Q1);
+            Math::GMPz::Rmpz_mul($U1, $U1, $V1);
+            Math::GMPz::Rmpz_mul($V2, $V2, $V1);
+            Math::GMPz::Rmpz_sub($U1, $U1, $Q1);
+
+            Math::GMPz::Rmpz_powm_ui($V1, $V1, 2, $n);
+            Math::GMPz::Rmpz_sub($V2, $V2, $Q1);
+            Math::GMPz::Rmpz_submul_ui($V1, $Q2, 2);
+
+            Math::GMPz::Rmpz_mod($V2, $V2, $n);
+            Math::GMPz::Rmpz_mod($U1, $U1, $n);
+        }
+    }
+
+    Math::GMPz::Rmpz_mul($Q1, $Q1, $Q2);
+    Math::GMPz::Rmpz_mul_si($Q2, $Q1, $Q);
+    Math::GMPz::Rmpz_mul($U1, $U1, $V1);
+    Math::GMPz::Rmpz_mul($V1, $V1, $V2);
+    Math::GMPz::Rmpz_sub($U1, $U1, $Q1);
+    Math::GMPz::Rmpz_sub($V1, $V1, $Q1);
+    Math::GMPz::Rmpz_mul($Q1, $Q1, $Q2);
+
+    my $t = Math::GMPz::Rmpz_init();
+
+    Math::GMPz::Rmpz_gcd($t, $U1, $n);
+
+    if (    Math::GMPz::Rmpz_cmp_ui($t, 1) > 0
+        and Math::GMPz::Rmpz_cmp($t, $n) < 0) {
+        return $t;
+    }
+
+    Math::GMPz::Rmpz_sub_ui($t, $V1, 2);
+    Math::GMPz::Rmpz_gcd($t, $t, $n);
+
+    if (    Math::GMPz::Rmpz_cmp_ui($t, 1) > 0
+        and Math::GMPz::Rmpz_cmp($t, $n) < 0) {
+        return $t;
+    }
+
+    for (1 .. $s) {
+
+        Math::GMPz::Rmpz_mul($U1, $U1, $V1);
+        Math::GMPz::Rmpz_mod($U1, $U1, $n);
+        Math::GMPz::Rmpz_powm_ui($V1, $V1, 2, $n);
+        Math::GMPz::Rmpz_submul_ui($V1, $Q1, 2);
+        Math::GMPz::Rmpz_powm_ui($Q1, $Q1, 2, $n);
+
+        Math::GMPz::Rmpz_gcd($t, $U1, $n);
+
+        if (    Math::GMPz::Rmpz_cmp_ui($t, 1) > 0
+            and Math::GMPz::Rmpz_cmp($t, $n) < 0) {
+            return $t;
+        }
+
+        Math::GMPz::Rmpz_sub_ui($t, $V1, 2);
+        Math::GMPz::Rmpz_gcd($t, $t, $n);
+
+        if (    Math::GMPz::Rmpz_cmp_ui($t, 1) > 0
+            and Math::GMPz::Rmpz_cmp($t, $n) < 0) {
+            return $t;
+        }
+    }
+
+    return undef;
 }
 
 sub pollard_pm1_find_factor ($n, $bound) {
 
-    my $max_tries = 3;
-    my ($t, $p, $g) = (random_prime($n), 2);
+    my $g = Math::GMPz::Rmpz_init();
+    my $t = Math::GMPz::Rmpz_init_set_str(random_prime($n), 10);
 
-    while ($p <= $bound) {
+    foreach my $p (sieve_primes(2, $bound)) {
 
-        $t = powmod($t, $p * (logint($bound, $p) + 1), $n);
-        $g = gcd($t - $ONE, $n);
-        $p = next_prime($p);
+        Math::GMPz::Rmpz_powm_ui($t, $t, $p * (logint($bound, $p) + 1), $n);
 
-        if ($g > 1) {
+        Math::GMPz::Rmpz_sub_ui($g, $t, 1);
+        Math::GMPz::Rmpz_gcd($g, $g, $n);
+
+        if (Math::GMPz::Rmpz_cmp_ui($g, 1) > 0) {
+
             if ($g == $n) {
-
-                if (--$max_tries <= 0) {
-                    say "Pollard p-1: giving up...";
-                    return undef;
-                }
-
-                say "Pollard p-1: trying again with a different base...";
-                $p = 2;
-                $t = random_prime($n);
-                next;
+                return undef;
             }
 
-            return Math::GMPz->new($g);
+            return $g;
         }
     }
 
@@ -927,9 +1030,44 @@ sub pollard_rho2_find_factor ($n, $max_iter) {
 
         my $g = gcd($n, $x - $y);
 
-        if ($g != 1) {
+        if ($g ne '1') {
+            $g = Math::GMPz->new($g);
             return undef if ($g == $n);
-            return Math::GMPz->new($g);
+            return $g;
+        }
+    }
+
+    return undef;
+}
+
+sub pollard_rho_exp_find_factor ($n, $max_iter) {
+
+    my $c = $n + 1;
+    my $t = $n * $n - 1;
+
+    my $x = Math::GMPz::Rmpz_init_set($c);
+    my $y = Math::GMPz::Rmpz_init();
+
+    Math::GMPz::Rmpz_powm($y, $x, $t, $n);
+    Math::GMPz::Rmpz_add($y, $y, $c);
+
+    foreach (1 .. $max_iter) {
+
+        Math::GMPz::Rmpz_powm($x, $x, $t, $n);
+        Math::GMPz::Rmpz_add($x, $x, $c);
+
+        Math::GMPz::Rmpz_powm($y, $y, $t, $n);
+        Math::GMPz::Rmpz_add($y, $y, $c);
+
+        Math::GMPz::Rmpz_powm($y, $y, $t, $n);
+        Math::GMPz::Rmpz_add($y, $y, $c);
+
+        my $g = gcd($n, $x - $y);
+
+        if ($g ne '1') {
+            $g = Math::GMPz->new($g);
+            return undef if ($g == $n);
+            return $g;
         }
     }
 
@@ -951,9 +1089,10 @@ sub pollard_rho_sqrt_find_factor ($n, $max_iter) {
 
         my $g = gcd($n, $a2 - $a1);
 
-        if ($g != 1) {
+        if ($g ne '1') {
+            $g = Math::GMPz->new($g);
             return undef if ($g == $n);
-            return Math::GMPz->new($g);
+            return $g;
         }
 
         $a1 = (($a1 * $a1 + $c) % $n);
@@ -974,7 +1113,7 @@ sub fermat_find_factor ($n, $max_iter) {
         $q += 2 * $p++ + 1;
 
         if (is_square($q)) {
-            return ($p - sqrtint($q));
+            return ($p - Math::GMPz->new(sqrtint($q)));
         }
     }
 
@@ -1004,7 +1143,7 @@ sub simple_cfrac_find_factor ($n, $max_iter) {
 
         foreach my $c ($v, $n - $v) {
             if (is_square($c)) {
-                my $g = Math::GMPz->new(gcd($u - sqrtint($c), $n));
+                my $g = Math::GMPz->new(gcd($u - Math::GMPz->new(sqrtint($c)), $n));
 
                 if ($g > 1 and $g < $n) {
                     return $g;
@@ -1104,7 +1243,17 @@ sub find_small_factors ($rem, $factors) {
             next;
         }
 
-        say "=> Fibonacci p±1...";
+#<<<
+        #~ say "=> Pollard rho-exp...";
+        #~ $f = pollard_rho_exp_find_factor($rem, POLLARD_RHO2_ITERATIONS);
+
+        #~ if (defined($f) and $f < $rem) {
+            #~ store_factor(\$rem, $f, $factors);
+            #~ next;
+        #~ }
+#>>>
+
+        say "=> Fibonacci-Lucas p±1...";
         $f = fibonacci_factorization($rem, FIBONACCI_BOUND);
 
         if (defined($f) and $f < $rem) {
