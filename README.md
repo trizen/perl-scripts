@@ -426,6 +426,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Is even perfect 3](./Math/is_even_perfect_3.pl)
     * [Is perfect power](./Math/is_perfect_power.pl)
     * [Is provable prime](./Math/is_provable_prime.pl)
+    * [Is smooth number](./Math/is_smooth_number.pl)
     * [Is sum of two squares](./Math/is_sum_of_two_squares.pl)
     * [Karatsuba multiplication](./Math/karatsuba_multiplication.pl)
     * [Klein J invariant and modular lambda](./Math/klein_J_invariant_and_modular_lambda.pl)
