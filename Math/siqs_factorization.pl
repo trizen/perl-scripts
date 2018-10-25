@@ -25,12 +25,11 @@ use Math::GMPz;
 use experimental qw(signatures);
 
 use ntheory qw(
-  sqrtmod invmod is_prime factor_exp
-  vecmin vecprod urandomm valuation
-  logint is_power fromdigits is_square
+  sqrtmod invmod is_prime factor_exp vecmin urandomm
+  valuation logint is_power fromdigits is_square
   );
 
-use Math::Prime::Util::GMP qw(sqrtint rootint gcd random_prime sieve_primes consecutive_integer_lcm);
+use Math::Prime::Util::GMP qw(vecprod sqrtint rootint gcd random_prime sieve_primes consecutive_integer_lcm);
 
 my $ZERO = Math::GMPz->new(0);
 my $ONE  = Math::GMPz->new(1);
@@ -40,7 +39,6 @@ local $| = 1;
 # Some tuning parameters
 use constant {
               LOOK_FOR_SMALL_FACTORS      => 1,
-              SMOOTH_TRIAL_DIVISION       => 0,
               FIBONACCI_BOUND             => 500_000,
               POLLARD_PM1_BOUND           => 2_000_000,
               TRIAL_DIVISION_LIMIT        => 1_000_000,
@@ -283,52 +281,37 @@ sub siqs_sieve ($factor_base, $m) {
     return \@sieve_array;
 }
 
-sub siqs_trial_divide ($n, $factor_base) {
+sub siqs_trial_divide ($n, $factor_base_info) {
 
     # Determine whether the given number a can be fully factorized into
     # primes from the factors base. If so, return the indices of the
     # factors from the factor base. If not, return undef.
 
-    if (SMOOTH_TRIAL_DIVISION) {
-        my @divisors_idx;
-        foreach my $i (0 .. $#{$factor_base}) {
+    my $factor_prod = $factor_base_info->{prod};
 
-            my $fb = $factor_base->[$i];
-            if ($n % $fb->{p} == 0) {
-                my $v = valuation($n, $fb->{p});
-                $n /= $fb->{p}**$v;
-                push @divisors_idx, [$i, $v];
-            }
+    my $g = Math::GMPz::Rmpz_init();
+    my $t = Math::GMPz::Rmpz_init_set($n);
 
-            if ($n == 1) {
-                return \@divisors_idx;
-            }
+    Math::GMPz::Rmpz_gcd($g, $t, $factor_prod);
+
+    while (Math::GMPz::Rmpz_cmp_ui($g, 1) > 0) {
+
+        Math::GMPz::Rmpz_remove($t, $t, $g);
+
+        if (Math::GMPz::Rmpz_cmp_ui($t, 1) == 0) {
+
+            my $factor_lkup = $factor_base_info->{lkup};
+
+            return [map { [$factor_lkup->{$_->[0]}, $_->[1]] } factor_exp($n)];
         }
 
-        return undef;
-    }
-
-    my @factors = factor_exp($n);
-
-    if (@factors and $factors[-1][0] <= $factor_base->[-1]{p}) {
-
-        my @divisors_idx;
-
-        foreach my $i (0 .. $#{$factor_base}) {
-            if ($factor_base->[$i]{p} == $factors[0][0]) {
-                my $p = shift @factors;
-                push @divisors_idx, [$i, $p->[1]];
-                @factors || last;
-            }
-        }
-
-        return \@divisors_idx;
+        Math::GMPz::Rmpz_gcd($g, $t, $factor_prod);
     }
 
     return undef;
 }
 
-sub siqs_trial_division ($n, $sieve_array, $factor_base, $smooth_relations, $g, $h, $m, $req_relations) {
+sub siqs_trial_division ($n, $sieve_array, $factor_base_info, $smooth_relations, $g, $h, $m, $req_relations) {
 
     # Perform the trial division step of the Self-Initializing Quadratic Sieve.
 
@@ -341,7 +324,7 @@ sub siqs_trial_division ($n, $sieve_array, $factor_base, $smooth_relations, $g, 
         my $x  = $i - $m;
         my $gx = abs($g->eval($x));
 
-        my $divisors_idx = siqs_trial_divide($gx, $factor_base) // next;
+        my $divisors_idx = siqs_trial_divide($gx, $factor_base_info) // next;
 
         my $u = $h->eval($x);
         my $v = $gx;
@@ -637,6 +620,16 @@ sub siqs_factorize ($n, $nf) {
 
     my @factors;
     my $factor_base = siqs_factor_base_primes($n, $nf);
+    my $factor_prod = Math::GMPz->new(vecprod(map { $_->{p} } @$factor_base));
+
+    my %factor_base_lookup;
+    @factor_base_lookup{map { $_->{p} } @{$factor_base}} = 0 .. $#{$factor_base};
+
+    my $factor_base_info = {
+                            base => $factor_base,
+                            prod => $factor_prod,
+                            lkup => \%factor_base_lookup,
+                           };
 
     my $smooth_relations         = [];
     my $required_relations_ratio = 1;
@@ -671,7 +664,7 @@ sub siqs_factorize ($n, $nf) {
             my $sieve_array = siqs_sieve($factor_base, $m);
 
             $enough_relations =
-              siqs_trial_division($n, $sieve_array, $factor_base, $smooth_relations, $g, $h, $m, $required_relations);
+              siqs_trial_division($n, $sieve_array, $factor_base_info, $smooth_relations, $g, $h, $m, $required_relations);
 
             if (   scalar(@$smooth_relations) >= $required_relations
                 or scalar(@$smooth_relations) > $prev_cnt) {
@@ -1417,7 +1410,7 @@ sub factorize($n) {
     }
 
     @$factors = sort { $a <=> $b } @$factors;
-    vecprod(@$factors) == $n or die 'error';
+    Math::GMPz->new(vecprod(@$factors)) == $n or die 'error';
 
     foreach my $p (@$factors) {
         is_prime($p) or die "not prime detected: $p";
