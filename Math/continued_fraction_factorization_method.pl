@@ -141,7 +141,7 @@ sub cffm ($n) {
 
     my (@A, @Q);
 
-    my $B = 2 * int(exp(sqrt(log("$n") * log(log("$n"))) / 2));    # B-smooth limit
+    my $B = int(exp(sqrt(log("$n") * log(log("$n"))) / 2));    # B-smooth limit
 
     my @factor_base;
 
