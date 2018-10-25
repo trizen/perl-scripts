@@ -70,18 +70,6 @@ sub gaussian_elimination ($rows, $n) {
     return (\@A, \@I);
 }
 
-sub exponents_signature ($factor_lookup, @factors) {
-    my $sig = Math::GMPz::Rmpz_init_set_ui(0);
-
-    foreach my $p (@factors) {
-        if ($p->[1] & 1) {
-            Math::GMPz::Rmpz_setbit($sig, $factor_lookup->{$p->[0]});
-        }
-    }
-
-    return $sig;
-}
-
 sub is_smooth_over_prod ($n, $k) {
 
     my $g = Math::GMPz::Rmpz_init();
@@ -165,12 +153,23 @@ sub cffm ($n) {
     } $B;
 #>>>
 
-    my $factor_prod = Math::GMPz->new(vecprod(@factor_base));
+    my %factor_index;
+    @factor_index{@factor_base} = (0 .. $#factor_base);
 
-    my %factor_lookup;
-    @factor_lookup{@factor_base} = (0 .. $#factor_base);
+    my sub exponents_signature (@factors) {
+        my $sig = Math::GMPz::Rmpz_init_set_ui(0);
 
-    my $L = scalar(@factor_base) + 1;    # maximum number of matrix-rows
+        foreach my $p (@factors) {
+            if ($p->[1] & 1) {
+                Math::GMPz::Rmpz_setbit($sig, $factor_index{$p->[0]});
+            }
+        }
+
+        return $sig;
+    }
+
+    my $L  = scalar(@factor_base) + 1;    # maximum number of matrix-rows
+    my $FP = Math::GMPz->new(vecprod(@factor_base));
 
     do {
 
@@ -195,11 +194,11 @@ sub cffm ($n) {
         }
 #>>>
 
-        if (is_smooth_over_prod($c, $factor_prod)) {
+        if (is_smooth_over_prod($c, $FP)) {
             my @factors = factor_exp($c);
 
             if (@factors) {
-                push @A, exponents_signature(\%factor_lookup, @factors);
+                push @A, exponents_signature(@factors);
                 push @Q, [$u, $c];
             }
         }
