@@ -351,7 +351,6 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Complex logarithm in real numbers](./Math/complex_logarithm_in_real_numbers.pl)
     * [Complex zeta in real numbers](./Math/complex_zeta_in_real_numbers.pl)
     * [Continued fraction factorization method](./Math/continued_fraction_factorization_method.pl)
-    * [Continued fraction factorization method extra](./Math/continued_fraction_factorization_method_extra.pl)
     * [Continued fractions](./Math/continued_fractions.pl)
     * [Continued fractions for e](./Math/continued_fractions_for_e.pl)
     * [Continued fractions for nth roots](./Math/continued_fractions_for_nth_roots.pl)

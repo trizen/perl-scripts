@@ -1,12 +1,16 @@
 #!/usr/bin/perl
 
+# Daniel "Trizen" Șuteu
+# Edit: 25 October 2018
+# https://github.com/trizen
+
 # A simple implementation of the continued fraction factorization method,
 # combined with modular arithmetic (variation of the Brillhart-Morrison algorithm).
 
 # See also:
 #   https://en.wikipedia.org/wiki/Continued_fraction_factorization
 
-# Parts of code inspired by:
+# Some parts of code inspired by:
 #    https://github.com/martani/Quadratic-Sieve
 
 use 5.020;
@@ -17,8 +21,12 @@ use experimental qw(signatures);
 
 use Math::GMPz qw();
 use List::Util qw(first);
-use ntheory qw(is_prime factor_exp prime_count vecprod);
-use Math::Prime::Util::GMP qw(is_square is_power sqrtint rootint valuation gcd urandomb);
+use ntheory qw(is_prime factor_exp forprimes);
+
+use Math::Prime::Util::GMP qw(
+    is_square is_power vecprod
+    sqrtint rootint gcd urandomb
+  );
 
 use constant {
     ONE => Math::GMPz::Rmpz_init_set_ui(1),
@@ -62,16 +70,32 @@ sub gaussian_elimination ($rows, $n) {
     return (\@A, \@I);
 }
 
-sub exponents_signature (@factors) {
+sub exponents_signature ($factor_lookup, @factors) {
     my $sig = Math::GMPz::Rmpz_init_set_ui(0);
 
     foreach my $p (@factors) {
         if ($p->[1] & 1) {
-            Math::GMPz::Rmpz_setbit($sig, prime_count($p->[0]) - 1);
+            Math::GMPz::Rmpz_setbit($sig, $factor_lookup->{$p->[0]});
         }
     }
 
     return $sig;
+}
+
+sub is_smooth_over_prod ($n, $k) {
+
+    my $g = Math::GMPz::Rmpz_init();
+    my $t = Math::GMPz::Rmpz_init_set($n);
+
+    Math::GMPz::Rmpz_gcd($g, $t, $k);
+
+    while (Math::GMPz::Rmpz_cmp_ui($g, 1) > 0) {
+        Math::GMPz::Rmpz_remove($t, $t, $g);
+        return 1 if Math::GMPz::Rmpz_cmp_ui($t, 1) == 0;
+        Math::GMPz::Rmpz_gcd($g, $t, $k);
+    }
+
+    return 0;
 }
 
 sub check_factor ($n, $g, $factors) {
@@ -103,9 +127,9 @@ sub cffm ($n) {
     }
 
     # Check for divisibility by 2
-    if (!($n & 1)) {
+    if (Math::GMPz::Rmpz_even_p($n)) {
 
-        my $v = valuation($n, 2);
+        my $v = Math::GMPz::Rmpz_scan1($n, 0);
         my $t = $n >> $v;
 
         my @factors = (2) x $v;
@@ -130,7 +154,23 @@ sub cffm ($n) {
     my (@A, @Q);
 
     my $B = 2 * int(exp(sqrt(log("$n") * log(log("$n"))) / 2));    # B-smooth limit
-    my $L = prime_count($B) + 1;                                   # maximum number of matrix-rows
+
+    my @factor_base;
+
+#<<<
+    forprimes {
+        if (Math::GMPz::Rmpz_ui_kronecker($_, $n) == 1) {
+            push @factor_base, $_;
+        }
+    } $B;
+#>>>
+
+    my $factor_prod = Math::GMPz->new(vecprod(@factor_base));
+
+    my %factor_lookup;
+    @factor_lookup{@factor_base} = (0 .. $#factor_base);
+
+    my $L = scalar(@factor_base) + 1;    # maximum number of matrix-rows
 
     do {
 
@@ -142,6 +182,7 @@ sub cffm ($n) {
         my $v = ($u * $u) % $n;
         my $c = ($v > $w ? $n - $v : $v);
 
+#<<<
         if (is_square($c)) {
             my $g = Math::GMPz->new(gcd($u - Math::GMPz->new(sqrtint($c)), $n));
 
@@ -152,12 +193,15 @@ sub cffm ($n) {
                 );
             }
         }
+#>>>
 
-        my @factors = factor_exp($c);
+        if (is_smooth_over_prod($c, $factor_prod)) {
+            my @factors = factor_exp($c);
 
-        if (@factors and $factors[-1][0] <= $B) {
-            push @A, exponents_signature(@factors);
-            push @Q, [$u, $c];
+            if (@factors) {
+                push @A, exponents_signature(\%factor_lookup, @factors);
+                push @Q, [$u, $c];
+            }
         }
 
         ($f1, $f2) = ($f2, ($r * $f2 + $f1) % $n);
@@ -166,7 +210,7 @@ sub cffm ($n) {
     } while ($z > 1 and @A <= $L);
 
     if (@A < $L) {
-        push @A, map { Math::GMPz::Rmpz_init_set_ui(0) } 1..($L - @A + 1);
+        push @A, map { Math::GMPz::Rmpz_init_set_ui(0) } 1 .. ($L - @A + 1);
     }
 
     my ($A, $I) = gaussian_elimination(\@A, $L - 1);
@@ -233,22 +277,17 @@ sub cffm ($n) {
     return sort { $a <=> $b } @final_factors;
 }
 
-# Support for using the program as a command-line tool
-if (@ARGV) {
-    my $n = $ARGV[0];
-    say "[*] Factoring $n (", length($n), ' digits)...';
-    my @f = cffm(Math::GMPz->new($n));
-    die "error" if vecprod(@f) != $n;
-    say "`-> ", join(', ', map { is_prime($_) ? $_ : "$_ (composite)" } @f);
-    exit;
-}
+my @composites = (
+    @ARGV ? (map { Math::GMPz->new($_) } @ARGV) : do {
+        map { Math::GMPz->new(urandomb($_)) + 2 } 2 .. 60;
+      }
+);
 
 # Run some tests when no argument is provided
-foreach my $k (2 .. 60) {
+foreach my $n (@composites) {
 
-    my $n = Math::GMPz->new(urandomb($k) + 2);
     my @f = cffm($n);
 
     say "$n = ", join(' * ', map { is_prime($_) ? $_ : "$_ (composite)" } @f);
-    die 'error' if vecprod(@f) != $n;
+    die 'error' if Math::GMPz->new(vecprod(@f)) != $n;
 }
