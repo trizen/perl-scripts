@@ -5,7 +5,7 @@
 # https://github.com/trizen
 
 # A new algorithm for testing N for B-smoothness, given the product of a subset of primes <= B.
-# Returns a true value when N is the product of a subsest of prime factors of B.
+# Returns a true value when N is the product of a subset of prime factors of B.
 # This algorithm can be useful in some modern integer factorization algorithms.
 
 use 5.020;
