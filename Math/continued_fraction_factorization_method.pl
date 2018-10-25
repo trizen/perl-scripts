@@ -221,34 +221,21 @@ sub cffm ($n) {
 
   SOLUTIONS: foreach my $solution (@{$I}[@$I - $LR .. $#$I]) {
 
-        my $solution_A = 1;
-        my $solution_B = 1;
-        my $solution_X = 1;
-        my $solution_Y = 1;
+        my $X = 1;
+        my $Y = 1;
 
         foreach my $i (0 .. $#Q) {
 
             Math::GMPz::Rmpz_tstbit($solution, $i) || next;
 
-            ($solution_A *= $Q[$i][0]) %= $n;
-            ($solution_B *= $Q[$i][0]);
+            ($X *= $Q[$i][0]) %= $n;
+            ($Y *= $Q[$i][1]);
 
-            ($solution_X *= $Q[$i][1]) %= $n;
-            ($solution_Y *= $Q[$i][1]);
+            my $g = Math::GMPz->new(gcd($X - Math::GMPz->new(sqrtint($Y)), $rem));
 
-            foreach my $pair (
-                [$solution_A, $solution_X],
-                [$solution_A, $solution_Y],
-                [$solution_B, $solution_X],
-                [$solution_B, $solution_Y],
-            ) {
-                my ($X, $Y) = @$pair;
-                my $g = Math::GMPz->new(gcd($X - Math::GMPz->new(sqrtint($Y)), $rem));
-
-                if ($g > 1 and $g < $rem) {
-                    $rem = check_factor($rem, $g, \@factors);
-                    last SOLUTIONS if $rem == 1;
-                }
+            if ($g > 1 and $g < $rem) {
+                $rem = check_factor($rem, $g, \@factors);
+                last SOLUTIONS if $rem == 1;
             }
         }
     }
