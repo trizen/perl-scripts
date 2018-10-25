@@ -147,11 +147,15 @@ sub cffm ($n) {
 
 #<<<
     forprimes {
-        if (Math::GMPz::Rmpz_ui_kronecker($_, $n) == 1) {
+        if (Math::GMPz::Rmpz_kronecker_ui($n, $_) == 1) {
             push @factor_base, $_;
         }
     } $B;
 #>>>
+
+    if ($factor_base[0] != 2) {
+        unshift(@factor_base, 2);
+    }
 
     my %factor_index;
     @factor_index{@factor_base} = (0 .. $#factor_base);
