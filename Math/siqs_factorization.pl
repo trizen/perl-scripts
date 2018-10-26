@@ -29,7 +29,7 @@ use ntheory qw(
   valuation logint is_power fromdigits is_square
   );
 
-use Math::Prime::Util::GMP qw(vecprod sqrtint rootint gcd random_prime sieve_primes consecutive_integer_lcm);
+use Math::Prime::Util::GMP qw(vecprod sqrtint rootint gcd random_prime sieve_primes consecutive_integer_lcm lucas_sequence);
 
 my $ZERO = Math::GMPz->new(0);
 my $ONE  = Math::GMPz->new(1);
@@ -811,44 +811,6 @@ sub pollard_brent_find_factor ($n, $max_iter) {
     return $g;
 }
 
-sub lucasmod ($n, $m) {
-
-#<<<
-    my ($f, $g, $w) = (
-        Math::GMPz::Rmpz_init_set_ui(3),
-        Math::GMPz::Rmpz_init_set_ui(1),
-    );
-#>>>
-
-    foreach my $bit (split(//, substr(Math::GMPz::Rmpz_get_str($n, 2), 1))) {
-        Math::GMPz::Rmpz_powm_ui($g, $g, 2, $m);
-        Math::GMPz::Rmpz_powm_ui($f, $f, 2, $m);
-
-        $w
-          ? do {
-            Math::GMPz::Rmpz_sub_ui($g, $g, 2);
-            Math::GMPz::Rmpz_add_ui($f, $f, 2);
-          }
-          : do {
-            Math::GMPz::Rmpz_add_ui($g, $g, 2);
-            Math::GMPz::Rmpz_sub_ui($f, $f, 2);
-          };
-
-        if ($bit) {
-            Math::GMPz::Rmpz_sub($g, $f, $g);
-            $w = 0;
-        }
-        else {
-            Math::GMPz::Rmpz_sub($f, $f, $g);
-            $w = 1;
-        }
-    }
-
-    Math::GMPz::Rmpz_mod($g, $g, $m);
-
-    return $g;
-}
-
 sub fibonacci_factorization ($n, $upper_bound) {
 
     # The Fibonacci factorization method, taking
@@ -864,18 +826,21 @@ sub fibonacci_factorization ($n, $upper_bound) {
         return undef if $bound <= 1;
 
         my $B = Math::GMPz::Rmpz_init_set_str(consecutive_integer_lcm($bound), 10);
-        my $L = lucasmod($B, $n);
+        my $F = Math::GMPz::Rmpz_init_set_str((lucas_sequence($n, 1, -1, $B))[0], 10);
 
-        my $g = Math::GMPz->new(gcd($L - 2, $n));
-
-        if ($g == $n) {
+        if ($F == 0) {
+            say ":: p±1 seems to be $bound-smooth...";
             $bound >>= 1;
             next;
         }
 
+        my $g = Math::GMPz->new(gcd($F, $n));
+
         if ($g > 1) {
             return $g;
         }
+
+        say "=> Lucas p±1...";
 
         return lucas_factorization($n, $B);
     }
@@ -1246,7 +1211,7 @@ sub find_small_factors ($rem, $factors) {
         #~ }
 #>>>
 
-        say "=> Fibonacci-Lucas p±1...";
+        say "=> Fibonacci p±1...";
         $f = fibonacci_factorization($rem, FIBONACCI_BOUND);
 
         if (defined($f) and $f < $rem) {
