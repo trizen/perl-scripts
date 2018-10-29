@@ -258,8 +258,7 @@ sub siqs_sieve ($factor_base, $m) {
         $fb->{p} > 100 or next;
         $fb->{soln1} // next;
 
-        my $p = $fb->{p};
-
+        my $p   = $fb->{p};
         my $lp  = $fb->{lp};
         my $end = 2 * $m;
 

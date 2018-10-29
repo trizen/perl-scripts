@@ -642,6 +642,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
 * Monitoring
     * [File-monitor](./Monitoring/file-monitor)
 * Other
+    * [Concatenation weirdness](./Other/concatenation_weirdness.pl)
     * [Tail recursion](./Other/tail_recursion.pl)
 * Regex
     * [Possitive-negative matching](./Regex/possitive-negative_matching.pl)
