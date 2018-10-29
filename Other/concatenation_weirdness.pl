@@ -2,8 +2,8 @@
 
 # Weird order of concatenation of variables, when the variables are mutated during concatenation.
 
-# In older versions of Perl, the first statement correctly returns "abc", but the is still incorrect.
-# In newer versions of Perl, both statements return unexpected values.
+# In older versions of Perl, the first statement correctly returns "abc".
+# In newer versions of Perl, both statements return incorrect values.
 
 use 5.010;
 use strict;
