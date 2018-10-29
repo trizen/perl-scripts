@@ -300,9 +300,9 @@ sub siqs_trial_divide ($n, $factor_base_info) {
 
         if (Math::GMPz::Rmpz_cmp_ui($t, 1) == 0) {
 
-            my $factor_lkup = $factor_base_info->{lkup};
+            my $factor_index = $factor_base_info->{index};
 
-            return [map { [$factor_lkup->{$_->[0]}, $_->[1]] } factor_exp($n)];
+            return [map { [$factor_index->{$_->[0]}, $_->[1]] } factor_exp($n)];
         }
 
         Math::GMPz::Rmpz_gcd($g, $t, $factor_prod);
@@ -435,7 +435,7 @@ sub siqs_solve_matrix_opt ($M, $n, $m) {
     return \@perf_squares;
 }
 
-sub siqs_calc_sqrts ($square_indices, $smooth_relations) {
+sub siqs_calc_sqrts ($n, $square_indices, $smooth_relations) {
 
     # Given on of the solutions returned by siqs_solve_matrix_opt and
     # the corresponding smooth relations, calculate the pair [a, b], such
@@ -445,8 +445,8 @@ sub siqs_calc_sqrts ($square_indices, $smooth_relations) {
     my $r2 = $ONE;
 
     foreach my $i (@$square_indices) {
-        $r1 *= $smooth_relations->[$i][0];
-        $r2 *= $smooth_relations->[$i][1];
+        ($r1 *= $smooth_relations->[$i][0]) %= $n;
+        ($r2 *= $smooth_relations->[$i][1]);
     }
 
     $r2 = Math::GMPz->new(sqrtint($r2));
@@ -461,7 +461,7 @@ sub siqs_factor_from_square ($n, $square_indices, $smooth_relations) {
     # a, b are calculated from the solution such that a*a = b*b (mod n).
     # Return f, a factor of n (possibly a trivial one).
 
-    my ($sqrt1, $sqrt2) = siqs_calc_sqrts($square_indices, $smooth_relations);
+    my ($sqrt1, $sqrt2) = siqs_calc_sqrts($n, $square_indices, $smooth_relations);
 
     #(($sqrt1 * $sqrt1) % $n == ($sqrt2 * $sqrt2) % $n) or die 'error';
 
@@ -622,13 +622,13 @@ sub siqs_factorize ($n, $nf) {
     my $factor_base = siqs_factor_base_primes($n, $nf);
     my $factor_prod = Math::GMPz->new(vecprod(map { $_->{p} } @$factor_base));
 
-    my %factor_base_lookup;
-    @factor_base_lookup{map { $_->{p} } @{$factor_base}} = 0 .. $#{$factor_base};
+    my %factor_base_index;
+    @factor_base_index{map { $_->{p} } @{$factor_base}} = 0 .. $#{$factor_base};
 
     my $factor_base_info = {
-                            base => $factor_base,
-                            prod => $factor_prod,
-                            lkup => \%factor_base_lookup,
+                            base  => $factor_base,
+                            prod  => $factor_prod,
+                            index => \%factor_base_index,
                            };
 
     my $smooth_relations         = [];
