@@ -300,6 +300,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Japh from ambiguity](./JAPH/japh_from_ambiguity.pl)
     * [Japh from auto-quoted keywords](./JAPH/japh_from_auto-quoted_keywords.pl)
     * [Japh from escapes](./JAPH/japh_from_escapes.pl)
+    * [Japh from escapes 2](./JAPH/japh_from_escapes_2.pl)
     * [Japh from keywords](./JAPH/japh_from_keywords.pl)
     * [Japh from pod](./JAPH/japh_from_pod.pl)
     * [Japh from poetry](./JAPH/japh_from_poetry.pl)
