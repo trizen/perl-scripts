@@ -1,0 +1,3 @@
+qw qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxqand
+s yys xxprint scalar reverse q qrekcah lreP rehtona tsuJqxe and print qq x
+xyexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
