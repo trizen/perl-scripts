@@ -18,7 +18,7 @@ sub is_smooth ($n, $k) {
 
     for (my $g = gcd($n, $k) ; $g > 1 ; $g = gcd($n, $k)) {
         $n /= $g;                         # remove one divisor g
-        $n /= $g while ($n % $g == 0);    # remove any divisibily by g
+        $n /= $g while ($n % $g == 0);    # remove any divisibility by g
         return 1 if ($n == 1);            # smooth if n == 1
     }
 
