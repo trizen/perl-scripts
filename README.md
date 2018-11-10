@@ -539,6 +539,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Number of representations as sum of two squares](./Math/number_of_representations_as_sum_of_two_squares.pl)
     * [Numbers with pow 2 divisors](./Math/numbers_with_pow_2_divisors.pl)
     * [Partial sums of sigma function](./Math/partial_sums_of_sigma_function.pl)
+    * [Partial sums of sigma function times k](./Math/partial_sums_of_sigma_function_times_k.pl)
     * [Partitions count](./Math/partitions_count.pl)
     * [Partitions count abs](./Math/partitions_count_abs.pl)
     * [Partitions count simple](./Math/partitions_count_simple.pl)
