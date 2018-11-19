@@ -12,9 +12,10 @@ use 5.020;
 use strict;
 use warnings;
 
+use Math::GMPz qw();
 use experimental qw(signatures);
-use Math::AnyNum qw(ipow gcd invmod);
-use ntheory qw(primes prime_count is_prime_power logint);
+use ntheory qw(is_prime_power logint gcd);
+use Math::Prime::Util::GMP qw(primes invmod);
 
 sub ecm ($N, $zrange = 100, $plimit = 10000) {
 
@@ -22,54 +23,55 @@ sub ecm ($N, $zrange = 100, $plimit = 10000) {
         return $p;
     }
 
-    state @primes;
-
-    if (@primes != prime_count($plimit)) {
-        @primes = @{primes($plimit)};
-    }
+    my @primes = @{primes($plimit)};
 
     foreach my $z (-$zrange .. $zrange) {
+
         my $x = 0;
         my $y = 1;
 
         foreach my $p (@primes) {
-            my $k = ipow($p, logint($plimit, $p));
+            my $k = $p**logint($plimit, $p);
 
             my ($xn, $yn);
             my ($sx, $sy, $t) = ($x, $y, $k);
 
-            my $first = '1';
+            my $first = 1;
 
             while ($t) {
 
-                if ($t->is_odd) {
+                if ($t&1) {
                     if ($first) {
                         ($xn, $yn) = ($sx, $sy);
-                        $first = '0';
+                        $first = 0;
                     }
                     else {
-                        my $d = gcd($sx - $xn, $N);
+                        my $u = invmod($sx - $xn, $N);
 
-                        if ($d > 1) {
+                        if (not defined $u) {
+                            my $d = gcd($sx - $xn, $N);
                             $d == $N ? last : return $d;
                         }
 
-                        my $u = invmod($sx - $xn, $N);
-                        my $L = ($u * ($sy - $yn)) % $N;
-                        my $x_sum = ($L * $L - $xn - $sx) % $N;
+                        $u = Math::GMPz->new($u);
 
-                        $yn = ($L * ($xn - $x_sum) - $yn) % $N;
-                        $xn = $x_sum;
+                        my $L = ($u * ($sy - $yn)) % $N;
+                        my $xs = ($L * $L - $xn - $sx) % $N;
+
+                        $yn = ($L * ($xn - $xs) - $yn) % $N;
+                        $xn = $xs;
                     }
                 }
 
-                my $d = gcd(2 * $sy, $N);
+                my $u = invmod(2 * $sy, $N);
 
-                if ($d > 1) {
+                if (not defined $u) {
+                    my $d = gcd(2 * $sy, $N);
                     $d == $N ? last : return $d;
                 }
 
-                my $u = invmod(2 * $sy, $N);
+                $u = Math::GMPz->new($u);
+
                 my $L = ($u * (3 * $sx * $sx + $z)) % $N;
                 my $x2 = ($L * $L - 2 * $sx) % $N;
 
@@ -85,5 +87,6 @@ sub ecm ($N, $zrange = 100, $plimit = 10000) {
     return $N;    # failed
 }
 
-say ecm(14304849576137459);
-say ecm(ipow(2, 128) + 1);    # takes ~11 seconds
+say ecm(Math::GMPz->new("14304849576137459"));
+say ecm(79710615566344993);
+say ecm(Math::GMPz->new(2)**128 + 1);    # takes ~3.4 seconds
