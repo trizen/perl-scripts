@@ -40,7 +40,7 @@ sub ecm ($N, $zrange = 100, $plimit = 10000) {
 
             while ($t) {
 
-                if ($t&1) {
+                if ($t & 1) {
                     if ($first) {
                         ($xn, $yn) = ($sx, $sy);
                         $first = 0;
@@ -55,7 +55,7 @@ sub ecm ($N, $zrange = 100, $plimit = 10000) {
 
                         $u = Math::GMPz->new($u);
 
-                        my $L = ($u * ($sy - $yn)) % $N;
+                        my $L  = ($u * ($sy - $yn)) % $N;
                         my $xs = ($L * $L - $xn - $sx) % $N;
 
                         $yn = ($L * ($xn - $xs) - $yn) % $N;
@@ -72,7 +72,7 @@ sub ecm ($N, $zrange = 100, $plimit = 10000) {
 
                 $u = Math::GMPz->new($u);
 
-                my $L = ($u * (3 * $sx * $sx + $z)) % $N;
+                my $L  = ($u * (3 * $sx * $sx + $z)) % $N;
                 my $x2 = ($L * $L - 2 * $sx) % $N;
 
                 $sy = ($L * ($sx - $x2) - $sy) % $N;
