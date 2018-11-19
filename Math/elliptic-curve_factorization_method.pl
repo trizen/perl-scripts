@@ -78,6 +78,8 @@ sub ecm ($N, $zrange = 100, $plimit = 10000) {
                 $sy = ($L * ($sx - $x2) - $sy) % $N;
                 $sx = $x2;
 
+                $sy || return $N;
+
                 $t >>= 1;
             }
             ($x, $y) = ($xn, $yn);
