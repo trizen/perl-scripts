@@ -43,7 +43,7 @@ use warnings;
 
 use Math::GMPz qw();
 use experimental qw(signatures);
-use ntheory qw(euler_phi moebius mertens sqrtint);
+use ntheory qw(euler_phi moebius mertens sqrtint forsquarefree);
 
 sub euler_totient_partial_sum ($n) {
 
@@ -60,12 +60,10 @@ sub euler_totient_partial_sum ($n) {
         $prev = $curr;
     }
 
-    for my $k (1 .. $u) {
-        if (my $m = moebius($k)) {
-            my $t = int($n / $k);
-            $total += $m * $t * ($t + 1);
-        }
-    }
+    forsquarefree {
+        my $t = int($n / $_);
+        $total += moebius($_) * $t * ($t + 1);
+    } $u;
 
     return $total / 2;
 }
