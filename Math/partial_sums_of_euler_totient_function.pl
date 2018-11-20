@@ -13,8 +13,22 @@
 # Based on the formula:
 #   Sum_{k=1..n} phi(k) = (1/2)*Sum_{k=1..n} moebius(k) * floor(n/k) * floor(1+n/k)
 
+# Example:
+#   a(10^1) = 32
+#   a(10^2) = 3044
+#   a(10^3) = 304192
+#   a(10^4) = 30397486
+#   a(10^5) = 3039650754
+#   a(10^6) = 303963552392
+#   a(10^7) = 30396356427242
+#   a(10^8) = 3039635516365908
+#   a(10^9) = 303963551173008414
+
+# This algorithm can be improved.
+
 # See also:
 #   https://oeis.org/A002088
+#   https://oeis.org/A064018
 #   https://en.wikipedia.org/wiki/Mertens_function
 #   https://en.wikipedia.org/wiki/M%C3%B6bius_function
 #   https://en.wikipedia.org/wiki/Euler%27s_totient_function
