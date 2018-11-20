@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 # Author: Daniel "Trizen" Șuteu
-# Date: 10 Novermber 2018
+# Date: 10 November 2018
 # https://github.com/trizen
 
 # A new generalized algorithm with O(sqrt(n)) complexity for computing the partial-sums of `k * sigma_j(k)`, for `1 <= k <= n`:

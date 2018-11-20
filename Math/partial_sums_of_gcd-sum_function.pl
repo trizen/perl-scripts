@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 # Author: Daniel "Trizen" Șuteu
-# Date: 20 Novermber 2018
+# Date: 20 November 2018
 # https://github.com/trizen
 
 # A new algorithm for computing the partial-sums of the gcd-sum function `Sum_{d|k} d*ϕ(k/d)`, for `1 <= k <= n`:
