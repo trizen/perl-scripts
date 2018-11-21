@@ -32,12 +32,8 @@
 #   a(10^9)  = 411233517733637365707365200123054947
 #   a(10^10) = 4112335168452793891288471658633554668746
 
-# Asymptotic formulas:
-#   a(10^k) ~ Pi^2/24 * 10^(4*k)
-#   a(10^k) ~ zeta(2)/4 * 10^(4*k)
-
-# Extra:
-#   zeta(3)/5 * 10^(5*k) ~ Sum_{k=1..10^n} k^2 * sigma_2(k)
+# For m>=0 and j>=1, we have the following asymptotic formula:
+#   Sum_{k=1..n} k^m * sigma_j(k) ~ zeta(j+1)/(j+m+1) * n^(j+m+1)
 
 # See also:
 #   https://en.wikipedia.org/wiki/Divisor_function
