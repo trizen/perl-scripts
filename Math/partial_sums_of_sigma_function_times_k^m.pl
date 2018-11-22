@@ -16,7 +16,7 @@
 #
 # where F(n,x) is Faulhaber's formula for `Sum_{k=1..x} k^n`, defined in terms of Bernoulli polynomials as:
 #
-#   F(n, x) = (Bernoulli(n+1, x+1) - Bernoulli(n+1, 0)) / (n+1)
+#   F(n,x) = (Bernoulli(n+1, x+1) - Bernoulli(n+1, 1)) / (n+1)
 #
 # and Bernoulli(n,x) are the Bernoulli polynomials.
 

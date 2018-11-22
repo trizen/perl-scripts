@@ -14,7 +14,7 @@
 #   Sum_{k=1..n} J_m(k) = Sum_{k=1..n} moebius(k) * F(m, floor(n/k))
 #
 # where F(n,x) is Faulhaber's formula for `Sum_{k=1..x} k^n`, defined in terms of Bernoulli polynomials as:
-#   F(n, x) = (Bernoulli(n+1, x+1) - Bernoulli(n+1, 0)) / (n+1)
+#   F(n, x) = (Bernoulli(n+1, x+1) - Bernoulli(n+1, 1)) / (n+1)
 
 # Example for a(n) = Sum_{k=1..n} J_2(k):
 #  a(10^1) = 312
