@@ -8,7 +8,7 @@
 #
 #   Sum_{k=1..n} J_m(k)
 #
-# for any fixed integer m >= 0.
+# for any fixed integer m >= 1.
 
 # Based on the formula:
 #   Sum_{k=1..n} J_m(k) = Sum_{k=1..n} moebius(k) * F(m, floor(n/k))
