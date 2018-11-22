@@ -20,7 +20,7 @@
 #
 # and Bernoulli(n,x) are the Bernoulli polynomials.
 
-# Example: `a(n) = Sum_{k=1..n} k^2 * sigma(k)`
+# Example for `a(n) = Sum_{k=1..n} k^2 * sigma(k)`
 #   a(10^1)  = 4948
 #   a(10^2)  = 42206495
 #   a(10^3)  = 412181273976
@@ -33,7 +33,7 @@
 #   a(10^10) = 4112335168452793891288471658633554668746
 
 # For m>=0 and j>=1, we have the following asymptotic formula:
-#   Sum_{k=1..n} k^m * sigma_j(k) ~ zeta(j+1)/(j+m+1) * n^(j+m+1)
+#   Sum_{k=1..n} k^m * sigma_j(k) ~ n^(j+m+1) * zeta(j+1) / (j+m+1)
 
 # See also:
 #   https://en.wikipedia.org/wiki/Divisor_function
@@ -49,7 +49,7 @@ use ntheory qw(divisor_sum);
 use experimental qw(signatures);
 use Math::AnyNum qw(faulhaber_sum isqrt ipow sum);
 
-sub fast_sigma_partial_sum($n, $m, $j) {      # O(sqrt(n)) complexity
+sub sigma_partial_sum($n, $m, $j) {      # O(sqrt(n)) complexity
 
     my $total = 0;
 
@@ -65,10 +65,9 @@ sub fast_sigma_partial_sum($n, $m, $j) {      # O(sqrt(n)) complexity
     }
 
     return $total;
-
 }
 
-sub sigma_partial_sum($n, $m, $j) {           # just for testing
+sub sigma_partial_sum_test($n, $m, $j) {           # just for testing
     sum(map { ipow($_, $m) * divisor_sum($_, $j) } 1..$n);
 }
 
@@ -78,11 +77,11 @@ for my $m (0..10) {
     my $n = int rand 1000;
 
     my $t1 = sigma_partial_sum($n, $m, $j);
-    my $t2 = fast_sigma_partial_sum($n, $m, $j);
+    my $t2 = sigma_partial_sum_test($n, $m, $j);
 
     die "error: $t1 != $t2" if ($t1 != $t2);
 
-    say "Sum_{k=1..$n} k^$m * σ_$j(k) = $t2";
+    say "Sum_{k=1..$n} k^$m * σ_$j(k) = $t1";
 }
 
 __END__

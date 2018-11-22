@@ -45,8 +45,8 @@ use strict;
 use warnings;
 
 use experimental qw(signatures);
-use ntheory qw(jordan_totient moebius mertens vecsum sqrtint forsquarefree);
 use Math::AnyNum qw(faulhaber_sum);
+use ntheory qw(jordan_totient moebius mertens vecsum sqrtint forsquarefree);
 
 sub jordan_totient_partial_sum ($n, $m) {
 

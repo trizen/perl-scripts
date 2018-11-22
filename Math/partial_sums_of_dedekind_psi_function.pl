@@ -47,7 +47,7 @@ use strict;
 use warnings;
 
 use experimental qw(signatures);
-use Math::AnyNum qw(faulhaber_sum zeta pi ipow);
+use Math::AnyNum qw(faulhaber_sum);
 use ntheory qw(jordan_totient moebius vecsum sqrtint forsquarefree);
 
 sub squarefree_count {
@@ -57,7 +57,7 @@ sub squarefree_count {
     my $count = 0;
 
     foreach my $m (moebius(1, sqrtint($n))) {
-        $count += $m * int($n / (++$k)**2);
+        ++$k; $count += $m * int($n / $k / $k);
     }
 
     return $count;
