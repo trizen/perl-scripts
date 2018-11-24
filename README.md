@@ -544,6 +544,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Partial sums of euler totient function](./Math/partial_sums_of_euler_totient_function.pl)
     * [Partial sums of gcd-sum function](./Math/partial_sums_of_gcd-sum_function.pl)
     * [Partial sums of jordan totient function](./Math/partial_sums_of_jordan_totient_function.pl)
+    * [Partial sums of prime omega function](./Math/partial_sums_of_prime_omega_function.pl)
     * [Partial sums of sigma function](./Math/partial_sums_of_sigma_function.pl)
     * [Partial sums of sigma function times k](./Math/partial_sums_of_sigma_function_times_k.pl)
     * [Partial sums of sigma function times k^m](./Math/partial_sums_of_sigma_function_times_k^m.pl)
