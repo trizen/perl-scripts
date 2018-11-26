@@ -29,7 +29,7 @@
 #   https://oeis.org/A064182
 #   https://en.wikipedia.org/wiki/Prime_omega_function
 #   https://en.wikipedia.org/wiki/Prime-counting_function
-#   https://trizenx.blogspot.com/2018/08/interesting-formulas-and-exercises-in.html
+#   https://trizenx.blogspot.com/2018/11/partial-sums-of-arithmetical-functions.html
 
 use 5.020;
 use strict;

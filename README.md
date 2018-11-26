@@ -578,6 +578,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Prime factors of factorial](./Math/prime_factors_of_factorial.pl)
     * [Prime formulas](./Math/prime_formulas.pl)
     * [Prime numbers generator](./Math/prime_numbers_generator.pl)
+    * [Prime omega function generalized](./Math/prime_omega_function_generalized.pl)
     * [Prime quadratic polynomial analyzer](./Math/prime_quadratic_polynomial_analyzer.pl)
     * [Prime quadratic polynomials](./Math/prime_quadratic_polynomials.pl)
     * [Prime summation](./Math/prime_summation.pl)

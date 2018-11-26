@@ -14,7 +14,7 @@
 #   https://en.wikipedia.org/wiki/Divisor_function
 #   https://en.wikipedia.org/wiki/Faulhaber%27s_formula
 #   https://en.wikipedia.org/wiki/Bernoulli_polynomials
-#   https://trizenx.blogspot.com/2018/08/interesting-formulas-and-exercises-in.html
+#   https://trizenx.blogspot.com/2018/11/partial-sums-of-arithmetical-functions.html
 
 use 5.020;
 use strict;

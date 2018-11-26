@@ -35,7 +35,7 @@
 #   https://en.wikipedia.org/wiki/Mertens_function
 #   https://en.wikipedia.org/wiki/M%C3%B6bius_function
 #   https://en.wikipedia.org/wiki/Euler%27s_totient_function
-#   https://trizenx.blogspot.com/2018/08/interesting-formulas-and-exercises-in.html
+#   https://trizenx.blogspot.com/2018/11/partial-sums-of-arithmetical-functions.html
 
 use 5.020;
 use strict;
