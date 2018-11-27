@@ -4,9 +4,10 @@
 # Date: 27 November 2018
 # https://github.com/trizen
 
-# A nice algorithm in terms of the prime-counting function for computing the sum of exponents in prime-power factorization of n!.
+# A nice algorithm in terms of the prime-counting function for computing partial sums of the bigomega(n) function:
+#   a(n) = Sum_{k=1..n} Ω(k)
 
-# Equivalent with:
+# Also equivalent with:
 #   a(n) = bigomega(n!)
 
 # See also:
@@ -41,7 +42,7 @@ sub prime_power_count($n) {
     vecsum(map { prime_count(rootint($n, $_)) } 1 .. logint($n, 2));
 }
 
-sub bigomega_of_factorial($n) {
+sub prime_bigomega_partial_sum($n) {
 
     my $s = sqrtint($n);
     my $u = int($n / ($s + 1));
@@ -62,5 +63,5 @@ sub bigomega_of_factorial($n) {
 }
 
 for my $n (1 .. 10) {
-    say "a(10^$n) = ", bigomega_of_factorial(10**$n);
+    say "a(10^$n) = ", prime_bigomega_partial_sum(10**$n);
 }
