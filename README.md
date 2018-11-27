@@ -358,6 +358,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Bernoulli numbers recursive](./Math/bernoulli_numbers_recursive.pl)
     * [Bernoulli numbers recursive 2](./Math/bernoulli_numbers_recursive_2.pl)
     * [Bernoulli numbers seidel](./Math/bernoulli_numbers_seidel.pl)
+    * [Bigomega of factorial](./Math/bigomega_of_factorial.pl)
     * [Binary gcd algorithm](./Math/binary_gcd_algorithm.pl)
     * [Binary gcd algorithm mpz](./Math/binary_gcd_algorithm_mpz.pl)
     * [Binary multiplier](./Math/binary_multiplier.pl)
