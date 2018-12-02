@@ -4,7 +4,7 @@
 # Date: 02 December 2018
 # https://github.com/trizen
 
-# A nice algorithm in terms of the prime-counting function for computing number of prime powers <= n.
+# A nice algorithm in terms of the prime-counting function for computing the number of prime powers <= n.
 #   a(n) = Sum_{k=1..floor(log_2(n))} π(floor(n^(1/k)))
 
 # Example: a(10^n) for n=1..15:
