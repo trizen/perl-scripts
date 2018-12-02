@@ -86,30 +86,30 @@ sub prime_power_count($n) {
     vecsum(map { prime_count(rootint($n, $_)) } 1 .. logint($n, 2));
 }
 
-sub prime_bigomega_partial_sum($n, $m) {
+sub prime_bigomega_partial_sum ($n, $m) {
 
     my $s = sqrtint($n);
-    my $u = int($n / ($s + 1));
+    my $u = int($n/($s + 1));
 
     my $total = 0;
 
     for my $k (1 .. $s) {
-        $total += faulhaber_sum($k, $m) * (prime_power_count(int($n / $k)) - prime_power_count(int($n / ($k + 1))));
+        $total += faulhaber_sum($k, $m) * (prime_power_count(int($n/$k)) - prime_power_count(int($n/($k+1))));
     }
 
     forprimes {
         foreach my $k (1 .. logint($u, $_)) {
-            $total +=faulhaber_sum( int($n / $_**$k), $m);
+            $total += faulhaber_sum(int($n / $_**$k), $m);
         }
     } $u;
 
     return $total;
 }
 
-sub prime_bigomega_partial_sum_test ($n, $m) {      # just for testing
+sub prime_bigomega_partial_sum_test ($n, $m) {    # just for testing
     my $total = 0;
 
-    foreach my $k (1..$n) {
+    foreach my $k (1 .. $n) {
         if (is_prime_power($k)) {
             $total += faulhaber_sum(int($n/$k), $m);
         }
