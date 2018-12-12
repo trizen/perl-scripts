@@ -439,6 +439,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Goldbach conjecture possibilities](./Math/goldbach_conjecture_possibilities.pl)
     * [Goldbach conjecture random primes](./Math/goldbach_conjecture_random_primes.pl)
     * [Golomb's sequence](./Math/golomb_s_sequence.pl)
+    * [Hamming numbers](./Math/hamming_numbers.pl)
     * [Harmonic numbers](./Math/harmonic_numbers.pl)
     * [Harmonic numbers from digamma](./Math/harmonic_numbers_from_digamma.pl)
     * [Harmonic numbers from powers](./Math/harmonic_numbers_from_powers.pl)
