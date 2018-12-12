@@ -534,6 +534,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Nth order fibonacci odd primes indices](./Math/nth_order_fibonacci_odd_primes_indices.pl)
     * [Nth prime approx](./Math/nth_prime_approx.pl)
     * [Nth root recurrence constant](./Math/nth_root_recurrence_constant.pl)
+    * [Nth smooth number](./Math/nth_smooth_number.pl)
     * [Number of conditional GCDs](./Math/number_of_conditional_GCDs.pl)
     * [Number of connected permutations](./Math/number_of_connected_permutations.pl)
     * [Number of representations as sum of 3 triangles](./Math/number_of_representations_as_sum_of_3_triangles.pl)
