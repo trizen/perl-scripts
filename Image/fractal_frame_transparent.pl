@@ -37,7 +37,7 @@ sub complex_transform ($file) {
         my $i = $max_iter;
 
         while (abs($z) < 2 and --$i) {
-            $z = $z**5 + $c;
+            $z = $z->pown(5) + $c;
         }
 
         ($max_iter - $i) / $max_iter;
