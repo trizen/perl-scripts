@@ -3,7 +3,6 @@
 # Generate the n-th smooth number that is the product of a given subset of primes.
 
 # See also:
-#   https://en.wikipedia.org/wiki/Regular_number
 #   https://en.wikipedia.org/wiki/Smooth_number
 
 use 5.020;

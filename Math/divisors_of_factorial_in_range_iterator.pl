@@ -7,7 +7,6 @@
 # Generate the divisors of n! in a given range, using a closure iterator.
 
 # See also:
-#   https://en.wikipedia.org/wiki/Regular_number
 #   https://en.wikipedia.org/wiki/Smooth_number
 
 use 5.020;
