@@ -14,7 +14,7 @@ use 5.020;
 use strict;
 use warnings;
 
-use Math::GComplex qw(cplx floor);
+use Math::AnyNum qw(:overload conj round);
 use experimental qw(signatures lexical_subs);
 
 sub complex_gcd ($a, $b) {
@@ -22,24 +22,20 @@ sub complex_gcd ($a, $b) {
     my ($x, $y) = ($a, $b);
 
     while ($b != 0) {
+        my $q = round($a / $b);
+        my $r = $a - $b * $q;
 
-        ($a, $b) = ($b, $a % $b);
-        ($x, $y) = ($y, $x % $y) if $y != 0;
-        ($x, $y) = ($y, $x % $y) if $y != 0;
-
-        if ($y != 0 and $a == $x and $y == $b) {
-            return undef;    # cycle detected
-        }
+        ($a, $b) = ($b, $r);
     }
 
-    return abs($a);
+    return $a;
 }
 
 sub complex_modular_inverse ($a, $n) {
 
     my $g = complex_gcd($a, $n);
 
-    (defined($g) and $g == 1) or return undef;
+    abs($g) == 1 or return undef;
 
     my sub inverse ($a, $n, $i) {
 
@@ -49,22 +45,25 @@ sub complex_modular_inverse ($a, $n) {
         my $c = $n;
 
         while ($c != 0) {
-            ($q, $r) = (floor($a / $c), $a % $c);
+
+            $q = round($a / $c);
+            $r = $a - $c * $q;
+
             ($a, $c) = ($c, $r);
             ($u, $w) = ($w, $u - $q * $w);
         }
 
-        return $u;
+        return $u % $n;
     }
 
-    (grep { ($_ * $a) % $n == 1 } map { inverse($a, $n, $_) } (1, -1, cplx(0, 1), cplx(0, -1)))[0];
+    (grep { ($_ * $a) % $n == 1 } map { inverse($a, $n, $_) } (conj($g), 1, -1, i, -i))[0];
 }
 
-say complex_modular_inverse(42, 2017);                 #=> (-48 0)
-say complex_modular_inverse(cplx(3,  4),  2017);       #=> (1291 968)
-say complex_modular_inverse(cplx(91, 23), 2017);       #=> (590 405)
-say complex_modular_inverse(cplx(43, 99), 1234567);    #=> (-215016 -567265)
+say complex_modular_inverse(42,          2017);       #=> 1969
+say complex_modular_inverse(3 + 4 * i,   2017);       #=> 1291+968i
+say complex_modular_inverse(91 + 23 * i, 2017);       #=> 590+405i
+say complex_modular_inverse(43 + 99 * i, 2017);       #=> 1709+1272i
+say complex_modular_inverse(43 + 99 * i, 1234567);    #=> 1019551+667302i
 
 # Non-existent inverses
-say complex_modular_inverse(cplx(43, 99), 2017) // 'undefined';    #=> undefined
-say complex_modular_inverse(cplx(43, 99), 1234) // 'undefined';    #=> undefined
+say complex_modular_inverse(43 + 99 * i, 1234) // 'undefined';    #=> undefined
