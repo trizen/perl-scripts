@@ -382,6 +382,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Collatz function](./Math/collatz_function.pl)
     * [Complex exponentiation in real numbers](./Math/complex_exponentiation_in_real_numbers.pl)
     * [Complex logarithm in real numbers](./Math/complex_logarithm_in_real_numbers.pl)
+    * [Complex modular multiplicative inverse](./Math/complex_modular_multiplicative_inverse.pl)
     * [Complex zeta in real numbers](./Math/complex_zeta_in_real_numbers.pl)
     * [Continued fraction factorization method](./Math/continued_fraction_factorization_method.pl)
     * [Continued fractions](./Math/continued_fractions.pl)
