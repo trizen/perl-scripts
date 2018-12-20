@@ -411,6 +411,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Ethiopian multiplication binary](./Math/ethiopian_multiplication_binary.pl)
     * [Extended Chernick Carmichael numbers](./Math/extended_Chernick_Carmichael_numbers.pl)
     * [Factorial dsc algorithm](./Math/factorial_dsc_algorithm.pl)
+    * [Factorial expansion of reciprocals](./Math/factorial_expansion_of_reciprocals.pl)
     * [Factorial from primes](./Math/factorial_from_primes.pl)
     * [Factorial from primes simple](./Math/factorial_from_primes_simple.pl)
     * [Factorial from trinomial coefficients](./Math/factorial_from_trinomial_coefficients.pl)
