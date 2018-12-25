@@ -54,7 +54,7 @@ GetOptions(
 sub analyze_image {
     my ($file, $images) = @_;
 
-    my $img = GD::Image->new($file) || return;
+    my $img = eval { GD::Image->new($file) } || return;
 
     say "Analyzing: $file";
 
