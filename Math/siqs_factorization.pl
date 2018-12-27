@@ -1180,8 +1180,15 @@ sub find_small_factors ($rem, $factors) {
         $f = check_perfect_power($rem);
 
         if (defined($f)) {
-            store_factor(\$rem, $f, $factors);
-            next;
+            my $exp = 1;
+
+            for (my $t = $f; $t < $rem; ++$exp) {
+                $t *= $f;
+            }
+
+            my @r = factorize($f);
+            push(@$factors, (@r) x $exp);
+            return 1;
         }
 
         say "=> Fermat's method...";
