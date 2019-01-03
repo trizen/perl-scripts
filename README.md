@@ -435,6 +435,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Fraction to decimal expansion](./Math/fraction_to_decimal_expansion.pl)
     * [Fractional pi](./Math/fractional_pi.pl)
     * [Fubini numbers](./Math/fubini_numbers.pl)
+    * [Fubini numbers recursive](./Math/fubini_numbers_recursive.pl)
     * [Function graph](./Math/function_graph.pl)
     * [Gamma function](./Math/gamma_function.pl)
     * [Gaussian integers sum](./Math/gaussian_integers_sum.pl)
