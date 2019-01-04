@@ -626,6 +626,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Semiprime equationization uncached](./Math/semiprime_equationization_uncached.pl)
     * [Sequence analyzer](./Math/sequence_analyzer.pl)
     * [Sequence closed form](./Math/sequence_closed_form.pl)
+    * [Sequence polynomial closed form](./Math/sequence_polynomial_closed_form.pl)
     * [Sieve of eratosthenes](./Math/sieve_of_eratosthenes.pl)
     * [Sigma0 of factorial](./Math/sigma0_of_factorial.pl)
     * [Sigma function](./Math/sigma_function.pl)
