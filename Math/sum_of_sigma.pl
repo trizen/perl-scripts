@@ -1,51 +1,55 @@
 #!/usr/bin/perl
 
-# Algorithm with O(sqrt(n)) complexity for computing the sum of the sum of divisors:
-#
-#   a(n) = Sum_{k=1..n} sigma(k).
-#
+# Daniel "Trizen" Șuteu
+# Date: 10 January 2018
+# https://github.com/trizen
 
-# Algorithm due to P. L. Patodia (09.01.2008) (see: https://oeis.org/A024916).
+# Sum of the sigma(k) function, for 1 <= k <= n, where `sigma(k)` is `Sum_{d|k} d`.
+
+# See also:
+#   https://oeis.org/A024916
+#   https://oeis.org/A072692
 
 use 5.010;
 use strict;
 use warnings;
 
-sub sum_of_sigma {
-    my ($z) = @_;
+use Math::AnyNum qw(faulhaber_sum isqrt);
 
-    my $p = 0;
-    my $s = $z * $z;
-    my $u = int(sqrt($z));
+sub partial_sum_of_sigma {    # O(sqrt(n)) complexity
+    my ($n) = @_;
 
-    foreach my $d (1 .. $u) {
+    my $s = isqrt($n);
+    my $u = int($n / ($s + 1));
 
-        my $n = int($z / $d) - int($z / ($d + 1));
+    my $sum  = 0;
+    my $prev = faulhaber_sum($n, 1);    # n-th triangular number
 
-        if ($n <= 1) {
-            $p = $d;
-            last;
-        }
-
-        $s -= (2 * ($z % $d) + ($n - 1) * $d) * $n / 2;
+    foreach my $k (1 .. $s) {
+        my $curr = faulhaber_sum(int($n/($k+1)), 1);
+        $sum += $k * ($prev - $curr);
+        $prev = $curr;
     }
 
-    $u = (
-          $p == 0
-          ? int($z / ($u + 1))
-          : int($z / $p)
-         );
-
-    foreach my $d (2 .. $u) {
-        $s -= $z % $d;
+    foreach my $k (1 .. $u) {
+        $sum += $k * int($n / $k);
     }
 
-    return $s;
+    return $sum;
 }
 
-say sum_of_sigma(64);       #=> 3403
-say sum_of_sigma(1234);     #=> 1252881
-say sum_of_sigma(10**8);    #=> 8224670422194237
+foreach my $k (0 .. 10) {
+    say "a(10^$k) = ", partial_sum_of_sigma(10**$k);
+}
 
-# a(n) = { 1, 4, 8, 15, 21, 33, 41, 56, 69, 87, 99, 127, 141, 165, 189, ... }
-say join(', ', map { sum_of_sigma($_) } 1 .. 15);
+__END__
+a(10^0) = 1
+a(10^1) = 87
+a(10^2) = 8299
+a(10^3) = 823081
+a(10^4) = 82256014
+a(10^5) = 8224740835
+a(10^6) = 822468118437
+a(10^7) = 82246711794796
+a(10^8) = 8224670422194237
+a(10^9) = 822467034112360628
