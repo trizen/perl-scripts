@@ -45,12 +45,13 @@ sub round {
     return $zt2;
 }
 
-my $p = nth_prime(1);    # start from this prime
+my $from = nth_prime(1);       # start from this prime
+my $to   = nth_prime(1000);    # end at this prime
 
-foreach my $n (prime_count($p) .. prime_count($p) + 1000) {    # compute the first 1000 terms
+foreach my $n (prime_count($from) .. prime_count($to)) {    # compute the first 1000 terms
 
-    my $t0 = $p;
-    my $t1 = next_prime($p);
+    my $t0 = $from;
+    my $t1 = next_prime($from);
 
     Math::GMPz::Rmpz_ui_pow_ui($z1, $t0, $t1);
     Math::GMPz::Rmpz_ui_pow_ui($z2, $t1, $t0);
@@ -60,5 +61,5 @@ foreach my $n (prime_count($p) .. prime_count($p) + 1000) {    # compute the fir
 
     say $n, " ", round($q);
 
-    $p = $t1;
+    $from = $t1;
 }
