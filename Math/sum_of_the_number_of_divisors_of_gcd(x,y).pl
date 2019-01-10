@@ -21,7 +21,7 @@
 # where γ is the Euler-Mascheroni constant and "A" is the Glaisher-Kinkelin constant.
 
 # Alternative asymptotic formula:
-#   a(n) ~ (n/zeta(2) * (log(n) + 2*γ - 1 + c) / (36 / π^4)) + O(sqrt(n)*log(n))
+#   a(n) ~ (n * zeta(2) * (log(n) + 2*γ - 1 + c)) + O(sqrt(n)*log(n))
 #
 #  where γ is the Euler-Mascheroni and c = 2*Zeta'(2)/Zeta(2) = -1.1399219861890656127997287200...
 
@@ -35,11 +35,11 @@ use Math::AnyNum qw(:overload pi EulerGamma isqrt zeta round);
 
 sub asymptotic_formula($n) {
 
-    # c = 2*Zeta'(2)/Zeta(2) = (12 * Zeta'(2))/π^2 = 2 (-12 log(A) + γ + log(2) + log(π))
+    # c = 2*Zeta'(2)/Zeta(2) = (12 * Zeta'(2))/π^2 = 2*(-12*log(A) + γ + log(2) + log(π))
     my $c = -1.13992198618906561279972872003946000480696456161386195911639472087583455473348121357;
 
     # Asymptotic formula based on Merten's theorem (1874) (see: https://oeis.org/A064608)
-    ($n / zeta(2) * (log($n) + 2 * EulerGamma - 1 + $c) / (36 / pi**4));
+    ($n * zeta(2) * (log($n) + 2 * EulerGamma + $c - 1));
 }
 
 sub sum_of_number_of_divisors_of_gcd ($n) {    # based on formula by Jerome Raulin (https://oeis.org/A064608)
@@ -61,7 +61,7 @@ sub sum_of_number_of_divisors_of_gcd ($n) {    # based on formula by Jerome Raul
 
 say join(', ', map { sum_of_number_of_divisors_of_gcd($_) } 1 .. 20);
 
-foreach my $k (0 .. 8) {
+foreach my $k (1 .. 8) {
 
     my $n = 10**$k;
     my $t = sum_of_number_of_divisors_of_gcd($n);
