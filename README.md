@@ -534,6 +534,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Mysterious sum-pentagonal numbers](./Math/mysterious_sum-pentagonal_numbers.pl)
     * [Mysterious sum-pentagonal numbers 2](./Math/mysterious_sum-pentagonal_numbers_2.pl)
     * [N dimensional circles](./Math/n_dimensional_circles.pl)
+    * [Nearest integer of p^(p+1) div (p+1)^p](./Math/nearest_integer_of_p^(p+1)_div_(p+1)^p.pl)
     * [Newton's method](./Math/newton_s_method.pl)
     * [Newton's method recursive](./Math/newton_s_method_recursive.pl)
     * [Next power of two](./Math/next_power_of_two.pl)
