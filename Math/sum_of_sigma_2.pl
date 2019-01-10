@@ -13,13 +13,12 @@ use 5.010;
 use strict;
 use warnings;
 
-use ntheory qw(sqrtint);
-use Math::AnyNum qw(faulhaber_sum);
+use Math::AnyNum qw(isqrt faulhaber_sum);
 
 sub partial_sum_of_sigma2 {    # O(sqrt(n)) complexity
     my ($n) = @_;
 
-    my $s = sqrtint($n);
+    my $s = isqrt($n);
     my $u = int($n / ($s + 1));
 
     my $sum  = 0;
