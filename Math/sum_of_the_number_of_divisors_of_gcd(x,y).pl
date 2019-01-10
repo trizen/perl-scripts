@@ -42,6 +42,15 @@ sub asymptotic_formula($n) {
     ($n * zeta(2) * (log($n) + 2 * EulerGamma + $c - 1));
 }
 
+sub asymptotic_formula2($n) {
+
+    # The Glaisher-Kinkelin constant
+    my $A = 1.28242712910062263687534256886979172776768892732500119206374002174040630885882646112973649195820237439420646120399;
+
+    # Asymptotic formula in terms of the Glaisher-Kinkelin constant
+    zeta(2) * $n * (2 * (-12 * log($A) + EulerGamma + log(2*pi)) + log($n) + 2*EulerGamma - 1);
+}
+
 sub sum_of_number_of_divisors_of_gcd ($n) {    # based on formula by Jerome Raulin (https://oeis.org/A064608)
 
     my $total = 0;
