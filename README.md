@@ -343,6 +343,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Ascii mandelbrot set](./Math/ascii_mandelbrot_set.pl)
     * [Batir factorial asymptotic formula mpfr](./Math/batir_factorial_asymptotic_formula_mpfr.pl)
     * [Bernoulli denominators](./Math/bernoulli_denominators.pl)
+    * [Bernoulli denominators records](./Math/bernoulli_denominators_records.pl)
     * [Bernoulli numbers](./Math/bernoulli_numbers.pl)
     * [Bernoulli numbers from factorials](./Math/bernoulli_numbers_from_factorials.pl)
     * [Bernoulli numbers from factorials mpq](./Math/bernoulli_numbers_from_factorials_mpq.pl)
