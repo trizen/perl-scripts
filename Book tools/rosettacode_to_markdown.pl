@@ -322,7 +322,7 @@ sub write_to_file {
     $name = join('_', split(' ', $name));
 
     my $char = uc(substr($name, 0, 1));
-    my $dir = catdir($base_dir, $char);
+    my $dir  = catdir($base_dir, $char);
 
     # Remove directory paths from name (if any)
     if ($name =~ s{^(.*)/}{}) {
@@ -415,6 +415,14 @@ my $lwp = LWP::UserAgent::Cached->new(
     },
 );
 
+my $accepted_encodings = HTTP::Message::decodable();
+$lwp->default_header('Accept-Encoding' => $accepted_encodings);
+
+require LWP::ConnCache;
+my $cache = LWP::ConnCache->new;
+$cache->total_capacity(undef);                                    # no limit
+$lwp->conn_cache($cache);
+
 my $lwp_uc = LWP::UserAgent->new(
                                  show_progress => 1,
                                  agent         => '',
@@ -426,7 +434,7 @@ my $req       = $lwp_uc->get($start_url);
 $req->is_success || die $req->status_line;
 
 my $content = $req->decoded_content;
-my $tasks = extract_tasks($content, $lang);
+my $tasks   = extract_tasks($content, $lang);
 
 foreach my $task (@{$tasks}) {
 
@@ -438,7 +446,7 @@ foreach my $task (@{$tasks}) {
 
     if ($req->is_success) {
 
-        my $content = $req->decoded_content;
+        my $content   = $req->decoded_content;
         my $lang_data = extract_lang($content, $lang) // do { $lwp->uncache; next };
 
         my $header   = "[1]: $url\n\n" . "# [$title][1]\n\n";
