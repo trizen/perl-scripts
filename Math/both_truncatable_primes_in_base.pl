@@ -9,8 +9,8 @@
 # Maximum value for each base is given in the following OEIS sequence:
 #   https://oeis.org/A323137
 
-# a(17) = 631
-# a(18) = ?
+# a(17)  = 631
+# a(18) >= 202715129
 
 # See also:
 #   https://www.youtube.com/watch?v=azL5ehbw_24
