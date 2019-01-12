@@ -372,6 +372,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Binomial theorem](./Math/binomial_theorem.pl)
     * [Bitstring prime sieve](./Math/bitstring_prime_sieve.pl)
     * [Bitstring prime sieve 2](./Math/bitstring_prime_sieve_2.pl)
+    * [Both truncatable primes in base](./Math/both_truncatable_primes_in_base.pl)
     * [BPSW primality test](./Math/BPSW_primality_test.pl)
     * [BPSW primality test mpz](./Math/BPSW_primality_test_mpz.pl)
     * [Brown numbers](./Math/brown_numbers.pl)
