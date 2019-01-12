@@ -10,7 +10,7 @@
 #   https://oeis.org/A323137
 
 # a(17) = 631
-# a(18) = ?  -- may be quite large
+# a(18) = ?
 
 # See also:
 #   https://www.youtube.com/watch?v=azL5ehbw_24
