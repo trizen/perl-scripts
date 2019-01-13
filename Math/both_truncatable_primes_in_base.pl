@@ -23,6 +23,8 @@
 # Related sequences:
 #  https://oeis.org/A076586 - Total number of right truncatable primes in base n.
 #  https://oeis.org/A076623 - Total number of left truncatable primes (without zeros) in base n.
+#  https://oeis.org/A323390 - Total number of primes that are both left-truncatable and right-truncatable in base n.
+#  https://oeis.org/A323396 - Irregular array read by rows, where T(n, k) is the k-th prime that is both left-truncatable and right-truncatable in base n.
 
 use 5.010;
 use strict;
@@ -34,8 +36,7 @@ use Math::Prime::Util::GMP qw(vecsum is_prob_prime);
 
 sub digits2num {
     my ($arr, $base) = @_;
-    my $size = scalar(@$arr);
-    vecsum(map { Math::GMPz->new($base)**($size - $_ - 1) * $arr->[$_] } 0 .. $#$arr);
+    vecsum(map { Math::GMPz->new($base)**$_ * $arr->[$_] } 0 .. $#$arr);
 }
 
 sub right_truncatable_primes {
@@ -44,7 +45,7 @@ sub right_truncatable_primes {
     my @seq = ($p);
 
     foreach my $n (1 .. $base - 1) {
-        my @next = (@$p, $n);
+        my @next = ($n, @$p);
         if (is_prob_prime(digits2num(\@next, $base))) {
             push @seq, right_truncatable_primes(\@next, $base);
         }
@@ -56,7 +57,7 @@ sub right_truncatable_primes {
 sub is_left_truncatable {
     my ($n, $base) = @_;
 
-    for (my @arr = @$n ; @arr > 0 ; shift(@arr)) {
+    for (my @arr = @$n ; @arr > 0 ; pop(@arr)) {
         is_prob_prime(digits2num(\@arr, $base)) || return 0;
     }
 
