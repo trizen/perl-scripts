@@ -8,7 +8,7 @@
 
 # Optimization:
 #   there are far fewer right-truncatable primes than are left-truncatable primes,
-#   so we can generated only the RTPs and then check which ones are also LTPs.
+#   so we can generate only the RTPs and then check which ones are also LTPs.
 
 # Maximum value for each base is given in the following OEIS sequence:
 #   https://oeis.org/A323137
@@ -16,6 +16,10 @@
 # See also:
 #   https://www.youtube.com/watch?v=azL5ehbw_24
 #   https://en.wikipedia.org/wiki/Truncatable_prime
+
+# Related sequences:
+#  https://oeis.org/A076586 - Total number of right truncatable primes in base n.
+#  https://oeis.org/A076623 - Total number of left truncatable primes (without zeros) in base n.
 
 # TODO: extend the program to bases > 36
 
