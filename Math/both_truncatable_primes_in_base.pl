@@ -31,24 +31,40 @@ use strict;
 use warnings;
 
 use Math::GMPz;
-use ntheory qw(primes vecmax);
-use Math::Prime::Util::GMP qw(vecsum is_prob_prime);
+use ntheory qw(primes is_prob_prime vecmax);
 
-sub digits2num {
-    my ($arr, $base) = @_;
-
+{
     my $t   = Math::GMPz::Rmpz_init_set_ui(1);
     my $sum = Math::GMPz::Rmpz_init_set_ui(0);
 
-    foreach my $d (@$arr) {
-        Math::GMPz::Rmpz_addmul_ui($sum, $t, $d);
-        Math::GMPz::Rmpz_mul_ui($t, $t, $base);
-    }
+    sub digits2num {
+        my ($arr, $base) = @_;
 
-    $sum;
+        Math::GMPz::Rmpz_set_ui($t,   1);
+        Math::GMPz::Rmpz_set_ui($sum, 0);
+
+        foreach my $d (@$arr) {
+            Math::GMPz::Rmpz_addmul_ui($sum, $t, $d);
+            Math::GMPz::Rmpz_mul_ui($t, $t, $base);
+        }
+
+        Math::GMPz::Rmpz_get_str($sum, 10);
+    }
 }
 
-sub right_truncatable_primes {
+sub is_left_truncatable {
+    my ($n, $base) = @_;
+
+    my @copy = @$n;
+
+    for (my @arr = shift(@copy) ; @copy > 0 ; push(@arr, shift(@copy))) {
+        is_prob_prime(digits2num(\@arr, $base)) || return 0;
+    }
+
+    return 1;
+}
+
+sub generate_from_prefix {
     my ($p, $base) = @_;
 
     my @seq = ($p);
@@ -56,39 +72,27 @@ sub right_truncatable_primes {
     foreach my $n (1 .. $base - 1) {
         my @next = ($n, @$p);
         if (is_prob_prime(digits2num(\@next, $base))) {
-            push @seq, right_truncatable_primes(\@next, $base);
+            push @seq, grep { is_left_truncatable($_, $base) } generate_from_prefix(\@next, $base);
         }
     }
 
     return @seq;
 }
 
-sub is_left_truncatable {
-    my ($n, $base) = @_;
-
-    for (my @arr = @$n ; @arr > 0 ; pop(@arr)) {
-        is_prob_prime(digits2num(\@arr, $base)) || return 0;
-    }
-
-    return 1;
-}
-
 sub both_truncatable_primes_in_base {
     my ($base) = @_;
 
-    if ($base <= 2) {
-        return;
-    }
+    return if $base <= 2;
 
     my @right;
     foreach my $p (@{primes(2, $base - 1)}) {
-        push @right, right_truncatable_primes([$p], $base);
+        push @right, generate_from_prefix([$p], $base);
     }
 
-    map { digits2num($_, $base) } grep { is_left_truncatable($_, $base) } @right;
+    map { digits2num($_, $base) } @right;
 }
 
-foreach my $base (3 .. 36) {
+foreach my $base (3..36) {
     my @t = both_truncatable_primes_in_base($base);
     printf("There are %3d both-truncatable primes in base %2d where largest is %s\n", scalar(@t), $base, vecmax(@t));
 }
@@ -126,3 +130,24 @@ There are  15 both-truncatable primes in base 31 where largest is 2203
 There are  89 both-truncatable primes in base 32 where largest is 1043557
 There are  27 both-truncatable primes in base 33 where largest is 2939
 There are  74 both-truncatable primes in base 34 where largest is 42741029
+There are  20 both-truncatable primes in base 35 where largest is 2767
+There are 241 both-truncatable primes in base 36 where largest is 50764713107
+There are  18 both-truncatable primes in base 37 where largest is 853
+There are 106 both-truncatable primes in base 38 where largest is 65467229
+There are  25 both-truncatable primes in base 39 where largest is 4409
+There are 134 both-truncatable primes in base 40 where largest is 8524002457
+There are  15 both-truncatable primes in base 41 where largest is 113
+There are 450 both-truncatable primes in base 42 where largest is 1272571820725769
+There are  23 both-truncatable primes in base 43 where largest is 4861
+There are 144 both-truncatable primes in base 44 where largest is 3215447359
+There are  33 both-truncatable primes in base 45 where largest is 5897
+There are 131 both-truncatable primes in base 46 where largest is 8542971469
+There are  24 both-truncatable primes in base 47 where largest is 1741
+There are 491 both-truncatable primes in base 48 where largest is 531866995189
+There are  27 both-truncatable primes in base 49 where largest is 6421
+There are 235 both-truncatable primes in base 50 where largest is 297897697
+There are  29 both-truncatable primes in base 51 where largest is 2399
+There are 187 both-truncatable primes in base 52 where largest is 2276097403
+There are  23 both-truncatable primes in base 53 where largest is 2281
+There are 575 both-truncatable primes in base 54 where largest is 586812834217
+There are  30 both-truncatable primes in base 55 where largest is 7537
