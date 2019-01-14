@@ -36,7 +36,16 @@ use Math::Prime::Util::GMP qw(vecsum is_prob_prime);
 
 sub digits2num {
     my ($arr, $base) = @_;
-    vecsum(map { Math::GMPz->new($base)**$_ * $arr->[$_] } 0 .. $#$arr);
+
+    my $t   = Math::GMPz::Rmpz_init_set_ui(1);
+    my $sum = Math::GMPz::Rmpz_init_set_ui(0);
+
+    foreach my $d (@$arr) {
+        Math::GMPz::Rmpz_addmul_ui($sum, $t, $d);
+        Math::GMPz::Rmpz_mul_ui($t, $t, $base);
+    }
+
+    $sum;
 }
 
 sub right_truncatable_primes {
