@@ -84,12 +84,12 @@ sub both_truncatable_primes_in_base {
 
     return if $base <= 2;
 
-    my @right;
+    my @truncatable;
     foreach my $p (@{primes(2, $base - 1)}) {
-        push @right, generate_from_prefix([$p], $base);
+        push @truncatable, generate_from_prefix([$p], $base);
     }
 
-    map { digits2num($_, $base) } @right;
+    map { digits2num($_, $base) } @truncatable;
 }
 
 foreach my $base (3..36) {
