@@ -590,6 +590,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Prime factors of binomial coefficients](./Math/prime_factors_of_binomial_coefficients.pl)
     * [Prime factors of binomial product](./Math/prime_factors_of_binomial_product.pl)
     * [Prime factors of factorial](./Math/prime_factors_of_factorial.pl)
+    * [Prime factors of superfactorial and hyperfactorial](./Math/prime_factors_of_superfactorial_and_hyperfactorial.pl)
     * [Prime formulas](./Math/prime_formulas.pl)
     * [Prime functions in terms of zeros of zeta](./Math/prime_functions_in_terms_of_zeros_of_zeta.pl)
     * [Prime numbers generator](./Math/prime_numbers_generator.pl)

@@ -22,43 +22,26 @@ use 5.020;
 use strict;
 use warnings;
 
-use ntheory qw(primes);
 use Math::AnyNum qw(prod ipow);
 use experimental qw(signatures);
+use ntheory qw(primes todigits vecsum);
 
-sub superfactorial_power ($n, $p) {
+my @cache;
 
-    my $r = 0;
-
-    foreach my $k (1 .. $n) {
-        while ($k > 0) {
-            $k = int($k / $p);
-            $r += $k;
-        }
-    }
-
-    return $r;
+sub sum_of_digits ($n, $p) {
+    return 0 if ($n <= 0);
+    $cache[$n][$p] //= vecsum(todigits($n - 1, $p)) + sum_of_digits($n - 1, $p);
 }
 
-sub hyperfactorial_power ($n, $p) {
-
-    my $r = 0;
-    my $k = $n;
-
-    while ($k > 0) {
-        $k = int($k / $p);
-        $r += $k;
-    }
-
-    my $t = superfactorial_power($n - 1, $p);
-    $n * $r - $t;
+sub power_of_product_of_binomials ($n, $p) {
+    (2 * sum_of_digits($n, $p) - ($n - 1) * vecsum(todigits($n, $p))) / ($p - 1);
 }
 
 sub sigma_of_binomial_product ($n, $m = 1) {
     prod(
         map {
             my $p = $_;
-            my $k = hyperfactorial_power($n, $p) - superfactorial_power($n, $p);
+            my $k = power_of_product_of_binomials($n, $p);
             (ipow($p, $m * ($k + 1)) - 1) / (ipow($p, $m) - 1);
         } @{primes($n)}
     );

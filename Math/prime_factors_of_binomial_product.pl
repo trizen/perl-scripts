@@ -35,7 +35,7 @@ sub sum_of_digits ($n, $p) {
     $cache[$n][$p] //= vecsum(todigits($n - 1, $p)) + sum_of_digits($n - 1, $p);
 }
 
-sub product_of_binomial_power ($n, $p) {
+sub power_of_product_of_binomials ($n, $p) {
     (2 * sum_of_digits($n, $p) - ($n - 1) * vecsum(todigits($n, $p))) / ($p - 1);
 }
 
@@ -45,7 +45,7 @@ sub prime_factorization_of_binomial_product ($n) {
     forprimes {
 
         my $p = $_;
-        my $k = product_of_binomial_power($n, $p);
+        my $k = power_of_product_of_binomials($n, $p);
 
         push @pp, [$p, $k];
     } $n;
