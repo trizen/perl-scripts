@@ -613,6 +613,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Random carmichael fibonacci pseudoprimes](./Math/random_carmichael_fibonacci_pseudoprimes.pl)
     * [Random integer factorization](./Math/random_integer_factorization.pl)
     * [Random miller-rabin pseudoprimes](./Math/random_miller-rabin_pseudoprimes.pl)
+    * [Rational approximations](./Math/rational_approximations.pl)
     * [Rational continued fractions](./Math/rational_continued_fractions.pl)
     * [Rational prime product](./Math/rational_prime_product.pl)
     * [Rational summation of fractions](./Math/rational_summation_of_fractions.pl)
