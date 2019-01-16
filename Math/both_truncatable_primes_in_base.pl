@@ -159,3 +159,4 @@ There are 1377 both-truncatable primes in base 60 where largest is 2004163080704
 There are   26 both-truncatable primes in base 61 where largest is 2503
 There are  247 both-truncatable primes in base 62 where largest is 2467459748009
 There are   37 both-truncatable primes in base 63 where largest is 10271
+There are  231 both-truncatable primes in base 64 where largest is 1591175082967
