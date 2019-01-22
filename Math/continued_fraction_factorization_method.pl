@@ -102,7 +102,9 @@ sub check_factor ($n, $g, $factors) {
     return $n;
 }
 
-sub cffm ($n) {
+sub cffm ($n, $verbose=0) {
+
+    local $| = 1;
 
     # Check for primes and negative numbers
     return ()   if $n <= 1;
@@ -110,7 +112,7 @@ sub cffm ($n) {
 
     # Check for perfect powers
     if (my $k = is_power($n)) {
-        my @factors = __SUB__->(Math::GMPz->new(rootint($n, $k)));
+        my @factors = __SUB__->(Math::GMPz->new(rootint($n, $k)), $verbose);
         return sort { $a <=> $b } ((@factors) x $k);
     }
 
@@ -123,7 +125,7 @@ sub cffm ($n) {
         my @factors = (2) x $v;
 
         if ($t > 1) {
-            push @factors, __SUB__->($t);
+            push @factors, __SUB__->($t, $verbose);
         }
 
         return @factors;
@@ -171,6 +173,12 @@ sub cffm ($n) {
     my $L  = scalar(@factor_base) + 1;    # maximum number of matrix-rows
     my $FP = Math::GMPz->new(vecprod(@factor_base));
 
+    if ($verbose) {
+        printf("[*] Factoring %s (%s digits)...\n\n", "$n", length("$n"));
+        say "*** Step 1/2: Finding smooth relations ***";
+        say "Target: $L relations.";
+    }
+
     do {
 
         $y = $r * $z - $y;
@@ -187,8 +195,8 @@ sub cffm ($n) {
 
             if ($g > 1 and $g < $n) {
                 return sort { $a <=> $b } (
-                    __SUB__->($g),
-                    __SUB__->($n / $g)
+                    __SUB__->($g, $verbose),
+                    __SUB__->($n / $g, $verbose)
                 );
             }
         }
@@ -201,12 +209,21 @@ sub cffm ($n) {
                 push @A, exponents_signature(@factors);
                 push @Q, [$u, $c];
             }
+
+            if ($verbose) {
+                printf("Progress: %d/%d relations.\r", scalar(@A), $L);
+            }
         }
 
         ($f1, $f2) = ($f2, ($r * $f2 + $f1) % $n);
         ($e1, $e2) = ($e2, ($r * $e2 + $e1) % $n);
 
     } while ($z > 1 and @A <= $L);
+
+    if ($verbose) {
+        say "\n\n*** Step 2/2: Linear Algebra ***";
+        say "Finding perfect squares using Gaussian elimination...";
+    }
 
     if (@A < $L) {
         push @A, map { Math::GMPz::Rmpz_init_set_ui(0) } 1 .. ($L - @A + 1);
@@ -215,6 +232,11 @@ sub cffm ($n) {
     my ($A, $I) = gaussian_elimination(\@A, $L - 1);
 
     my $LR = ((first { $A->[-$_] } 1 .. @$A) // 0) - 1;
+
+    if ($verbose) {
+        say "Found $LR linear dependencies...";
+        say "Finding factors from perfect squares...\n";
+    }
 
     my @factors;
     my $rem = $n;
@@ -234,11 +256,16 @@ sub cffm ($n) {
             my $g = Math::GMPz->new(gcd($X - Math::GMPz->new(sqrtint($Y)), $rem));
 
             if ($g > 1 and $g < $rem) {
+                if ($verbose) {
+                    say "`-> found factor: $g";
+                }
                 $rem = check_factor($rem, $g, \@factors);
                 last SOLUTIONS if $rem == 1;
             }
         }
     }
+
+    say '' if $verbose;
 
     my @final_factors;
 
@@ -247,13 +274,13 @@ sub cffm ($n) {
             push @final_factors, $f;
         }
         else {
-            push @final_factors, __SUB__->($f);
+            push @final_factors, __SUB__->($f, $verbose);
         }
     }
 
     if ($rem != 1) {
         if ($rem != $n) {
-            push @final_factors, __SUB__->($rem);
+            push @final_factors, __SUB__->($rem, $verbose);
         }
         else {
             push @final_factors, $rem;
@@ -272,7 +299,7 @@ my @composites = (
 # Run some tests when no argument is provided
 foreach my $n (@composites) {
 
-    my @f = cffm($n);
+    my @f = cffm($n, @ARGV ? 1 : 0);
 
     say "$n = ", join(' * ', map { is_prime($_) ? $_ : "$_ (composite)" } @f);
     die 'error' if Math::GMPz->new(vecprod(@f)) != $n;
