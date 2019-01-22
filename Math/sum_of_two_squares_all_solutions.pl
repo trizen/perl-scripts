@@ -25,6 +25,7 @@ use warnings;
 
 use experimental qw(signatures);
 
+use Math::GMPz;
 use Set::Product::XS qw(product);
 use ntheory qw(sqrtmod factor_exp chinese);
 
@@ -40,20 +41,20 @@ sub sum_of_two_squares_solutions ($n) {
     foreach my $f (factor_exp($n)) {
         if ($f->[0] % 4 == 3) {    # p = 3 (mod 4)
             $f->[1] % 2 == 0 or return;    # power must be even
-            $prod2 *= $f->[0]**($f->[1] >> 1);
+            $prod2 *= Math::GMPz->new($f->[0])**($f->[1] >> 1);
         }
         elsif ($f->[0] == 2) {             # p = 2
             if ($f->[1] % 2 == 0) {        # power is even
-                $prod2 *= $f->[0]**($f->[1] >> 1);
+                $prod2 *= Math::GMPz->new($f->[0])**($f->[1] >> 1);
             }
             else {                         # power is odd
                 $prod1 *= $f->[0];
-                $prod2 *= $f->[0]**(($f->[1] - 1) >> 1);
+                $prod2 *= Math::GMPz->new($f->[0])**(($f->[1] - 1) >> 1);
                 push @prime_powers, [$f->[0], 1];
             }
         }
         else {                             # p = 1 (mod 4)
-            $prod1 *= $f->[0]**$f->[1];
+            $prod1 *= Math::GMPz->new($f->[0])**$f->[1];
             push @prime_powers, $f;
         }
     }
@@ -63,7 +64,7 @@ sub sum_of_two_squares_solutions ($n) {
 
     my %table;
     foreach my $f (@prime_powers) {
-        my $pp = $f->[0]**$f->[1];
+        my $pp = Math::GMPz->new($f->[0])**$f->[1];
         my $r = sqrtmod($pp - 1, $pp);
         push @{$table{$pp}}, [$r, $pp], [$pp - $r, $pp];
     }
@@ -71,7 +72,7 @@ sub sum_of_two_squares_solutions ($n) {
     my @square_roots;
 
     product {
-        push @square_roots, chinese(@_);
+        push @square_roots, Math::GMPz->new(chinese(@_));
     } values %table;
 
     my @solutions;
@@ -91,8 +92,8 @@ sub sum_of_two_squares_solutions ($n) {
     foreach my $f (@prime_powers) {
         for (my $i = $f->[1] % 2; $i < $f->[1]; $i += 2) {
 
-            my $sq = $f->[0]**(($f->[1] - $i) >> 1);
-            my $pp = $f->[0]**($f->[1] - $i);
+            my $sq = Math::GMPz->new($f->[0])**(($f->[1] - $i) >> 1);
+            my $pp = Math::GMPz->new($f->[0])**($f->[1] - $i);
 
             push @solutions, map {
                 [map { $sq * $prod2 * $_ } @$_]
@@ -108,7 +109,9 @@ sub sum_of_two_squares_solutions ($n) {
     };
 }
 
-foreach my $n (1 .. 1e5) {
+my @nums = (@ARGV ? (map { Math::GMPz->new($_) } @ARGV) : (1..10000));
+
+foreach my $n (@nums) {
     (my @solutions = sum_of_two_squares_solutions($n)) || next;
 
     say "$n = " . join(' = ', map { "$_->[0]^2 + $_->[1]^2" } @solutions);
