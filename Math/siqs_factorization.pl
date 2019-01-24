@@ -94,7 +94,7 @@ sub siqs_factor_base_primes ($n, $nf) {
     my @factor_base;
 
     foreach my $p (@small_primes) {
-        my $t = sqrtmod($n, $p) // next;
+        my $t  = sqrtmod($n, $p) // next;
         my $lp = sprintf('%0.f', log($p) / log(2));
         push @factor_base, FactorBasePrime->new($p, $t, $lp);
 
@@ -797,7 +797,7 @@ sub pollard_brent_find_factor ($n, $max_iter) {
     if ($g == $n) {
         for (; ;) {
             $ys = pollard_brent_f($c, $n, $ys);
-            $g = gcd($x - $ys, $n);
+            $g  = gcd($x - $ys, $n);
 
             if ($g ne '1') {
                 $g = Math::GMPz->new($g);
@@ -860,7 +860,7 @@ sub lucas_factorization ($n, $d) {
         }
     }
 
-    my $s = Math::GMPz::Rmpz_scan1($d, 0);
+    my $s  = Math::GMPz::Rmpz_scan1($d, 0);
     my $U1 = Math::GMPz::Rmpz_init_set_ui(1);
 
     my ($V1, $V2) = (Math::GMPz::Rmpz_init_set_ui(2), Math::GMPz::Rmpz_init_set_ui(1));
@@ -1141,11 +1141,13 @@ sub store_factor ($rem, $f, $factors) {
         else {
 
             # Use SIQS to factorize f
-            my @factors = find_prime_factors($f);
+            find_prime_factors($f, $factors);
 
-            foreach my $p (@factors) {
-                $$rem = check_factor($$rem, $p, $factors);
-                last if $$rem == 1;
+            foreach my $p (@$factors) {
+                if ($$rem % $p == 0) {
+                    $$rem = check_factor($$rem, $p, $factors);
+                    last if $$rem == 1;
+                }
             }
         }
     }
@@ -1182,7 +1184,7 @@ sub find_small_factors ($rem, $factors) {
         if (defined($f)) {
             my $exp = 1;
 
-            for (my $t = $f; $t < $rem; ++$exp) {
+            for (my $t = $f ; $t < $rem ; ++$exp) {
                 $t *= $f;
             }
 
@@ -1277,7 +1279,7 @@ sub check_perfect_power ($n) {
     return undef;
 }
 
-sub find_prime_factors($n) {
+sub find_prime_factors ($n, $factors) {
 
     # Return one or more prime factors of the given number n. Assume
     # that n is not a prime and does not have very small factors, and that
@@ -1300,15 +1302,12 @@ sub find_prime_factors($n) {
         @factors{@sf} = @sf;
     }
 
-    my @prime_factors;
     foreach my $f (values %factors) {
-        push @prime_factors, find_all_prime_factors($f);
+        find_all_prime_factors($f, $factors);
     }
-
-    return @prime_factors;
 }
 
-sub find_all_prime_factors($n) {
+sub find_all_prime_factors ($n, $factors) {
 
     # Return all prime factors of the given number n. Assume that n
     # does not have very small factors and that the global small_primes
@@ -1319,28 +1318,28 @@ sub find_all_prime_factors($n) {
     }
 
     my $rem = $n;
-    my @factors;
 
     while ($rem > 1) {
 
         if (is_prime($rem)) {
-            push @factors, $rem;
+            push @$factors, $rem;
             last;
         }
 
-        foreach my $f (find_prime_factors($rem)) {
+        my @new_factors;
+        find_prime_factors($rem, \@new_factors);
+
+        foreach my $f (@new_factors) {
 
             $rem != $f     or die 'error';
             $rem % $f == 0 or die 'error';
             is_prime($f)   or die 'error';
 
-            $rem = check_factor($rem, $f, \@factors);
+            $rem = check_factor($rem, $f, $factors);
 
             last if ($rem == 1);
         }
     }
-
-    return @factors;
 }
 
 sub factorize($n) {
@@ -1376,7 +1375,7 @@ sub factorize($n) {
         }
 
         if ($rem > 1) {
-            push @$factors, find_all_prime_factors($rem);
+            find_all_prime_factors($rem, $factors);
         }
     }
 
