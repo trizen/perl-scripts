@@ -720,6 +720,8 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Regexp to strings](./Regex/regexp_to_strings.pl)
 * Socket
     * [Chat server](./Socket/chat_server.pl)
+* Sort
+    * [Binsertion sorting algorithm](./Sort/binsertion_sorting_algorithm.pl)
 * Subtitle
     * [Srt-delay](./Subtitle/srt-delay)
     * [Srt assembler](./Subtitle/srt_assembler.pl)
