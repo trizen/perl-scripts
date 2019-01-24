@@ -50,9 +50,7 @@ sub fibonacci_matrix($k) {
     Math::MatrixLUP->build(
         $k, $k,
         sub ($i, $j) {
-                ($i == $k - 1) ? 1
-              : ($i == $j - 1) ? 1
-              :                  0;
+            (($i == $k - 1) || ($i == $j - 1)) ? 1 : 0;
         }
     );
 }
