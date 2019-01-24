@@ -288,9 +288,10 @@ sub siqs_trial_divide ($n, $factor_base_info) {
 
     my $factor_prod = $factor_base_info->{prod};
 
-    my $g = Math::GMPz::Rmpz_init();
-    my $t = Math::GMPz::Rmpz_init_set($n);
+    state $g = Math::GMPz::Rmpz_init_nobless();
+    state $t = Math::GMPz::Rmpz_init_nobless();
 
+    Math::GMPz::Rmpz_set($t, $n);
     Math::GMPz::Rmpz_gcd($g, $t, $factor_prod);
 
     while (Math::GMPz::Rmpz_cmp_ui($g, 1) > 0) {
