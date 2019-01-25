@@ -572,6 +572,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Pell factorization anynum](./Math/pell_factorization_anynum.pl)
     * [Perfect numbers](./Math/perfect_numbers.pl)
     * [Period length of square roots](./Math/period_length_of_square_roots.pl)
+    * [Period of continued fraction for square roots](./Math/period_of_continued_fraction_for_square_roots.pl)
     * [Pi from infinity](./Math/pi_from_infinity.pl)
     * [Pisano periods](./Math/pisano_periods.pl)
     * [Pisano periods efficient algorithm](./Math/pisano_periods_efficient_algorithm.pl)

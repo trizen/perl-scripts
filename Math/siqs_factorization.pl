@@ -282,7 +282,7 @@ sub siqs_sieve ($factor_base, $m) {
 
 sub siqs_trial_divide ($n, $factor_base_info) {
 
-    # Determine whether the given number a can be fully factorized into
+    # Determine whether the given number can be fully factorized into
     # primes from the factors base. If so, return the indices of the
     # factors from the factor base. If not, return undef.
 
