@@ -5,33 +5,21 @@
 # License: GPLv3
 # https://github.com/trizen
 
-# Compute the period length of the continued fraction for square root of a given number.
-
 # Algorithm from:
 #   http://web.math.princeton.edu/mathlab/jr02fall/Periodicity/mariusjp.pdf
 
-# OEIS sequences:
-#   https://oeis.org/A003285 -- Period of continued fraction for square root of n (or 0 if n is a square).
-#   https://oeis.org/A059927 -- Period length of the continued fraction for sqrt(2^(2n+1)).
-#   https://oeis.org/A064932 -- Period length of the continued fraction for sqrt(3^(2n+1)).
-#   https://oeis.org/A067280 -- Terms in continued fraction for sqrt(n), excl. 2nd and higher periods.
-
 # See also:
+#   https://oeis.org/A003285
+#   https://oeis.org/A067280
+#   https://projecteuler.net/problem=64
 #   https://en.wikipedia.org/wiki/Continued_fraction
 #   http://mathworld.wolfram.com/PeriodicContinuedFraction.html
-
-# This program was used in computing the a(15)-a(19) terms of the OEIS sequence A064932.
-#   A064932(15) = 15924930
-#   A064932(16) = 47779238
-#   A064932(17) = 143322850
-#   A064932(18) = 429998586
-#   A064932(19) = 1289970842
 
 use 5.010;
 use strict;
 use warnings;
 
-use ntheory qw(is_square sqrtint powint divint);
+use ntheory qw(is_square sqrtint);
 
 sub period_length {
     my ($n) = @_;
@@ -45,30 +33,36 @@ sub period_length {
     my $period = 0;
 
     do {
-        $y = divint(($x + $y),      $z) * $z - $y;
-        $z = divint(($n - $y * $y), $z);
+        $y = int(($x + $y) / $z) * $z - $y;
+        $z = int(($n - $y * $y) / $z);
         ++$period;
     } until ($z == 1);
 
     return $period;
 }
 
-for my $n (1 .. 14) {
-    print "A064932($n) = ", period_length(powint(3, 2 * $n + 1)), "\n";
+for my $i (1 .. 20) {
+    say "P($i) = ", period_length($i);
 }
 
 __END__
-A064932(1) = 2
-A064932(2) = 10
-A064932(3) = 30
-A064932(4) = 98
-A064932(5) = 270
-A064932(6) = 818
-A064932(7) = 2382
-A064932(8) = 7282
-A064932(9) = 21818
-A064932(10) = 65650
-A064932(11) = 196406
-A064932(12) = 589982
-A064932(13) = 1768938
-A064932(14) = 5309294
+P(1) = 0
+P(2) = 1
+P(3) = 2
+P(4) = 0
+P(5) = 1
+P(6) = 2
+P(7) = 4
+P(8) = 2
+P(9) = 0
+P(10) = 1
+P(11) = 2
+P(12) = 2
+P(13) = 5
+P(14) = 4
+P(15) = 2
+P(16) = 0
+P(17) = 1
+P(18) = 2
+P(19) = 6
+P(20) = 2
