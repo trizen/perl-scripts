@@ -409,6 +409,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [E primorial](./Math/e_primorial.pl)
     * [Ecm factorization method](./Math/ecm_factorization_method.pl)
     * [Elliptic-curve factorization method](./Math/elliptic-curve_factorization_method.pl)
+    * [Equally spaced squares solutions](./Math/equally_spaced_squares_solutions.pl)
     * [Ethiopian multiplication](./Math/ethiopian_multiplication.pl)
     * [Ethiopian multiplication binary](./Math/ethiopian_multiplication_binary.pl)
     * [Extended Chernick Carmichael numbers](./Math/extended_Chernick_Carmichael_numbers.pl)
