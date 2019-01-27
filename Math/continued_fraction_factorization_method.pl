@@ -22,15 +22,9 @@ use experimental qw(signatures);
 use Math::GMPz qw();
 use List::Util qw(first);
 use ntheory qw(is_prime factor_exp forprimes);
+use Math::Prime::Util::GMP qw(is_power vecprod sqrtint rootint gcd urandomb);
 
-use Math::Prime::Util::GMP qw(
-    is_square is_power vecprod
-    sqrtint rootint gcd urandomb
-  );
-
-use constant {
-    ONE => Math::GMPz::Rmpz_init_set_ui(1),
-};
+use constant {ONE => Math::GMPz::Rmpz_init_set_ui(1)};
 
 sub gaussian_elimination ($rows, $n) {
 
@@ -72,9 +66,10 @@ sub gaussian_elimination ($rows, $n) {
 
 sub is_smooth_over_prod ($n, $k) {
 
-    my $g = Math::GMPz::Rmpz_init();
-    my $t = Math::GMPz::Rmpz_init_set($n);
+    state $g = Math::GMPz::Rmpz_init_nobless();
+    state $t = Math::GMPz::Rmpz_init_nobless();
 
+    Math::GMPz::Rmpz_set($t, $n);
     Math::GMPz::Rmpz_gcd($g, $t, $k);
 
     while (Math::GMPz::Rmpz_cmp_ui($g, 1) > 0) {
@@ -102,7 +97,7 @@ sub check_factor ($n, $g, $factors) {
     return $n;
 }
 
-sub cffm ($n, $verbose=0) {
+sub cffm ($n, $verbose = 0) {
 
     local $| = 1;
 
@@ -131,15 +126,24 @@ sub cffm ($n, $verbose=0) {
         return @factors;
     }
 
-    my $x = Math::GMPz->new(sqrtint($n));
-    my $y = $x;
-    my $z = 1;
+    my $x = Math::GMPz::Rmpz_init();
+    my $y = Math::GMPz::Rmpz_init();
+    my $z = Math::GMPz::Rmpz_init_set_ui(1);
 
-    my $w = $x + $x;
-    my $r = $w;
+    my $w = Math::GMPz::Rmpz_init();
+    my $r = Math::GMPz::Rmpz_init();
 
-    my ($e1, $e2) = (1, 0);
-    my ($f1, $f2) = (0, 1);
+    Math::GMPz::Rmpz_sqrt($x, $n);
+    Math::GMPz::Rmpz_set($y, $x);
+
+    Math::GMPz::Rmpz_add($w, $x, $x);
+    Math::GMPz::Rmpz_set($r, $w);
+
+    my $e1 = Math::GMPz::Rmpz_init_set_ui(1);
+    my $e2 = Math::GMPz::Rmpz_init_set_ui(0);
+
+    my $f1 = Math::GMPz::Rmpz_init_set_ui(0);
+    my $f2 = Math::GMPz::Rmpz_init_set_ui(1);
 
     my (@A, @Q);
 
@@ -170,7 +174,7 @@ sub cffm ($n, $verbose=0) {
         return $sig;
     }
 
-    my $L  = scalar(@factor_base) + 1;    # maximum number of matrix-rows
+    my $L  = scalar(@factor_base) + 1;                 # maximum number of matrix-rows
     my $FP = Math::GMPz->new(vecprod(@factor_base));
 
     if ($verbose) {
@@ -179,19 +183,41 @@ sub cffm ($n, $verbose=0) {
         say "Target: $L relations.";
     }
 
+    my $t = Math::GMPz::Rmpz_init();
+    my $u = Math::GMPz::Rmpz_init();
+    my $v = Math::GMPz::Rmpz_init();
+
     do {
 
-        $y = $r * $z - $y;
-        $z = ($n - $y * $y) / $z;
-        $r = ($x + $y) / $z;
+        # y = r*z - y
+        Math::GMPz::Rmpz_mul($t, $r, $z);
+        Math::GMPz::Rmpz_sub($y, $t, $y);
 
-        my $u = ($x * $f2 + $e2) % $n;
-        my $v = ($u * $u) % $n;
-        my $c = ($v > $w ? $n - $v : $v);
+        # z = (n - y*y) / z
+        Math::GMPz::Rmpz_mul($t, $y, $y);
+        Math::GMPz::Rmpz_sub($t, $n, $t);
+        Math::GMPz::Rmpz_div($z, $t, $z);
+
+        # r = (x + y) / z
+        Math::GMPz::Rmpz_add($t, $x, $y);
+        Math::GMPz::Rmpz_div($r, $t, $z);
+
+        # u = (x * f2 + e2) % n
+        Math::GMPz::Rmpz_mul($u, $x, $f2);
+        Math::GMPz::Rmpz_mod($u, $u, $n);
+        Math::GMPz::Rmpz_add($u, $u, $e2);
+
+        # v = (u*u) % n
+        Math::GMPz::Rmpz_powm_ui($v, $u, 2, $n);
+
+        # v = n-v if v > w
+        if (Math::GMPz::Rmpz_cmp($v, $w) > 0) {
+            Math::GMPz::Rmpz_sub($v, $n, $v);
+        }
 
 #<<<
-        if (is_square($c)) {
-            my $g = Math::GMPz->new(gcd($u - Math::GMPz->new(sqrtint($c)), $n));
+        if (Math::GMPz::Rmpz_perfect_square_p($v)) {
+            my $g = Math::GMPz->new(gcd($u - Math::GMPz->new(sqrtint($v)), $n));
 
             if ($g > 1 and $g < $n) {
                 return sort { $a <=> $b } (
@@ -202,12 +228,12 @@ sub cffm ($n, $verbose=0) {
         }
 #>>>
 
-        if (is_smooth_over_prod($c, $FP)) {
-            my @factors = factor_exp($c);
+        if (is_smooth_over_prod($v, $FP)) {
+            my @factors = factor_exp($v);
 
             if (@factors) {
                 push @A, exponents_signature(@factors);
-                push @Q, [$u, $c];
+                push @Q, [map { Math::GMPz::Rmpz_init_set($_) } ($u, $v)];
             }
 
             if ($verbose) {
@@ -215,10 +241,16 @@ sub cffm ($n, $verbose=0) {
             }
         }
 
-        ($f1, $f2) = ($f2, ($r * $f2 + $f1) % $n);
-        ($e1, $e2) = ($e2, ($r * $e2 + $e1) % $n);
+        Math::GMPz::Rmpz_addmul($f1, $f2, $r);    # f1 += f2 * r
+        Math::GMPz::Rmpz_addmul($e1, $e2, $r);    # e1 += e2 * r
 
-    } while ($z > 1 and @A <= $L);
+        Math::GMPz::Rmpz_mod($e1, $e1, $n);
+        Math::GMPz::Rmpz_mod($f1, $f1, $n);
+
+        ($f1, $f2) = ($f2, $f1);
+        ($e1, $e2) = ($e2, $e1);
+
+    } while (Math::GMPz::Rmpz_cmp_ui($z, 1) > 0 and @A < $L);
 
     if ($verbose) {
         say "\n\n*** Step 2/2: Linear Algebra ***";
@@ -293,7 +325,7 @@ sub cffm ($n, $verbose=0) {
 my @composites = (
     @ARGV ? (map { Math::GMPz->new($_) } @ARGV) : do {
         map { Math::GMPz->new(urandomb($_)) + 2 } 2 .. 60;
-      }
+    }
 );
 
 # Run some tests when no argument is provided
