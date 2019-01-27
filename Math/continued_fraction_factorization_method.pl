@@ -254,7 +254,7 @@ sub cffm ($n, $verbose = 0) {
 
     if ($verbose) {
         say "\n\n*** Step 2/2: Linear Algebra ***";
-        say "Finding perfect squares using Gaussian elimination...";
+        say "Performing Gaussian elimination...";
     }
 
     if (@A < $L) {
