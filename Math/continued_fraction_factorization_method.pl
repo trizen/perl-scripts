@@ -21,16 +21,20 @@ use experimental qw(signatures);
 
 use Math::GMPz qw();
 use List::Util qw(first);
-use ntheory qw(is_prime factor_exp forprimes);
+use ntheory qw(is_prime factor_exp forprimes next_prime);
 use Math::Prime::Util::GMP qw(is_power vecprod sqrtint rootint gcd urandomb);
 
-use constant {ONE => Math::GMPz::Rmpz_init_set_ui(1)};
+use constant {
+              USE_B_SMOOTH_METHOD => 0,    # 1 to use primes in factor-base up to B=floor(exp(sqrt(log(n) * log(log(n))) / 2))
+             };
 
 sub gaussian_elimination ($rows, $n) {
 
-    my @A = @$rows;
-    my $m = $#A;
-    my @I = map { ONE << $_ } 0 .. $m;
+    my @A   = @$rows;
+    my $m   = $#A;
+    my $ONE = Math::GMPz::Rmpz_init_set_ui(1);
+
+    my @I = map { $ONE << $_ } 0 .. $m;
 
     my $nrow = -1;
     my $mcol = $m < $n ? $m : $n;
@@ -147,17 +151,26 @@ sub cffm ($n, $verbose = 0) {
 
     my (@A, @Q);
 
-    my $B = int(exp(sqrt(log("$n") * log(log("$n"))) / 2));    # B-smooth limit
+    my $B  = int(exp(sqrt(log("$n") * log(log("$n"))) / 2));                      # B-smooth limit
+    my $nf = int(exp(sqrt(log("$n") * log(log("$n"))))**(sqrt(2) / 4) / 1.25);    # number of primes in factor-base
 
     my @factor_base;
 
-#<<<
-    forprimes {
-        if ($_ <= 97 or Math::GMPz::Rmpz_kronecker_ui($n, $_) == 1) {
-            push @factor_base, $_;
+    if (USE_B_SMOOTH_METHOD) {
+        forprimes {
+            if ($_ <= 97 or Math::GMPz::Rmpz_kronecker_ui($n, $_) == 1) {
+                push @factor_base, $_;
+            }
         }
-    } $B;
-#>>>
+        $B;
+    }
+    else {
+        for (my $p = 2 ; @factor_base < $nf ; $p = next_prime($p)) {
+            if ($p <= 97 or Math::GMPz::Rmpz_kronecker_ui($n, $p) == 1) {
+                push @factor_base, $p;
+            }
+        }
+    }
 
     my %factor_index;
     @factor_index{@factor_base} = (0 .. $#factor_base);
@@ -180,7 +193,7 @@ sub cffm ($n, $verbose = 0) {
     if ($verbose) {
         printf("[*] Factoring %s (%s digits)...\n\n", "$n", length("$n"));
         say "*** Step 1/2: Finding smooth relations ***";
-        say "Target: $L relations.";
+        printf("Target: %s relations, with B = %s\n", $L, $factor_base[-1]);
     }
 
     my $t = Math::GMPz::Rmpz_init();
@@ -324,7 +337,7 @@ sub cffm ($n, $verbose = 0) {
 
 my @composites = (
     @ARGV ? (map { Math::GMPz->new($_) } @ARGV) : do {
-        map { Math::GMPz->new(urandomb($_)) + 2 } 2 .. 60;
+        map { Math::GMPz->new(urandomb($_)) + 2 } 2 .. 70;
     }
 );
 
