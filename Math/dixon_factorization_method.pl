@@ -1,14 +1,13 @@
 #!/usr/bin/perl
 
 # Daniel "Trizen" Șuteu
-# Date: 25 October 2018
+# Date: 28 January 2019
 # https://github.com/trizen
 
-# Simple implementation of the continued fraction factorization method (CFRAC),
-# combined with modular arithmetic (variation of the Brillhart-Morrison algorithm).
+# Simple implementation of Dixon's factorization method.
 
 # See also:
-#   https://en.wikipedia.org/wiki/Continued_fraction_factorization
+#   https://en.wikipedia.org/wiki/Dixon%27s_factorization_method
 #   https://trizenx.blogspot.com/2018/10/continued-fraction-factorization-method.html
 
 # Some parts of code inspired by:
@@ -24,10 +23,6 @@ use Math::GMPz qw();
 use List::Util qw(first);
 use ntheory qw(is_prime factor_exp forprimes next_prime);
 use Math::Prime::Util::GMP qw(is_power vecprod sqrtint rootint gcd urandomb);
-
-use constant {
-              USE_B_SMOOTH_METHOD => 0,    # 1 to use primes in factor-base up to B=floor(exp(sqrt(log(n) * log(log(n))) / 2))
-             };
 
 sub gaussian_elimination ($rows, $n) {
 
@@ -102,7 +97,7 @@ sub check_factor ($n, $g, $factors) {
     return $n;
 }
 
-sub cffm ($n, $verbose = 0) {
+sub dixon_factorization ($n, $verbose = 0) {
 
     local $| = 1;
 
@@ -131,39 +126,17 @@ sub cffm ($n, $verbose = 0) {
         return @factors;
     }
 
-    my $x = Math::GMPz::Rmpz_init();
-    my $y = Math::GMPz::Rmpz_init();
-    my $z = Math::GMPz::Rmpz_init_set_ui(1);
-
-    my $w = Math::GMPz::Rmpz_init();
-    my $r = Math::GMPz::Rmpz_init();
-
-    Math::GMPz::Rmpz_sqrt($x, $n);
-    Math::GMPz::Rmpz_set($y, $x);
-
-    Math::GMPz::Rmpz_add($w, $x, $x);
-    Math::GMPz::Rmpz_set($r, $w);
-
-    my $e1 = Math::GMPz::Rmpz_init_set_ui(1);
-    my $e2 = Math::GMPz::Rmpz_init_set_ui(0);
-
-    my $f1 = Math::GMPz::Rmpz_init_set_ui(0);
-    my $f2 = Math::GMPz::Rmpz_init_set_ui(1);
-
-    my (@A, @Q);
-
-    my $B  = int(exp(sqrt(log("$n") * log(log("$n"))) / 2));                      # B-smooth limit
-    my $nf = int(exp(sqrt(log("$n") * log(log("$n"))))**(sqrt(2) / 4) / 1.25);    # number of primes in factor-base
+    my $B  = 8 * int(exp(sqrt(log("$n") * log(log("$n"))) / 2));                              # B-smooth limit
+    my $nf = int(log(log("$n"))) * int(exp(sqrt(log("$n") * log(log("$n"))))**(sqrt(2) / 4)); # number of primes in factor-base
 
     my @factor_base;
 
-    if (USE_B_SMOOTH_METHOD) {
+    if (length("$n") <= 25) {
         forprimes {
             if ($_ <= 97 or Math::GMPz::Rmpz_kronecker_ui($n, $_) == 1) {
                 push @factor_base, $_;
             }
-        }
-        $B;
+        } $B;
     }
     else {
         for (my $p = 2 ; @factor_base < $nf ; $p = next_prime($p)) {
@@ -197,37 +170,20 @@ sub cffm ($n, $verbose = 0) {
         printf("Target: %s relations, with B = %s\n", $L, $factor_base[-1]);
     }
 
-    my $t = Math::GMPz::Rmpz_init();
+    my (@A, @Q);
+
     my $u = Math::GMPz::Rmpz_init();
     my $v = Math::GMPz::Rmpz_init();
 
-    do {
+    Math::GMPz::Rmpz_sqrt($u, $n);
 
-        # y = r*z - y
-        Math::GMPz::Rmpz_mul($t, $r, $z);
-        Math::GMPz::Rmpz_sub($y, $t, $y);
+    while (1) {
 
-        # z = (n - y*y) / z
-        Math::GMPz::Rmpz_mul($t, $y, $y);
-        Math::GMPz::Rmpz_sub($t, $n, $t);
-        Math::GMPz::Rmpz_div($z, $t, $z);
-
-        # r = (x + y) / z
-        Math::GMPz::Rmpz_add($t, $x, $y);
-        Math::GMPz::Rmpz_div($r, $t, $z);
-
-        # u = (x * f2 + e2) % n
-        Math::GMPz::Rmpz_mul($u, $x, $f2);
-        Math::GMPz::Rmpz_mod($u, $u, $n);
-        Math::GMPz::Rmpz_add($u, $u, $e2);
+        # u += 1
+        Math::GMPz::Rmpz_add_ui($u, $u, 1);
 
         # v = (u*u) % n
         Math::GMPz::Rmpz_powm_ui($v, $u, 2, $n);
-
-        # v = n-v if v > w
-        if (Math::GMPz::Rmpz_cmp($v, $w) > 0) {
-            Math::GMPz::Rmpz_sub($v, $n, $v);
-        }
 
 #<<<
         if (Math::GMPz::Rmpz_perfect_square_p($v)) {
@@ -253,21 +209,14 @@ sub cffm ($n, $verbose = 0) {
             if ($verbose) {
                 printf("Progress: %d/%d relations.\r", scalar(@A), $L);
             }
+
+            last if (@A >= $L);
         }
-
-        Math::GMPz::Rmpz_addmul($f1, $f2, $r);    # f1 += f2 * r
-        Math::GMPz::Rmpz_addmul($e1, $e2, $r);    # e1 += e2 * r
-
-        Math::GMPz::Rmpz_mod($e1, $e1, $n);
-        Math::GMPz::Rmpz_mod($f1, $f1, $n);
-
-        ($f1, $f2) = ($f2, $f1);
-        ($e1, $e2) = ($e2, $e1);
-
-    } while (Math::GMPz::Rmpz_cmp_ui($z, 1) > 0 and @A < $L);
+    }
 
     if ($verbose) {
-        say "\n\n*** Step 2/2: Linear Algebra ***";
+        say "This step took ", $u -Math::GMPz->new(sqrtint($n)), " iterations.";
+        say "\n*** Step 2/2: Linear Algebra ***";
         say "Performing Gaussian elimination...";
     }
 
@@ -338,14 +287,14 @@ sub cffm ($n, $verbose = 0) {
 
 my @composites = (
     @ARGV ? (map { Math::GMPz->new($_) } @ARGV) : do {
-        map { Math::GMPz->new(urandomb($_)) + 2 } 2 .. 70;
+        map { Math::GMPz->new(urandomb($_)) + 2 } 2 .. 60;
     }
 );
 
 # Run some tests when no argument is provided
 foreach my $n (@composites) {
 
-    my @f = cffm($n, @ARGV ? 1 : 0);
+    my @f = dixon_factorization($n, @ARGV ? 1 : 0);
 
     say "$n = ", join(' * ', map { is_prime($_) ? $_ : "$_ (composite)" } @f);
     die 'error' if Math::GMPz->new(vecprod(@f)) != $n;

@@ -405,6 +405,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Discrete root](./Math/discrete_root.pl)
     * [Divisors of factorial bellow limit](./Math/divisors_of_factorial_bellow_limit.pl)
     * [Divisors of factorial in range iterator](./Math/divisors_of_factorial_in_range_iterator.pl)
+    * [Dixon factorization method](./Math/dixon_factorization_method.pl)
     * [E from binomial](./Math/e_from_binomial.pl)
     * [E primorial](./Math/e_primorial.pl)
     * [Ecm factorization method](./Math/ecm_factorization_method.pl)
