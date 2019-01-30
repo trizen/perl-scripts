@@ -210,7 +210,7 @@ sub cffm ($n, $verbose = 0) {
         # z = (n - y*y) / z
         Math::GMPz::Rmpz_mul($t, $y, $y);
         Math::GMPz::Rmpz_sub($t, $n, $t);
-        Math::GMPz::Rmpz_div($z, $t, $z);
+        Math::GMPz::Rmpz_divexact($z, $t, $z);
 
         # r = (x + y) / z
         Math::GMPz::Rmpz_add($t, $x, $y);
@@ -264,7 +264,7 @@ sub cffm ($n, $verbose = 0) {
         ($f1, $f2) = ($f2, $f1);
         ($e1, $e2) = ($e2, $e1);
 
-    } while (Math::GMPz::Rmpz_cmp_ui($z, 1) > 0 and @A < $L);
+    } while (Math::GMPz::Rmpz_cmp_ui($z, 1) and @A < $L);
 
     if ($verbose) {
         say "\n\n*** Step 2/2: Linear Algebra ***";
