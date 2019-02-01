@@ -11,12 +11,14 @@ use 5.010;
 use strict;
 use autodie;
 use warnings;
+
 use open IO => ':utf8';
 
 use Text::CSV qw();
 use Text::ASCIITable qw();
-use Encode qw(encode_utf8);
 use Getopt::Std qw(getopts);
+
+binmode(STDOUT, ':utf8');
 
 my %opt = (
            s => 0,
@@ -93,7 +95,7 @@ sub create_ascii_table {
     }
 
     foreach my $i (0 .. $lines - 1) {
-        $table->addRow(map { encode_utf8($_->[$i]) } @{$record}{@{$columns}});
+        $table->addRow(map { $_->[$i] } @{$record}{@{$columns}});
     }
 
     return $table;
