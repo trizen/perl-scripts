@@ -42,7 +42,7 @@ sub difference_of_two_squares_solutions {
     return @solutions;
 }
 
-foreach my $n (1 .. 1e4) {
+foreach my $n (1 .. 1e2) {
     (my @solutions = difference_of_two_squares_solutions($n)) || next;
 
     say "$n = ", join(' = ', map { "$_->[0]^2 - $_->[1]^2" } @solutions);
