@@ -1,98 +1,73 @@
 #!/usr/bin/perl
 
 # Daniel "Trizen" Șuteu
-# Date: 01 April 2018
+# Date: 03 February 2019
 # https://github.com/trizen
 
-# A new integer factorization method, based on continued fraction square root convergents.
-
-# Similar to solving the Pell equation:
-#   x^2 - d*y^2 = 1, where `d` is known.
+# A simple integer factorization method, using square root convergents.
 
 # See also:
-#   https://oeis.org/A003285
 #   https://en.wikipedia.org/wiki/Pell%27s_equation
 
 use 5.020;
 use strict;
 use warnings;
 
+use ntheory qw(random_nbit_prime);
+use Math::AnyNum qw(:overload :all);
 use experimental qw(signatures);
 
-use ntheory qw(random_nbit_prime is_prime);
-use Math::AnyNum qw(irand isqrt is_square valuation gcd round);
-
 sub pell_factorization ($n) {
-
-    # Check for primes and negative numbers
-    return ()   if ($n <= 1);
-    return ($n) if is_prime($n);
-
-    # Check for perfect squares
-    if (is_square($n)) {
-        return sort { $a <=> $b } (
-            (__SUB__->(isqrt($n))) x 2
-        );
-    }
-
-    # Check for divisibility by 2
-    if (!($n & 1)) {
-        my $v = valuation($n, 2);
-        return ((2) x $v, __SUB__->($n >> $v));
-    }
 
     my $x = isqrt($n);
     my $y = $x;
     my $z = 1;
+    my $r = 2 * $x;
+    my $w = $r;
 
-    my $r = $x + $y;
+    return $x if is_square($n);
 
-    my ($e1, $e2) = (1, 0);
-    my ($f1, $f2) = (0, 1);
+    my ($f1, $f2) = (1, $x);
 
     for (; ;) {
 
         $y = $r * $z - $y;
         $z = ($n - $y * $y) / $z;
-        $r = round(($x + $y) / $z);
+        $r = idiv(($x + $y), $z);
 
-        my $a0 = ($x * $f2 + $e2) % $n;
-        my $b0 = ($a0 * $a0) % $n;
+        ($f1, $f2) = ($f2, ($r * $f2  + $f1) % $n);
 
-        if (is_square($b0)) {
-            my $g = gcd($a0 - isqrt($b0), $n);
+        my $u = $f1;
+        my $v = ($u*$u)%$n;
 
+        if ($v > $w) {
+            $v = ($n - $v);
+        }
+
+        if (is_square($v)) {
+            my $g = gcd($u - isqrt($v), $n);
             if ($g > 1 and $g < $n) {
-                return sort { $a <=> $b } (
-                    __SUB__->($g),
-                    __SUB__->($n/$g)
-                );
+                return $g;
             }
         }
 
-        foreach my $t (
-            $e2 + $e2 + $f2 + $x,
-            $e2 + $f2 + $f2,
-            $e2 + $f2 * $x,
-            $e2 + $f2,
-            $e2,
-        ) {
-            my $g = gcd($t, $n);
-
-            if ($g > 1 and $g < $n) {
-                return sort { $a <=> $b } (
-                    __SUB__->($g),
-                    __SUB__->($n/$g)
-                );
-            }
-        }
-
-        ($f1, $f2) = ($f2, ($r * $f2 + $f1) % $n);
-        ($e1, $e2) = ($e2, ($r * $e2 + $e1) % $n);
+        return $n if ($z == 1);
     }
 }
 
 for (1 .. 10) {
     my $n = random_nbit_prime(25) * random_nbit_prime(25);
-    say "PellFactor($n) = ", join(' * ', pell_factorization($n));
+    say "PellFactor($n) = ", pell_factorization($n);
 }
+
+__END__
+PellFactor(607859142082991) = 20432749
+PellFactor(926859728053057) = 33170069
+PellFactor(523709106944971) = 19544953
+PellFactor(379392152082407) = 18361823
+PellFactor(397926699623521) = 22529261
+PellFactor(596176048102421) = 27540133
+PellFactor(556290216898421) = 21828529
+PellFactor(799063586749279) = 27381929
+PellFactor(513015423767879) = 25622173
+PellFactor(964450431874939) = 30653317
