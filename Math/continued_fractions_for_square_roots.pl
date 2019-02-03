@@ -1,12 +1,13 @@
 #!/usr/bin/perl
 
-# Author: Daniel "Trizen" Șuteu
-# License: GPLv3
+# Daniel "Trizen" Șuteu
 # Date: 09 November 2015
-# Website: https://github.com/trizen
+# https://github.com/trizen
 
 # Square roots as continued fractions
-# See: https://en.wikipedia.org/wiki/Continued_fraction#Generalized_continued_fraction_for_square_roots
+
+# See also:
+#   https://en.wikipedia.org/wiki/Continued_fraction#Generalized_continued_fraction_for_square_roots
 
 use 5.010;
 use strict;
