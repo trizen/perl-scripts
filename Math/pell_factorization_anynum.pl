@@ -19,7 +19,7 @@ use warnings;
 
 use experimental qw(signatures);
 
-use ntheory qw(is_prime vecprod vecany);
+use ntheory qw(random_nbit_prime is_prime);
 use Math::AnyNum qw(irand isqrt is_square valuation gcd round);
 
 sub pell_factorization ($n) {
@@ -53,7 +53,7 @@ sub pell_factorization ($n) {
     for (; ;) {
 
         $y = $r * $z - $y;
-        $z = round(($n - $y * $y) / $z);
+        $z = ($n - $y * $y) / $z;
         $r = round(($x + $y) / $z);
 
         my $a0 = ($x * $f2 + $e2) % $n;
@@ -92,13 +92,7 @@ sub pell_factorization ($n) {
     }
 }
 
-foreach my $k (2 .. 48) {
-    my $n = irand(2, 1 << $k);
-
-    my @factors = pell_factorization($n);
-
-    die 'error' if vecprod(@factors) != $n;
-    die 'error' if vecany { !is_prime($_) } @factors;
-
-    say "$n = ", join(' * ', @factors);
+for (1 .. 10) {
+    my $n = random_nbit_prime(25) * random_nbit_prime(25);
+    say "PellFactor($n) = ", join(' * ', pell_factorization($n));
 }

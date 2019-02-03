@@ -574,6 +574,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Pell cfrac factorization](./Math/pell_cfrac_factorization.pl)
     * [Pell factorization](./Math/pell_factorization.pl)
     * [Pell factorization anynum](./Math/pell_factorization_anynum.pl)
+    * [Pell factorization simple](./Math/pell_factorization_simple.pl)
     * [Perfect numbers](./Math/perfect_numbers.pl)
     * [Period of continued fraction for square roots](./Math/period_of_continued_fraction_for_square_roots.pl)
     * [Period of continued fraction for square roots mpz](./Math/period_of_continued_fraction_for_square_roots_mpz.pl)

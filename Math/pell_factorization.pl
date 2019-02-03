@@ -17,13 +17,8 @@ use 5.020;
 use strict;
 use warnings;
 
-use integer;
+use ntheory qw(:all);
 use experimental qw(signatures);
-
-use ntheory qw(
-    is_prime gcd mulmod addmod sqrtint
-    is_square vecprod vecany valuation urandomm
-);
 
 sub pell_factorization ($n) {
 
@@ -56,7 +51,7 @@ sub pell_factorization ($n) {
     for (; ;) {
 
         $y = $r * $z - $y;
-        $z = int(($n - $y * $y) / $z);
+        $z = ($n - $y * $y) / $z;
         $r = int(($x + $y) / $z);
 
         my $a0 = addmod(mulmod($x, $f2, $n), $e2, $n);
@@ -95,13 +90,7 @@ sub pell_factorization ($n) {
     }
 }
 
-foreach my $k (2..62) {
-    my $n = urandomm(1 << $k) + 2;
-
-    my @factors = pell_factorization($n);
-
-    die 'error' if vecprod(@factors) != $n;
-    die 'error' if vecany { !is_prime($_) } @factors;
-
-    say "$n = ", join(' * ', @factors);
+for (1 .. 10) {
+    my $n = random_nbit_prime(25) * random_nbit_prime(25);
+    say "PellFactor($n) = ", join(' * ', pell_factorization($n));
 }
