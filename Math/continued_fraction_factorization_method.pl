@@ -144,11 +144,8 @@ sub cffm ($n, $verbose = 0) {
     Math::GMPz::Rmpz_add($w, $x, $x);
     Math::GMPz::Rmpz_set($r, $w);
 
-    my $e1 = Math::GMPz::Rmpz_init_set_ui(1);
-    my $e2 = Math::GMPz::Rmpz_init_set_ui(0);
-
-    my $f1 = Math::GMPz::Rmpz_init_set_ui(0);
-    my $f2 = Math::GMPz::Rmpz_init_set_ui(1);
+    my $f2 = Math::GMPz::Rmpz_init_set($x);
+    my $f1 = Math::GMPz::Rmpz_init_set_ui(1);
 
     my (@A, @Q);
 
@@ -198,7 +195,6 @@ sub cffm ($n, $verbose = 0) {
     }
 
     my $t = Math::GMPz::Rmpz_init();
-    my $u = Math::GMPz::Rmpz_init();
     my $v = Math::GMPz::Rmpz_init();
 
     do {
@@ -216,13 +212,15 @@ sub cffm ($n, $verbose = 0) {
         Math::GMPz::Rmpz_add($t, $x, $y);
         Math::GMPz::Rmpz_div($r, $t, $z);
 
-        # u = (x * f2 + e2) % n
-        Math::GMPz::Rmpz_mul($u, $x, $f2);
-        Math::GMPz::Rmpz_mod($u, $u, $n);
-        Math::GMPz::Rmpz_add($u, $u, $e2);
+        # f1 = (f1 + r*f2) % n
+        Math::GMPz::Rmpz_addmul($f1, $f2, $r);
+        Math::GMPz::Rmpz_mod($f1, $f1, $n);
 
-        # v = (u*u) % n
-        Math::GMPz::Rmpz_powm_ui($v, $u, 2, $n);
+        # swap f1 with f2
+        ($f1, $f2) = ($f2, $f1);
+
+        # v = (f1^2) % n
+        Math::GMPz::Rmpz_powm_ui($v, $f1, 2, $n);
 
         # v = n-v if v > w
         if (Math::GMPz::Rmpz_cmp($v, $w) > 0) {
@@ -231,7 +229,7 @@ sub cffm ($n, $verbose = 0) {
 
 #<<<
         if (Math::GMPz::Rmpz_perfect_square_p($v)) {
-            my $g = Math::GMPz->new(gcd($u - Math::GMPz->new(sqrtint($v)), $n));
+            my $g = Math::GMPz->new(gcd($f1 - Math::GMPz->new(sqrtint($v)), $n));
 
             if ($g > 1 and $g < $n) {
                 return sort { $a <=> $b } (
@@ -247,22 +245,13 @@ sub cffm ($n, $verbose = 0) {
 
             if (@factors) {
                 push @A, exponents_signature(@factors);
-                push @Q, [map { Math::GMPz::Rmpz_init_set($_) } ($u, $v)];
+                push @Q, [map { Math::GMPz::Rmpz_init_set($_) } ($f1, $v)];
             }
 
             if ($verbose) {
                 printf("Progress: %d/%d relations.\r", scalar(@A), $L);
             }
         }
-
-        Math::GMPz::Rmpz_addmul($f1, $f2, $r);    # f1 += f2 * r
-        Math::GMPz::Rmpz_addmul($e1, $e2, $r);    # e1 += e2 * r
-
-        Math::GMPz::Rmpz_mod($e1, $e1, $n);
-        Math::GMPz::Rmpz_mod($f1, $f1, $n);
-
-        ($f1, $f2) = ($f2, $f1);
-        ($e1, $e2) = ($e2, $e1);
 
     } while (Math::GMPz::Rmpz_cmp_ui($z, 1) and @A < $L);
 
