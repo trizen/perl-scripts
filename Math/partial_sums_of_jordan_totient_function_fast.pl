@@ -6,7 +6,7 @@
 
 # A sublinear algorithm for computing the partial sums of the Jordan totient function.
 
-# The partial sums of the Euler totient function is defined as:
+# The partial sums of the Jordan totient function is defined as:
 #
 #   a_m(n) = Sum_{k=1..n} J_m(k)
 #
