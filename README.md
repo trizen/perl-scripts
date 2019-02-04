@@ -559,6 +559,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Numbers with pow 2 divisors](./Math/numbers_with_pow_2_divisors.pl)
     * [Partial sums of dedekind psi function](./Math/partial_sums_of_dedekind_psi_function.pl)
     * [Partial sums of euler totient function](./Math/partial_sums_of_euler_totient_function.pl)
+    * [Partial sums of euler totient function fast](./Math/partial_sums_of_euler_totient_function_fast.pl)
     * [Partial sums of gcd-sum function](./Math/partial_sums_of_gcd-sum_function.pl)
     * [Partial sums of gcd-sum function fast](./Math/partial_sums_of_gcd-sum_function_fast.pl)
     * [Partial sums of gcd sum function faster](./Math/partial_sums_of_gcd_sum_function_faster.pl)
