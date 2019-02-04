@@ -403,6 +403,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Difference of k powers](./Math/difference_of_k_powers.pl)
     * [Difference of three squares solutions](./Math/difference_of_three_squares_solutions.pl)
     * [Difference of two squares solutions](./Math/difference_of_two_squares_solutions.pl)
+    * [Dirichlet hyperbola method](./Math/dirichlet_hyperbola_method.pl)
     * [Discrete root](./Math/discrete_root.pl)
     * [Divisors of factorial bellow limit](./Math/divisors_of_factorial_bellow_limit.pl)
     * [Divisors of factorial in range iterator](./Math/divisors_of_factorial_in_range_iterator.pl)
