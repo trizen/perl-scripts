@@ -50,7 +50,7 @@ sub partial_sums_of_gcd_sum_function($n) {
     my @mertens_lookup   = (0);
     my @euler_sum_lookup = (0);
 
-    my $lookup_size = rootint($n, 5)**4;
+    my $lookup_size = 2 + rootint($n, 4)**3;
 
     my @moebius   = moebius(0, $lookup_size);
     my @euler_phi = euler_phi(0, $lookup_size);
@@ -60,9 +60,18 @@ sub partial_sums_of_gcd_sum_function($n) {
         $euler_sum_lookup[$i] = $euler_sum_lookup[$i - 1] + $euler_phi[$i];
     }
 
+    my %mertens_cache;
+
     my sub moebius_partial_sum($n) {
-        ($n <= $lookup_size) ? $mertens_lookup[$n] : mertens($n);
+
+        if ($n <= $lookup_size) {
+            return $mertens_lookup[$n];
+        }
+
+        $mertens_cache{$n} //= mertens($n);
     }
+
+    my %euler_phi_sum_cache;
 
     my sub euler_phi_partial_sum($n) {
 
@@ -70,26 +79,28 @@ sub partial_sums_of_gcd_sum_function($n) {
             return $euler_sum_lookup[$n];
         }
 
+        if (exists $euler_phi_sum_cache{$n}) {
+            return $euler_phi_sum_cache{$n};
+        }
+
         my $s = sqrtint($n);
         my $A = 0;
 
         foreach my $k (1 .. $s) {
             my $t = int($n / $k);
-            $A += $k * ($t <= $lookup_size ? $mertens_lookup[$t] : moebius_partial_sum($t)) +
-              ($k <= $lookup_size ? $moebius[$k] : moebius($k)) * (($t * ($t + 1)) >> 1);
+            $A += $k * moebius_partial_sum($t) + $moebius[$k] * (($t * ($t + 1)) >> 1);
         }
 
         my $C = moebius_partial_sum($s) * (($s * ($s + 1)) >> 1);
 
-        return ($A - $C);
+        $euler_phi_sum_cache{$n} = ($A - $C);
     }
 
     my $A = 0;
 
     foreach my $k (1 .. $s) {
         my $t = int($n / $k);
-        $A += $k * ($t <= $lookup_size ? $euler_sum_lookup[$t] : euler_phi_partial_sum($t)) +
-          ($k <= $lookup_size ? $euler_phi[$k] : euler_phi($k)) * (($t * ($t + 1)) >> 1);
+        $A += $k * euler_phi_partial_sum($t) + $euler_phi[$k] * (($t * ($t + 1)) >> 1);
     }
 
     my $C = euler_phi_partial_sum($s) * (($s * ($s + 1)) >> 1);
@@ -97,6 +108,6 @@ sub partial_sums_of_gcd_sum_function($n) {
     return ($A - $C);
 }
 
-foreach my $n (1 .. 7) {    # takes less than 1 second
+foreach my $n (1 .. 8) {    # takes ~3.6 seconds
     say "a(10^$n) = ", partial_sums_of_gcd_sum_function(10**$n);
 }

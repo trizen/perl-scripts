@@ -49,7 +49,7 @@ sub partial_sums_of_gcd_sum_function($n) {
 
     my @euler_sum_lookup = (0);
 
-    my $lookup_size = rootint($n, 5)**4;
+    my $lookup_size = 2 + 2 * rootint($n, 3)**2;
     my @euler_phi   = euler_phi(0, $lookup_size);
 
     foreach my $i (1 .. $lookup_size) {
@@ -89,8 +89,7 @@ sub partial_sums_of_gcd_sum_function($n) {
 
     foreach my $k (1 .. $s) {
         my $t = int($n / $k);
-        $A += $k * ($t <= $lookup_size ? $euler_sum_lookup[$t] : euler_phi_partial_sum($t)) +
-          ($k <= $lookup_size ? $euler_phi[$k] : euler_phi($k)) * (($t * ($t + 1)) >> 1);
+        $A += $k * euler_phi_partial_sum($t) + $euler_phi[$k] * (($t * ($t + 1)) >> 1);
     }
 
     my $T = ($s * ($s + 1)) >> 1;
