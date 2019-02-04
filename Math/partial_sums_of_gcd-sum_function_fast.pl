@@ -37,12 +37,12 @@
 #   https://en.wikipedia.org/wiki/Dirichlet_hyperbola_method
 #   https://trizenx.blogspot.com/2018/11/partial-sums-of-arithmetical-functions.html
 
-use 5.010;
+use 5.020;
 use strict;
 use warnings;
 
 use experimental qw(signatures);
-use ntheory qw(euler_phi mertens moebius sqrtint rootint);
+use ntheory qw(euler_phi moebius sqrtint rootint);
 
 sub partial_sums_of_gcd_sum_function($n) {
     my $s = sqrtint($n);
@@ -62,13 +62,28 @@ sub partial_sums_of_gcd_sum_function($n) {
 
     my %mertens_cache;
 
-    my sub moebius_partial_sum($n) {
+    my sub moebius_partial_sum ($n) {
 
         if ($n <= $lookup_size) {
             return $mertens_lookup[$n];
         }
 
-        $mertens_cache{$n} //= mertens($n);
+        if (exists $mertens_cache{$n}) {
+            return $mertens_cache{$n};
+        }
+
+        my $s = sqrtint($n);
+        my $M = 1;
+
+        foreach my $k (2 .. int($n / ($s + 1))) {
+            $M -= __SUB__->(int($n / $k));
+        }
+
+        foreach my $k (1 .. $s) {
+            $M -= $mertens_lookup[$k] * (int($n / $k) - int($n / ($k + 1)));
+        }
+
+        $mertens_cache{$n} = $M;
     }
 
     my %euler_phi_sum_cache;
@@ -108,6 +123,6 @@ sub partial_sums_of_gcd_sum_function($n) {
     return ($A - $C);
 }
 
-foreach my $n (1 .. 8) {    # takes ~3.6 seconds
+foreach my $n (1 .. 8) {    # takes less than 1 second
     say "a(10^$n) = ", partial_sums_of_gcd_sum_function(10**$n);
 }
