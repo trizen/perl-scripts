@@ -102,6 +102,30 @@ sub check_factor ($n, $g, $factors) {
     return $n;
 }
 
+sub round {
+    my ($n, $z) = @_;
+
+    state $half = do {
+        require Math::GMPq;
+        Math::GMPq->new('1/2');
+    };
+
+    my $sgn = Math::GMPq::Rmpq_sgn($n);
+
+    if ($sgn < 0) {
+        Math::GMPq::Rmpq_neg($n, $n);
+    }
+
+    Math::GMPq::Rmpq_add($n, $n, $half);
+    Math::GMPz::Rmpz_set_q($z, $n);
+
+    if ($sgn < 0) {
+        Math::GMPz::Rmpz_neg($z, $z);
+    }
+
+    $z;
+}
+
 sub cffm ($n, $verbose = 0) {
 
     local $| = 1;
@@ -197,6 +221,9 @@ sub cffm ($n, $verbose = 0) {
     my $t = Math::GMPz::Rmpz_init();
     my $v = Math::GMPz::Rmpz_init();
 
+    #~ require Math::GMPq;
+    #~ my $q = Math::GMPq->new();
+
     do {
 
         # y = r*z - y
@@ -211,6 +238,13 @@ sub cffm ($n, $verbose = 0) {
         # r = (x + y) / z
         Math::GMPz::Rmpz_add($t, $x, $y);
         Math::GMPz::Rmpz_div($r, $t, $z);
+
+        # Alternatively, we can round (x+y)/z to nearest integer
+        #~ Math::GMPz::Rmpz_add($t, $x, $y);
+        #~ Math::GMPq::Rmpq_set_num($q, $t);
+        #~ Math::GMPq::Rmpq_set_den($q, $z);
+        #~ Math::GMPq::Rmpq_canonicalize($q);
+        #~ round($q, $r);
 
         # f1 = (f1 + r*f2) % n
         Math::GMPz::Rmpz_addmul($f1, $f2, $r);
