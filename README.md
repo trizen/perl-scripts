@@ -513,6 +513,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Maximum product of parts bisection](./Math/maximum_product_of_parts_bisection.pl)
     * [Maximum square remainder](./Math/maximum_square_remainder.pl)
     * [Mertens function](./Math/mertens_function.pl)
+    * [Mertens function fast](./Math/mertens_function_fast.pl)
     * [Miller-rabin deterministic primality test](./Math/miller-rabin_deterministic_primality_test.pl)
     * [Miller-rabin deterministic primality test mpz](./Math/miller-rabin_deterministic_primality_test_mpz.pl)
     * [Modular binomial](./Math/modular_binomial.pl)
