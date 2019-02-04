@@ -4,7 +4,7 @@
 # Date: 04 February 2019
 # https://github.com/trizen
 
-# A sublinear time for computing the Mertens function (partial sums of the Möbius function).
+# A sublinear algorithm for computing the Mertens function (partial sums of the Möbius function).
 
 # Defined as:
 #
