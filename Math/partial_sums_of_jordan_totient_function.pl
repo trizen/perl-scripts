@@ -28,10 +28,10 @@
 #  a(10^9) = 277302457878113251222146576
 
 # Asymptotic formula:
-#   n^3 / (3*zeta(3)) ~ Sum_{k=1..n} J_2(k)
+#   Sum_{k=1..n} J_2(k) ~ n^3 / (3*zeta(3))
 
 # In general, for m>=1:
-#   n^(m+1) / ((m+1) * zeta(m+1)) ~ Sum_{k=1..n} J_m(k)
+#   Sum_{k=1..n} J_m(k) ~ n^(m+1) / ((m+1) * zeta(m+1))
 
 # See also:
 #   https://oeis.org/A321879
