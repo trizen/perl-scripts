@@ -50,7 +50,7 @@ sub partial_sums_of_gcd_sum_function($n) {
     my @mertens_lookup   = (0);
     my @euler_sum_lookup = (0);
 
-    my $lookup_size = 2 + rootint($n, 4)**3;
+    my $lookup_size = 2 + 2 * rootint($n, 3)**2;
 
     my @moebius   = moebius(0, $lookup_size);
     my @euler_phi = euler_phi(0, $lookup_size);
