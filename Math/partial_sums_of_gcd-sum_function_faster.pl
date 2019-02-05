@@ -71,18 +71,15 @@ sub partial_sums_of_gcd_sum_function($n) {
         my $s = sqrtint($n);
         my $T = ($n * ($n + 1)) >> 1;
 
-        my $A = 0;
-
-        foreach my $k (2 .. $s) {
-            $A += __SUB__->(int($n / $k));
+        foreach my $k (2 .. int($n / ($s + 1))) {
+            $T -= __SUB__->(int($n / $k));
         }
 
-        my $B = 0;
-        foreach my $k (1 .. int($n / $s) - 1) {
-            $B += (int($n / $k) - int($n / ($k + 1))) * __SUB__->($k);
+        foreach my $k (1 .. $s) {
+            $T -= (int($n / $k) - int($n / ($k + 1))) * __SUB__->($k);
         }
 
-        $seen{$n} = $T - $A - $B;
+        $seen{$n} = $T;
     }
 
     my $A = 0;

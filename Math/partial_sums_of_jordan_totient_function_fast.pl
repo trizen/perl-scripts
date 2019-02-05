@@ -80,17 +80,17 @@ sub partial_sums_of_jordan_totient ($n, $m) {
         my $s = sqrtint($n);
         my $A = ${faulhaber_sum($n, $m)};
 
-        foreach my $k (2 .. $s) {
+        foreach my $k (2 .. int($n / ($s + 1))) {
             $A -= __SUB__->(int($n / $k));
         }
 
-        foreach my $k (1 .. int($n / $s) - 1) {
+        foreach my $k (1 .. $s) {
             $A -= (int($n / $k) - int($n / ($k + 1))) * __SUB__->($k);
         }
 
         $seen{$n} = $A;
 
-      }->($n);
+    }->($n);
 }
 
 foreach my $n (1 .. 8) {    # takes ~1.5 seconds
