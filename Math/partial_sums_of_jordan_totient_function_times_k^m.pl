@@ -4,32 +4,33 @@
 # Date: 07 February 2019
 # https://github.com/trizen
 
-# A sublinear algorithm for computing the partial sums of the Euler totient function times k^m.
+# A sublinear algorithm for computing the partial sums of the Jordan totient function times k^m.
 
-# The partial sums of the Euler totient function is defined as:
+# The partial sums of the Jordan totient function is defined as:
 #
-#   a(n,m) = Sum_{k=1..n} k^m * phi(k)
+#   a(n,j,m) = Sum_{k=1..n} k^m * J_j(k)
 #
-# where phi(k) is the Euler totient function.
+# where J_j(k) is the Jordan totient function.
 
 # Example:
-#    a(10^1, 1) = 217
-#    a(10^2, 1) = 203085
-#    a(10^3, 1) = 202870719
-#    a(10^4, 1) = 202653667159
-#    a(10^5, 1) = 202643891472849
-#    a(10^6, 1) = 202642368741515819
-#    a(10^7, 1) = 202642380629476099463
-#    a(10^8, 1) = 202642367994273571457613
-#    a(10^9, 1) = 202642367530671221417109931
+#   a(10^1, 2, 1) = 2431
+#   a(10^2, 2, 1) = 21128719
+#   a(10^3, 2, 1) = 208327305823
+#   a(10^4, 2, 1) = 2080103011048135
+#   a(10^5, 2, 1) = 20798025097513144783
+#   a(10^6, 2, 1) = 207977166477794042245831
+#   a(10^7, 2, 1) = 2079768770407248541815183631
+#   a(10^8, 2, 1) = 20797684646417657386198683679183
+#   a(10^9, 2, 1) = 207976843496387628847025371255443991
 
 # General asymptotic formula:
 #
-#   Sum_{k=1..n} k^m * phi(k)  ~  F_(m+1)(n) / zeta(2).
+#   Sum_{k=1..n} k^m * J_j(k)  ~  F_(m+j)(n) / zeta(j+1).
 #
 # where F_m(n) are the Faulhaber polynomials.
 
 # OEIS sequences:
+#   https://oeis.org/A321879 -- Partial sums of the Jordan function J_2(k), for 1 <= k <= n.
 #   https://oeis.org/A002088 -- Sum of totient function: a(n) = Sum_{k=1..n} phi(k).
 #   https://oeis.org/A064018 -- Sum of the Euler totients phi for 10^n.
 #   https://oeis.org/A272718 -- Partial sums of gcd-sum sequence A018804.
@@ -37,6 +38,7 @@
 # See also:
 #   https://en.wikipedia.org/wiki/Faulhaber's_formula
 #   https://en.wikipedia.org/wiki/Dirichlet_hyperbola_method
+#   https://en.wikipedia.org/wiki/Jordan%27s_totient_function
 #   https://trizenx.blogspot.com/2018/11/partial-sums-of-arithmetical-functions.html
 
 use 5.020;
@@ -45,18 +47,16 @@ use warnings;
 
 use experimental qw(signatures);
 use Math::AnyNum qw(faulhaber_sum ipow);
-use ntheory qw(euler_phi sqrtint rootint);
+use ntheory qw(jordan_totient sqrtint rootint);
 
-sub partial_sums_of_euler_totient ($n, $m) {
+sub partial_sums_of_jordan_totient ($n, $j, $m) {
     my $s = sqrtint($n);
 
-    my @euler_sum_lookup = (0);
-
+    my @jordan_sum_lookup = (0);
     my $lookup_size = 2 * rootint($n, 3)**2;
-    my @euler_phi   = euler_phi(0, $lookup_size);
 
     foreach my $i (1 .. $lookup_size) {
-        $euler_sum_lookup[$i] = $euler_sum_lookup[$i - 1] + ipow($i, $m) * $euler_phi[$i];
+        $jordan_sum_lookup[$i] = $jordan_sum_lookup[$i - 1] + ipow($i, $m) * jordan_totient($j, $i);
     }
 
     my %seen;
@@ -64,7 +64,7 @@ sub partial_sums_of_euler_totient ($n, $m) {
     sub ($n) {
 
         if ($n <= $lookup_size) {
-            return $euler_sum_lookup[$n];
+            return $jordan_sum_lookup[$n];
         }
 
         if (exists $seen{$n}) {
@@ -72,7 +72,7 @@ sub partial_sums_of_euler_totient ($n, $m) {
         }
 
         my $s = sqrtint($n);
-        my $T = faulhaber_sum($n, $m + 1);
+        my $T = faulhaber_sum($n, $m + $j);
 
         foreach my $k (2 .. int($n / ($s + 1))) {
             $T -= ipow($k, $m) * __SUB__->(int($n / $k));
@@ -87,6 +87,9 @@ sub partial_sums_of_euler_totient ($n, $m) {
     }->($n);
 }
 
-foreach my $n (1 .. 7) {    # takes ~2.8 seconds
-    say "a(10^$n, 1) = ", partial_sums_of_euler_totient(10**$n, 1);
+my $j = 2;
+my $k = 1;
+
+foreach my $n (1 .. 7) {    # takes ~2.9 seconds
+    say "a(10^$n, $j, $k) = ", partial_sums_of_jordan_totient(10**$n, $j, $k);
 }
