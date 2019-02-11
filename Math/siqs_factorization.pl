@@ -47,6 +47,7 @@ use constant {
               POLLARD_RHO_SQRT_ITERATIONS => 25_000,
               FERMAT_ITERATIONS           => 500,
               CFRAC_ITERATIONS            => 15_000,
+              HOLF_ITERATIONS             => 15_000,
               SIQS_TRIAL_DIVISION_EPS     => 25,
               SIQS_MIN_PRIME_POLYNOMIAL   => 400,
               SIQS_MAX_PRIME_POLYNOMIAL   => 4000,
@@ -1078,6 +1079,38 @@ sub fermat_find_factor ($n, $max_iter) {
     return undef;
 }
 
+sub holf_find_factor ($n, $max_iter) {
+
+    # Hart’s One-Line Factoring Algorithm
+
+    my $m = Math::GMPz::Rmpz_init();
+    my $s = Math::GMPz::Rmpz_init();
+
+    foreach my $i (1 .. $max_iter) {
+
+        Math::GMPz::Rmpz_mul_ui($s, $n, $i);
+        Math::GMPz::Rmpz_sqrt($s, $s);
+        Math::GMPz::Rmpz_add_ui($s, $s, 1);
+
+        Math::GMPz::Rmpz_mul($m, $s, $s);
+        Math::GMPz::Rmpz_mod($m, $m, $n);
+
+        if (Math::GMPz::Rmpz_perfect_square_p($m)) {
+
+            Math::GMPz::Rmpz_sqrt($m, $m);
+            Math::GMPz::Rmpz_sub($m, $s, $m);
+            Math::GMPz::Rmpz_gcd($m, $m, $n);
+
+            if (    Math::GMPz::Rmpz_cmp_ui($m, 1) > 0
+                and Math::GMPz::Rmpz_cmp($m, $n) < 0) {
+                return $m;
+            }
+        }
+    }
+
+    return undef;
+}
+
 sub simple_cfrac_find_factor ($n, $max_iter) {
 
     # Simple version of the continued-fraction factorization method.
@@ -1094,7 +1127,7 @@ sub simple_cfrac_find_factor ($n, $max_iter) {
 
     foreach (1 .. $max_iter) {
         $y = $r * $z - $y;
-        $z = ($n - $y * $y) / $z;    # integer division
+        $z = ($n - $y * $y) / $z;
 
         my $u = ($x * $f2 + $e2) % $n;
         my $v = ($u * $u) % $n;
@@ -1196,6 +1229,14 @@ sub find_small_factors ($rem, $factors) {
 
         say "=> Fermat's method...";
         $f = fermat_find_factor($rem, FERMAT_ITERATIONS);
+
+        if (defined($f) and $f < $rem) {
+            store_factor(\$rem, $f, $factors);
+            next;
+        }
+
+        say "=> HOLF method...";
+        $f = holf_find_factor($rem, HOLF_ITERATIONS);
 
         if (defined($f) and $f < $rem) {
             store_factor(\$rem, $f, $factors);
