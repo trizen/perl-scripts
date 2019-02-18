@@ -1088,7 +1088,7 @@ sub holf_find_factor ($n, $max_iter) {
 
     foreach my $i (1 .. $max_iter) {
 
-        Math::GMPz::Rmpz_mul_ui($s, $n, $i);
+        Math::GMPz::Rmpz_mul_ui($s, $n, 4 * $i);
         Math::GMPz::Rmpz_sqrt($s, $s);
         Math::GMPz::Rmpz_add_ui($s, $s, 1);
 
