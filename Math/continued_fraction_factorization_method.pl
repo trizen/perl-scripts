@@ -22,7 +22,7 @@ use experimental qw(signatures);
 
 use Math::GMPz qw();
 use List::Util qw(first);
-use ntheory qw(is_prime factor_exp forprimes next_prime);
+use ntheory qw(is_prime factor_exp forprimes next_prime is_square_free);
 use Math::Prime::Util::GMP qw(is_power vecprod sqrtint rootint gcd urandomb);
 
 use constant {
@@ -126,7 +126,7 @@ sub round {
     $z;
 }
 
-sub cffm ($n, $verbose = 0) {
+sub cffm ($n, $verbose = 0, $multiplier = 1) {
 
     local $| = 1;
 
@@ -155,6 +155,8 @@ sub cffm ($n, $verbose = 0) {
         return @factors;
     }
 
+    my $N = $n * $multiplier;
+
     my $x = Math::GMPz::Rmpz_init();
     my $y = Math::GMPz::Rmpz_init();
     my $z = Math::GMPz::Rmpz_init_set_ui(1);
@@ -162,7 +164,7 @@ sub cffm ($n, $verbose = 0) {
     my $w = Math::GMPz::Rmpz_init();
     my $r = Math::GMPz::Rmpz_init();
 
-    Math::GMPz::Rmpz_sqrt($x, $n);
+    Math::GMPz::Rmpz_sqrt($x, $N);
     Math::GMPz::Rmpz_set($y, $x);
 
     Math::GMPz::Rmpz_add($w, $x, $x);
@@ -178,21 +180,22 @@ sub cffm ($n, $verbose = 0) {
 
     my @factor_base;
 
+#<<<
     if (USE_B_SMOOTH_METHOD) {
         forprimes {
-            if ($_ <= 97 or Math::GMPz::Rmpz_kronecker_ui($n, $_) == 1) {
+            if ($_ <= 97 or Math::GMPz::Rmpz_kronecker_ui($N, $_) == 1) {
                 push @factor_base, $_;
             }
-        }
-        $B;
+        } $B;
     }
     else {
         for (my $p = 2 ; @factor_base < $nf ; $p = next_prime($p)) {
-            if ($p <= 97 or Math::GMPz::Rmpz_kronecker_ui($n, $p) == 1) {
+            if ($p <= 97 or Math::GMPz::Rmpz_kronecker_ui($N, $p) == 1) {
                 push @factor_base, $p;
             }
         }
     }
+#>>>
 
     my %factor_index;
     @factor_index{@factor_base} = (0 .. $#factor_base);
@@ -224,7 +227,7 @@ sub cffm ($n, $verbose = 0) {
     #~ require Math::GMPq;
     #~ my $q = Math::GMPq->new();
 
-    do {
+    while (@A < $L) {
 
         # y = r*z - y
         Math::GMPz::Rmpz_mul($t, $r, $z);
@@ -232,7 +235,7 @@ sub cffm ($n, $verbose = 0) {
 
         # z = (n - y*y) / z
         Math::GMPz::Rmpz_mul($t, $y, $y);
-        Math::GMPz::Rmpz_sub($t, $n, $t);
+        Math::GMPz::Rmpz_sub($t, $N, $t);
         Math::GMPz::Rmpz_divexact($z, $t, $z);
 
         # r = (x + y) / z
@@ -287,7 +290,17 @@ sub cffm ($n, $verbose = 0) {
             }
         }
 
-    } while (Math::GMPz::Rmpz_cmp_ui($z, 1) and @A < $L);
+        if (!Math::GMPz::Rmpz_cmp_ui($z, 1)) {
+            my $k = $multiplier + 2;
+
+            until (is_square_free($k)) {
+                ++$k;
+            }
+
+            say "Trying again with multiplier k = $k" if $verbose;
+            return __SUB__->($n, $verbose, $k);
+        }
+    }
 
     if ($verbose) {
         say "\n\n*** Step 2/2: Linear Algebra ***";
