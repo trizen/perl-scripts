@@ -586,6 +586,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Period of continued fraction for square roots](./Math/period_of_continued_fraction_for_square_roots.pl)
     * [Period of continued fraction for square roots mpz](./Math/period_of_continued_fraction_for_square_roots_mpz.pl)
     * [Period of continued fraction for square roots ntheory](./Math/period_of_continued_fraction_for_square_roots_ntheory.pl)
+    * [Phi-finder factorization method](./Math/phi-finder_factorization_method.pl)
     * [Pi from infinity](./Math/pi_from_infinity.pl)
     * [Pisano periods](./Math/pisano_periods.pl)
     * [Pisano periods efficient algorithm](./Math/pisano_periods_efficient_algorithm.pl)
