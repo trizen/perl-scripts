@@ -102,6 +102,17 @@ sub check_factor ($n, $g, $factors) {
     return $n;
 }
 
+sub next_multiplier ($k) {
+
+    $k += 2;
+
+    until (is_square_free($k)) {
+        ++$k;
+    }
+
+    return $k;
+}
+
 sub round {
     my ($n, $z) = @_;
 
@@ -291,13 +302,10 @@ sub cffm ($n, $verbose = 0, $multiplier = 1) {
         }
 
         if (!Math::GMPz::Rmpz_cmp_ui($z, 1)) {
-            my $k = $multiplier + 2;
 
-            until (is_square_free($k)) {
-                ++$k;
-            }
+            my $k = next_multiplier($multiplier);
 
-            say "Trying again with multiplier k = $k" if $verbose;
+            say "Trying again with multiplier k = $k\n" if $verbose;
             return __SUB__->($n, $verbose, $k);
         }
     }
@@ -369,6 +377,14 @@ sub cffm ($n, $verbose = 0, $multiplier = 1) {
         }
     }
 
+    # Failed to factorize n (try again with a multiplier)
+    if ($rem == $n) {
+        my $k = next_multiplier($multiplier);
+        say "Trying again with multiplier k = $k\n" if $verbose;
+        return __SUB__->($n, $verbose, $k);
+    }
+
+    # Return all the prime factors of n
     return sort { $a <=> $b } @final_factors;
 }
 
