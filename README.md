@@ -377,6 +377,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [BPSW primality test](./Math/BPSW_primality_test.pl)
     * [BPSW primality test mpz](./Math/BPSW_primality_test_mpz.pl)
     * [Brown numbers](./Math/brown_numbers.pl)
+    * [Carmichael factorization method](./Math/carmichael_factorization_method.pl)
     * [Carmichael numbers random](./Math/carmichael_numbers_random.pl)
     * [Cartesian product iter](./Math/cartesian_product_iter.pl)
     * [Cartesian product rec](./Math/cartesian_product_rec.pl)
