@@ -485,6 +485,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Lambert W function](./Math/lambert_W_function.pl)
     * [Lambert W function complex](./Math/lambert_W_function_complex.pl)
     * [Lanczos approximation](./Math/lanczos_approximation.pl)
+    * [Least k such that k*prime(k) > 10^n](./Math/least_k_such_that_k*prime(k)_>_10^n.pl)
     * [Legendary question six](./Math/legendary_question_six.pl)
     * [Length of shortest addition chain](./Math/length_of_shortest_addition_chain.pl)
     * [Lerch zeta function](./Math/lerch_zeta_function.pl)
