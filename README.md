@@ -643,6 +643,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Rest calc](./Math/rest_calc.pl)
     * [Reversed number triangle](./Math/reversed_number_triangle.pl)
     * [Reversed number triangles](./Math/reversed_number_triangles.pl)
+    * [Riemann prime-counting function](./Math/riemann_prime-counting_function.pl)
     * [Riemann's J function](./Math/riemann_s_J_function.pl)
     * [Roots on the rise](./Math/roots_on_the_rise.pl)
     * [RSA example](./Math/RSA_example.pl)
