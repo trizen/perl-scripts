@@ -49,7 +49,7 @@ use ntheory qw(divisor_sum);
 use experimental qw(signatures);
 use Math::AnyNum qw(faulhaber_sum isqrt ipow sum);
 
-sub sigma_partial_sum($n, $m, $j) {      # O(sqrt(n)) complexity
+sub sigma_partial_sum ($n, $m, $j) {    # O(sqrt(n)) complexity
 
     my $total = 0;
 
@@ -57,29 +57,47 @@ sub sigma_partial_sum($n, $m, $j) {      # O(sqrt(n)) complexity
     my $u = int($n / ($s + 1));
 
     for my $k (1 .. $s) {
-        $total += faulhaber_sum($k, $m) * (faulhaber_sum(int($n/$k), $m+$j) - faulhaber_sum(int($n/($k+1)), $m+$j));
+        $total += faulhaber_sum($k, $m) * (faulhaber_sum(int($n / $k), $m + $j) - faulhaber_sum(int($n / ($k + 1)), $m + $j));
     }
 
     for my $k (1 .. $u) {
-        $total += ipow($k, $m+$j) * faulhaber_sum(int($n/$k), $m);
+        $total += ipow($k, $m + $j) * faulhaber_sum(int($n / $k), $m);
     }
 
     return $total;
 }
 
-sub sigma_partial_sum_test($n, $m, $j) {           # just for testing
-    sum(map { ipow($_, $m) * divisor_sum($_, $j) } 1..$n);
+sub sigma_partial_sum_2 ($n, $m, $j) {    # O(sqrt(n)) complexity
+
+    my $total = 0;
+
+    my $s = isqrt($n);
+
+    for my $k (1 .. $s) {
+        $total += ipow($k, $m) * faulhaber_sum(int($n / $k), $m + $j);
+        $total += ipow($k, $m + $j) * faulhaber_sum(int($n / $k), $m);
+    }
+
+    $total -= faulhaber_sum($s, $m) * faulhaber_sum($s, $j + $m);
+
+    return $total;
 }
 
-for my $m (0..10) {
+sub sigma_partial_sum_test ($n, $m, $j) {    # just for testing
+    sum(map { ipow($_, $m) * divisor_sum($_, $j) } 1 .. $n);
+}
+
+for my $m (0 .. 10) {
 
     my $j = int rand 10;
     my $n = int rand 1000;
 
     my $t1 = sigma_partial_sum($n, $m, $j);
-    my $t2 = sigma_partial_sum_test($n, $m, $j);
+    my $t2 = sigma_partial_sum_2($n, $m, $j);
+    my $t3 = sigma_partial_sum_test($n, $m, $j);
 
     die "error: $t1 != $t2" if ($t1 != $t2);
+    die "error: $t1 != $t2" if ($t1 != $t3);
 
     say "Sum_{k=1..$n} k^$m * σ_$j(k) = $t1";
 }
