@@ -40,7 +40,6 @@ local $| = 1;
 use constant {
               LOOK_FOR_SMALL_FACTORS      => 1,
               FIBONACCI_BOUND             => 500_000,
-              POLLARD_PM1_BOUND           => 2_000_000,
               TRIAL_DIVISION_LIMIT        => 1_000_000,
               POLLARD_RHO_ITERATIONS      => 16,
               POLLARD_RHO2_ITERATIONS     => 50_000,
@@ -1251,15 +1250,13 @@ sub find_small_factors ($rem, $factors) {
             next;
         }
 
-#<<<
-        #~ say "=> Pollard rho-exp...";
-        #~ $f = pollard_rho_exp_find_factor($rem, POLLARD_RHO2_ITERATIONS);
+        say "=> Pollard p-1 (500K)...";
+        $f = pollard_pm1_find_factor($rem, 500_000);
 
-        #~ if (defined($f) and $f < $rem) {
-            #~ store_factor(\$rem, $f, $factors);
-            #~ next;
-        #~ }
-#>>>
+        if (defined($f) and $f < $rem) {
+            store_factor(\$rem, $f, $factors);
+            next;
+        }
 
         say "=> Fibonacci p±1...";
         $f = fibonacci_factorization($rem, FIBONACCI_BOUND);
@@ -1269,8 +1266,8 @@ sub find_small_factors ($rem, $factors) {
             next;
         }
 
-        say "=> Pollard p-1...";
-        $f = pollard_pm1_find_factor($rem, POLLARD_PM1_BOUND);
+        say "=> Pollard p-1 (2M)...";
+        $f = pollard_pm1_find_factor($rem, 2_000_000);
 
         if (defined($f) and $f < $rem) {
             store_factor(\$rem, $f, $factors);
@@ -1299,6 +1296,25 @@ sub find_small_factors ($rem, $factors) {
         if (defined($f) and $f < $rem) {
             store_factor(\$rem, $f, $factors);
             next;
+        }
+
+        if ($digits > 50) {
+
+            say "=> Pollard p-1 (10M)...";
+            $f = pollard_pm1_find_factor($rem, 10_000_000);
+
+            if (defined($f) and $f < $rem) {
+                store_factor(\$rem, $f, $factors);
+                next;
+            }
+
+            say "=> Pollard rho-exp...";
+            $f = pollard_rho_exp_find_factor($rem, POLLARD_RHO2_ITERATIONS);
+
+            if (defined($f) and $f < $rem) {
+                store_factor(\$rem, $f, $factors);
+                next;
+            }
         }
 
         last;
