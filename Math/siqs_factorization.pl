@@ -38,18 +38,17 @@ local $| = 1;
 
 # Some tuning parameters
 use constant {
-              LOOK_FOR_SMALL_FACTORS      => 1,
-              FIBONACCI_BOUND             => 500_000,
-              TRIAL_DIVISION_LIMIT        => 1_000_000,
-              POLLARD_RHO_ITERATIONS      => 16,
-              POLLARD_RHO2_ITERATIONS     => 50_000,
-              POLLARD_RHO_SQRT_ITERATIONS => 25_000,
-              FERMAT_ITERATIONS           => 500,
-              CFRAC_ITERATIONS            => 15_000,
-              HOLF_ITERATIONS             => 15_000,
-              SIQS_TRIAL_DIVISION_EPS     => 25,
-              SIQS_MIN_PRIME_POLYNOMIAL   => 400,
-              SIQS_MAX_PRIME_POLYNOMIAL   => 4000,
+              LOOK_FOR_SMALL_FACTORS    => 1,
+              FIBONACCI_BOUND           => 500_000,
+              TRIAL_DIVISION_LIMIT      => 1_000_000,
+              POLLARD_BRENT_ITERATIONS  => 16,
+              POLLARD_RHO_ITERATIONS    => 50_000,
+              FERMAT_ITERATIONS         => 500,
+              CFRAC_ITERATIONS          => 15_000,
+              HOLF_ITERATIONS           => 15_000,
+              SIQS_TRIAL_DIVISION_EPS   => 25,
+              SIQS_MIN_PRIME_POLYNOMIAL => 400,
+              SIQS_MAX_PRIME_POLYNOMIAL => 4000,
              };
 
 my @small_primes = sieve_primes(2, TRIAL_DIVISION_LIMIT);
@@ -954,7 +953,7 @@ sub lucas_factorization ($n, $d) {
 sub pollard_pm1_find_factor ($n, $bound) {
 
     my $g = Math::GMPz::Rmpz_init();
-    my $t = Math::GMPz::Rmpz_init_set_str(random_prime($n), 10);
+    my $t = Math::GMPz::Rmpz_init_set_ui(random_prime(1e6));
 
     foreach my $p (sieve_primes(2, $bound)) {
 
@@ -976,54 +975,28 @@ sub pollard_pm1_find_factor ($n, $bound) {
     return undef;
 }
 
-sub pollard_rho2_find_factor ($n, $max_iter) {
+sub pollard_rho_find_factor ($n, $max_iter) {
 
-    my $x = 2;
-    my $y = 3;
+    my $x = Math::GMPz->new(2);
+    my $y = Math::GMPz->new(3);
 
-    foreach (1 .. $max_iter) {
+    my $g = Math::GMPz::Rmpz_init();
 
-        $x = ((($x * $x - 1) % $n));
-        $y = ((($y * $y - 1)**2 - 1) % $n);
+    for (1 .. $max_iter) {
 
-        my $g = gcd($n, $x - $y);
+        Math::GMPz::Rmpz_mul($x, $x, $x);
+        Math::GMPz::Rmpz_sub_ui($x, $x, 1);
+        Math::GMPz::Rmpz_mod($x, $x, $n);
 
-        if ($g ne '1') {
-            $g = Math::GMPz->new($g);
-            return undef if ($g == $n);
-            return $g;
-        }
-    }
+        Math::GMPz::Rmpz_mul($y, $y, $y);
+        Math::GMPz::Rmpz_sub_ui($y, $y, 1);
+        Math::GMPz::Rmpz_powm_ui($y, $y, 2, $n);
+        Math::GMPz::Rmpz_sub_ui($y, $y, 1);
 
-    return undef;
-}
+        Math::GMPz::Rmpz_sub($g, $x, $y);
+        Math::GMPz::Rmpz_gcd($g, $g, $n);
 
-sub pollard_rho_exp_find_factor ($n, $max_iter) {
-
-    my $c = $n + 1;
-    my $t = $n * $n - 1;
-
-    my $x = Math::GMPz::Rmpz_init_set($c);
-    my $y = Math::GMPz::Rmpz_init();
-
-    Math::GMPz::Rmpz_powm($y, $x, $t, $n);
-    Math::GMPz::Rmpz_add($y, $y, $c);
-
-    foreach (1 .. $max_iter) {
-
-        Math::GMPz::Rmpz_powm($x, $x, $t, $n);
-        Math::GMPz::Rmpz_add($x, $x, $c);
-
-        Math::GMPz::Rmpz_powm($y, $y, $t, $n);
-        Math::GMPz::Rmpz_add($y, $y, $c);
-
-        Math::GMPz::Rmpz_powm($y, $y, $t, $n);
-        Math::GMPz::Rmpz_add($y, $y, $c);
-
-        my $g = gcd($n, $x - $y);
-
-        if ($g ne '1') {
-            $g = Math::GMPz->new($g);
+        if (Math::GMPz::Rmpz_cmp_ui($g, 1) != 0) {
             return undef if ($g == $n);
             return $g;
         }
@@ -1043,19 +1016,29 @@ sub pollard_rho_sqrt_find_factor ($n, $max_iter) {
     my $a1 = ($a0 * $a0 + $c);
     my $a2 = ($a1 * $a1 + $c);
 
-    foreach (1 .. $max_iter) {
+    my $g = Math::GMPz::Rmpz_init();
 
-        my $g = gcd($n, $a2 - $a1);
+    for (1 .. $max_iter) {
 
-        if ($g ne '1') {
-            $g = Math::GMPz->new($g);
+        Math::GMPz::Rmpz_sub($g, $a2, $a1);
+        Math::GMPz::Rmpz_gcd($g, $g, $n);
+
+        if (Math::GMPz::Rmpz_cmp_ui($g, 1) != 0) {
             return undef if ($g == $n);
             return $g;
         }
 
-        $a1 = (($a1 * $a1 + $c) % $n);
-        $a2 = (($a2 * $a2 + $c) % $n);
-        $a2 = (($a2 * $a2 + $c) % $n);
+        Math::GMPz::Rmpz_mul($a1, $a1, $a1);
+        Math::GMPz::Rmpz_add($a1, $a1, $c);
+        Math::GMPz::Rmpz_mod($a1, $a1, $n);
+
+        Math::GMPz::Rmpz_mul($a2, $a2, $a2);
+        Math::GMPz::Rmpz_add($a2, $a2, $c);
+        Math::GMPz::Rmpz_mod($a2, $a2, $n);
+
+        Math::GMPz::Rmpz_mul($a2, $a2, $a2);
+        Math::GMPz::Rmpz_add($a2, $a2, $c);
+        Math::GMPz::Rmpz_mod($a2, $a2, $n);
     }
 
     return undef;
@@ -1243,7 +1226,7 @@ sub find_small_factors ($rem, $factors) {
         }
 
         say "=> Pollard rho-sqrt...";
-        $f = pollard_rho_sqrt_find_factor($rem, POLLARD_RHO_SQRT_ITERATIONS);
+        $f = pollard_rho_sqrt_find_factor($rem, ($digits > 50 ? 2 : 1) * POLLARD_RHO_ITERATIONS);
 
         if (defined($f) and $f < $rem) {
             store_factor(\$rem, $f, $factors);
@@ -1274,8 +1257,8 @@ sub find_small_factors ($rem, $factors) {
             next;
         }
 
-        say "=> Pollard rho2...";
-        $f = pollard_rho2_find_factor($rem, POLLARD_RHO2_ITERATIONS);
+        say "=> Pollard rho...";
+        $f = pollard_rho_find_factor($rem, ($digits > 50 ? 2 : 1) * POLLARD_RHO_ITERATIONS);
 
         if (defined($f) and $f < $rem) {
             store_factor(\$rem, $f, $factors);
@@ -1283,7 +1266,7 @@ sub find_small_factors ($rem, $factors) {
         }
 
         say "=> Pollard rho (Brent)...";
-        $f = pollard_brent_find_factor($rem, POLLARD_RHO_ITERATIONS);
+        $f = pollard_brent_find_factor($rem, POLLARD_BRENT_ITERATIONS);
 
         if (defined($f) and $f < $rem) {
             store_factor(\$rem, $f, $factors);
@@ -1291,7 +1274,7 @@ sub find_small_factors ($rem, $factors) {
         }
 
         say "=> CFRAC simple...";
-        $f = simple_cfrac_find_factor($rem, CFRAC_ITERATIONS);
+        $f = simple_cfrac_find_factor($rem, ($digits > 50 ? 2 : 1) * CFRAC_ITERATIONS);
 
         if (defined($f) and $f < $rem) {
             store_factor(\$rem, $f, $factors);
@@ -1307,9 +1290,12 @@ sub find_small_factors ($rem, $factors) {
                 store_factor(\$rem, $f, $factors);
                 next;
             }
+        }
 
-            say "=> Pollard rho-exp...";
-            $f = pollard_rho_exp_find_factor($rem, POLLARD_RHO2_ITERATIONS);
+        if ($digits > 70) {
+
+            say "=> Pollard p-1 (20M)...";
+            $f = pollard_pm1_find_factor($rem, 20_000_000);
 
             if (defined($f) and $f < $rem) {
                 store_factor(\$rem, $f, $factors);

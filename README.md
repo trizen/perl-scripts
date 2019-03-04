@@ -596,6 +596,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Pollard p minus 1 factorization](./Math/pollard_p_minus_1_factorization.pl)
     * [Pollard p minus 1 factorization random](./Math/pollard_p_minus_1_factorization_random.pl)
     * [Pollard p minus 1 fermat factorization](./Math/pollard_p_minus_1_fermat_factorization.pl)
+    * [Pollard rho exp factorization](./Math/pollard_rho_exp_factorization.pl)
     * [Polygonal numbers](./Math/polygonal_numbers.pl)
     * [Polygonal representations](./Math/polygonal_representations.pl)
     * [Polynomial interpolation](./Math/polynomial_interpolation.pl)
