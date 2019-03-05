@@ -1044,6 +1044,55 @@ sub pollard_rho_sqrt_find_factor ($n, $max_iter) {
     return undef;
 }
 
+sub pollard_rho_exp_find_factor ($n, $max_iter) {
+
+    my $B = logint($n, 5)**2;
+
+    if ($B > 50_000) {
+        $B = 50_000;
+    }
+
+    my $e = Math::GMPz::Rmpz_init_set_str(consecutive_integer_lcm($B), 10);
+    my $c = 2 * $e - 1;
+
+    my $x = Math::GMPz::Rmpz_init_set_ui(1);
+    my $y = Math::GMPz::Rmpz_init();
+    my $g = Math::GMPz::Rmpz_init();
+
+    Math::GMPz::Rmpz_powm($x, $x, $e, $n);
+    Math::GMPz::Rmpz_add($x, $x, $c);
+    Math::GMPz::Rmpz_mod($x, $x, $n);
+
+    Math::GMPz::Rmpz_powm($y, $x, $e, $n);
+    Math::GMPz::Rmpz_add($y, $y, $c);
+    Math::GMPz::Rmpz_mod($y, $y, $n);
+
+    for (1 .. $max_iter) {
+
+        Math::GMPz::Rmpz_powm($x, $x, $e, $n);
+        Math::GMPz::Rmpz_add($x, $x, $c);
+        Math::GMPz::Rmpz_mod($x, $x, $n);
+
+        Math::GMPz::Rmpz_powm($y, $y, $e, $n);
+        Math::GMPz::Rmpz_add($y, $y, $c);
+        Math::GMPz::Rmpz_mod($y, $y, $n);
+
+        Math::GMPz::Rmpz_powm($y, $y, $e, $n);
+        Math::GMPz::Rmpz_add($y, $y, $c);
+        Math::GMPz::Rmpz_mod($y, $y, $n);
+
+        Math::GMPz::Rmpz_sub($g, $x, $y);
+        Math::GMPz::Rmpz_gcd($g, $g, $n);
+
+        if (Math::GMPz::Rmpz_cmp_ui($g, 1) != 0) {
+            return undef if ($g == $n);
+            return $g;
+        }
+    }
+
+    return undef;
+}
+
 sub fermat_find_factor ($n, $max_iter) {
 
     my $p = Math::GMPz->new(sqrtint($n));
@@ -1265,6 +1314,17 @@ sub find_small_factors ($rem, $factors) {
             next;
         }
 
+        if ($digits < 150) {
+
+            say "=> Pollard rho-exp...";
+            $f = pollard_rho_exp_find_factor($rem, ($digits > 50 ? 2 : 1) * 200);
+
+            if (defined($f) and $f < $rem) {
+                store_factor(\$rem, $f, $factors);
+                next;
+            }
+        }
+
         say "=> Pollard rho (Brent)...";
         $f = pollard_brent_find_factor($rem, POLLARD_BRENT_ITERATIONS);
 
@@ -1296,6 +1356,25 @@ sub find_small_factors ($rem, $factors) {
 
             say "=> Pollard p-1 (20M)...";
             $f = pollard_pm1_find_factor($rem, 20_000_000);
+
+            if (defined($f) and $f < $rem) {
+                store_factor(\$rem, $f, $factors);
+                next;
+            }
+
+            say "=> Pollard rho-exp...";
+            $f = pollard_rho_exp_find_factor($rem, 1000);
+
+            if (defined($f) and $f < $rem) {
+                store_factor(\$rem, $f, $factors);
+                next;
+            }
+        }
+
+        if ($digits > 80) {
+
+            say "=> Pollard p-1 (50M)...";
+            $f = pollard_pm1_find_factor($rem, 50_000_000);
 
             if (defined($f) and $f < $rem) {
                 store_factor(\$rem, $f, $factors);
