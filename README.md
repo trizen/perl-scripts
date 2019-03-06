@@ -665,6 +665,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Smallest k-gonal inverse](./Math/smallest_k-gonal_inverse.pl)
     * [Smallest k-gonal inverse brute force](./Math/smallest_k-gonal_inverse_brute_force.pl)
     * [Smarandache function](./Math/smarandache_function.pl)
+    * [Smooth numbers generalized](./Math/smooth_numbers_generalized.pl)
     * [Solutions to x^2 = -1 (mod n)](./Math/solutions_to_x^2%20=%20-1%20(mod%20n).pl)
     * [Solutions to x^2 = 1 (mod n)](./Math/solutions_to_x^2%20=%201%20(mod%20n).pl)
     * [Solutions to x^2 = a (mod n)](./Math/solutions_to_x^2%20=%20a%20(mod%20n).pl)
