@@ -45,8 +45,8 @@ use strict;
 use warnings;
 
 use experimental qw(signatures);
-use Math::AnyNum qw(faulhaber_sum);
-use ntheory qw(jordan_totient moebius mertens vecsum sqrtint forsquarefree);
+use Math::AnyNum qw(faulhaber_sum ipow);
+use ntheory qw(jordan_totient moebius mertens vecsum sqrtint forsquarefree is_square_free);
 
 sub jordan_totient_partial_sum ($n, $m) {
 
@@ -70,6 +70,21 @@ sub jordan_totient_partial_sum ($n, $m) {
     return $total;
 }
 
+sub jordan_totient_partial_sum_2 ($n, $m) {
+
+    my $total = 0;
+    my $s = sqrtint($n);
+
+    for my $k (1 .. $s) {
+        $total += ipow($k, $m) * mertens(int($n/$k));
+        $total += moebius($k) * faulhaber_sum(int($n/$k), $m) if is_square_free($k);
+    }
+
+    $total -= faulhaber_sum($s, $m) * mertens($s);
+
+    return $total;
+}
+
 sub jordan_totient_partial_sum_test ($n, $m) {    # just for testing
     vecsum(map { jordan_totient($m, $_) } 1 .. $n);
 }
@@ -79,9 +94,11 @@ for my $m (0 .. 10) {
     my $n = int rand 10000;
 
     my $t1 = jordan_totient_partial_sum($n, $m);
-    my $t2 = jordan_totient_partial_sum_test($n, $m);
+    my $t2 = jordan_totient_partial_sum_2($n, $m);
+    my $t3 = jordan_totient_partial_sum_test($n, $m);
 
     die "error: $t1 != $t2" if ($t1 != $t2);
+    die "error: $t1 != $t3" if ($t1 != $t3);
 
     say "Sum_{k=1..$n} J_$m(k) = $t1";
 }

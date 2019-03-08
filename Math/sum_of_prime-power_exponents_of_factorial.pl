@@ -16,16 +16,17 @@
 #~ a(10^8)  = 392351272
 #~ a(10^9)  = 4044220058
 #~ a(10^10) = 41518796555
+#~ a(10^11) = 424904645958
 
 # See also:
-#   https://oeis.org/A022559
-#   https://oeis.org/A071811
+#   https://oeis.org/A022559    -- Sum of exponents in prime-power factorization of n!.
+#   https://oeis.org/A071811    -- Sum_{k <= 10^n} number of primes (counted with multiplicity) dividing k
 
 use 5.014;
 use strict;
 use warnings;
 
-use ntheory qw(vecsum logint sqrtint rootint prime_count forprimes);
+use ntheory qw(vecsum logint sqrtint rootint prime_count forprimes is_prime_power);
 
 sub prime_power_count {
     my ($n) = @_;
@@ -53,12 +54,27 @@ sub sum_of_exponents_of_factorial {
         foreach my $k (1 .. logint($u, $_)) {
             $total += int($n / $_**$k);
         }
-    }
-    $u;
+    } $u;
 
     return $total;
 }
 
-foreach my $k (1 .. 10) {
+sub sum_of_exponents_of_factorial_2 {
+    my ($n) = @_;
+
+    my $s = sqrtint($n);
+    my $total = 0;
+
+    for my $k (1 .. $s) {
+        $total +=  prime_power_count(int($n/$k));
+        $total += int($n/$k) if is_prime_power($k);
+    }
+
+    $total -= prime_power_count($s) * $s;
+
+    return $total;
+}
+
+foreach my $k (1 .. 10) {       # takes ~1.5s
     say "a(10^$k) = ", sum_of_exponents_of_factorial(10**$k);
 }

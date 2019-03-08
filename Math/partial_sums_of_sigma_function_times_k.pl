@@ -8,7 +8,7 @@
 #
 #   Sum_{k=1..n} k * sigma_j(k)
 #
-# for any fixed j >= 0.
+# for any integer j >= 0.
 
 # Example: `a(n) = Sum_{k=1..n} k * sigma(k)`
 #   a(10^1)  = 622
@@ -39,7 +39,7 @@ use ntheory qw(divisors);
 use experimental qw(signatures);
 use Math::AnyNum qw(faulhaber_sum sum isqrt ipow);
 
-sub fast_sigma_partial_sum($n, $m) {       # O(sqrt(n)) complexity
+sub sigma_partial_sum($n, $m) {       # O(sqrt(n)) complexity
 
     my $total = 0;
 
@@ -57,7 +57,7 @@ sub fast_sigma_partial_sum($n, $m) {       # O(sqrt(n)) complexity
     return $total/2;
 }
 
-sub sigma_partial_sum($n, $m) {      # just for testing
+sub sigma_partial_sum_test($n, $m) {      # just for testing
     sum(map { $_ * sum(map { ipow($_, $m) } divisors($_)) } 1..$n);
 }
 
@@ -66,7 +66,7 @@ for my $m (0..10) {
     my $n = int(rand(1000));
 
     my $t1 = sigma_partial_sum($n, $m);
-    my $t2 = fast_sigma_partial_sum($n, $m);
+    my $t2 = sigma_partial_sum_test($n, $m);
 
     die "error: $t1 != $t2" if ($t1 != $t2);
 

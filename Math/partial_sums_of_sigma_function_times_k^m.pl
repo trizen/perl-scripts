@@ -70,7 +70,6 @@ sub sigma_partial_sum ($n, $m, $j) {    # O(sqrt(n)) complexity
 sub sigma_partial_sum_2 ($n, $m, $j) {    # O(sqrt(n)) complexity
 
     my $total = 0;
-
     my $s = isqrt($n);
 
     for my $k (1 .. $s) {
@@ -97,7 +96,7 @@ for my $m (0 .. 10) {
     my $t3 = sigma_partial_sum_test($n, $m, $j);
 
     die "error: $t1 != $t2" if ($t1 != $t2);
-    die "error: $t1 != $t2" if ($t1 != $t3);
+    die "error: $t1 != $t3" if ($t1 != $t3);
 
     say "Sum_{k=1..$n} k^$m * σ_$j(k) = $t1";
 }

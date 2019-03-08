@@ -47,8 +47,8 @@ use strict;
 use warnings;
 
 use experimental qw(signatures);
-use Math::AnyNum qw(faulhaber_sum);
-use ntheory qw(jordan_totient moebius vecsum sqrtint forsquarefree);
+use Math::AnyNum qw(ipow faulhaber_sum);
+use ntheory qw(jordan_totient moebius vecsum sqrtint forsquarefree is_square_free);
 
 sub squarefree_count {
     my ($n) = @_;
@@ -85,6 +85,21 @@ sub dedekind_psi_partial_sum ($n, $m) {     # O(sqrt(n)) complexity
     return $total;
 }
 
+sub dedekind_psi_partial_sum_2 ($n, $m) {     # O(sqrt(n)) complexity
+
+    my $total = 0;
+    my $s = sqrtint($n);
+
+    for my $k (1 .. $s) {
+        $total += ipow($k, $m) * squarefree_count(int($n/$k));
+        $total += faulhaber_sum(int($n/$k), $m) if is_square_free($k);
+    }
+
+    $total -= squarefree_count($s) * faulhaber_sum($s, $m);
+
+    return $total;
+}
+
 sub dedekind_psi_partial_sum_test ($n, $m) {    # just for testing
     vecsum(map { jordan_totient(2*$m, $_) / jordan_totient($m, $_) } 1 .. $n);
 }
@@ -94,9 +109,11 @@ for my $m (1 .. 10) {
     my $n = int rand 1000;
 
     my $t1 = dedekind_psi_partial_sum($n, $m);
-    my $t2 = dedekind_psi_partial_sum_test($n, $m);
+    my $t2 = dedekind_psi_partial_sum_2($n, $m);
+    my $t3 = dedekind_psi_partial_sum_test($n, $m);
 
     die "error: $t1 != $t2" if ($t1 != $t2);
+    die "error: $t1 != $t3" if ($t1 != $t3);
 
     say "Sum_{k=1..$n} psi_$m(k) = $t1";
 }

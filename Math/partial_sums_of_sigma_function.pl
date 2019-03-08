@@ -8,7 +8,7 @@
 #
 #   Sum_{k=1..n} sigma_j(k)
 #
-# for any j >= 0.
+# for any integer j >= 0.
 
 # See also:
 #   https://en.wikipedia.org/wiki/Divisor_function
@@ -24,7 +24,7 @@ use ntheory qw(divisors);
 use experimental qw(signatures);
 use Math::AnyNum qw(faulhaber_sum bernoulli sum isqrt ipow);
 
-sub faulhaber_partial_sum_of_sigma ($n, $m = 1) {       # using Faulhaber's formula
+sub sigma_partial_sum_faulhaber ($n, $m = 1) {       # using Faulhaber's formula
 
     my $s = isqrt($n);
     my $u = int($n / ($s + 1));
@@ -42,7 +42,7 @@ sub faulhaber_partial_sum_of_sigma ($n, $m = 1) {       # using Faulhaber's form
     return $sum;
 }
 
-sub bernoulli_partial_sum_of_sigma ($n, $m = 1) {       # using Bernoulli polynomials
+sub sigma_partial_sum_bernoulli ($n, $m = 1) {       # using Bernoulli polynomials
 
     my $s = isqrt($n);
     my $u = int($n / ($s + 1));
@@ -60,7 +60,7 @@ sub bernoulli_partial_sum_of_sigma ($n, $m = 1) {       # using Bernoulli polyno
     return $sum;
 }
 
-sub partial_sum_of_sigma ($n, $m = 1) {    # just for testing
+sub sigma_partial_sum_test ($n, $m = 1) {    # just for testing
     sum(map { sum(map { ipow($_, $m) } divisors($_)) } 1..$n);
 }
 
@@ -68,9 +68,9 @@ foreach my $m (0 .. 10) {
 
     my $n = int(rand(1000));
 
-    my $t1 = partial_sum_of_sigma($n, $m);
-    my $t2 = faulhaber_partial_sum_of_sigma($n, $m);
-    my $t3 = bernoulli_partial_sum_of_sigma($n, $m);
+    my $t1 = sigma_partial_sum_test($n, $m);
+    my $t2 = sigma_partial_sum_faulhaber($n, $m);
+    my $t3 = sigma_partial_sum_bernoulli($n, $m);
 
     say "Sum_{k=1..$n} sigma_$m(k) = $t2";
 

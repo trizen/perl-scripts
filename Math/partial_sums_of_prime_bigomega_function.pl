@@ -68,6 +68,10 @@
 # The prime zeta function is defined as:
 #   primezeta(s) = Sum_{p prime >= 2} 1/p^s
 
+# OEIS sequences:
+#   https://oeis.org/A022559    -- Sum of exponents in prime-power factorization of n!.
+#   https://oeis.org/A071811    -- Sum_{k <= 10^n} number of primes (counted with multiplicity) dividing k.
+
 # See also:
 #   https://en.wikipedia.org/wiki/Prime_zeta_function
 #   https://en.wikipedia.org/wiki/Prime_omega_function
@@ -79,7 +83,7 @@ use strict;
 use warnings;
 
 use experimental qw(signatures);
-use Math::AnyNum qw(faulhaber_sum);
+use Math::AnyNum qw(faulhaber_sum ipow);
 use ntheory qw(vecsum logint sqrtint rootint prime_count is_prime_power forprimes);
 
 sub prime_power_count($n) {
@@ -92,9 +96,12 @@ sub prime_bigomega_partial_sum ($n, $m) {
     my $u = int($n/($s + 1));
 
     my $total = 0;
+    my $prev = prime_power_count($n);
 
     for my $k (1 .. $s) {
-        $total += faulhaber_sum($k, $m) * (prime_power_count(int($n/$k)) - prime_power_count(int($n/($k+1))));
+        my $curr = prime_power_count(int($n/($k+1)));
+        $total += faulhaber_sum($k, $m) * ($prev - $curr);
+        $prev = $curr;
     }
 
     forprimes {
@@ -102,6 +109,21 @@ sub prime_bigomega_partial_sum ($n, $m) {
             $total += faulhaber_sum(int($n / $_**$k), $m);
         }
     } $u;
+
+    return $total;
+}
+
+sub prime_bigomega_partial_sum_2 ($n, $m) {
+
+    my $s = sqrtint($n);
+    my $total = 0;
+
+    for my $k (1 .. $s) {
+        $total += ipow($k, $m) * prime_power_count(int($n/$k));
+        $total += faulhaber_sum(int($n/$k), $m) if is_prime_power($k);
+    }
+
+    $total -= prime_power_count($s) * faulhaber_sum($s, $m);
 
     return $total;
 }
@@ -123,9 +145,11 @@ for my $m (0 .. 10) {
     my $n = int rand 100000;
 
     my $t1 = prime_bigomega_partial_sum($n, $m);
-    my $t2 = prime_bigomega_partial_sum_test($n, $m);
+    my $t2 = prime_bigomega_partial_sum_2($n, $m);
+    my $t3 = prime_bigomega_partial_sum_test($n, $m);
 
     die "error: $t1 != $t2" if ($t1 != $t2);
+    die "error: $t1 != $t3" if ($t1 != $t3);
 
     say "Sum_{k=1..$n} bigomega_$m(k) = $t1";
 }

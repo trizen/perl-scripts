@@ -67,9 +67,11 @@
 # where P(s) is defined as:
 #   P(s) = Sum_{p prime >= 2} 1/p^s
 
+# OEIS sequences:
+#   https://oeis.org/A013939     -- Partial sums of sequence A001221 (number of distinct primes dividing n).
+#   https://oeis.org/A064182     -- Sum_{k <= 10^n} number of distinct primes dividing k.
+
 # See also:
-#   https://oeis.org/A013939
-#   https://oeis.org/A064182
 #   https://en.wikipedia.org/wiki/Prime_omega_function
 #   https://en.wikipedia.org/wiki/Prime-counting_function
 #   https://trizenx.blogspot.com/2018/11/partial-sums-of-arithmetical-functions.html
@@ -79,8 +81,8 @@ use strict;
 use warnings;
 
 use experimental qw(signatures);
-use ntheory qw(forprimes prime_count sqrtint);
-use Math::AnyNum qw(faulhaber_sum);
+use Math::AnyNum qw(faulhaber_sum ipow);
+use ntheory qw(forprimes prime_count sqrtint is_prime);
 
 sub prime_omega_partial_sum ($n, $m) {     # O(sqrt(n)) complexity
 
@@ -100,6 +102,20 @@ sub prime_omega_partial_sum ($n, $m) {     # O(sqrt(n)) complexity
     return $total;
 }
 
+sub prime_omega_partial_sum_2 ($n, $m) {     # O(sqrt(n)) complexity
+
+    my $total = 0;
+    my $s = sqrtint($n);
+
+    for my $k (1 .. $s) {
+        $total += ipow($k, $m) * prime_count(int($n/$k));
+        $total += faulhaber_sum(int($n/$k), $m) if is_prime($k);
+    }
+
+    $total -= faulhaber_sum($s, $m) * prime_count($s);
+
+    return $total;
+}
 
 sub prime_omega_partial_sum_test ($n, $m) {      # just for testing
     my $total = 0;
@@ -111,20 +127,16 @@ sub prime_omega_partial_sum_test ($n, $m) {      # just for testing
     return $total;
 }
 
-foreach my $n(1..12) {
-    say "A_2(10^$n) = ", prime_omega_partial_sum(10**$n, 2);
-}
-
-__END__
-
 for my $m (0 .. 10) {
 
     my $n = int rand 100000;
 
     my $t1 = prime_omega_partial_sum($n, $m);
-    my $t2 = prime_omega_partial_sum_test($n, $m);
+    my $t2 = prime_omega_partial_sum_2($n, $m);
+    my $t3 = prime_omega_partial_sum_test($n, $m);
 
     die "error: $t1 != $t2" if ($t1 != $t2);
+    die "error: $t1 != $t3" if ($t1 != $t3);
 
     say "Sum_{k=1..$n} omega_$m(k) = $t1";
 }
