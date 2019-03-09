@@ -43,11 +43,14 @@ use ntheory qw(sqrtint rootint factor_exp moebius);
 
 sub inverse_moebius_of_dedekind_partial_sum ($n, $m) {
 
-    my $lookup_size      = 2 + 2 * rootint($n, 3)**2;
+    my $lookup_size = 2 + 2 * rootint($n, 3)**2;
+
+    my @omega_lookup     = (0);
     my @omega_sum_lookup = (0);
 
     for my $k (1 .. $lookup_size) {
-        $omega_sum_lookup[$k] = $omega_sum_lookup[$k - 1] + 2**factor_exp($k);
+        $omega_lookup[$k]     = 2**factor_exp($k);
+        $omega_sum_lookup[$k] = $omega_sum_lookup[$k - 1] + $omega_lookup[$k];
     }
 
     my $s  = sqrtint($n);
@@ -79,7 +82,7 @@ sub inverse_moebius_of_dedekind_partial_sum ($n, $m) {
     my $total = 0;
 
     for my $k (1 .. $s) {
-        $total += 2**factor_exp($k) * faulhaber_sum(int($n / $k), $m);
+        $total += $omega_lookup[$k] * faulhaber_sum(int($n / $k), $m);
         $total += $k**$m * R(int($n / $k));
     }
 
