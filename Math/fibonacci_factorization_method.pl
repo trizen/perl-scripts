@@ -32,6 +32,9 @@ sub fibonacci_factorization ($n, $B = 10000) {
 say fibonacci_factorization(257221 * 470783,              700);     #=> 470783           (p+1 is  700-smooth)
 say fibonacci_factorization(333732865481 * 1632480277613, 3000);    #=> 333732865481     (p-1 is 3000-smooth)
 
+# Example of a larger number that can be factorized fast with this method
+say fibonacci_factorization(203544696384073367670016326770637347800169508950125910682353, 19);    #=> 5741461760879844361
+
 foreach my $k (1 .. 50) {
 
     my $n = Math::AnyNum->new(random_prime(1 << $k)) * random_prime(1 << $k);

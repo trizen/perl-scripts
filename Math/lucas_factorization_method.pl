@@ -37,9 +37,7 @@ sub lucas_factorization ($n, $B) {
         }
     }
 
-    my $d = Math::AnyNum->new(consecutive_integer_lcm($B));
-    my $s = bit_scan1($d);
-
+    my $d = consecutive_integer_lcm($B);
     my ($U, $V) = lucas_sequence($n, $P, $Q, $d);
 
     foreach my $f (sub { gcd($U, $n) }, sub { gcd($V - 2, $n) }) {
@@ -55,6 +53,9 @@ say lucas_factorization(333732865481 * 1632480277613,  3000);    #=> 33373286548
 say lucas_factorization(1124075136413 * 3556516507813, 4000);    #=> 1124075136413    (p+1 is 4000-smooth)
 say lucas_factorization(6555457852399 * 7864885571993, 700);     #=> 6555457852399    (p-1 is  700-smooth)
 say lucas_factorization(7553377229 * 588103349,        800);     #=> 7553377229       (p+1 is  800-smooth)
+
+# Example of a larger number that can be factorized fast with this method
+say lucas_factorization(203544696384073367670016326770637347800169508950125910682353, 19);      #=> 5741461760879844361
 
 say "\n=> More tests:";
 

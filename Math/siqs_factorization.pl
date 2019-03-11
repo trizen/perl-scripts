@@ -815,33 +815,42 @@ sub fibonacci_factorization ($n, $upper_bound) {
     # The Fibonacci factorization method, taking
     # advatange of the smoothness of `p - legendre(p, 5)`.
 
-    my $bound = 3 * logint($n, 2)**2;
+    my $bound = 5 * logint($n, 2)**2;
 
     if ($bound > $upper_bound) {
         $bound = $upper_bound;
     }
 
+    my ($P, $Q) = (1, 0);
+
+    for (my $k = 2 ; ; ++$k) {
+        my $D = (-1)**$k * (2 * $k + 1);
+
+        if (Math::GMPz::Rmpz_si_kronecker($D, $n) == -1) {
+            $Q = (1 - $D) / 4;
+            last;
+        }
+    }
+
     for (; ;) {
         return undef if $bound <= 1;
 
-        my $B = Math::GMPz::Rmpz_init_set_str(consecutive_integer_lcm($bound), 10);
-        my $F = Math::GMPz::Rmpz_init_set_str((lucas_sequence($n, 1, -1, $B))[0], 10);
+        my $d = consecutive_integer_lcm($bound);
+        my ($U, $V) = map { Math::GMPz::Rmpz_init_set_str($_, 10) } lucas_sequence($n, $P, $Q, $d);
 
-        if ($F == 0) {
+        foreach my $f (sub { gcd($U, $n) }, sub { gcd($V - 2, $n) }) {
+            my $g = Math::GMPz->new($f->());
+            return $g if ($g > 1 and $g < $n);
+        }
+
+        if ($U == 0) {
             say ":: p±1 seems to be $bound-smooth...";
             $bound >>= 1;
             next;
         }
 
-        my $g = Math::GMPz->new(gcd($F, $n));
-
-        if ($g > 1) {
-            return $g;
-        }
-
         say "=> Lucas p±1...";
-
-        return lucas_factorization($n, $B);
+        return lucas_factorization($n, Math::GMPz::Rmpz_init_set_str($d, 10));
     }
 }
 

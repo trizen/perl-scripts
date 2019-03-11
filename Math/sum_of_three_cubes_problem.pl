@@ -172,10 +172,22 @@ sub get_partitions {
 #~ my $y = 0;
 #~ my $z = 0;
 
-my $n = 74;
-my $x = 66229832190556;
-my $y = 283450105697727;
-my $z = -284650292555885;
+#~ my $n = 74;
+#~ my $x = 66229832190556;
+#~ my $y = 283450105697727;
+#~ my $z = -284650292555885;
+
+# First solution for n=33 was found by Andrew Booker
+# See also:
+#   https://people.maths.bris.ac.uk/~maarb/papers/cubesv1.pdf
+#   http://www.bradyharanblog.com/blog/33-and-the-sum-of-three-cubes
+
+my $n = 33;
+my $x = 8866128975287528;
+my $y = -8778405442862239;
+my $z = -2736111468807040;
+
+say powmod($x, 3, 33) + powmod($y, 3, 33) + powmod($z, 3, 33);
 
 #~ my $n = 30;
 #~ my $x = 2_220_422_932;
