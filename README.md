@@ -376,6 +376,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Both truncatable primes in base](./Math/both_truncatable_primes_in_base.pl)
     * [BPSW primality test](./Math/BPSW_primality_test.pl)
     * [BPSW primality test mpz](./Math/BPSW_primality_test_mpz.pl)
+    * [Brazilian primes constant](./Math/brazilian_primes_constant.pl)
     * [Brown numbers](./Math/brown_numbers.pl)
     * [Carmichael factorization method](./Math/carmichael_factorization_method.pl)
     * [Carmichael numbers random](./Math/carmichael_numbers_random.pl)
