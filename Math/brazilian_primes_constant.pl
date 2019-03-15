@@ -2,6 +2,9 @@
 
 # Compute the decimal expansion of the sum of reciprocals of Brazilian primes, also called the Brazilian primes constant.
 
+# The constant begins as:
+#   0.3317544666
+
 # OEIS sequences:
 #   https://oeis.org/A085104 (Brazillian primes)
 #   https://oeis.org/A306759 (Decimal expansion of the sum of reciprocals of Brazilian primes)
@@ -35,7 +38,13 @@ sub brazillian_constant ($lim) {
             Math::GMPz::Rmpz_sub_ui($z, $z, 1);
             Math::GMPz::Rmpz_divexact_ui($z, $z, $n - 1);
 
-            if (is_prob_prime(Math::GMPz::Rmpz_get_str($z, 10))) {
+            if (
+                is_prob_prime(
+                                Math::GMPz::Rmpz_fits_ulong_p($z)
+                              ? Math::GMPz::Rmpz_get_ui($z)
+                              : Math::GMPz::Rmpz_get_str($z, 10)
+                             )
+              ) {
 
                 # Conjecture: duplicate terms may happen only for t = 2^k-1, for some k
                 if ((($z + 1) & $z) == 0) {
@@ -54,7 +63,7 @@ sub brazillian_constant ($lim) {
     return Math::AnyNum->new($sum);
 }
 
-foreach my $n (1..14) {
+foreach my $n (1 .. 14) {
     say "B(10^$n) ~ ", brazillian_constant(Math::GMPz->new(10)**$n)->round(-32);
 }
 
