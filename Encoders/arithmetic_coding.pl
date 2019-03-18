@@ -1,15 +1,13 @@
 #!/usr/bin/perl
 
-# Author: Daniel "Trizen" Șuteu
-# License: GPLv3
+# Daniel "Trizen" Șuteu
 # Date: 01 May 2015
-# Website: http://github.com/trizen
+# https://github.com/trizen
 
-#
-## The arithmetic coding algorithm.
-#
+# The arithmetic coding algorithm.
 
-# See: http://en.wikipedia.org/wiki/Arithmetic_coding#Arithmetic_coding_as_a_generalized_change_of_radix
+# See also:
+#   https://en.wikipedia.org/wiki/Arithmetic_coding#Arithmetic_coding_as_a_generalized_change_of_radix
 
 use 5.010;
 use strict;

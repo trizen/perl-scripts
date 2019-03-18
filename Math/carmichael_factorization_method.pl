@@ -21,7 +21,7 @@ use strict;
 use warnings;
 
 use experimental qw(signatures);
-use Math::AnyNum qw(:overload isqrt icbrt floor gcd);
+use Math::AnyNum qw(:overload isqrt icbrt round gcd);
 
 sub solve_cubic_equation ($a, $b, $c, $d) {
 
@@ -31,7 +31,7 @@ sub solve_cubic_equation ($a, $b, $c, $d) {
     my $t = (icbrt(-($q/2) + isqrt(($q**2 / 4) + ($p**3 / 27))) +
              icbrt(-($q/2) - isqrt(($q**2 / 4) + ($p**3 / 27))));
 
-    my $x = floor($t - $b/(3*$a));
+    my $x = round($t - $b/(3*$a));
 
     return $x;
 }

@@ -1,15 +1,13 @@
 #!/usr/bin/perl
 
-# Author: Daniel "Trizen" Șuteu
-# License: GPLv3
+# Daniel "Trizen" Șuteu
 # Date: 07 May 2015
-# Website: http://github.com/trizen
+# https://github.com/trizen
 
-#
-## The binary arithmetic coding algorithm.
-#
+# The binary arithmetic coding algorithm.
 
-# See: http://en.wikipedia.org/wiki/Arithmetic_coding
+# See also:
+#   https://en.wikipedia.org/wiki/Arithmetic_coding
 
 use 5.010;
 use strict;
