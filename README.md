@@ -483,6 +483,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Is smooth number](./Math/is_smooth_number.pl)
     * [Is squarefree over product](./Math/is_squarefree_over_product.pl)
     * [Is sum of two squares](./Math/is_sum_of_two_squares.pl)
+    * [Iterative difference of central divisors to reach zero](./Math/iterative_difference_of_central_divisors_to_reach_zero.pl)
     * [Karatsuba multiplication](./Math/karatsuba_multiplication.pl)
     * [Kempner binomial numbers](./Math/kempner_binomial_numbers.pl)
     * [Klein J invariant and modular lambda](./Math/klein_J_invariant_and_modular_lambda.pl)
