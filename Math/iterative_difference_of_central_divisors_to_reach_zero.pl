@@ -7,7 +7,7 @@
 # Let f(n) be the difference between the least divisor of n that is >= sqrt(n) and the greatest divisor of n that is <= sqrt(n).
 # Let g(n) be the number of iterations of f(n) required to reach zero.
 
-# Then a(n) is the smallest integer of the form x*(x + a(n-1)), such that g(n) = n, for some positive integer x, with a(0) = 0.
+# Then a(n) is the smallest integer k of the form x*(x + a(n-1)), such that g(k) = n, for some positive integer x, with a(0) = 0.
 
 # This sequence provides upper-bounds for:
 #   https://oeis.org/A324921
