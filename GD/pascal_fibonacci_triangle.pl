@@ -51,9 +51,11 @@ sub pascal_fibonacci {
 
         my $i = 0;
         foreach my $elem (@row) {
-            $img->setpixel(x => $i++, y => $n, color => {hsv => [360 / $elem, 1, 1]});
+            $img->setpixel(x => $rows - ++$i, y => $n, color => {hsv => [360 / $elem, 1, 1]});
         }
     }
+
+    $img->flip(dir => "h");
 }
 
 pascal_fibonacci($size);
