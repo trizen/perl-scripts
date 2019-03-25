@@ -185,6 +185,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Moebius walking line](./GD/moebius_walking_line.pl)
     * [Number triangles](./GD/number_triangles.pl)
     * [Numeric circles](./GD/numeric_circles.pl)
+    * [Pascal fibonacci triangle](./GD/pascal_fibonacci_triangle.pl)
     * [Pascal's triangle multiples](./GD/pascal_s_triangle_multiples.pl)
     * [Pattern triangle](./GD/pattern_triangle.pl)
     * [Peacock triangles](./GD/peacock_triangles.pl)
