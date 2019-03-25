@@ -27,7 +27,7 @@ sub is_fibonacci($n) {
     is_square($m - 4) or is_square($m + 4);
 }
 
-my $size = 1000;                                           # the size of the triangle
+my $size = 1000;                                          # the size of the triangle
 my $img  = Imager->new(xsize => $size, ysize => $size);
 
 my $black = Imager::Color->new('#000000');
@@ -40,19 +40,27 @@ sub pascal_fibonacci {
 
     my @row = (1);
 
-    foreach my $n (0 .. $rows-1) {
+    foreach my $n (0 .. $rows - 1) {
+
+        my $i      = 0;
+        my $offset = ($rows - $n) / 2;
+
+        foreach my $elem (@row) {
+            $img->setpixel(
+                           x     => $offset + $i++,
+                           y     => $n,
+                           color => {
+                                     hsv => [$elem == 1 ? 0 : (360 / sqrt($elem)), 1 - 1 / $elem, 1 - 1 / $elem]
+                                    }
+                          );
+        }
 
 #<<<
         @row = (1, (map {
             my $t = $row[$_] + $row[$_ + 1];
             is_fibonacci($t) ? $t : 1;
-        } 0 .. $n - 2), 1);
+        } 0 .. $n - 1), 1);
 #>>>
-
-        my $i = 0;
-        foreach my $elem (@row) {
-            $img->setpixel(x => $i++, y => $n, color => {hsv => [360 / $elem, 1, 1]});
-        }
     }
 }
 
