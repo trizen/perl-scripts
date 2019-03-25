@@ -59,7 +59,7 @@ sub pascal_fibonacci {
         @row = (1, (map {
             my $t = $row[$_] + $row[$_ + 1];
             is_fibonacci($t) ? $t : 1;
-        } 0 .. $n - 1), 1);
+        } 0 .. $n - 2), 1);
 #>>>
     }
 }
