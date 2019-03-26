@@ -40,7 +40,7 @@ sub pascal_fibonacci {
 
     my @row = (1);
 
-    foreach my $n (0 .. $rows - 1) {
+    foreach my $n (1 .. $rows - 1) {
 
         my $i      = 0;
         my $offset = ($rows - $n) / 2;
@@ -53,6 +53,10 @@ sub pascal_fibonacci {
                                      hsv => [$elem == 1 ? 0 : (360 / sqrt($elem)), 1 - 1 / $elem, 1 - 1 / $elem]
                                     }
                           );
+        }
+
+        if ($n <= 10) {
+            say "@row";
         }
 
 #<<<
