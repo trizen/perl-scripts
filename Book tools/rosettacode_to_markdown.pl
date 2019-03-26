@@ -450,7 +450,7 @@ foreach my $task (@{$tasks}) {
         my $lang_data = extract_lang($content, $lang) // do { $lwp->uncache; next };
 
         my $header   = "[1]: $url\n\n" . "# [$title][1]\n\n";
-        my $markdown = $header . to_markdown($lang_data);
+        my $markdown = $header . to_markdown($lang_data) . "\n";
 
         write_to_file($base_dir, $name, $markdown, $overwrite);
     }
