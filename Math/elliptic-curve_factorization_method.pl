@@ -89,6 +89,25 @@ sub ecm ($N, $zrange = 100, $plimit = 10000) {
     return $N;    # failed
 }
 
+if (@ARGV) {
+
+    my ($str, $B1, $B2) = @ARGV;
+
+    my $n = Math::GMPz->new($str);
+    printf("[*] Factoring: %s (%d digits)...\n", $n, length("$n"));
+
+    my $factor = ecm($n, $B1 // 100, $B2 // 1000);
+
+    if ($factor > 1 and $factor < $n) {
+        say "`-> found factor: $factor";
+        exit 0;
+    }
+    else {
+        say "`-> no factor found...";
+        exit 1;
+    }
+}
+
 say ecm(Math::GMPz->new("14304849576137459"));
 say ecm(79710615566344993);
 say ecm(Math::GMPz->new(2)**128 + 1);    # takes ~3.4 seconds

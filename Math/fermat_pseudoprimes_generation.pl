@@ -4,7 +4,7 @@
 # Date: 28 January 2019
 # https://github.com/trizen
 
-# A new algorithm for generating Fermat pseudoprimes to base 2 (subset of Super-Poulet numbers whose divisors d all satisfy d|2^d-2).
+# A new algorithm for generating Fermat pseudoprimes to base 2.
 
 # See also:
 #   https://oeis.org/A050217 -- Super-Poulet numbers: Poulet numbers whose divisors d all satisfy d|2^d-2.
