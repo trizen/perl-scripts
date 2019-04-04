@@ -42,11 +42,10 @@ sub liouville_function_sum($n) {
 
     my $lookup_size = 2 * rootint($n, 3)**2;
 
-    my @lambda_lookup = (0);
     my @liouville_lookup = (0);
 
     foreach my $i (1 .. $lookup_size) {
-        $liouville_lookup[$i] = $liouville_lookup[$i - 1] + ($lambda_lookup[$i] = liouville($i));
+        $liouville_lookup[$i] = $liouville_lookup[$i - 1] + liouville($i);
     }
 
     my %seen;
