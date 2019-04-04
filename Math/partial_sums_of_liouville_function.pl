@@ -62,17 +62,17 @@ sub liouville_function_sum($n) {
         }
 
         my $s = sqrtint($n);
-        my $M = $s;
+        my $L = $s;
 
         foreach my $k (2 .. int($n / ($s + 1))) {
-            $M -= __SUB__->(int($n / $k));
+            $L -= __SUB__->(int($n / $k));
         }
 
         foreach my $k (1 .. $s) {
-            $M -= $liouville_lookup[$k] * (int($n / $k) - int($n / ($k + 1)));
+            $L -= $liouville_lookup[$k] * (int($n / $k) - int($n / ($k + 1)));
         }
 
-        $seen{$n} = $M;
+        $seen{$n} = $L;
 
     }->($n);
 }
