@@ -27,7 +27,7 @@ use warnings;
 
 use Math::GMPz;
 
-sub period_length_mpz {
+sub cfrac_sqrt {
     my ($n) = @_;
 
     $n = Math::GMPz->new("$n");
@@ -70,7 +70,7 @@ sub period_length_mpz {
 }
 
 foreach my $n (1 .. 20) {
-    say "sqrt($n) = [", join(', ', period_length_mpz($n)), "]";
+    say "sqrt($n) = [", join(', ', cfrac_sqrt($n)), "]";
 }
 
 __END__
