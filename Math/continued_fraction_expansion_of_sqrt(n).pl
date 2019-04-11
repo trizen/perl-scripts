@@ -1,70 +1,43 @@
 #!/usr/bin/perl
 
 # Daniel "Trizen" Șuteu
-# Date: 09 April 2019
+# Date: 11 April 2019
 # https://github.com/trizen
 
-# Compute the simple continued fraction for square root of a given number.
+# Compute the simple continued fraction expansion for the square root of a given number.
 
 # Algorithm from:
 #   http://web.math.princeton.edu/mathlab/jr02fall/Periodicity/mariusjp.pdf
-
-# OEIS sequences:
-#   https://oeis.org/A003285 -- Period of continued fraction for square root of n (or 0 if n is a square).
-#   https://oeis.org/A059927 -- Period length of the continued fraction for sqrt(2^(2n+1)).
-#   https://oeis.org/A064932 -- Period length of the continued fraction for sqrt(3^(2n+1)).
-#   https://oeis.org/A067280 -- Terms in continued fraction for sqrt(n), excl. 2nd and higher periods.
-#   https://oeis.org/A064025 -- Length of period of continued fraction for square root of n!.
-#   https://oeis.org/A064486 -- Quotient cycle lengths of square roots of primorials.
 
 # See also:
 #   https://en.wikipedia.org/wiki/Continued_fraction
 #   http://mathworld.wolfram.com/PeriodicContinuedFraction.html
 
-use 5.010;
+use 5.020;
 use strict;
 use warnings;
 
-use Math::GMPz;
+use Math::AnyNum qw(is_square isqrt idiv);
+use experimental qw(signatures);
 
-sub cfrac_sqrt {
-    my ($n) = @_;
+sub cfrac_sqrt ($n) {
 
-    $n = Math::GMPz->new("$n");
+    my $x = isqrt($n);
+    my $y = $x;
+    my $z = 1;
+    my $r = 2 * $x;
 
-    my $x = Math::GMPz::Rmpz_init();
-    Math::GMPz::Rmpz_sqrt($x, $n);
-
-    return ($x) if Math::GMPz::Rmpz_perfect_square_p($n);
-
-    my $y = Math::GMPz::Rmpz_init_set($x);
-    my $z = Math::GMPz::Rmpz_init_set_ui(1);
-    my $r = Math::GMPz::Rmpz_init();
+    return ($x) if is_square($n);
 
     my @cfrac = ($x);
 
-    Math::GMPz::Rmpz_add($r, $x, $x);    # r = x+x
-
     do {
-        my $t = Math::GMPz::Rmpz_init();
+        $y = $r * $z - $y;
+        $z = ($n - $y*$y) / $z;
+        $r = idiv(($x + $y), $z);
 
-        # y = (r*z - y)
-        Math::GMPz::Rmpz_submul($y, $r, $z);    # y = y - t*z
-        Math::GMPz::Rmpz_neg($y, $y);           # y = -y
-
-        # z = floor((n - y*y) / z)
-        Math::GMPz::Rmpz_mul($t, $y, $y);       # t = y*y
-        Math::GMPz::Rmpz_sub($t, $n, $t);       # t = n-t
-        Math::GMPz::Rmpz_divexact($z, $t, $z);  # z = t/z
-
-        # t = floor((x + y) / z)
-        Math::GMPz::Rmpz_add($t, $x, $y);       # t = x+y
-        Math::GMPz::Rmpz_tdiv_q($t, $t, $z);    # t = floor(t/z)
-
-        $r = $t;
-        push @cfrac, $t;
-
-    } until (Math::GMPz::Rmpz_cmp_ui($z, 1) == 0);
+        push @cfrac, $r;
+    } until ($z == 1);
 
     return @cfrac;
 }

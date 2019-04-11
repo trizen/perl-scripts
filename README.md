@@ -392,6 +392,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Complex modular multiplicative inverse](./Math/complex_modular_multiplicative_inverse.pl)
     * [Complex zeta in real numbers](./Math/complex_zeta_in_real_numbers.pl)
     * [Continued fraction expansion of sqrt(n)](./Math/continued_fraction_expansion_of_sqrt(n).pl)
+    * [Continued fraction expansion of sqrt(n) mpz](./Math/continued_fraction_expansion_of_sqrt(n)_mpz.pl)
     * [Continued fraction factorization method](./Math/continued_fraction_factorization_method.pl)
     * [Continued fractions](./Math/continued_fractions.pl)
     * [Continued fractions for e](./Math/continued_fractions_for_e.pl)
