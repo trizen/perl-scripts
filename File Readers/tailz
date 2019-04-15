@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 # Simple program to read the last n line(s) of a file.
-# Reads from the end of the file for effeciency
+# Reads from the end of the file for efficiency.
 
 # Originally coded by zentara on 06 September 2002:
 #   http://www.perlmonks.org/index.pl?node_id=195768

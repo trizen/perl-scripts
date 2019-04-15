@@ -143,7 +143,7 @@ sub ecm ($N, $zrange = 200, $plimit = 20000) {
     return $N;    # failed to factorize N
 }
 
-# Factoring the 7th Fermat numebr: 2^128 + 1
+# Factoring the 7th Fermat number: 2^128 + 1
 say ecm(Math::GMPz->new(2)**128 + 1, 100, 8000);    # takes ~1 second
 
 say "\n=> More tests:";

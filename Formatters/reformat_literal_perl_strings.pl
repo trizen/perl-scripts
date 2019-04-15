@@ -10,7 +10,7 @@
 #   'foo姓bar' -> "foo\x{59D3}bar"
 #   '\'foo\''  -> "'foo'"
 
-# The literal quoted strings (quoted as: q{...}, qq{...}, '...' or "...") will be reformated as "...".
+# The literal quoted strings (quoted as: q{...}, qq{...}, '...' or "...") will be reformatted as "...".
 
 # Strings which (potentially) include variable interpolations, are ignored.
 

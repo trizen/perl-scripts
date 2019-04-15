@@ -6,7 +6,7 @@
 
 # The following 1628-digit number: 46785696846401151 * 3^3377 requires 41763 steps to get down to 1.
 
-# Collatz function on higher powers of 3 multipied with n = 46785696846401151:
+# Collatz function on higher powers of 3 multiplied with n = 46785696846401151:
 #      collatz(n * 3^8818) = 101856
 #      collatz(n * 3^9071) = 106610
 #      collatz(n * 3^9296) = 108210

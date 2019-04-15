@@ -15,6 +15,7 @@ use warnings;
 use Text::Hunspell;
 use List::Util qw(max);
 use File::Find qw(find);
+use Encode qw(decode_utf8);
 use Perl::Tokenizer qw(perl_tokens);
 use Text::JaroWinkler qw(strcmp95);
 use Getopt::Long qw(GetOptions :config no_ignore_case);
@@ -126,6 +127,8 @@ while (@ARGV) {
         } => $file;
         next;
     }
+
+    $file = decode_utf8($file);
 
     open my $fh, '<:encoding(UTF-8)', $file or next;
     local $SIG{__WARN__} = sub { };

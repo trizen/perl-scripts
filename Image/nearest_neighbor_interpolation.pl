@@ -4,7 +4,7 @@
 # Date: 27 July 2018
 # https://github.com/trizen
 
-# A simple implementation of the nearest-neighbor interpolation algorithm for scalling up an image.
+# A simple implementation of the nearest-neighbor interpolation algorithm for scaling up an image.
 
 # See also:
 #   https://en.wikipedia.org/wiki/Nearest-neighbor_interpolation

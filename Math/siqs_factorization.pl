@@ -813,7 +813,7 @@ sub pollard_brent_find_factor ($n, $max_iter) {
 sub fibonacci_factorization ($n, $upper_bound) {
 
     # The Fibonacci factorization method, taking
-    # advatange of the smoothness of `p - legendre(p, 5)`.
+    # advantage of the smoothness of `p - legendre(p, 5)`.
 
     my $bound = 5 * logint($n, 2)**2;
 

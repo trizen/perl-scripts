@@ -7,7 +7,7 @@
 
 # A number triangle, with the primes highlighted in blue
 
-## Veritical lines are represented by:
+## Vertical lines are represented by:
 # n^2 - 2n + 2
 # n^2 - n + 1
 # n^2

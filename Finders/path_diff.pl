@@ -5,7 +5,7 @@
 # Date: 12 October 2017
 # https://github.com/trizen
 
-# Compare two paths file-by-file and diplay the filenames of (non-)duplicate files.
+# Compare two paths file-by-file and display the filenames of (non-)duplicate files.
 
 use 5.010;
 use strict;

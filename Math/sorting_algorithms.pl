@@ -18,15 +18,15 @@ use List::Util qw(min max shuffle);
         my $end = $#A;
 
         while (1) {
-            my $swaped;
+            my $swapped;
             for (my $i = 0 ; $i < $end ; $i++) {
                 if ($A[$i] > $A[$i + 1]) {
                     @A[$i + 1, $i] = @A[$i, $i + 1];
-                    $swaped //= 1;
+                    $swapped //= 1;
                     $i++;
                 }
             }
-            $swaped || return \@A;
+            $swapped || return \@A;
         }
     }
 }
@@ -561,19 +561,19 @@ use List::Util qw(min max shuffle);
 
         my @indices = $max;
 
-        my $swaped;
+        my $swapped;
         foreach my $i (1 .. $#arr) {
             my $cmp = $arr[$i - 1] <=> $arr[$i];
 
             push @indices,
                 $cmp == -1 ? $indices[-1] + 1
-              : $cmp == 1 ? do { $swaped //= 1; $indices[-1] - 1 }
+              : $cmp == 1 ? do { $swapped //= 1; $indices[-1] - 1 }
               :             $indices[-1];
 
             $min = $indices[-1] if $indices[-1] < $min;
             $max = $indices[-1] if $indices[-1] > $max;
         }
-        unless ($swaped) {
+        unless ($swapped) {
             return @arr;
         }
 

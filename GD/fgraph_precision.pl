@@ -72,7 +72,7 @@ for (my $x = $from ; $x <= $to ; $x += $step) {
     }
 
     $y = sprintf('%.0f', $y);
-    say "($x, $y)" if $v;    # this line prints the coordonates
+    say "($x, $y)" if $v;    # this line prints the coordinates
     assign($x, $y, 'o');     # this line maps the value of (x, f(x)) on the graph
 }
 

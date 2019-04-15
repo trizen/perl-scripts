@@ -4,7 +4,7 @@
 # Date: 24 January 2019
 # https://github.com/trizen
 
-# Generalized efficient formula for computing the k-th order Fibonacci numbers, using exponentation by squaring.
+# Generalized efficient formula for computing the k-th order Fibonacci numbers, using exponentiation by squaring.
 
 # OEIS sequences:
 #   https://oeis.org/A000045    (2-nd order: Fibonacci numbers)

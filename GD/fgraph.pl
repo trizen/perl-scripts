@@ -71,7 +71,7 @@ foreach my $x ($range->[0] .. $range->[1]) {
         next;
     }
 
-    say "($x, $y)";    # this line prints the coordonates
+    say "($x, $y)";         # this line prints the coordinates
     assign($x, $y, 'o');    # this line maps the value of (x, f(x)) on the graph
 }
 

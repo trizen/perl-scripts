@@ -34,6 +34,6 @@ say "The internal diagonal angles:";
 say '  ', rad2deg($a1);     #=> 66.0923395058274991877532084833790002675999587054
 say '  ', rad2deg($a2);     #=> 23.9076604941725008122467915166209997324000412946
 
-say "\nThe smallest side lenghts matching the internal angles:";
+say "\nThe smallest side lengths matching the internal angles:";
 say rectangle_side_from_angle($a1);         #=> 43
 say rectangle_side_from_angle($a2);         #=> 97
