@@ -635,6 +635,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Primes diff](./Math/primes_diff.pl)
     * [Primes sum of pair product](./Math/primes_sum_of_pair_product.pl)
     * [Primitive sum of two squares](./Math/primitive_sum_of_two_squares.pl)
+    * [Primorial deflation](./Math/primorial_deflation.pl)
     * [Pseudo square root](./Math/pseudo_square_root.pl)
     * [PSW primality test](./Math/PSW_primality_test.pl)
     * [PSW primality test mpz](./Math/PSW_primality_test_mpz.pl)
