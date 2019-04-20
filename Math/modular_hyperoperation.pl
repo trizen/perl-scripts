@@ -10,6 +10,7 @@
 # See also:
 #   https://en.wikipedia.org/wiki/Knuth%27s_up-arrow_notation
 
+use utf8;
 use 5.020;
 use strict;
 use warnings;
@@ -17,8 +18,10 @@ use warnings;
 no warnings 'recursion';
 use experimental qw(signatures);
 
-use ntheory qw(powmod euler_phi forprimes);
+binmode(STDOUT, ':utf8');
+
 use Memoize qw(memoize);
+use ntheory qw(powmod euler_phi forprimes);
 
 memoize('knuth');
 memoize('hyper1');
@@ -75,30 +78,30 @@ foreach my $i (0 .. 6) {
     my $y = 1 + int(rand(100));
 
     my $n = knuth($x, $i, $y, $m);
-    printf("%5s %10s %5s = %5s   (mod %s)\n", $x, '^' x $i, $y, $n, $m);
+    printf("%5s %10s %5s = %5s   (mod %s)\n", $x, '↑' x $i, $y, $n, $m);
 }
 
-say "\n=> Finding prime factors of 10∆10 + 23:";
+say "\n=> Finding prime factors of 10↑↑10 + 23:";
 
 forprimes {
     if (((knuth(10, 2, 10, $_) + 23) % $_) == 0) {
-        printf("%6s | (10∆10 + 23)\n", $_);
+        printf("%6s | (10↑↑10 + 23)\n", $_);
     }
 } 1e6;
 
 __END__
-   50               33 =   650   (mod 1000)
-   94          ^    91 =   144   (mod 1000)
-   14         ^^    36 =   336   (mod 1000)
-   55        ^^^     5 =   375   (mod 1000)
-   85       ^^^^    67 =   125   (mod 1000)
-   32      ^^^^^    39 =   176   (mod 1000)
-   84     ^^^^^^     4 =   816   (mod 1000)
+   47               20 =   940   (mod 1000)
+   84          ↑    59 =   664   (mod 1000)
+   49         ↑↑    79 =   449   (mod 1000)
+   95        ↑↑↑    71 =   375   (mod 1000)
+    7       ↑↑↑↑    41 =   343   (mod 1000)
+   40      ↑↑↑↑↑     7 =    40   (mod 1000)
+   17     ↑↑↑↑↑↑    55 =   777   (mod 1000)
 
-=> Finding prime factors of 10∆10 + 23:
-     2 | (10∆10 + 23)
-     3 | (10∆10 + 23)
-    13 | (10∆10 + 23)
-   673 | (10∆10 + 23)
- 18301 | (10∆10 + 23)
-400109 | (10∆10 + 23)
+=> Finding prime factors of 10↑↑10 + 23:
+     2 | (10↑↑10 + 23)
+     3 | (10↑↑10 + 23)
+    13 | (10↑↑10 + 23)
+   673 | (10↑↑10 + 23)
+ 18301 | (10↑↑10 + 23)
+400109 | (10↑↑10 + 23)
