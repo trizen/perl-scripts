@@ -151,21 +151,6 @@ sub cffm ($n, $verbose = 0, $multiplier = 1) {
         return sort { $a <=> $b } ((@factors) x $k);
     }
 
-    # Check for divisibility by 2
-    if (Math::GMPz::Rmpz_even_p($n)) {
-
-        my $v = Math::GMPz::Rmpz_scan1($n, 0);
-        my $t = $n >> $v;
-
-        my @factors = (2) x $v;
-
-        if ($t > 1) {
-            push @factors, __SUB__->($t, $verbose);
-        }
-
-        return @factors;
-    }
-
     my $N = $n * $multiplier;
 
     my $x = Math::GMPz::Rmpz_init();
