@@ -20,7 +20,7 @@ my $max = 200-$n;
 sub build_dict {
     my ($n, @words) = @_;
     my %dict;
-    for my $i (0 .. @words - $n) {
+    for my $i (0 .. @words - $n - 1) {
         my @prefix = @words[$i .. $i + $n - 1];
         push @{$dict{join ' ', @prefix}}, $words[$i + $n];
     }
