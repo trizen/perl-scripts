@@ -768,6 +768,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Jaro-winkler distance](./Text/jaro-winkler_distance.pl)
     * [Levenshtein distance iter](./Text/levenshtein_distance_iter.pl)
     * [Levenshtein distance rec](./Text/levenshtein_distance_rec.pl)
+    * [Markov chain text generator](./Text/markov_chain_text_generator.pl)
     * [Orthogonal text scrambling](./Text/orthogonal_text_scrambling.pl)
     * [Orthogonal text scrambling double](./Text/orthogonal_text_scrambling_double.pl)
     * [Repeated substrings](./Text/repeated_substrings.pl)
