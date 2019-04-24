@@ -747,6 +747,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
 * Other
     * [Concatenation weirdness](./Other/concatenation_weirdness.pl)
     * [Tail recursion](./Other/tail_recursion.pl)
+    * [Yafu factorization](./Other/yafu_factorization.pl)
 * Regex
     * [Positive-negative matching](./Regex/positive-negative_matching.pl)
     * [Prime regexp](./Regex/prime_regexp.pl)
