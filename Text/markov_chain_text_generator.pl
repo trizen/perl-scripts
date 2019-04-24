@@ -12,6 +12,7 @@ use warnings;
 
 use Encode qw(decode_utf8);
 use Text::Unidecode qw(unidecode);
+use List::Util qw(first shuffle);
 
 my $n   = 2;
 my $max = 200-$n;
@@ -38,16 +39,19 @@ $text = lc($text);
 $text =~ s/[^\w-]+/ /g;
 
 my @words = split ' ', $text;
-my %dict  = build_dict($n, @words);
+push @words, @words[0..$n-1];   # close the loop
 
+my %dict  = build_dict($n, @words);
 my $idx   = int(rand(@words - $n));
 my @rotor = @words[$idx .. $idx + $n - 1];
 my @chain = @rotor;
 
 sub pick_next {
-    my $key = join(' ', @_);
+    my (@prefix) = @_;
+    my $key = join(' ', @prefix);
+    shift(@prefix);
     my @arr = @{$dict{$key}};
-    $arr[rand @arr];
+    first { exists($dict{join(' ', @prefix, $_)}) } shuffle(@arr);
 }
 
 for (1 .. $max) {
