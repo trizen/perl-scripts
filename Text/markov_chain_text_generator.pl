@@ -63,9 +63,9 @@ $text = decode_utf8($text);
 $text = unidecode($text);
 $text = lc($text);
 
-$text =~ s/[^\w-]+/ /g;
+$text =~ s/[^\w'-]+/ /g;
 
-my @words = split ' ', $text;
+my @words = grep { /^[a-z]/ } split ' ', $text;
 
 my %dict  = build_dict(@words);
 my $idx   = int(rand(@words - $n_max));
