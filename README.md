@@ -746,6 +746,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [File-monitor](./Monitoring/file-monitor)
 * Other
     * [Concatenation weirdness](./Other/concatenation_weirdness.pl)
+    * [Lexical subs recursion bug](./Other/lexical_subs_recursion_bug.pl)
     * [Tail recursion](./Other/tail_recursion.pl)
     * [Yafu factorization](./Other/yafu_factorization.pl)
 * Regex
