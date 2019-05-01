@@ -684,6 +684,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Solutions to x^2 = 1 (mod n)](./Math/solutions_to_x^2%20=%201%20(mod%20n).pl)
     * [Solutions to x^2 = a (mod n)](./Math/solutions_to_x^2%20=%20a%20(mod%20n).pl)
     * [Solve congruence equation example](./Math/solve_congruence_equation_example.pl)
+    * [Solve cubic equation real](./Math/solve_cubic_equation_real.pl)
     * [Solve pell equation](./Math/solve_pell_equation.pl)
     * [Solve pell equation fast](./Math/solve_pell_equation_fast.pl)
     * [Solve pell equation generalized](./Math/solve_pell_equation_generalized.pl)
