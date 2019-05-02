@@ -4,7 +4,7 @@
 # Date: 30 April 2019
 # https://github.com/trizen
 
-# Given an array of `n` elements, generate all the possible ordered subsets of consecutive elements (with no swaps and go gaps).
+# Given an array of `n` elements, generate all the possible consecutive partitions (with no swaps and go gaps).
 
 # For example, given the array [1,2,3,4,5], there are 16 different ways to
 # subdivide the array (using all of its elements in their original order):
@@ -49,7 +49,7 @@ sub split_at_indices {
     return @parts;
 }
 
-sub ordered_subsets {
+sub consecutive_partitions {
     my (@array) = @_;
 
     my @subsets;
@@ -66,7 +66,7 @@ sub ordered_subsets {
     return @subsets;
 }
 
-my @subsets = ordered_subsets(1, 2, 3, 4, 5);
+my @subsets = consecutive_partitions(1, 2, 3, 4, 5);
 
 foreach my $subset (@subsets) {
     say join(', ', map { "[@$_]" } @$subset);
