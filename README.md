@@ -382,7 +382,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Brazilian primes constant](./Math/brazilian_primes_constant.pl)
     * [Brown numbers](./Math/brown_numbers.pl)
     * [Carmichael factorization method](./Math/carmichael_factorization_method.pl)
-    * [Carmichael factorization method binary search](./Math/carmichael_factorization_method_binary_search.pl)
+    * [Carmichael factorization method generalized](./Math/carmichael_factorization_method_generalized.pl)
     * [Carmichael numbers random](./Math/carmichael_numbers_random.pl)
     * [Cartesian product iter](./Math/cartesian_product_iter.pl)
     * [Cartesian product rec](./Math/cartesian_product_rec.pl)
