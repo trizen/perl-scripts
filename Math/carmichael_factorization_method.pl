@@ -21,8 +21,10 @@ use strict;
 use warnings;
 
 use experimental qw(signatures);
+use ntheory qw(lastfor forcomb);
 use Math::AnyNum qw(:overload isqrt icbrt round gcd);
 
+#<<<
 sub solve_cubic_equation ($a, $b, $c, $d) {
 
     my $p = (3*$a*$c - $b*$b) / (3*$a*$a);
@@ -35,8 +37,9 @@ sub solve_cubic_equation ($a, $b, $c, $d) {
 
     return $x;
 }
+#>>>
 
-sub carmichael_factorization($n) {
+sub carmichael_factorization ($n, $l = 2, $h = 23) {
 
     my $factor = 1;
 
@@ -51,23 +54,23 @@ sub carmichael_factorization($n) {
         }
     }
 
-    # It's also possible to iterate over `z in (1..3)` and set `y = y/z`
-  OUTER: foreach my $x (1 .. 11) {
-        foreach my $y ($x .. 23) {
+    my @range = ($l .. $h);
 
-            my $a = $x * $y;
-            my $b = 2*$a - $x - $y;
-            my $c = $a - $x - $y + 1;
+    forcomb {
+        my ($x, $y) = @range[@_];
 
-            try_parameters($a,  $b,    $c) and last OUTER;
-            try_parameters($a, -$b,    $c) and last OUTER;
-            try_parameters( 1, $x+$y,  $a) and last OUTER;
-            try_parameters($a, $y-$x, -$c) and last OUTER;
+        my $a = $x * $y;
+        my $b = 2 * $a - $x - $y;
+        my $c = $a - $x - $y + 1;
 
-            try_parameters($a, (+2 * $y + 1) * $x + $y, ($y + 1) * $x + ($y + 1)) and last OUTER;
-            try_parameters($a, (-2 * $y - 1) * $x - $y, ($y + 1) * $x + ($y + 1)) and last OUTER;
-        }
-    }
+        try_parameters($a, $b,      $c)  and do { lastfor, return $factor };
+        try_parameters($a, -$b,     $c)  and do { lastfor, return $factor };
+        try_parameters(1,  $x + $y, $a)  and do { lastfor, return $factor };
+        try_parameters($a, $y - $x, -$c) and do { lastfor, return $factor };
+
+        try_parameters($a, (+2 * $y + 1) * $x + $y, ($y + 1) * $x + ($y + 1)) and do { lastfor, return $factor };
+        try_parameters($a, (-2 * $y - 1) * $x - $y, ($y + 1) * $x + ($y + 1)) and do { lastfor, return $factor };
+    } scalar(@range), 2;
 
     return $factor;
 }
