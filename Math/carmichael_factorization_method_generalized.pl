@@ -36,7 +36,6 @@ sub carmichael_factorization ($n, $k = 3, $l = 2, $h = 6) {
     my @range = ($l .. $h);
 
     forcomb {
-
         my @params = @range[@_];
 
         foreach my $block (@blocks) {
@@ -51,7 +50,7 @@ sub carmichael_factorization ($n, $k = 3, $l = 2, $h = 6) {
             my $g = gcd($r, $n);
 
             if ($g > 1) {
-                @factors = (grep { $n % $_ == 0 } ($r, $block->($r, @params)));
+                @factors = grep { $n % $_ == 0 } ($r, $block->($r, @params));
                 lastfor, return @factors;
             }
         }
