@@ -507,6 +507,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Logarithmic root mpfr](./Math/logarithmic_root_mpfr.pl)
     * [Long division](./Math/long_division.pl)
     * [Long multiplication](./Math/long_multiplication.pl)
+    * [Lucas-pratt prime records](./Math/lucas-pratt_prime_records.pl)
     * [Lucas factorization method](./Math/lucas_factorization_method.pl)
     * [Lucas sequences U V](./Math/lucas_sequences_U_V.pl)
     * [Lucas sequences U V mpz](./Math/lucas_sequences_U_V_mpz.pl)
