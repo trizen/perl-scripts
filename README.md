@@ -1,7 +1,7 @@
 perl-scripts
 ============
 
-A collection of day-to-day Perl scripts that prove some ideas or implement some useful practicability.
+A nice collection of day-to-day Perl scripts.
 
 ### Summary
 
@@ -480,6 +480,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Inverse of fibonacci](./Math/inverse_of_fibonacci.pl)
     * [Inverse of p adic valuation](./Math/inverse_of_p_adic_valuation.pl)
     * [Invert transform of factorials](./Math/invert_transform_of_factorials.pl)
+    * [Is absolute euler pseudoprime](./Math/is_absolute_euler_pseudoprime.pl)
     * [Is chernick carmichael number](./Math/is_chernick_carmichael_number.pl)
     * [Is even perfect](./Math/is_even_perfect.pl)
     * [Is even perfect 2](./Math/is_even_perfect_2.pl)
@@ -497,6 +498,7 @@ A collection of day-to-day Perl scripts that prove some ideas or implement some 
     * [Lambert W function complex](./Math/lambert_W_function_complex.pl)
     * [Lanczos approximation](./Math/lanczos_approximation.pl)
     * [Least k such that k*prime(k) > 10^n](./Math/least_k_such_that_k*prime(k)_>_10^n.pl)
+    * [Least nonresidue](./Math/least_nonresidue.pl)
     * [Legendary question six](./Math/legendary_question_six.pl)
     * [Length of shortest addition chain](./Math/length_of_shortest_addition_chain.pl)
     * [Lerch zeta function](./Math/lerch_zeta_function.pl)
