@@ -810,6 +810,34 @@ sub pollard_brent_find_factor ($n, $max_iter) {
     return $g;
 }
 
+sub fast_fibonacci_factor ($n, $upto) {
+
+    state %lcms;
+
+    foreach my $k (2 .. 500) {
+
+        my $d = ($lcms{$k} //= consecutive_integer_lcm($k));
+        my ($U, $V) = map { Math::GMPz::Rmpz_init_set_str($_, 10) } lucas_sequence($n, 3, 1, $d);
+
+        foreach my $f (sub { gcd($U, $n) }, sub { gcd($V - 2, $n) }) {
+            my $g = Math::GMPz->new($f->());
+            return $g if ($g > 1 and $g < $n);
+        }
+    }
+
+    foreach my $k (2 .. $upto) {
+
+        my ($U, $V) = map { Math::GMPz::Rmpz_init_set_str($_, 10) } lucas_sequence($n, 4, 1, $k);
+
+        foreach my $f (sub { gcd($U, $n) }, sub { gcd($V - 2, $n) }) {
+            my $g = Math::GMPz->new($f->());
+            return $g if ($g > 1 and $g < $n);
+        }
+    }
+
+    return undef;
+}
+
 sub fibonacci_factorization ($n, $upper_bound) {
 
     # The Fibonacci factorization method, taking
@@ -1277,6 +1305,14 @@ sub find_small_factors ($rem, $factors) {
 
         say "=> HOLF method...";
         $f = holf_find_factor($rem, HOLF_ITERATIONS);
+
+        if (defined($f) and $f < $rem) {
+            store_factor(\$rem, $f, $factors);
+            next;
+        }
+
+        say "=> Fast Fibonacci check...";
+        $f = fast_fibonacci_factor($rem, 5000);
 
         if (defined($f) and $f < $rem) {
             store_factor(\$rem, $f, $factors);
