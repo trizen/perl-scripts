@@ -104,7 +104,7 @@ sub BPSW_primality_test ($n) {
         return 1;
     }
 
-    for (1 .. $s) {
+    for (1 .. $s-1) {
 
         Math::GMPz::Rmpz_powm_ui($V1, $V1, 2, $n);
         Math::GMPz::Rmpz_submul_ui($V1, $Q1, 2);

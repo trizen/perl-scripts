@@ -82,7 +82,7 @@ sub BPSW_primality_test($n) {
     return 1 if is_congruent($U1, 0, $n);
     return 1 if is_congruent($V1, 0, $n);
 
-    for (1 .. $s) {
+    for (1 .. $s-1) {
 
         $V1 = ($V1 * $V1 - 2 * $Q1) % $n;
         $Q1 = ($Q1 * $Q1) % $n;
