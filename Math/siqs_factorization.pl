@@ -819,7 +819,7 @@ sub fast_fibonacci_factor ($n, $upto) {
         my $d = ($lcms{$k} //= consecutive_integer_lcm($k));
         my ($U, $V) = map { Math::GMPz::Rmpz_init_set_str($_, 10) } lucas_sequence($n, 3, 1, $d);
 
-        foreach my $f (sub { gcd($U, $n) }, sub { gcd($V - 2, $n) }) {
+        foreach my $f (sub { gcd($U, $n) }, sub { gcd($V - 2, $n) }, sub { gcd($V, $n) }) {
             my $g = Math::GMPz->new($f->());
             return $g if ($g > 1 and $g < $n);
         }
@@ -829,7 +829,7 @@ sub fast_fibonacci_factor ($n, $upto) {
 
         my ($U, $V) = map { Math::GMPz::Rmpz_init_set_str($_, 10) } lucas_sequence($n, 4, 1, $k);
 
-        foreach my $f (sub { gcd($U, $n) }, sub { gcd($V - 2, $n) }) {
+        foreach my $f (sub { gcd($U, $n) }, sub { gcd($V - 2, $n) }, sub { gcd($V, $n) }) {
             my $g = Math::GMPz->new($f->());
             return $g if ($g > 1 and $g < $n);
         }
@@ -866,7 +866,7 @@ sub fibonacci_factorization ($n, $upper_bound) {
         my $d = consecutive_integer_lcm($bound);
         my ($U, $V) = map { Math::GMPz::Rmpz_init_set_str($_, 10) } lucas_sequence($n, $P, $Q, $d);
 
-        foreach my $f (sub { gcd($U, $n) }, sub { gcd($V - 2, $n) }) {
+        foreach my $f (sub { gcd($U, $n) }, sub { gcd($V - 2, $n) }, sub { gcd($V, $n) }) {
             my $g = Math::GMPz->new($f->());
             return $g if ($g > 1 and $g < $n);
         }
