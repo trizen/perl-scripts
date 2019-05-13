@@ -5,8 +5,8 @@
 # No counter-examples are known to this test.
 
 # Algorithm: given an odd integer n, that is not a perfect power:
-#   1. Perform a base-2 Fermat test.
-#   2. Find the first P>0 such that kronecker(n, P^2 + 4) = -1.
+#   1. Perform a (strong) base-2 Fermat test.
+#   2. Find the first P>0 such that kronecker(P^2 + 4, n) = -1.
 #   3. If the Lucas U sequence: U(P, -1, n+1) = 0 (mod n), then n is probably prime.
 
 # See also:
@@ -26,6 +26,8 @@ sub PSW_primality_test ($n) {
 
     return 0 if Math::GMPz::Rmpz_cmp_ui($n, 1) <= 0;
     return 1 if Math::GMPz::Rmpz_cmp_ui($n, 2) == 0;
+
+    return 0 if Math::GMPz::Rmpz_even_p($n);
     return 0 if Math::GMPz::Rmpz_perfect_power_p($n);
 
     my $d = Math::GMPz::Rmpz_init();
@@ -36,10 +38,10 @@ sub PSW_primality_test ($n) {
     Math::GMPz::Rmpz_powm($t, $t, $d, $n);
     Math::GMPz::Rmpz_cmp_ui($t, 1) and return 0;
 
-    # Find P such that kronecker(n, P^2 + 4) = -1.
+    # Find P such that kronecker(P^2 - 4*Q, n) = -1.
     my $P;
     for (my $k = 1 ; ; ++$k) {
-        if (Math::GMPz::Rmpz_kronecker_ui($n, $k * $k + 4) == -1) {
+        if (Math::GMPz::Rmpz_ui_kronecker($k * $k + 4, $n) == -1) {
             $P = $k;
             last;
         }

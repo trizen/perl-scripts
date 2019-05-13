@@ -5,7 +5,7 @@
 # No counter-examples are known to this test.
 
 # Algorithm: given an odd integer n, that is not a perfect power:
-#   1. Perform a base-2 Fermat test.
+#   1. Perform a (strong) base-2 Fermat test.
 #   2. Find the first D in the sequence 5, −7, 9, −11, 13, −15, ... for which the Jacobi symbol (D/n) is −1.
 #      Set P = 1 and Q = (1 − D) / 4.
 #   3. Perform a strong Lucas probable prime test on n using parameters D, P, and Q.
@@ -26,6 +26,8 @@ sub BPSW_primality_test ($n) {
 
     return 0 if Math::GMPz::Rmpz_cmp_ui($n, 1) <= 0;
     return 1 if Math::GMPz::Rmpz_cmp_ui($n, 2) == 0;
+
+    return 0 if Math::GMPz::Rmpz_even_p($n);
     return 0 if Math::GMPz::Rmpz_perfect_power_p($n);
 
     my $d = Math::GMPz::Rmpz_init();
@@ -46,15 +48,15 @@ sub BPSW_primality_test ($n) {
         }
     }
 
-    Math::GMPz::Rmpz_add_ui($d, $d, 2);
+    Math::GMPz::Rmpz_add_ui($d, $d, 2);                 # d = n+1
+    my $s = Math::GMPz::Rmpz_scan1($d, 0);              # s = valuation(n, 2)
+    Math::GMPz::Rmpz_div_2exp($t, $d, $s+1);            # t = d >> (s+1)
 
-    my $s = Math::GMPz::Rmpz_scan1($d, 0);
     my $U1 = Math::GMPz::Rmpz_init_set_ui(1);
-
     my ($V1, $V2) = (Math::GMPz::Rmpz_init_set_ui(2), Math::GMPz::Rmpz_init_set_ui(1));
     my ($Q1, $Q2) = (Math::GMPz::Rmpz_init_set_ui(1), Math::GMPz::Rmpz_init_set_ui(1));
 
-    foreach my $bit (split(//, substr(Math::GMPz::Rmpz_get_str($d, 2), 0, -$s - 1))) {
+    foreach my $bit (split(//, Math::GMPz::Rmpz_get_str($t, 2))) {
 
         Math::GMPz::Rmpz_mul($Q1, $Q1, $Q2);
         Math::GMPz::Rmpz_mod($Q1, $Q1, $n);
