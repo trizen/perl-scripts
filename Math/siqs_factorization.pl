@@ -812,26 +812,15 @@ sub pollard_brent_find_factor ($n, $max_iter) {
 
 sub fast_fibonacci_factor ($n, $upto) {
 
-    state %lcms;
-
-    foreach my $k (2 .. 500) {
-
-        my $d = ($lcms{$k} //= consecutive_integer_lcm($k));
-        my ($U, $V) = map { Math::GMPz::Rmpz_init_set_str($_, 10) } lucas_sequence($n, 3, 1, $d);
-
-        foreach my $f (sub { gcd($U, $n) }, sub { gcd($V - 2, $n) }, sub { gcd($V, $n) }) {
-            my $g = Math::GMPz->new($f->());
-            return $g if ($g > 1 and $g < $n);
-        }
-    }
-
     foreach my $k (2 .. $upto) {
+        foreach my $P (3, 4) {
 
-        my ($U, $V) = map { Math::GMPz::Rmpz_init_set_str($_, 10) } lucas_sequence($n, 4, 1, $k);
+            my ($U, $V) = map { Math::GMPz::Rmpz_init_set_str($_, 10) } lucas_sequence($n, $P, 1, $k);
 
-        foreach my $f (sub { gcd($U, $n) }, sub { gcd($V - 2, $n) }, sub { gcd($V, $n) }) {
-            my $g = Math::GMPz->new($f->());
-            return $g if ($g > 1 and $g < $n);
+            foreach my $f (sub { gcd($U, $n) }, sub { gcd($V - 2, $n) }, sub { gcd($V, $n) }) {
+                my $g = Math::GMPz->new($f->());
+                return $g if ($g > 1 and $g < $n);
+            }
         }
     }
 
