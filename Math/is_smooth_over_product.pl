@@ -15,7 +15,7 @@
 #     4. If g is greater than 1, then n = r * g^e, for some e >= 1.
 #        - If r = 1, then n is smooth over the factor base.
 #        - Otherwise, set n = r and go to step 3.
-#     5. If this step is reached, then n is not smooth.
+#     5. If this step is reached, then n is not smooth over the factor base.
 
 use 5.020;
 use warnings;

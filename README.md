@@ -487,7 +487,7 @@ A nice collection of day-to-day Perl scripts.
     * [Is even perfect 3](./Math/is_even_perfect_3.pl)
     * [Is perfect power](./Math/is_perfect_power.pl)
     * [Is provable prime](./Math/is_provable_prime.pl)
-    * [Is smooth number](./Math/is_smooth_number.pl)
+    * [Is smooth over product](./Math/is_smooth_over_product.pl)
     * [Is squarefree over product](./Math/is_squarefree_over_product.pl)
     * [Is sum of two squares](./Math/is_sum_of_two_squares.pl)
     * [Iterative difference of central divisors to reach zero](./Math/iterative_difference_of_central_divisors_to_reach_zero.pl)
