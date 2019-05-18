@@ -55,7 +55,7 @@ sub bern_from_primes {
 
     my $N = Math::MPFR::Rmpfr_init2(64);
     Math::MPFR::Rmpfr_mul_z($N, $K, $d, $round);          # N = K * d
-    Math::MPFR::Rmpfr_root($N, $N, $n - 1, $round);       # N = K^(1/(n-1))
+    Math::MPFR::Rmpfr_rootn_ui($N, $N, $n - 1, $round);   # N = K^(1/(n-1))
     Math::MPFR::Rmpfr_ceil($N, $N);                       # N = ceil(N)
 
     $N = Math::MPFR::Rmpfr_get_ui($N, $round);

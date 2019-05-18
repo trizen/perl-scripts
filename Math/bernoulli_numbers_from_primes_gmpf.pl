@@ -86,7 +86,7 @@ sub bern_from_primes {
 
     state $N = Math::MPFR::Rmpfr_init2_nobless(64);
     Math::MPFR::Rmpfr_mul_z($K, $K, $d, $round);         # K = K*d
-    Math::MPFR::Rmpfr_root($N, $K, $n - 1, $round);      # N = N^(1/(n-1))
+    Math::MPFR::Rmpfr_rootn_ui($N, $K, $n - 1, $round);  # N = N^(1/(n-1))
     Math::MPFR::Rmpfr_ceil($N, $N);                      # N = ceil(N)
 
     my $bound = Math::MPFR::Rmpfr_get_ui($N, $round);    # bound = int(N)
