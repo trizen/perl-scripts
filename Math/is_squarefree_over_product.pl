@@ -11,9 +11,9 @@
 #     2. Let k be the product of the primes <= B.
 #     3. Compute the greatest common divisor: g = gcd(n, k)
 #     4. If g is greater than 1, then n = r*g.
-#        - If r = 1, then n is B-squarefree.
-#        - Otherwise, if gcd(r, k) > 1, then n is not B-squarefree.
-#     5. If this step is reached, then n is B-squarefree.
+#        - If r = 1, then n is B-smooth and squarefree.
+#        - Otherwise, if gcd(r, k) > 1, then n is not squarefree.
+#     5. If this step is reached, then n is not B-smooth.
 
 use 5.020;
 use strict;
@@ -37,10 +37,10 @@ sub is_squarefree_over_prod ($n, $k) {
         # If g is greater than 1, then n = r*g.
         Math::GMPz::Rmpz_divexact($t, $t, $g);
 
-        # If r = 1, then n is B-squarefree.
+        # If r = 1, then n is squarefree.
         return 1 if Math::GMPz::Rmpz_cmp_ui($t, 1) == 0;
 
-        # Otherwise, if gcd(r, k) > 1, then n is not B-squarefree.
+        # Otherwise, if gcd(r, k) > 1, then n is not squarefree.
         Math::GMPz::Rmpz_gcd($g, $t, $k);
 
         if (Math::GMPz::Rmpz_cmp_ui($g, 1) > 0) {
@@ -48,8 +48,8 @@ sub is_squarefree_over_prod ($n, $k) {
         }
     }
 
-    # If this step is reached, then n is B-squarefree.
-    return 1;
+    # If this step is reached, then n is not B-smooth.
+    return 0;
 }
 
 my $k = Math::GMPz->new(primorial(19));    # product of primes <= 19
