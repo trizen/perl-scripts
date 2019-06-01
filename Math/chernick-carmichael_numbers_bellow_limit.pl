@@ -21,37 +21,42 @@ use ntheory qw(:all);
 use experimental qw(signatures);
 
 # Generate the factors of a Chernick number, given n
-# and k, where k is the number of distinct prime factors.
-sub chernick_carmichael_factors ($n, $k) {
-    (6 * $n + 1, 12 * $n + 1, (map { (1 << $_) * 9 * $n + 1 } 1 .. $k - 2));
+# and m, where n is the number of distinct prime factors.
+sub chernick_carmichael_factors ($n, $m) {
+    (6*$m + 1, 12*$m + 1, (map { (1 << $_) * 9*$m + 1 } 1 .. $n-2));
+}
+
+# Check the conditions for an extended Chernick-Carmichael number
+sub is_chernick_carmichael ($n, $m) {
+    ($n == 2) ? (is_prime(6*$m + 1) && is_prime(12*$m + 1))
+              : (is_prime((1 << ($n-2)) * 9*$m + 1) && __SUB__->($n-1, $m));
 }
 
 my @terms;
 my $limit = 0 + ($ARGV[0] // 10**15);
 
 # Generate terms with k distict prime factors
-for (my $k = 3 ; ; ++$k) {
+for (my $n = 3 ; ; ++$n) {
 
     # We can stop the search when:
-    #   (6*m + 1) * (12*m + 1) * Product_{i=1..k-2} (9 * 2^i * m + 1)
+    #   (6*m + 1) * (12*m + 1) * Product_{i=1..n-2} (9 * 2^i * m + 1)
     # is greater than the limit, for m=1.
-    last if vecprod(chernick_carmichael_factors(1, $k)) > $limit;
+    last if vecprod(chernick_carmichael_factors($n, 1)) > $limit;
 
     # Set the multiplier, based on the condition that `m` has to be divisible by 2^(k-4).
-    my $multiplier = 1;
+    my $multiplier = ($n > 4) ? (1 << ($n-4)) : 1;
 
-    if ($k > 4) {
-        $multiplier = 1 << ($k - 4);
-    }
-
-    # Generate the extended Chernick numbers with k distinct prime factors,
+    # Generate the extended Chernick numbers with n distinct prime factors,
     # that are also Carmichael numbers, bellow the limit we're looking for.
-    for (my $n = 1 ; ; ++$n) {
+    for (my $k = 1 ; ; ++$k) {
 
-        my @f = chernick_carmichael_factors($n * $multiplier, $k);
+        my $m = $multiplier * $k;
 
-        # Check the condition for an extended Chernick-Carmichael number
-        next if not vecall { is_prime($_) } @f;
+        # All factors must be prime
+        is_chernick_carmichael($n, $m) || next;
+
+        # Get the prime factors
+        my @f = chernick_carmichael_factors($n, $m);
 
         # The product of these primes, gives a Carmichael number
         my $c = vecprod(@f);

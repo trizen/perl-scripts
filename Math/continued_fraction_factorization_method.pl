@@ -174,19 +174,19 @@ sub cffm ($n, $verbose = 0, $multiplier = 1) {
     my $B  = int(exp(sqrt(log("$n") * log(log("$n"))) / 2));                      # B-smooth limit
     my $nf = int(exp(sqrt(log("$n") * log(log("$n"))))**(sqrt(2) / 4) / 1.25);    # number of primes in factor-base
 
-    my @factor_base;
+    my @factor_base = (2);
 
 #<<<
     if (USE_B_SMOOTH_METHOD) {
         forprimes {
-            if ($_ <= 97 or Math::GMPz::Rmpz_kronecker_ui($N, $_) == 1) {
+            if (Math::GMPz::Rmpz_kronecker_ui($N, $_) >= 0) {
                 push @factor_base, $_;
             }
-        } $B;
+        } 3, $B;
     }
     else {
-        for (my $p = 2 ; @factor_base < $nf ; $p = next_prime($p)) {
-            if ($p <= 97 or Math::GMPz::Rmpz_kronecker_ui($N, $p) == 1) {
+        for (my $p = 3 ; @factor_base < $nf ; $p = next_prime($p)) {
+            if (Math::GMPz::Rmpz_kronecker_ui($N, $p) >= 0) {
                 push @factor_base, $p;
             }
         }

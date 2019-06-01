@@ -13,42 +13,40 @@
 #   https://oeis.org/wiki/Carmichael_numbers
 #   http://www.ams.org/journals/bull/1939-45-04/S0002-9904-1939-06953-X/home.html
 
+# Challenge:
+#   find the smallest extended Chernick-Carmichael with 10 prime factors.
+
 use 5.020;
 use warnings;
-
 use ntheory qw(:all);
 use experimental qw(signatures);
 
-# Generate the factors of a Chernick number, given n
-# and k, where k is the number of distinct prime factors.
-sub chernick_carmichael_factors ($n, $k) {
-    (6 * $n + 1, 12 * $n + 1, (map { (1 << $_) * 9 * $n + 1 } 1 .. $k - 2));
+# Generate the factors of a Chernick-Carmichael number
+sub chernick_carmichael_factors ($n, $m) {
+    (6*$m + 1, 12*$m + 1, (map { (1 << $_) * 9*$m + 1 } 1 .. $n-2));
+}
+
+# Check the conditions for an extended Chernick-Carmichael number
+sub is_chernick_carmichael ($n, $m) {
+    ($n == 2) ? (is_prime(6*$m + 1) && is_prime(12*$m + 1))
+              : (is_prime((1 << ($n-2)) * 9*$m + 1) && __SUB__->($n-1, $m));
 }
 
 # Find the smallest Chernick-Carmichael number with k prime factors.
-sub extended_chernick_carmichael_number ($k, $callback) {
+sub chernick_carmichael_number ($n, $callback) {
 
-    my $multiplier = 1;
+    my $multiplier = ($n > 4) ? (1 << ($n-4)) : 1;
 
-    if ($k > 4) {
-        $multiplier = 1 << ($k - 4);
-    }
-
-    for (my $n = 1 ; ; ++$n) {
-        my @f = chernick_carmichael_factors($n * $multiplier, $k);
-        next if not vecall { is_prime($_) } @f;
-        $callback->(vecprod(@f), @f);
+    for (my $k = 1 ; ; ++$k) {
+        my $m = $k * $multiplier;
+        is_chernick_carmichael($n, $m) || next;
+        $callback->(chernick_carmichael_factors($n, $m));
         last;
     }
 }
 
-foreach my $k (3 .. 9) {
-    extended_chernick_carmichael_number(
-        $k,
-        sub ($n, @f) {
-            say "a($k) = $n";
-        }
-    );
+foreach my $n (3..9) {
+    chernick_carmichael_number($n, sub (@f) { say "a($n) = ", vecprod(@f) });
 }
 
 __END__
