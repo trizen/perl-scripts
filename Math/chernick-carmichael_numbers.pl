@@ -35,7 +35,7 @@ sub is_chernick_carmichael ($n, $m) {
 # Find the smallest Chernick-Carmichael number with k prime factors.
 sub chernick_carmichael_number ($n, $callback) {
 
-    my $multiplier = ($n > 4) ? (1 << ($n-4)) : 1;
+    my $multiplier = ($n > 4) ? 5*(1 << ($n-4)) : 1;
 
     for (my $k = 1 ; ; ++$k) {
         my $m = $k * $multiplier;
