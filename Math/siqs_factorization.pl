@@ -36,7 +36,7 @@ my $ONE  = Math::GMPz->new(1);
 
 local $| = 1;
 
-# Some tuning parameters
+# Tuning parameters
 use constant {
               LOOK_FOR_SMALL_FACTORS    => 1,
               FIBONACCI_BOUND           => 500_000,
@@ -44,6 +44,7 @@ use constant {
               POLLARD_BRENT_ITERATIONS  => 16,
               POLLARD_RHO_ITERATIONS    => 50_000,
               FERMAT_ITERATIONS         => 500,
+              NEAR_POWER_ITERATIONS     => 100,
               CFRAC_ITERATIONS          => 15_000,
               HOLF_ITERATIONS           => 15_000,
               SIQS_TRIAL_DIVISION_EPS   => 25,
@@ -1308,6 +1309,14 @@ sub find_small_factors ($rem, $factors) {
             next;
         }
 
+        say "=> CFRAC simple...";
+        $f = simple_cfrac_find_factor($rem, ($digits > 50 ? 2 : 1) * CFRAC_ITERATIONS);
+
+        if (defined($f) and $f < $rem) {
+            store_factor(\$rem, $f, $factors);
+            next;
+        }
+
         say "=> Pollard rho-sqrt...";
         $f = pollard_rho_sqrt_find_factor($rem, ($digits > 50 ? 2 : 1) * POLLARD_RHO_ITERATIONS);
 
@@ -1361,14 +1370,6 @@ sub find_small_factors ($rem, $factors) {
 
         say "=> Pollard rho (Brent)...";
         $f = pollard_brent_find_factor($rem, POLLARD_BRENT_ITERATIONS);
-
-        if (defined($f) and $f < $rem) {
-            store_factor(\$rem, $f, $factors);
-            next;
-        }
-
-        say "=> CFRAC simple...";
-        $f = simple_cfrac_find_factor($rem, ($digits > 50 ? 2 : 1) * CFRAC_ITERATIONS);
 
         if (defined($f) and $f < $rem) {
             store_factor(\$rem, $f, $factors);
@@ -1499,6 +1500,59 @@ sub find_all_prime_factors ($n, $factors) {
     }
 }
 
+sub near_power_factorization ($n) {
+
+    my $f = sub ($r, $e, $k) {
+        my @factors;
+
+        foreach my $d (ntheory::divisors($e)) {
+
+            foreach my $j (1, -1) {
+
+                my $t = $r**$d - $k * $j;
+                my $g = Math::GMPz->new(gcd($t, $n));
+
+                if ($g > 1 and $g < $n) {
+                    while ($n % $g == 0) {
+                        $n /= $g;
+                        push @factors, $g;
+                    }
+                }
+            }
+        }
+
+        sort { $a <=> $b } @factors;
+    };
+
+    foreach my $j (1 .. NEAR_POWER_ITERATIONS) {
+
+        foreach my $k (1, -1) {
+            my $u = $k * $j * $j;
+
+            if ($n + $u > 0) {
+                if (my $e = is_power($n + $u)) {
+                    my $r = Math::GMPz->new(rootint($n + $u, $e));
+                    say "[*] Special form detected: $r^$e ", sprintf("%s %s", ($k == 1) ? ('-', $u) : ('+', -$u));
+                    return $f->($r, $e, $j);
+                }
+            }
+        }
+    }
+
+    return;
+}
+
+sub verify_prime_factors ($n, $factors) {
+
+    Math::GMPz->new(vecprod(@$factors)) == $n or die 'product of factors != n';
+
+    foreach my $p (@$factors) {
+        is_prime($p) or die "not prime detected: $p";
+    }
+
+    sort { $a <=> $b } @$factors;
+}
+
 sub factorize($n) {
 
     # Factorize the given integer n >= 1 into its prime factors.
@@ -1512,13 +1566,42 @@ sub factorize($n) {
     return ()   if ($n <= 1);
     return ($n) if is_prime($n);
 
+    my @divisors = (($n > ~0) ? near_power_factorization($n) : ());
+
+    if (@divisors) {
+
+        say "[*] Divisors found so far: ", join(', ', @divisors);
+
+        my @composite;
+        my @factors;
+
+        foreach my $d (@divisors) {
+            $d > 1 or next;
+            if (is_prime($d)) {
+                push @factors, $d;
+            }
+            else {
+                push @composite, $d;
+            }
+        }
+
+        push @factors, map { factorize($_) } @composite;
+        my $rem = $n / Math::GMPz->new(vecprod(@factors));
+
+        if ($rem > 1) {
+            push @factors, factorize($rem);
+        }
+
+        return verify_prime_factors($n, \@factors);
+    }
+
     my ($factors, $rem) = trial_division_small_primes($n);
 
     if (@$factors) {
-        say("[*] Prime factors found so far: ", join(', ', @$factors));
+        say "[*] Prime factors found so far: ", join(', ', @$factors);
     }
     else {
-        say("[*] No small factors found...");
+        say "[*] No small factors found...";
     }
 
     if ($rem != 1) {
@@ -1536,14 +1619,7 @@ sub factorize($n) {
         }
     }
 
-    @$factors = sort { $a <=> $b } @$factors;
-    Math::GMPz->new(vecprod(@$factors)) == $n or die 'error';
-
-    foreach my $p (@$factors) {
-        is_prime($p) or die "not prime detected: $p";
-    }
-
-    return @$factors;
+    return verify_prime_factors($n, $factors);
 }
 
 if (@ARGV) {
