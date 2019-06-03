@@ -44,7 +44,7 @@ use constant {
               POLLARD_BRENT_ITERATIONS  => 16,
               POLLARD_RHO_ITERATIONS    => 50_000,
               FERMAT_ITERATIONS         => 500,
-              NEAR_POWER_ITERATIONS     => 100,
+              NEAR_POWER_ITERATIONS     => 500,
               CFRAC_ITERATIONS          => 15_000,
               HOLF_ITERATIONS           => 15_000,
               SIQS_TRIAL_DIVISION_EPS   => 25,
