@@ -4,7 +4,7 @@
 # Date: 16 May 2019
 # https://github.com/trizen
 
-# Generate the smallest extended Chernick-Carmichael number with k prime factors.
+# Generate the smallest extended Chernick-Carmichael number with n prime factors.
 
 # OEIS sequence:
 #   https://oeis.org/A318646 -- The least Chernick's "universal form" Carmichael number with n prime factors.
