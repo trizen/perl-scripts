@@ -13,9 +13,6 @@
 #   https://oeis.org/wiki/Carmichael_numbers
 #   http://www.ams.org/journals/bull/1939-45-04/S0002-9904-1939-06953-X/home.html
 
-# Challenge:
-#   find the smallest extended Chernick-Carmichael with 10 prime factors.
-
 use 5.020;
 use warnings;
 use ntheory qw(:all);
@@ -32,7 +29,7 @@ sub is_chernick_carmichael ($n, $m) {
               : (is_prime((1 << ($n-2)) * 9*$m + 1) && __SUB__->($n-1, $m));
 }
 
-# Find the smallest Chernick-Carmichael number with k prime factors.
+# Find the smallest Chernick-Carmichael number with n prime factors.
 sub chernick_carmichael_number ($n, $callback) {
 
     my $multiplier = ($n > 4) ? 5*(1 << ($n-4)) : 1;
