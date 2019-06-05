@@ -44,7 +44,10 @@ for (my $n = 3 ; ; ++$n) {
     last if vecprod(chernick_carmichael_factors($n, 1)) > $limit;
 
     # Set the multiplier, based on the condition that `m` has to be divisible by 2^(k-4).
-    my $multiplier = ($n > 4) ? 5*(1 << ($n-4)) : 1;
+    my $multiplier = ($n > 4) ? (1 << ($n-4)) : 1;
+
+    # Optimization for n > 5
+    $multiplier *= 5 if ($n > 5);
 
     # Generate the extended Chernick numbers with n distinct prime factors,
     # that are also Carmichael numbers, bellow the limit we're looking for.
