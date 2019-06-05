@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 # Daniel "Trizen" Șuteu
-# Date: 13 October 2017
+# Date: 05 June 2019
 # https://github.com/trizen
 
 # Find the greatest divisor (mod m) of `n` that does not exceed the square root of `n`.
@@ -12,37 +12,39 @@
 use 5.020;
 use warnings;
 
-use ntheory qw(factor mulmod);
+use ntheory qw(:all);
 use experimental qw(signatures);
 
 sub pseudo_square_root_mod ($n, $mod) {
 
+    my $lim     = sqrtint($n);
+    my @factors = map { [$_, log($_)] } grep { $_ <= $lim } factor($n);
+
+    my @d        = ([1, 0]);
     my $sqrt_log = log("$n") / 2;
-    my @factors  = factor($n);
-    my $end      = $#factors;
 
-    my $maximum_log = 0;
-    my $maximum_num = 0;
-
-    sub ($i, $log, $prod) {
-
-        if ($log > $maximum_log) {
-            $maximum_log = $log;
-            $maximum_num = $prod;
+    my %seen;
+    while (my $p = shift(@factors)) {
+        my @t;
+        foreach my $d (@d) {
+            if ($p->[1] + $d->[1] <= $sqrt_log) {
+                push @t, [mulmod($p->[0], $d->[0], $mod), $p->[1] + $d->[1]];
+            }
         }
+        push @d, @t;
+    }
 
-        if ($i > $end) {
-            return;
+    my $max_log = 0;
+    my $max_div = 0;
+
+    foreach my $d (@d) {
+        if ($d->[1] > $max_log) {
+            $max_div = $d->[0];
+            $max_log = $d->[1];
         }
+    }
 
-        if ($log + log($factors[$i]) <= $sqrt_log) {
-            __SUB__->($i + 1, $log, $prod) if ($i < $end);
-            __SUB__->($i + 1, $log + log($factors[$i]), mulmod($prod, $factors[$i], $mod));
-        }
-
-    }->(0, 0, 1);
-
-    return $maximum_num;
+    return $max_div;
 }
 
 say pseudo_square_root_mod(479001600,   10**16);    #=> 21600
