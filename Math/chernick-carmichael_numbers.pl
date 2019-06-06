@@ -20,32 +20,36 @@ use experimental qw(signatures);
 
 # Generate the factors of a Chernick-Carmichael number
 sub chernick_carmichael_factors ($n, $m) {
-    (6*$m + 1, 12*$m + 1, (map { (1 << $_) * 9*$m + 1 } 1 .. $n-2));
+    (6*$m + 1, 12*$m + 1, (map { ((9*$m) << $_) + 1 } 1 .. $n - 2));
 }
 
 # Check the conditions for an extended Chernick-Carmichael number
 sub is_chernick_carmichael ($n, $m) {
-    ($n == 2) ? (is_prime(6*$m + 1) && is_prime(12*$m + 1))
-              : (is_prime((1 << ($n-2)) * 9*$m + 1) && __SUB__->($n-1, $m));
+    foreach my $k (2 .. $n-2) {
+        is_prime(((9*$m) << $k) + 1) || return 0;
+    }
+    return 1;
 }
 
 # Find the smallest Chernick-Carmichael number with n prime factors.
 sub chernick_carmichael_number ($n, $callback) {
 
-    my $multiplier = ($n > 4) ? (1 << ($n-4)) : 1;
+    # `m` must be divisible by 2^(n-4), for n > 4
+    my $multiplier = ($n > 4) ? (1 << ($n - 4)) : 1;
 
     # Optimization for n > 5
     $multiplier *= 5 if ($n > 5);
 
     for (my $k = 1 ; ; ++$k) {
         my $m = $k * $multiplier;
-        is_chernick_carmichael($n, $m) || next;
-        $callback->(chernick_carmichael_factors($n, $m));
-        last;
+        if (is_prime(6*$m + 1) and is_prime(12*$m + 1) and is_prime(18*$m + 1) and is_chernick_carmichael($n, $m)) {
+            $callback->(chernick_carmichael_factors($n, $m));
+            last;
+        }
     }
 }
 
-foreach my $n (3..9) {
+foreach my $n (3 .. 9) {
     chernick_carmichael_number($n, sub (@f) { say "a($n) = ", vecprod(@f) });
 }
 
