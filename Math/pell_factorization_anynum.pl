@@ -14,7 +14,7 @@ use strict;
 use warnings;
 
 use ntheory qw(random_nbit_prime);
-use Math::AnyNum qw(:overload :all);
+use Math::AnyNum qw(:all);
 use experimental qw(signatures);
 
 sub pell_factorization ($n) {
@@ -31,21 +31,14 @@ sub pell_factorization ($n) {
 
     for (; ;) {
 
-        $y = $r * $z - $y;
-        $z = ($n - $y * $y) / $z;
-        $r = idiv(($x + $y), $z);
+        $y = $r*$z - $y;
+        $z = idiv($n - $y*$y, $z);
+        $r = idiv($x + $y, $z);
 
-        ($f1, $f2) = ($f2, ($r * $f2  + $f1) % $n);
+        ($f1, $f2) = ($f2, ($r*$f2 + $f1) % $n);
 
-        my $u = $f1;
-        my $v = ($u*$u)%$n;
-
-        if ($v > $w) {
-            $v = ($n - $v);
-        }
-
-        if (is_square($v)) {
-            my $g = gcd($u - isqrt($v), $n);
+        if (is_square($z)) {
+            my $g = gcd($f1 - isqrt($z), $n);
             if ($g > 1 and $g < $n) {
                 return $g;
             }

@@ -1174,36 +1174,52 @@ sub simple_cfrac_find_factor ($n, $max_iter) {
     # Simple version of the continued-fraction factorization method.
     # Efficient for numbers that have factors relatively close to sqrt(n)
 
-    my $x = Math::GMPz->new(sqrtint($n));
-    my $r = $x + $x;
+    my $x = Math::GMPz::Rmpz_init();
+    my $y = Math::GMPz::Rmpz_init();
+    my $z = Math::GMPz::Rmpz_init_set_ui(1);
 
-    my $y = $x;
-    my $z = 1;
+    my $t = Math::GMPz::Rmpz_init();
+    my $w = Math::GMPz::Rmpz_init();
+    my $r = Math::GMPz::Rmpz_init();
 
-    my ($e1, $e2) = (1, 0);
-    my ($f1, $f2) = (0, 1);
+    Math::GMPz::Rmpz_sqrt($x, $n);
+    Math::GMPz::Rmpz_set($y, $x);
+
+    Math::GMPz::Rmpz_add($w, $x, $x);
+    Math::GMPz::Rmpz_set($r, $w);
+
+    my $f2 = Math::GMPz::Rmpz_init_set($x);
+    my $f1 = Math::GMPz::Rmpz_init_set_ui(1);
 
     foreach (1 .. $max_iter) {
-        $y = $r * $z - $y;
-        $z = ($n - $y * $y) / $z;
 
-        my $u = ($x * $f2 + $e2) % $n;
-        my $v = ($u * $u) % $n;
+        # y = r*z - y
+        Math::GMPz::Rmpz_mul($t, $r, $z);
+        Math::GMPz::Rmpz_sub($y, $t, $y);
 
-        foreach my $c ($v, $n - $v) {
-            if (is_square($c)) {
-                my $g = Math::GMPz->new(gcd($u - Math::GMPz->new(sqrtint($c)), $n));
+        # z = (n - y*y) / z
+        Math::GMPz::Rmpz_mul($t, $y, $y);
+        Math::GMPz::Rmpz_sub($t, $n, $t);
+        Math::GMPz::Rmpz_divexact($z, $t, $z);
 
-                if ($g > 1 and $g < $n) {
-                    return $g;
-                }
+        # r = (x + y) / z
+        Math::GMPz::Rmpz_add($t, $x, $y);
+        Math::GMPz::Rmpz_div($r, $t, $z);
+
+        # f1 = (f1 + r*f2) % n
+        Math::GMPz::Rmpz_addmul($f1, $f2, $r);
+        Math::GMPz::Rmpz_mod($f1, $f1, $n);
+
+        # swap f1 with f2
+        ($f1, $f2) = ($f2, $f1);
+
+        if (Math::GMPz::Rmpz_perfect_square_p($z)) {
+            my $g = Math::GMPz->new(gcd($f1 - Math::GMPz->new(sqrtint($z)), $n));
+
+            if ($g > 1 and $g < $n) {
+                return $g;
             }
         }
-
-        $r = ($x + $y) / $z;    # integer division
-
-        ($f1, $f2) = ($f2, ($r * $f2 + $f1) % $n);
-        ($e1, $e2) = ($e2, ($r * $e2 + $e1) % $n);
 
         last if ($z == 1);
     }

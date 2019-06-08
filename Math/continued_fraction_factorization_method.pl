@@ -218,7 +218,6 @@ sub cffm ($n, $verbose = 0, $multiplier = 1) {
     }
 
     my $t = Math::GMPz::Rmpz_init();
-    my $v = Math::GMPz::Rmpz_init();
 
     #~ require Math::GMPq;
     #~ my $q = Math::GMPq->new();
@@ -252,17 +251,9 @@ sub cffm ($n, $verbose = 0, $multiplier = 1) {
         # swap f1 with f2
         ($f1, $f2) = ($f2, $f1);
 
-        # v = (f1^2) % n
-        Math::GMPz::Rmpz_powm_ui($v, $f1, 2, $n);
-
-        # v = n-v if v > w
-        if (Math::GMPz::Rmpz_cmp($v, $w) > 0) {
-            Math::GMPz::Rmpz_sub($v, $n, $v);
-        }
-
 #<<<
-        if (Math::GMPz::Rmpz_perfect_square_p($v)) {
-            my $g = Math::GMPz->new(gcd($f1 - Math::GMPz->new(sqrtint($v)), $n));
+        if (Math::GMPz::Rmpz_perfect_square_p($z)) {
+            my $g = Math::GMPz->new(gcd($f1 - Math::GMPz->new(sqrtint($z)), $n));
 
             if ($g > 1 and $g < $n) {
                 return sort { $a <=> $b } (
@@ -273,12 +264,12 @@ sub cffm ($n, $verbose = 0, $multiplier = 1) {
         }
 #>>>
 
-        if (is_smooth_over_prod($v, $FP)) {
-            my @factors = factor_exp($v);
+        if (is_smooth_over_prod($z, $FP)) {
+            my @factors = factor_exp($z);
 
             if (@factors) {
                 push @A, exponents_signature(@factors);
-                push @Q, [map { Math::GMPz::Rmpz_init_set($_) } ($f1, $v)];
+                push @Q, [map { Math::GMPz::Rmpz_init_set($_) } ($f1, $z)];
             }
 
             if ($verbose) {

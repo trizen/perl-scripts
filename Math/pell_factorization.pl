@@ -31,21 +31,14 @@ sub pell_factorization ($n) {
 
     for (; ;) {
 
-        $y = $r * $z - $y;
-        $z = ($n - $y * $y) / $z;
-        $r = int(($x + $y) / $z);
+        $y = $r*$z - $y;
+        $z = divint($n - $y*$y, $z);
+        $r = divint($x + $y, $z);
 
         ($f1, $f2) = ($f2, addmod(mulmod($r, $f2, $n), $f1, $n));
 
-        my $u = $f1;
-        my $v = mulmod($u, $u, $n);
-
-        if ($v > $w) {
-            $v = ($n - $v);
-        }
-
-        if (is_square($v)) {
-            my $g = gcd($u - sqrtint($v), $n);
+        if (is_square($z)) {
+            my $g = gcd($f1 - sqrtint($z), $n);
             if ($g > 1 and $g < $n) {
                 return $g;
             }
@@ -56,18 +49,18 @@ sub pell_factorization ($n) {
 }
 
 for (1 .. 10) {
-    my $n = random_nbit_prime(25) * random_nbit_prime(25);
+    my $n = random_nbit_prime(31) * random_nbit_prime(31);
     say "PellFactor($n) = ", pell_factorization($n);
 }
 
 __END__
-PellFactor(607859142082991) = 20432749
-PellFactor(926859728053057) = 33170069
-PellFactor(523709106944971) = 19544953
-PellFactor(379392152082407) = 18361823
-PellFactor(397926699623521) = 22529261
-PellFactor(596176048102421) = 27540133
-PellFactor(556290216898421) = 21828529
-PellFactor(799063586749279) = 27381929
-PellFactor(513015423767879) = 25622173
-PellFactor(964450431874939) = 30653317
+PellFactor(2101772756469048319) = 1228264087
+PellFactor(2334333625703344609) = 1709282917
+PellFactor(2358058220132276317) = 1210584887
+PellFactor(1482285997261862561) = 1197377617
+PellFactor(2759217719449375403) = 1559110667
+PellFactor(2828146117168463857) = 1493774729
+PellFactor(1732707024229573211) = 1165003451
+PellFactor(2510049724431882299) = 1820676019
+PellFactor(1585505630716792319) = 1311005599
+PellFactor(1612976091192715981) = 1453708381
