@@ -984,7 +984,7 @@ sub pollard_pm1_find_factor ($n, $bound) {
 
     foreach my $p (sieve_primes(2, $bound)) {
 
-        Math::GMPz::Rmpz_powm_ui($t, $t, $p * (logint($bound, $p) + 1), $n);
+        Math::GMPz::Rmpz_powm_ui($t, $t, $p * $p * (logint($bound, $p) + 1), $n);
 
         Math::GMPz::Rmpz_sub_ui($g, $t, 1);
         Math::GMPz::Rmpz_gcd($g, $g, $n);
@@ -1366,7 +1366,15 @@ sub find_small_factors ($rem, $factors) {
         }
 
         say "=> Pollard rho...";
-        $f = pollard_rho_find_factor($rem, ($digits > 50 ? 2 : 1) * POLLARD_RHO_ITERATIONS);
+        $f = pollard_rho_find_factor($rem, ($digits > 50 ? 3 : 2) * POLLARD_RHO_ITERATIONS);
+
+        if (defined($f) and $f < $rem) {
+            store_factor(\$rem, $f, $factors);
+            next;
+        }
+
+        say "=> Pollard rho-sqrt...";
+        $f = pollard_rho_sqrt_find_factor($rem, ($digits > 50 ? 6 : 3) * POLLARD_RHO_ITERATIONS);
 
         if (defined($f) and $f < $rem) {
             store_factor(\$rem, $f, $factors);
