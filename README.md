@@ -139,6 +139,7 @@ A nice collection of day-to-day Perl scripts.
     * [Collatz triangle](./GD/collatz_triangle.pl)
     * [Color wheel](./GD/color_wheel.pl)
     * [Complex square](./GD/complex_square.pl)
+    * [Congruence of squares triangle](./GD/congruence_of_squares_triangle.pl)
     * [Cuboid turtle](./GD/cuboid_turtle.pl)
     * [Cuboid turtle3](./GD/cuboid_turtle3.pl)
     * [Cuboid turtle 2](./GD/cuboid_turtle_2.pl)
