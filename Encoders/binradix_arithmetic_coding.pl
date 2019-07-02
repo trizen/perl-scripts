@@ -4,7 +4,7 @@
 # Date: 07 May 2015
 # https://github.com/trizen
 
-# The arithmetic coding algorithm.
+# The arithmetic coding algorithm (radix+binary).
 
 # See also:
 #   https://en.wikipedia.org/wiki/Arithmetic_coding#Arithmetic_coding_as_a_generalized_change_of_radix

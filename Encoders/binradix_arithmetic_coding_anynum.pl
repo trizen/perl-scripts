@@ -1,10 +1,10 @@
 #!/usr/bin/perl
 
 # Daniel "Trizen" Șuteu
-# Date: 01 May 2015
+# Date: 07 May 2015
 # https://github.com/trizen
 
-# The arithmetic coding algorithm, as_a_generalized_change_of_radix.
+# The arithmetic coding algorithm (radix+binary).
 
 # See also:
 #   https://en.wikipedia.org/wiki/Arithmetic_coding#Arithmetic_coding_as_a_generalized_change_of_radix
@@ -13,29 +13,23 @@ use 5.010;
 use strict;
 use warnings;
 
-use Math::BigInt (try => 'GMP');
-
-sub asciibet {
-    map { chr } 0 .. 255;
-}
+use Math::AnyNum qw(ipow ipow10 idiv);
 
 sub cumulative_freq {
     my ($freq) = @_;
 
     my %cf;
-    my $total = Math::BigInt->new(0);
-    foreach my $c (asciibet()) {
-        if (exists $freq->{$c}) {
-            $cf{$c} = $total;
-            $total += $freq->{$c};
-        }
+    my $total = Math::AnyNum->new(0);
+    foreach my $c (sort keys %$freq) {
+        $cf{$c} = $total;
+        $total += $freq->{$c};
     }
 
     return %cf;
 }
 
 sub arithmethic_coding {
-    my ($str, $radix) = @_;
+    my ($str) = @_;
     my @chars = split(//, $str);
 
     # The frequency characters
@@ -49,37 +43,63 @@ sub arithmethic_coding {
     my $base = scalar @chars;
 
     # Lower bound
-    my $L = Math::BigInt->new(0);
+    my $L = Math::AnyNum->new(0);
 
     # Product of all frequencies
-    my $pf = Math::BigInt->new(1);
+    my $pf = Math::AnyNum->new(1);
 
     # Each term is multiplied by the product of the
     # frequencies of all previously occurring symbols
-    foreach my $c (@chars) {
-        $L->bmuladd($base, $cf{$c} * $pf);
-        $pf->bmul($freq{$c});
+    for my $c (@chars) {
+        $L *= $base;
+        $L += $cf{$c} * $pf;
+        $pf *= $freq{$c};
     }
 
     # Upper bound
     my $U = $L + $pf;
 
+    my $len = $L->length;
+
+    $L = Math::AnyNum->new("$L / " . ipow10($len));
+    $U = Math::AnyNum->new("$U / " . ipow10($len));
+
+    my $t = Math::AnyNum->new(1);
+    my $n = Math::AnyNum->new(0);
+
+    my $bin = '';
+    while ($n < $L || $n >= $U) {
+        my $m = 1 / ($t <<= 1);
+
+        if ($n + $m < $U) {
+            $n += $m;
+            $bin .= '1';
+        }
+        else {
+            $bin .= '0';
+        }
+    }
+
     #~ say $L;
     #~ say $U;
 
-    my $pow = Math::BigInt->new($pf)->blog($radix);
-    my $enc = ($U - 1)->bdiv(Math::BigInt->new($radix)->bpow($pow));
-
-    return ($enc, $pow, \%freq);
+    return ($bin, $len, \%freq);
 }
 
 sub arithmethic_decoding {
-    my ($enc, $radix, $pow, $freq) = @_;
+    my ($enc, $pow, $freq) = @_;
 
-    # Multiply enc by 10^pow
-    $enc *= $radix**$pow;
+    my $t    = Math::AnyNum->new(1);
+    my $line = Math::AnyNum->new(0);
 
-    my $base = Math::BigInt->new(0);
+    my @bin = split(//, $enc);
+    foreach my $i (0 .. $#bin) {
+        $line += $bin[$i] / ($t <<= 1);
+    }
+
+    $enc = $line * ipow10($pow);
+
+    my $base = Math::AnyNum->new(0);
     $base += $_ for values %{$freq};
 
     # Create the cumulative frequency table
@@ -106,8 +126,8 @@ sub arithmethic_decoding {
     my $decoded = '';
     for (my $i = $base - 1 ; $i >= 0 ; $i--) {
 
-        my $pow = $base**$i;
-        my $div = ($enc / $pow);
+        my $pow = ipow($base, $i);
+        my $div = idiv($enc, $pow);
 
         my $c  = $dict{$div};
         my $fv = $freq->{$c};
@@ -129,18 +149,15 @@ sub arithmethic_decoding {
 #
 ## Run some tests
 #
-
-my $radix = 10;    # can be any integer >= 2
-
 foreach my $str (
-    qw(DABDDB DABDDBBDDBA ABBDDD ABRACADABRA CoMpReSSeD Sidef Trizen google TOBEORNOTTOBEORTOBEORNOT 吹吹打打),
+    qw(DABDDB DABDDBBDDBA ABBDDD ABRACADABRA CoMpReSSeD Sidef Trizen google TOBEORNOTTOBEORTOBEORNOT),
     'In a positional numeral system the radix, or base, is numerically equal to a number of different symbols '
     . 'used to express the number. For example, in the decimal system the number of symbols is 10, namely 0, 1, 2, '
     . '3, 4, 5, 6, 7, 8, and 9. The radix is used to express any finite integer in a presumed multiplier in polynomial '
     . 'form. For example, the number 457 is actually 4×102 + 5×101 + 7×100, where base 10 is presumed but not shown explicitly.'
   ) {
-    my ($enc, $pow, $freq) = arithmethic_coding($str, $radix);
-    my $dec = arithmethic_decoding($enc, $radix, $pow, $freq);
+    my ($enc, $pow, $freq) = arithmethic_coding($str);
+    my $dec = arithmethic_decoding($enc, $pow, $freq);
 
     say "Encoded:  $enc";
     say "Decoded:  $dec";

@@ -13,7 +13,7 @@ use 5.010;
 use strict;
 use warnings;
 
-use Math::BigInt (try => 'GMP');
+use Math::AnyNum qw(ipow ilog idiv);
 
 sub asciibet {
     map { chr } 0 .. 255;
@@ -23,7 +23,7 @@ sub cumulative_freq {
     my ($freq) = @_;
 
     my %cf;
-    my $total = Math::BigInt->new(0);
+    my $total = Math::AnyNum->new(0);
     foreach my $c (asciibet()) {
         if (exists $freq->{$c}) {
             $cf{$c} = $total;
@@ -45,20 +45,21 @@ sub arithmethic_coding {
     # The cumulative frequency table
     my %cf = cumulative_freq(\%freq);
 
-    # Limit and base
-    my $base = scalar @chars;
+    # Base
+    my $base = Math::AnyNum->new(scalar @chars);
 
     # Lower bound
-    my $L = Math::BigInt->new(0);
+    my $L = Math::AnyNum->new(0);
 
     # Product of all frequencies
-    my $pf = Math::BigInt->new(1);
+    my $pf = Math::AnyNum->new(1);
 
     # Each term is multiplied by the product of the
     # frequencies of all previously occurring symbols
     foreach my $c (@chars) {
-        $L->bmuladd($base, $cf{$c} * $pf);
-        $pf->bmul($freq{$c});
+        $L *= $base;
+        $L += $cf{$c} * $pf;
+        $pf *= $freq{$c};
     }
 
     # Upper bound
@@ -67,8 +68,8 @@ sub arithmethic_coding {
     #~ say $L;
     #~ say $U;
 
-    my $pow = Math::BigInt->new($pf)->blog($radix);
-    my $enc = ($U - 1)->bdiv(Math::BigInt->new($radix)->bpow($pow));
+    my $pow = ilog($pf, $radix);
+    my $enc = idiv($U - 1, ipow($radix, $pow));
 
     return ($enc, $pow, \%freq);
 }
@@ -77,9 +78,9 @@ sub arithmethic_decoding {
     my ($enc, $radix, $pow, $freq) = @_;
 
     # Multiply enc by 10^pow
-    $enc *= $radix**$pow;
+    $enc *= ipow($radix, $pow);
 
-    my $base = Math::BigInt->new(0);
+    my $base = Math::AnyNum->new(0);
     $base += $_ for values %{$freq};
 
     # Create the cumulative frequency table
@@ -104,19 +105,17 @@ sub arithmethic_decoding {
 
     # Decode the input number
     my $decoded = '';
-    for (my $i = $base - 1 ; $i >= 0 ; $i--) {
-
-        my $pow = $base**$i;
-        my $div = ($enc / $pow);
+    for (my $pow = ipow($base, $base - 1) ; $pow > 0 ; $pow = idiv($pow, $base)) {
+        my $div = idiv($enc, $pow);
 
         my $c  = $dict{$div};
         my $fv = $freq->{$c};
         my $cv = $cf{$c};
 
-        my $rem = ($enc - $pow * $cv) / $fv;
+        my $rem = idiv($enc - $pow * $cv, $fv);
 
-        #~ say "$enc / $base^$i = $div ($c)";
-        #~ say "($enc - $base^$i * $cv) / $fv = $rem\n";
+        #~ say "$enc / $base^$pow = $div ($c)";
+        #~ say "($enc - $base^$pow * $cv) / $fv = $rem\n";
 
         $enc = $rem;
         $decoded .= $c;
@@ -150,4 +149,14 @@ foreach my $str (
     }
 
     say "-" x 80;
+}
+
+open my $fh, '<', __FILE__;
+my $content = do { local $/; <$fh> };
+
+my ($enc, $pow, $freq) = arithmethic_coding($content, $radix);
+my $dec = arithmethic_decoding($enc, $radix, $pow, $freq);
+
+if ($dec ne $content) {
+    die "Failed to encode and decode the __FILE__ correctly.";
 }

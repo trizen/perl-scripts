@@ -114,8 +114,7 @@ LOOP_1: foreach my $letter (split(//, $phrase, 0)) {
         next LOOP_1 if $chars_table{$letter} eq 'Not found!';
         $compact ? push(@content, $chars_table{$letter})
           : (
-             ref($chars_table{$letter}) eq 'ARRAY'
-             ? push(@content, "('$chars_table{$letter}[0]'^'$chars_table{$letter}[1]').")
+             ref($chars_table{$letter}) eq 'ARRAY' ? push(@content, "('$chars_table{$letter}[0]'^'$chars_table{$letter}[1]').")
              : push(@content, $chars_table{$letter})
             );
         next LOOP_1;

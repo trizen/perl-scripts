@@ -66,7 +66,7 @@ sub main {
     $opt{v} && version();
 
     my ($input, $output) = @ARGV;
-    $input //= $opt{i} // usage(2);
+    $input  //= $opt{i} // usage(2);
     $output //= $opt{o};
 
     my $ext = qr{\.${\FORMAT}\z}io;

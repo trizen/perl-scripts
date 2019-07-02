@@ -32,7 +32,7 @@ sub main {
     $opt{h} && help() && exit(0);
 
     my ($input, $output) = @ARGV;
-    $input //= $opt{i} // (help() && exit 1);
+    $input  //= $opt{i} // (help() && exit 1);
     $output //= $opt{o};
 
     $DEBUG = $opt{v};
@@ -191,7 +191,7 @@ sub decompress {
     valid_archive($fh) || die "$0: file `$input' is not a TZP archive!\n";
 
     my $fsize_len = do { read($fh, (my $byte), 1); ord $byte };
-    my $filesize = do {
+    my $filesize  = do {
         read($fh, (my $bytes), $fsize_len);
 
         my @bytes = unpack('C*', $bytes);
@@ -234,7 +234,7 @@ sub decompress {
     while (my $size = read($fh, (my $chunk), CHUNK_SIZE)) {
 
         $bit_counter += $size * 8;
-        my $bits = $prev_bits . unpack "B*", $chunk;
+        my $bits     = $prev_bits . unpack "B*", $chunk;
         my $bits_len = ($size * 8 + length($prev_bits));
 
         if ($bit_counter / $bits_num - $filesize == 1) {

@@ -45,7 +45,7 @@ sub lzt_compress {
             # If it doesn't exists, then the $memo is the largest
             # duplicated substring in the dictionary at this point.
             else {
-                $remember = 0;    # turn-off remember mode
+                $remember = 0;                  # turn-off remember mode
                 if (length($memo) >= $min) {    # check for the minimum length of the word
                     push @dups, [$dict{$memo}, length($memo), $memo, $i - length($memo)];
                 }

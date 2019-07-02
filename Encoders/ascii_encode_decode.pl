@@ -17,16 +17,17 @@ use warnings;
 sub encode_decode ($$) {
     my ($encode, $text) = @_;
 
-    my $i = 1;
+    my $i      = 1;
     my $output = '';
 
   LOOP_1: foreach my $c (map ord, split //, $text) {
         foreach my $o ([32, 121]) {
             if ($c > $o->[0] && $c <= $o->[1]) {
 
-                my $ord = $encode
-                        ? $c + ($i % 2 ? $i : -$i)
-                        : $c - ($i % 2 ? $i : -$i);
+                my $ord =
+                    $encode
+                  ? $c + ($i % 2 ? $i : -$i)
+                  : $c - ($i % 2 ? $i : -$i);
 
                 if ($ord > $o->[1]) {
                     $ord = $o->[0] + ($ord - $o->[1]);
@@ -35,7 +36,8 @@ sub encode_decode ($$) {
                     $ord = $o->[1] - ($o->[0] - $ord);
                 }
                 $output .= chr $ord;
-                ++$i; next LOOP_1;
+                ++$i;
+                next LOOP_1;
             }
         }
         $output .= chr;

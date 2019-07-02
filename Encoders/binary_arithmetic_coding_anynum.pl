@@ -13,8 +13,7 @@ use 5.010;
 use strict;
 use warnings;
 
-use Math::BigInt (try => 'GMP');
-use Math::BigRat (try => 'GMP');
+use Math::AnyNum;
 
 sub asciibet {
     map { chr } 0 .. 255;
@@ -39,7 +38,7 @@ sub mass_function {
     my ($freq, $sum) = @_;
 
     my %p;
-    $p{$_} = Math::BigRat->new($freq->{$_}) / $sum for keys %{$freq};
+    $p{$_} = Math::AnyNum->new($freq->{$_}) / $sum for keys %{$freq};
 
     return %p;
 }
@@ -55,22 +54,22 @@ sub arithmethic_coding {
     my %p   = mass_function(\%freq, $len);
     my %cf  = cumulative_freq(\%p, $len);
 
-    my $pf = Math::BigRat->new(1);
-    my $L  = Math::BigRat->new(0);
-    foreach my $c (@chars) {
-        $L->badd($pf * $cf{$c});
-        $pf->bmul($p{$c});
+    my $pf = Math::AnyNum->new(1);
+    my $L  = Math::AnyNum->new(0);
+
+    for my $c (@chars) {
+        $L += $pf * $cf{$c};
+        $pf *= $p{$c};
     }
 
     my $U = $L + $pf;
 
-    my $big_two = Math::BigInt->new(2);
-    my $two_pow = Math::BigInt->new(1);
-    my $n       = Math::BigRat->new(0);
+    my $t = Math::AnyNum->new(1);
+    my $n = Math::AnyNum->new(0);
 
     my $bin = '';
-    for (my $i = Math::BigInt->new(1) ; ($n < $L || $n >= $U) ; $i->binc) {
-        my $m = Math::BigRat->new(1)->bdiv($two_pow->bmul($big_two));
+    while ($n < $L || $n >= $U) {
+        my $m = 1 / ($t <<= 1);
 
         if ($n + $m < $U) {
             $n += $m;
@@ -87,14 +86,12 @@ sub arithmethic_coding {
 sub arithmethic_decoding {
     my ($enc, $len, $freq) = @_;
 
-    my $two_pow = Math::BigInt->new(1);
-    my $big_two = Math::BigInt->new(2);
-
-    my $line = Math::BigRat->new(0);
+    my $t    = Math::AnyNum->new(1);
+    my $line = Math::AnyNum->new(0);
 
     my @bin = split(//, $enc);
     foreach my $i (0 .. $#bin) {
-        $line->badd(scalar Math::BigRat->new($bin[$i])->bdiv($two_pow->bmul($big_two)));
+        $line += $bin[$i] / ($t <<= 1);
     }
 
     my %p  = mass_function($freq, $len);

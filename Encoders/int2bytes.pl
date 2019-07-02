@@ -60,7 +60,7 @@ sub int2bytes {
         }
     }
 
-    my $min = min(map { $#{$_} } @nums);
+    my $min   = min(map { $#{$_} } @nums);
     my @bytes = do {
         my %seen;
         grep { !$seen{join(' ', @{$_})}++ } grep { $#{$_} == $min } @nums;

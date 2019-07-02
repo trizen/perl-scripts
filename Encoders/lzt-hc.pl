@@ -66,7 +66,7 @@ sub main {
     $opt{v} && version();
 
     my ($input, $output) = @ARGV;
-    $input //= $opt{i} // usage(2);
+    $input  //= $opt{i} // usage(2);
     $output //= $opt{o};
 
     my $ext = qr{\.${\FORMAT}\z}io;
@@ -189,7 +189,7 @@ sub compress {
         }
 
         my $huffman_hash = mktree($uncompressed);
-        my $huffman_enc = huffman_encode($uncompressed, $huffman_hash);
+        my $huffman_enc  = huffman_encode($uncompressed, $huffman_hash);
 
         my %huffman_dict;
         foreach my $k (keys %{$huffman_hash}) {
@@ -199,7 +199,7 @@ sub compress {
         {
             use bytes;
 
-            my $binary_enc = pack('B*', $huffman_enc);
+            my $binary_enc   = pack('B*', $huffman_enc);
             my $encoding_len = length($binary_enc);
 
             printf("%3d -> %3d (%.2f%%)\n", $len, $encoding_len, ($len - $encoding_len) / $len * 100);
@@ -298,7 +298,7 @@ sub decompress {
         read($fh, (my $bytes),     ord($bytes_len) + 1);
 
         # Huffman decoding
-        my $len = ord($len_byte) + 1;
+        my $len   = ord($len_byte) + 1;
         my $block = substr(huffman_decode(\%huffman_dict, $bytes), 0, $len);
 
         my $acc          = 0;

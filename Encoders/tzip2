@@ -34,7 +34,7 @@ sub main {
     $opt{h} && help() && exit(0);
 
     my ($input, $output) = @ARGV;
-    $input //= $opt{i} // (help() && exit 1);
+    $input  //= $opt{i} // (help() && exit 1);
     $output //= $opt{o};
 
     $DEBUG = $opt{v};
@@ -135,7 +135,7 @@ sub int2bytes {
         }
     }
 
-    my $min = min(map { $#{$_} } @nums);
+    my $min   = min(map { $#{$_} } @nums);
     my @bytes = do {
         my %seen;
         grep { !$seen{join(' ', @{$_})}++ } grep { $#{$_} == $min } @nums;
@@ -253,7 +253,7 @@ sub decompress {
     valid_archive($fh) || die "$0: file `$input' is not a TZP archive!\n";
 
     my $fsize_len = do { read($fh, (my $byte), 1); ord $byte };
-    my $filesize = do {
+    my $filesize  = do {
         read($fh, (my $bytes), $fsize_len);
         join('', unpack('C*', $bytes));
     };
@@ -289,7 +289,7 @@ sub decompress {
     my $prev_bits    = '';
     while (my $size = read($fh, (my $chunk), CHUNK_SIZE)) {
 
-        my $bits = $prev_bits . unpack('B*', $chunk);
+        my $bits     = $prev_bits . unpack('B*', $chunk);
         my $bits_len = 8 * $size + length($prev_bits);
 
         my $left = $bits_len % $bits_num;

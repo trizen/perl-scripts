@@ -68,7 +68,7 @@ sub main {
     $opt{v} && version();
 
     my ($input, $output) = @ARGV;
-    $input //= $opt{i} // usage(2);
+    $input  //= $opt{i} // usage(2);
     $output //= $opt{o};
 
     my $ext = qr{\.${\FORMAT}\z}io;
@@ -145,7 +145,7 @@ sub int2bytes {
         }
     }
 
-    my $min = min(map { $#{$_} } @nums);
+    my $min   = min(map { $#{$_} } @nums);
     my @bytes = do {
         my %seen;
         grep { !$seen{join(' ', @{$_})}++ } grep { $#{$_} == $min } @nums;
@@ -281,7 +281,7 @@ sub compress {
                        );
 
         my $huffman_hash = mktree($text);
-        my $huffman_enc = huffman_encode($text, $huffman_hash);
+        my $huffman_enc  = huffman_encode($text, $huffman_hash);
 
         my %huffman_dict;
         foreach my $k (keys %{$huffman_hash}) {
@@ -301,7 +301,7 @@ sub compress {
         say "** Huffman dictionary length: ", length($h_dictionary);
 
         say "** Compressing...";
-        my $binary_enc = pack('B*', $huffman_enc);
+        my $binary_enc   = pack('B*', $huffman_enc);
         my $encoding_len = length($binary_enc);
 
         printf("%3d -> %3d (%.2f%%)\n", $len, $encoding_len, ($len - $encoding_len) / $len * 100);
@@ -375,7 +375,7 @@ sub decompress {
         read($fh, (my $bytes),     ord($bytes_len) + 1);
 
         # Huffman decoding
-        my $len = ord($len_byte);
+        my $len   = ord($len_byte);
         my $block = substr(huffman_decode(\%huffman_dict, $bytes), 0, $len);
 
         my $acc          = 0;

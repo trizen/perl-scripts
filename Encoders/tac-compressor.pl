@@ -66,7 +66,7 @@ sub main {
     $opt{v} && version();
 
     my ($input, $output) = @ARGV;
-    $input //= $opt{i} // usage(2);
+    $input  //= $opt{i} // usage(2);
     $output //= $opt{o};
 
     my $ext = qr{\.${\FORMAT}\z}io;
@@ -175,13 +175,13 @@ sub compress {
         $enc->brsft(1);
     }
 
-    my $bin = substr($enc->as_bin, 2);
-    my $encoded = pack('L', $pow);    # the power value
-    $encoded .= chr(scalar(keys %freq) - 1);    # number of unique chars
-    $encoded .= chr(length($bin) % 8);          # padding
+    my $bin     = substr($enc->as_bin, 2);
+    my $encoded = pack('L', $pow);           # the power value
+    $encoded .= chr(scalar(keys %freq) - 1); # number of unique chars
+    $encoded .= chr(length($bin) % 8);       # padding
 
     while (my ($k, $v) = each %freq) {
-        $encoded .= $k . pack('S', $v);         # char => freq
+        $encoded .= $k . pack('S', $v);      # char => freq
     }
 
     print {$out_fh} $encoded, pack('B*', $bin);
@@ -248,7 +248,7 @@ sub decompress {
     open my $out_fh, '>:raw', $output;
 
     # Decode the input number
-    for (my $pow = $base**($base-1); $pow > 0 ; $pow /= $base) {
+    for (my $pow = $base**($base - 1) ; $pow > 0 ; $pow /= $base) {
         my $div = $enc / $pow;
 
         my $c  = $dict{$div};
