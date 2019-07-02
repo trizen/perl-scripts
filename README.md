@@ -46,9 +46,12 @@ A nice collection of day-to-day Perl scripts.
 * Encoders
     * [77](./Encoders/77.pl)
     * [Arithmetic coding](./Encoders/arithmetic_coding.pl)
-    * [Arithmetic coding 2](./Encoders/arithmetic_coding_2.pl)
+    * [Arithmetic coding anynum](./Encoders/arithmetic_coding_anynum.pl)
     * [Ascii encode decode](./Encoders/ascii_encode_decode.pl)
     * [Binary arithmetic coding](./Encoders/binary_arithmetic_coding.pl)
+    * [Binary arithmetic coding anynum](./Encoders/binary_arithmetic_coding_anynum.pl)
+    * [Binradix arithmetic coding](./Encoders/binradix_arithmetic_coding.pl)
+    * [Binradix arithmetic coding anynum](./Encoders/binradix_arithmetic_coding_anynum.pl)
     * [Eyes dropper](./Encoders/eyes_dropper.pl)
     * [Int2bytes](./Encoders/int2bytes.pl)
     * [Length encoder](./Encoders/length_encoder.pl)
