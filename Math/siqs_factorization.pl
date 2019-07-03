@@ -38,13 +38,15 @@ local $| = 1;
 
 # Tuning parameters
 use constant {
+              MASK_LIMIT                => 200,         # show Cn if n > MASK_LIMIT, where n ~ log_10(N)
               LOOK_FOR_SMALL_FACTORS    => 1,
               FIBONACCI_BOUND           => 500_000,
               TRIAL_DIVISION_LIMIT      => 1_000_000,
               POLLARD_BRENT_ITERATIONS  => 16,
               POLLARD_RHO_ITERATIONS    => 50_000,
               FERMAT_ITERATIONS         => 500,
-              NEAR_POWER_ITERATIONS     => 500,
+              NEAR_POWER_ITERATIONS     => 1_000,
+              DIFF_OF_POWERS_ITERATIONS => 10_000,
               CFRAC_ITERATIONS          => 15_000,
               HOLF_ITERATIONS           => 15_000,
               SIQS_TRIAL_DIVISION_EPS   => 25,
@@ -1283,8 +1285,8 @@ sub find_small_factors ($rem, $factors) {
             last;
         }
 
-        my $digits = length($rem);
-        say "\n[*] Factoring $rem ($digits digits)...\n";
+        my $len = length($rem);
+        printf("\n[*] Factoring %s (%s digits)...\n\n", ($len > MASK_LIMIT ? "C$len" : $rem), $len);
 
         say "=> Perfect power check...";
         $f = check_perfect_power($rem);
@@ -1326,7 +1328,7 @@ sub find_small_factors ($rem, $factors) {
         }
 
         say "=> CFRAC simple...";
-        $f = simple_cfrac_find_factor($rem, ($digits > 50 ? 2 : 1) * CFRAC_ITERATIONS);
+        $f = simple_cfrac_find_factor($rem, ($len > 50 ? 2 : 1) * CFRAC_ITERATIONS);
 
         if (defined($f) and $f < $rem) {
             store_factor(\$rem, $f, $factors);
@@ -1334,7 +1336,7 @@ sub find_small_factors ($rem, $factors) {
         }
 
         say "=> Pollard rho-sqrt...";
-        $f = pollard_rho_sqrt_find_factor($rem, ($digits > 50 ? 2 : 1) * POLLARD_RHO_ITERATIONS);
+        $f = pollard_rho_sqrt_find_factor($rem, ($len > 50 ? 2 : 1) * POLLARD_RHO_ITERATIONS);
 
         if (defined($f) and $f < $rem) {
             store_factor(\$rem, $f, $factors);
@@ -1366,7 +1368,7 @@ sub find_small_factors ($rem, $factors) {
         }
 
         say "=> Pollard rho...";
-        $f = pollard_rho_find_factor($rem, ($digits > 50 ? 3 : 2) * POLLARD_RHO_ITERATIONS);
+        $f = pollard_rho_find_factor($rem, ($len > 50 ? 3 : 2) * POLLARD_RHO_ITERATIONS);
 
         if (defined($f) and $f < $rem) {
             store_factor(\$rem, $f, $factors);
@@ -1374,17 +1376,17 @@ sub find_small_factors ($rem, $factors) {
         }
 
         say "=> Pollard rho-sqrt...";
-        $f = pollard_rho_sqrt_find_factor($rem, ($digits > 50 ? 6 : 3) * POLLARD_RHO_ITERATIONS);
+        $f = pollard_rho_sqrt_find_factor($rem, ($len > 50 ? 6 : 3) * POLLARD_RHO_ITERATIONS);
 
         if (defined($f) and $f < $rem) {
             store_factor(\$rem, $f, $factors);
             next;
         }
 
-        if ($digits < 150) {
+        if ($len < 150) {
 
             say "=> Pollard rho-exp...";
-            $f = pollard_rho_exp_find_factor($rem, ($digits > 50 ? 2 : 1) * 200);
+            $f = pollard_rho_exp_find_factor($rem, ($len > 50 ? 2 : 1) * 200);
 
             if (defined($f) and $f < $rem) {
                 store_factor(\$rem, $f, $factors);
@@ -1400,7 +1402,7 @@ sub find_small_factors ($rem, $factors) {
             next;
         }
 
-        if ($digits > 50) {
+        if ($len > 50) {
 
             say "=> Pollard p-1 (10M)...";
             $f = pollard_pm1_find_factor($rem, 10_000_000);
@@ -1411,7 +1413,7 @@ sub find_small_factors ($rem, $factors) {
             }
         }
 
-        if ($digits > 70) {
+        if ($len > 70) {
 
             say "=> Pollard p-1 (20M)...";
             $f = pollard_pm1_find_factor($rem, 20_000_000);
@@ -1430,7 +1432,7 @@ sub find_small_factors ($rem, $factors) {
             }
         }
 
-        if ($digits > 80) {
+        if ($len > 80) {
 
             say "=> Pollard p-1 (50M)...";
             $f = pollard_pm1_find_factor($rem, 50_000_000);
@@ -1557,9 +1559,76 @@ sub near_power_factorization ($n) {
                 if (my $e = is_power($n + $u)) {
                     my $r = Math::GMPz->new(rootint($n + $u, $e));
                     say "[*] Special form detected: $r^$e ", sprintf("%s %s", ($k == 1) ? ('-', $u) : ('+', -$u));
-                    return $f->($r, $e, $j);
+                    my @f = $f->($r, $e, $j);
+                    @f and return @f;
                 }
             }
+        }
+    }
+
+    my $g = sub ($r, $e, $r2, $e2) {
+        my @factors;
+
+        foreach my $d (ntheory::divisors($e)) {
+
+            foreach my $d2 (ntheory::divisors($e2)) {
+
+                foreach my $j (1, -1) {
+
+                    my $t = $r**$d - $j * $r2**$d2;
+                    my $g = Math::GMPz->new(gcd($t, $n));
+
+                    if ($g > 1 and $g < $n) {
+                        while ($n % $g == 0) {
+                            $n /= $g;
+                            push @factors, $g;
+                        }
+                    }
+
+                    if ($d * log($e) / log(10) < 1e6) {
+
+                        $t = Math::GMPz->new($d)**$e - $j * Math::GMPz->new($d)**$e2;
+                        $g = Math::GMPz->new(gcd($t, $n));
+
+                        if ($g > 1 and $g < $n) {
+                            while ($n % $g == 0) {
+                                $n /= $g;
+                                push @factors, $g;
+                            }
+                        }
+                    }
+
+                    if ($d2 * log($e) / log(10) < 1e6) {
+
+                        $t = Math::GMPz->new($d2)**$e - $j * Math::GMPz->new($d2)**$e2;
+                        $g = Math::GMPz->new(gcd($t, $n));
+
+                        if ($g > 1 and $g < $n) {
+                            while ($n % $g == 0) {
+                                $n /= $g;
+                                push @factors, $g;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        sort { $a <=> $b } @factors;
+    };
+
+    foreach my $r (2 .. DIFF_OF_POWERS_ITERATIONS) {
+
+        my $l    = logint($n, $r);
+        my $u    = Math::GMPz->new($r)**($l + 1);
+        my $diff = $u - $n;
+
+        if ($diff == 1 or is_power($diff)) {
+            my $e  = ($diff == 1) ? 1 : is_power($diff);
+            my $r2 = rootint($u - $n, $e);
+            say "[*] Special form detected: ", sprintf("%s^%s - %s^%s", $r, $l + 1, $r2, $e);
+            my @f = $g->(Math::GMPz->new($r), $l + 1, Math::GMPz->new($r2), $e);
+            @f and return @f;
         }
     }
 
@@ -1585,7 +1654,8 @@ sub factorize($n) {
         die "Number needs to be an integer >= 1";
     }
 
-    printf("[*] Factoring %s (%d digits)...\n", $n, length($n));
+    my $len = length($n);
+    printf("\n[*] Factoring %s (%d digits)...\n", ($len > MASK_LIMIT ? "C$len" : $n), $len);
 
     return ()   if ($n <= 1);
     return ($n) if is_prime($n);
@@ -1609,7 +1679,7 @@ sub factorize($n) {
             }
         }
 
-        push @factors, map { factorize($_) } @composite;
+        push @factors, map { factorize($_) } reverse @composite;
         my $rem = $n / Math::GMPz->new(vecprod(@factors));
 
         if ($rem > 1) {
