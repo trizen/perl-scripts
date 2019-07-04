@@ -46,7 +46,6 @@ use constant {
               POLLARD_RHO_ITERATIONS    => 50_000,
               FERMAT_ITERATIONS         => 500,
               NEAR_POWER_ITERATIONS     => 1_000,
-              DIFF_OF_POWERS_ITERATIONS => 10_000,
               CFRAC_ITERATIONS          => 15_000,
               HOLF_ITERATIONS           => 15_000,
               SIQS_TRIAL_DIVISION_EPS   => 25,
@@ -1538,7 +1537,7 @@ sub near_power_factorization ($n) {
                 my $t = $r**$d - $k * $j;
                 my $g = Math::GMPz->new(gcd($t, $n));
 
-                if ($g > 1 and $g < $n) {
+                if ($g > TRIAL_DIVISION_LIMIT and $g < $n) {
                     while ($n % $g == 0) {
                         $n /= $g;
                         push @factors, $g;
@@ -1550,6 +1549,9 @@ sub near_power_factorization ($n) {
         sort { $a <=> $b } @factors;
     };
 
+    my @f_params;
+    my @g_params;
+
     foreach my $j (1 .. NEAR_POWER_ITERATIONS) {
 
         foreach my $k (1, -1) {
@@ -1558,9 +1560,8 @@ sub near_power_factorization ($n) {
             if ($n + $u > 0) {
                 if (my $e = is_power($n + $u)) {
                     my $r = Math::GMPz->new(rootint($n + $u, $e));
-                    say "[*] Special form detected: $r^$e ", sprintf("%s %s", ($k == 1) ? ('-', $u) : ('+', -$u));
-                    my @f = $f->($r, $e, $j);
-                    @f and return @f;
+                    say "[*] Near power detected: $r^$e ", sprintf("%s %s", ($k == 1) ? ('-', $u) : ('+', -$u));
+                    push @f_params, [$r, $e, $j];
                 }
             }
         }
@@ -1569,45 +1570,56 @@ sub near_power_factorization ($n) {
     my $g = sub ($r, $e, $r2, $e2) {
         my @factors;
 
-        foreach my $d (ntheory::divisors($e)) {
+        my @d1 = ntheory::divisors($e);
+        my @d2 = ntheory::divisors($e2);
 
-            foreach my $d2 (ntheory::divisors($e2)) {
+        foreach my $d (@d1) {
+
+            foreach my $d2 (@d2) {
 
                 foreach my $j (1, -1) {
 
                     my $t = $r**$d - $j * $r2**$d2;
                     my $g = Math::GMPz->new(gcd($t, $n));
 
-                    if ($g > 1 and $g < $n) {
+                    if ($g > TRIAL_DIVISION_LIMIT and $g < $n) {
                         while ($n % $g == 0) {
                             $n /= $g;
                             push @factors, $g;
                         }
                     }
+                }
+            }
+        }
 
-                    if ($d * log($e) / log(10) < 1e6) {
+        foreach my $d (@d1) {
+            foreach my $j (1, -1) {
+                if ($d * log($e) / log(10) < 1e6) {
 
-                        $t = Math::GMPz->new($d)**$e - $j * Math::GMPz->new($d)**$e2;
-                        $g = Math::GMPz->new(gcd($t, $n));
+                    my $t = Math::GMPz->new($d)**$e - $j * Math::GMPz->new($d)**$e2;
+                    my $g = Math::GMPz->new(gcd($t, $n));
 
-                        if ($g > 1 and $g < $n) {
-                            while ($n % $g == 0) {
-                                $n /= $g;
-                                push @factors, $g;
-                            }
+                    if ($g > TRIAL_DIVISION_LIMIT and $g < $n) {
+                        while ($n % $g == 0) {
+                            $n /= $g;
+                            push @factors, $g;
                         }
                     }
+                }
+            }
+        }
 
-                    if ($d2 * log($e) / log(10) < 1e6) {
+        foreach my $d2 (@d2) {
+            foreach my $j (1, -1) {
+                if ($d2 * log($e) / log(10) < 1e6) {
 
-                        $t = Math::GMPz->new($d2)**$e - $j * Math::GMPz->new($d2)**$e2;
-                        $g = Math::GMPz->new(gcd($t, $n));
+                    my $t = Math::GMPz->new($d2)**$e - $j * Math::GMPz->new($d2)**$e2;
+                    my $g = Math::GMPz->new(gcd($t, $n));
 
-                        if ($g > 1 and $g < $n) {
-                            while ($n % $g == 0) {
-                                $n /= $g;
-                                push @factors, $g;
-                            }
+                    if ($g > TRIAL_DIVISION_LIMIT and $g < $n) {
+                        while ($n % $g == 0) {
+                            $n /= $g;
+                            push @factors, $g;
                         }
                     }
                 }
@@ -1617,22 +1629,44 @@ sub near_power_factorization ($n) {
         sort { $a <=> $b } @factors;
     };
 
-    foreach my $r (2 .. DIFF_OF_POWERS_ITERATIONS) {
+    foreach my $r (2 .. logint($n, 2)) {
 
         my $l    = logint($n, $r);
         my $u    = Math::GMPz->new($r)**($l + 1);
         my $diff = $u - $n;
 
-        if ($diff == 1 or is_power($diff)) {
+        if ($diff == 1 or Math::GMPz::Rmpz_perfect_power_p($diff)) {
             my $e  = ($diff == 1) ? 1 : is_power($diff);
-            my $r2 = rootint($u - $n, $e);
-            say "[*] Special form detected: ", sprintf("%s^%s - %s^%s", $r, $l + 1, $r2, $e);
-            my @f = $g->(Math::GMPz->new($r), $l + 1, Math::GMPz->new($r2), $e);
-            @f and return @f;
+            my $r2 = rootint($diff, $e);
+            say "[*] Difference of powers detected: ", sprintf("%s^%s - %s^%s", $r, $l + 1, $r2, $e);
+            push @g_params, [Math::GMPz->new($r), $l + 1, Math::GMPz->new($r2), $e];
         }
     }
 
-    return;
+    foreach my $r (2 .. logint($n, 2)) {
+
+        my $l    = logint($n, $r);
+        my $u    = Math::GMPz->new($r)**$l;
+        my $diff = $n - $u;
+
+        if ($diff == 1 or Math::GMPz::Rmpz_perfect_power_p($diff)) {
+            my $e  = ($diff == 1) ? 1 : is_power($diff);
+            my $r2 = rootint($diff, $e);
+            say "[*] Sum of powers detected: ", sprintf("%s^%s + %s^%s", $r, $l, $r2, $e);
+            push @g_params, [Math::GMPz->new($r), $l, Math::GMPz->new($r2), $e];
+        }
+    }
+
+    my @factors;
+    foreach my $fp (@f_params) {
+        push @factors, $f->(@$fp);
+    }
+
+    foreach my $gp (@g_params) {
+        push @factors, $g->(@$gp);
+    }
+
+    return sort { $a <=> $b } @factors;
 }
 
 sub verify_prime_factors ($n, $factors) {
