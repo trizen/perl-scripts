@@ -18,10 +18,14 @@ use warnings;
 
 use experimental qw(signatures);
 
-use ntheory qw(divisors logint is_power);
-use Math::AnyNum qw(iroot ipow prod gcd);
+use Math::GMPz;
+use ntheory qw(divisors rootint logint is_power gcd vecprod powint);
 
 sub diff_power_factorization ($n) {
+
+    if (ref($n) ne 'Math::GMPz') {
+        $n = Math::GMPz->new("$n");
+    }
 
     my $orig = $n;
     my @f_params;
@@ -36,7 +40,7 @@ sub diff_power_factorization ($n) {
             foreach my $d2 (@d2) {
                 foreach my $j (1, -1) {
 
-                    my $t = ipow($r, $d) - $j * ipow($r2, $d2);
+                    my $t = $r**$d - $j * $r2**$d2;
                     my $g = gcd($t, $n);
 
                     if ($g > 1 and $g < $n) {
@@ -49,11 +53,11 @@ sub diff_power_factorization ($n) {
             }
         }
 
-        foreach my $d (@d1) {
+        foreach my $d (map { Math::GMPz->new($_) } @d1) {    # optional
             foreach my $j (1, -1) {
                 if ($d * log($e) / log(10) < 1e6) {
 
-                    my $t = ipow($d, $e) - $j * ipow($d, $e2);
+                    my $t = $d**$e - $j * $d**$e2;
                     my $g = gcd($t, $n);
 
                     if ($g > 1 and $g < $n) {
@@ -66,11 +70,11 @@ sub diff_power_factorization ($n) {
             }
         }
 
-        foreach my $d2 (@d2) {
+        foreach my $d2 (map { Math::GMPz->new($_) } @d2) {    # optional
             foreach my $j (1, -1) {
                 if ($d2 * log($e) / log(10) < 1e6) {
 
-                    my $t = ipow($d2, $e) - $j * ipow($d2, $e2);
+                    my $t = $d2**$e - $j * $d2**$e2;
                     my $g = gcd($t, $n);
 
                     if ($g > 1 and $g < $n) {
@@ -86,31 +90,31 @@ sub diff_power_factorization ($n) {
         sort { $a <=> $b } @factors;
     };
 
-    foreach my $r (2 .. logint($n, 2)) {
+    foreach my $r (map { Math::GMPz->new($_) } 2 .. logint($n, 2)) {
 
-        my $l    = logint($n, $r);
-        my $u    = ipow($r, $l + 1);
-        my $diff = $u - $n;
+        my $l  = logint($n, $r);
+        my $u  = $r**($l + 1);
+        my $dx = $u - $n;
 
-        if ($diff == 1 or is_power($diff)) {
-            my $e  = ($diff == 1) ? 1 : is_power($diff);
-            my $r2 = iroot($diff, $e);
+        if ($dx == 1 or Math::GMPz::Rmpz_perfect_power_p($dx)) {
+            my $e  = ($dx == 1) ? 1 : is_power($dx);
+            my $r2 = Math::GMPz->new(rootint($dx, $e));
             ##say "[*] Difference of powers detected: ", sprintf("%s^%s - %s^%s", $r, $l + 1, $r2, $e);
-            push @f_params, [Math::AnyNum->new($r), $l + 1, $r2, $e];
+            push @f_params, [$r, $l + 1, $r2, $e];
         }
     }
 
-    foreach my $r (2 .. logint($n, 2)) {
+    foreach my $r (map { Math::GMPz->new($_) } 2 .. logint($n, 2)) {
 
-        my $l    = logint($n, $r);
-        my $u    = ipow($r, $l);
-        my $diff = $n - $u;
+        my $l  = logint($n, $r);
+        my $u  = $r**$l;
+        my $dx = $n - $u;
 
-        if ($diff == 1 or is_power($diff)) {
-            my $e  = ($diff == 1) ? 1 : is_power($diff);
-            my $r2 = iroot($diff, $e);
+        if ($dx == 1 or Math::GMPz::Rmpz_perfect_power_p($dx)) {
+            my $e  = ($dx == 1) ? 1 : is_power($dx);
+            my $r2 = Math::GMPz->new(rootint($dx, $e));
             ##say "[*] Sum of powers detected: ", sprintf("%s^%s + %s^%s", $r, $l, $r2, $e);
-            push @f_params, [Math::AnyNum->new($r), $l, $r2, $e];
+            push @f_params, [$r, $l, $r2, $e];
         }
     }
 
@@ -120,22 +124,22 @@ sub diff_power_factorization ($n) {
         push @factors, $f->(@$fp);
     }
 
-    push @factors, $orig / prod(@factors);
+    push @factors, $orig / vecprod(@factors);
     return sort { $a <=> $b } @factors;
 }
 
 if (@ARGV) {
-    say join ', ', diff_power_factorization(Math::AnyNum->new($ARGV[0]), defined($ARGV[1]) ? $ARGV[1] : ());
+    say join ', ', diff_power_factorization($ARGV[0]);
     exit;
 }
 
-say '2^256  - 1      = ', join ' * ', diff_power_factorization(ipow(2,  256) - 1);
-say '10^120 + 1      = ', join ' * ', diff_power_factorization(ipow(10, 120) + 1);
-say '10^120 - 1      = ', join ' * ', diff_power_factorization(ipow(10, 120) - 1);
-say '10^120 - 25     = ', join ' * ', diff_power_factorization(ipow(10, 120) - 25);
-say '10^105 - 1      = ', join ' * ', diff_power_factorization(ipow(10, 105) - 1);
-say '10^105 + 1      = ', join ' * ', diff_power_factorization(ipow(10, 105) + 1);
-say '10^120 - 2134^2 = ', join ' * ', diff_power_factorization(ipow(10, 120) - 2134 * 2134);
+say '2^256  - 1      = ', join ' * ', diff_power_factorization(powint(2,  256) - 1);
+say '10^120 + 1      = ', join ' * ', diff_power_factorization(powint(10, 120) + 1);
+say '10^120 - 1      = ', join ' * ', diff_power_factorization(powint(10, 120) - 1);
+say '10^120 - 25     = ', join ' * ', diff_power_factorization(powint(10, 120) - 25);
+say '10^105 - 1      = ', join ' * ', diff_power_factorization(powint(10, 105) - 1);
+say '10^105 + 1      = ', join ' * ', diff_power_factorization(powint(10, 105) + 1);
+say '10^120 - 2134^2 = ', join ' * ', diff_power_factorization(powint(10, 120) - 2134 * 2134);
 
 __END__
 2^256  - 1      = 3 * 5 * 17 * 257 * 65537 * 4294967297 * 18446744073709551617 * 340282366920938463463374607431768211457
