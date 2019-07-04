@@ -29,7 +29,8 @@ use ntheory qw(
   valuation logint is_power fromdigits is_square
   );
 
-use Math::Prime::Util::GMP qw(vecprod sqrtint rootint gcd random_prime sieve_primes consecutive_integer_lcm lucas_sequence);
+use Math::Prime::Util::GMP
+  qw(powmod vecprod sqrtint rootint gcd random_prime sieve_primes consecutive_integer_lcm lucas_sequence);
 
 my $ZERO = Math::GMPz->new(0);
 my $ONE  = Math::GMPz->new(1);
@@ -1527,6 +1528,14 @@ sub find_all_prime_factors ($n, $factors) {
 
 sub near_power_factorization ($n) {
 
+    my @f_params;
+    my @g_params;
+    my @h_params;
+
+    #
+    ## Close to a perfect power
+    #
+
     my $f = sub ($r, $e, $k) {
         my @factors;
 
@@ -1545,11 +1554,8 @@ sub near_power_factorization ($n) {
             }
         }
 
-        sort { $a <=> $b } @factors;
+        @factors;
     };
-
-    my @f_params;
-    my @g_params;
 
     foreach my $j (1 .. NEAR_POWER_ITERATIONS) {
         foreach my $k (1, -1) {
@@ -1565,17 +1571,21 @@ sub near_power_factorization ($n) {
         }
     }
 
-    my $g = sub ($r, $e, $r2, $e2) {
+    #
+    ## Difference of powers
+    #
+
+    my $g = sub ($r1, $e1, $r2, $e2) {
         my @factors;
 
-        my @d1 = ntheory::divisors($e);
+        my @d1 = ntheory::divisors($e1);
         my @d2 = ntheory::divisors($e2);
 
-        foreach my $d (@d1) {
+        foreach my $d1 (@d1) {
             foreach my $d2 (@d2) {
                 foreach my $j (1, -1) {
 
-                    my $t = $r**$d - $j * $r2**$d2;
+                    my $t = $r1**$d1 - $j * $r2**$d2;
                     my $g = Math::GMPz->new(gcd($t, $n));
 
                     if ($g > TRIAL_DIVISION_LIMIT and $g < $n) {
@@ -1588,78 +1598,110 @@ sub near_power_factorization ($n) {
             }
         }
 
-        foreach my $d (@d1) {
-            foreach my $j (1, -1) {
-                if ($d * log($e) / log(10) < 1e6) {
-
-                    my $t = Math::GMPz->new($d)**$e - $j * Math::GMPz->new($d)**$e2;
-                    my $g = Math::GMPz->new(gcd($t, $n));
-
-                    if ($g > TRIAL_DIVISION_LIMIT and $g < $n) {
-                        while ($n % $g == 0) {
-                            $n /= $g;
-                            push @factors, $g;
-                        }
-                    }
-                }
-            }
-        }
-
-        foreach my $d2 (@d2) {
-            foreach my $j (1, -1) {
-                if ($d2 * log($e) / log(10) < 1e6) {
-
-                    my $t = Math::GMPz->new($d2)**$e - $j * Math::GMPz->new($d2)**$e2;
-                    my $g = Math::GMPz->new(gcd($t, $n));
-
-                    if ($g > TRIAL_DIVISION_LIMIT and $g < $n) {
-                        while ($n % $g == 0) {
-                            $n /= $g;
-                            push @factors, $g;
-                        }
-                    }
-                }
-            }
-        }
-
-        sort { $a <=> $b } @factors;
+        @factors;
     };
 
-    foreach my $r (2 .. logint($n, 2)) {
+    foreach my $r1 (map { Math::GMPz->new($_) } 2 .. logint($n, 2)) {
 
-        my $l    = logint($n, $r);
-        my $u    = Math::GMPz->new($r)**($l + 1);
-        my $diff = $u - $n;
+        my $e1 = logint($n, $r1);
+        my $u  = $r1**($e1 + 1);
+        my $dx = $u - $n;
 
-        if ($diff == 1 or Math::GMPz::Rmpz_perfect_power_p($diff)) {
-            my $e  = ($diff == 1) ? 1 : is_power($diff);
-            my $r2 = rootint($diff, $e);
-            say "[*] Difference of powers detected: ", sprintf("%s^%s - %s^%s", $r, $l + 1, $r2, $e);
-            push @g_params, [Math::GMPz->new($r), $l + 1, Math::GMPz->new($r2), $e];
+        if ($dx >= 1 and Math::GMPz::Rmpz_perfect_power_p($dx)) {
+            my $e2 = ($dx == 1) ? 1 : is_power($dx);
+            my $r2 = Math::GMPz->new(rootint($dx, $e2));
+            say "[*] Difference of powers detected: ", sprintf("%s^%s - %s^%s", $r1, $e1 + 1, $r2, $e2);
+            push @g_params, [$r1, $e1 + 1, $r2, $e2];
         }
     }
 
-    foreach my $r (2 .. logint($n, 2)) {
+    foreach my $r1 (map { Math::GMPz->new($_) } 2 .. logint($n, 2)) {
 
-        my $l    = logint($n, $r);
-        my $u    = Math::GMPz->new($r)**$l;
-        my $diff = $n - $u;
+        my $e1 = logint($n, $r1);
+        my $u  = $r1**$e1;
+        my $dx = $n - $u;
 
-        if ($diff == 1 or Math::GMPz::Rmpz_perfect_power_p($diff)) {
-            my $e  = ($diff == 1) ? 1 : is_power($diff);
-            my $r2 = rootint($diff, $e);
-            say "[*] Sum of powers detected: ", sprintf("%s^%s + %s^%s", $r, $l, $r2, $e);
-            push @g_params, [Math::GMPz->new($r), $l, Math::GMPz->new($r2), $e];
+        if ($dx >= 1 and Math::GMPz::Rmpz_perfect_power_p($dx)) {
+            my $e2 = ($dx == 1) ? 1 : is_power($dx);
+            my $r2 = Math::GMPz->new(rootint($dx, $e2));
+            say "[*] Sum of powers detected: ", sprintf("%s^%s + %s^%s", $r1, $e1, $r2, $e2);
+            push @g_params, [$r1, $e1, $r2, $e2];
+        }
+    }
+
+    #
+    ## Congruence of powers
+    #
+
+    my $h = sub ($r, $k, $e) {
+
+        my @factors;
+
+        foreach my $t ($r + $k, $k - $r) {
+            my $g = Math::GMPz->new(gcd($t, $n));
+            if ($g > TRIAL_DIVISION_LIMIT and $g < $n) {
+
+                if ($r == $k) {
+                    say "[*] Congruence of powers: a^$e == b^$e (mod n)";
+                }
+                else {
+                    say "[*] Congruence of powers: $k^$e == $r^$e (mod n)";
+                }
+
+                while ($n % $g == 0) {
+                    $n /= $g;
+                    push @factors, $g;
+                }
+            }
+        }
+
+        @factors;
+    };
+
+    for my $e (2 .. 20) {
+
+        my $root = rootint($n, $e);
+
+        if ($root + 1 >= ~0) {
+            $root = Math::GMPz->new("$root");
+        }
+
+        for my $j (1, 0) {
+
+            my $k = $root + $j;
+            my $u = Math::GMPz->new(powmod($k, $e, $n));
+
+            if (is_power($u, $e, \my $r)) {
+
+                if (!ref($k) and $r + $k >= ~0) {
+                    $r = Math::GMPz->new("$r");
+                }
+
+                push @h_params, [$r, $k, $e];
+            }
+
+            if (is_power($n - $u, $e, \my $r)) {
+
+                if (!ref($k) and $r + $k >= ~0) {
+                    $r = Math::GMPz->new("$r");
+                }
+
+                push @h_params, [$r, $k, $e];
+            }
         }
     }
 
     my @factors;
-    foreach my $fp (@f_params) {
-        push @factors, $f->(@$fp);
+    foreach my $args (@f_params) {
+        push @factors, $f->(@$args);
     }
 
-    foreach my $gp (@g_params) {
-        push @factors, $g->(@$gp);
+    foreach my $args (@g_params) {
+        push @factors, $g->(@$args);
+    }
+
+    foreach my $args (@h_params) {
+        push @factors, $h->(@$args);
     }
 
     return sort { $a <=> $b } @factors;
