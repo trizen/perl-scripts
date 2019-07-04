@@ -415,6 +415,7 @@ A nice collection of day-to-day Perl scripts.
     * [Cyclotomic polynomial](./Math/cyclotomic_polynomial.pl)
     * [Definite integral numerical approximation](./Math/definite_integral_numerical_approximation.pl)
     * [Difference of k powers](./Math/difference_of_k_powers.pl)
+    * [Difference of powers factorization method](./Math/difference_of_powers_factorization_method.pl)
     * [Difference of three squares solutions](./Math/difference_of_three_squares_solutions.pl)
     * [Difference of two squares solutions](./Math/difference_of_two_squares_solutions.pl)
     * [Dirichlet hyperbola method](./Math/dirichlet_hyperbola_method.pl)
