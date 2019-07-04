@@ -20,7 +20,7 @@ use Math::GMPz;
 use ntheory qw(:all);
 use experimental qw(signatures);
 
-sub cgpow_factor ($n) {
+sub cgpow_factor ($n, $verbose = 0) {
 
     if (ref($n) ne 'Math::GMPz') {
         $n = Math::GMPz->new("$n");
@@ -51,7 +51,11 @@ sub cgpow_factor ($n) {
                 foreach my $t ($r + $k, $k - $r) {
                     my $g = gcd($t, $n);
                     if ($g > 1 and $g < $n) {
-                        ##say "a^$e == b^$e -> $g";
+
+                        if ($verbose) {
+                            say "[-] Congruence: a^$e == b^$e -> $g";
+                        }
+
                         while ($n % $g == 0) {
                             $n /= $g;
                             push @factors, $g;
@@ -62,14 +66,18 @@ sub cgpow_factor ($n) {
 
             if (is_power($N - $u, $e, \my $r)) {
 
-                if ($r + $k >= ~0) {
+                if (!ref($k) and $r + $k >= ~0) {
                     $r = Math::GMPz->new("$r");
                 }
 
                 foreach my $t ($r + $k, $k - $r) {
                     my $g = gcd($t, $n);
                     if ($g > 1 and $g < $n) {
-                        ##say "a^$e == b^$e -> $g";
+
+                        if ($verbose) {
+                            say "[+] Congreunce: a^$e == b^$e -> $g";
+                        }
+
                         while ($n % $g == 0) {
                             $n /= $g;
                             push @factors, $g;
@@ -85,7 +93,7 @@ sub cgpow_factor ($n) {
 }
 
 if (@ARGV) {
-    say join ', ', cgpow_factor($ARGV[0]);
+    say join ', ', cgpow_factor($ARGV[0], 1);
     exit;
 }
 

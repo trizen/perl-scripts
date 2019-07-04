@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 # Daniel "Trizen" Șuteu
-# Date: 05 July 2019
+# Date: 03 July 2019
 # https://github.com/trizen
 
 # A simple factorization method for numbers that can be expressed as a difference of powers.
@@ -21,7 +21,7 @@ use experimental qw(signatures);
 use Math::GMPz;
 use ntheory qw(divisors rootint logint is_power gcd vecprod powint);
 
-sub diff_power_factorization ($n) {
+sub diff_power_factorization ($n, $verbose = 0) {
 
     if (ref($n) ne 'Math::GMPz') {
         $n = Math::GMPz->new("$n");
@@ -30,51 +30,17 @@ sub diff_power_factorization ($n) {
     my $orig = $n;
     my @f_params;
 
-    my $f = sub ($r, $e, $r2, $e2) {
+    my $f = sub ($r1, $e1, $r2, $e2) {
         my @factors;
 
-        my @d1 = divisors($e);
-        my @d2 = divisors($e2);
+        my @divs1 = divisors($e1);
+        my @divs2 = divisors($e2);
 
-        foreach my $d (@d1) {
-            foreach my $d2 (@d2) {
+        foreach my $d1 (@divs1) {
+            foreach my $d2 (@divs2) {
                 foreach my $j (1, -1) {
 
-                    my $t = $r**$d - $j * $r2**$d2;
-                    my $g = gcd($t, $n);
-
-                    if ($g > 1 and $g < $n) {
-                        while ($n % $g == 0) {
-                            $n /= $g;
-                            push @factors, $g;
-                        }
-                    }
-                }
-            }
-        }
-
-        foreach my $d (map { Math::GMPz->new($_) } @d1) {    # optional
-            foreach my $j (1, -1) {
-                if ($d * log($e) / log(10) < 1e6) {
-
-                    my $t = $d**$e - $j * $d**$e2;
-                    my $g = gcd($t, $n);
-
-                    if ($g > 1 and $g < $n) {
-                        while ($n % $g == 0) {
-                            $n /= $g;
-                            push @factors, $g;
-                        }
-                    }
-                }
-            }
-        }
-
-        foreach my $d2 (map { Math::GMPz->new($_) } @d2) {    # optional
-            foreach my $j (1, -1) {
-                if ($d2 * log($e) / log(10) < 1e6) {
-
-                    my $t = $d2**$e - $j * $d2**$e2;
+                    my $t = $r1**$d1 - $j * $r2**$d2;
                     my $g = gcd($t, $n);
 
                     if ($g > 1 and $g < $n) {
@@ -90,31 +56,39 @@ sub diff_power_factorization ($n) {
         sort { $a <=> $b } @factors;
     };
 
-    foreach my $r (map { Math::GMPz->new($_) } 2 .. logint($n, 2)) {
+    foreach my $r1 (map { Math::GMPz->new($_) } 2 .. logint($n, 2)) {
 
-        my $l  = logint($n, $r);
-        my $u  = $r**($l + 1);
+        my $e1 = logint($n, $r1);
+        my $u  = $r1**($e1 + 1);
         my $dx = $u - $n;
 
         if ($dx == 1 or Math::GMPz::Rmpz_perfect_power_p($dx)) {
-            my $e  = ($dx == 1) ? 1 : is_power($dx);
-            my $r2 = Math::GMPz->new(rootint($dx, $e));
-            ##say "[*] Difference of powers detected: ", sprintf("%s^%s - %s^%s", $r, $l + 1, $r2, $e);
-            push @f_params, [$r, $l + 1, $r2, $e];
+            my $e2 = ($dx == 1) ? 1 : is_power($dx);
+            my $r2 = Math::GMPz->new(rootint($dx, $e2));
+
+            if ($verbose) {
+                say "[*] Difference of powers detected: ", sprintf("%s^%s - %s^%s", $r1, $e1 + 1, $r2, $e2);
+            }
+
+            push @f_params, [$r1, $e1 + 1, $r2, $e2];
         }
     }
 
-    foreach my $r (map { Math::GMPz->new($_) } 2 .. logint($n, 2)) {
+    foreach my $r1 (map { Math::GMPz->new($_) } 2 .. logint($n, 2)) {
 
-        my $l  = logint($n, $r);
-        my $u  = $r**$l;
+        my $e1 = logint($n, $r1);
+        my $u  = $r1**$e1;
         my $dx = $n - $u;
 
         if ($dx == 1 or Math::GMPz::Rmpz_perfect_power_p($dx)) {
-            my $e  = ($dx == 1) ? 1 : is_power($dx);
-            my $r2 = Math::GMPz->new(rootint($dx, $e));
-            ##say "[*] Sum of powers detected: ", sprintf("%s^%s + %s^%s", $r, $l, $r2, $e);
-            push @f_params, [$r, $l, $r2, $e];
+            my $e2 = ($dx == 1) ? 1 : is_power($dx);
+            my $r2 = Math::GMPz->new(rootint($dx, $e2));
+
+            if ($verbose) {
+                say "[*] Sum of powers detected: ", sprintf("%s^%s + %s^%s", $r1, $e1, $r2, $e2);
+            }
+
+            push @f_params, [$r1, $e1, $r2, $e2];
         }
     }
 
@@ -129,7 +103,7 @@ sub diff_power_factorization ($n) {
 }
 
 if (@ARGV) {
-    say join ', ', diff_power_factorization($ARGV[0]);
+    say join ', ', diff_power_factorization($ARGV[0], 1);
     exit;
 }
 
