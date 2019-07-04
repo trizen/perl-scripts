@@ -33,9 +33,7 @@ sub diff_power_factorization ($n) {
         my @d2 = divisors($e2);
 
         foreach my $d (@d1) {
-
             foreach my $d2 (@d2) {
-
                 foreach my $j (1, -1) {
 
                     my $t = ipow($r, $d) - $j * ipow($r2, $d2);
@@ -52,7 +50,6 @@ sub diff_power_factorization ($n) {
         }
 
         foreach my $d (@d1) {
-
             foreach my $j (1, -1) {
                 if ($d * log($e) / log(10) < 1e6) {
 
@@ -70,7 +67,6 @@ sub diff_power_factorization ($n) {
         }
 
         foreach my $d2 (@d2) {
-
             foreach my $j (1, -1) {
                 if ($d2 * log($e) / log(10) < 1e6) {
 
@@ -85,7 +81,6 @@ sub diff_power_factorization ($n) {
                     }
                 }
             }
-
         }
 
         sort { $a <=> $b } @factors;

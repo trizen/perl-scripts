@@ -1531,7 +1531,6 @@ sub near_power_factorization ($n) {
         my @factors;
 
         foreach my $d (ntheory::divisors($e)) {
-
             foreach my $j (1, -1) {
 
                 my $t = $r**$d - $k * $j;
@@ -1553,7 +1552,6 @@ sub near_power_factorization ($n) {
     my @g_params;
 
     foreach my $j (1 .. NEAR_POWER_ITERATIONS) {
-
         foreach my $k (1, -1) {
             my $u = $k * $j * $j;
 
@@ -1574,9 +1572,7 @@ sub near_power_factorization ($n) {
         my @d2 = ntheory::divisors($e2);
 
         foreach my $d (@d1) {
-
             foreach my $d2 (@d2) {
-
                 foreach my $j (1, -1) {
 
                     my $t = $r**$d - $j * $r2**$d2;
