@@ -1298,7 +1298,7 @@ sub find_small_factors ($rem, $factors) {
                 $t *= $f;
             }
 
-            my @r = factorize($f);
+            my @r = (is_prime($f) ? $f : factorize($f));
             push(@$factors, (@r) x $exp);
             return 1;
         }
@@ -1456,7 +1456,7 @@ sub check_perfect_power ($n) {
 
     if ((my $exp = is_power($n)) > 1) {
         my $root = Math::GMPz->new(rootint($n, $exp));
-        say "$n is $root^$exp";
+        say "`-> $root^$exp";
         return $root;
     }
 
@@ -1731,6 +1731,13 @@ sub factorize($n) {
 
     return ()   if ($n <= 1);
     return ($n) if is_prime($n);
+
+    if (my $e = is_power($n)) {
+        my $root = Math::GMPz->new(rootint($n, $e));
+        say "[*] Perfect power detected: $root^$e";
+        my @factors = (is_prime($root) ? $root : factorize($root));
+        return verify_prime_factors($n, [(@factors) x $e]);
+    }
 
     my @divisors = (($n > ~0) ? near_power_factorization($n) : ());
 
