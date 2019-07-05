@@ -58,11 +58,7 @@ sub cgpow_factor ($n, $verbose = 0) {
     # In practice, we can check only the range `2 <= e < min(50, log_2(n))`
     for my $e (2 .. logint($n, 2)) {
 
-        my $root = rootint($n, $e);
-
-        if ($root + 1 >= ~0) {
-            $root = Math::GMPz->new("$root");
-        }
+        my $root = Math::GMPz->new(rootint($n, $e));
 
         for my $j (1, 0) {
 
@@ -70,21 +66,11 @@ sub cgpow_factor ($n, $verbose = 0) {
             my $u = powmod($k, $e, $n);
 
             if (is_power($u, $e, \my $r)) {
-
-                if (!ref($k) and $r + $k >= ~0) {
-                    $r = Math::GMPz->new("$r");
-                }
-
-                push @params, [$r, $k, $e];
+                push @params, [Math::GMPz->new($r), $k, $e];
             }
 
             if (is_power($n - $u, $e, \my $r)) {
-
-                if (!ref($k) and $r + $k >= ~0) {
-                    $r = Math::GMPz->new("$r");
-                }
-
-                push @params, [$r, $k, $e];
+                push @params, [Math::GMPz->new($r), $k, $e];
             }
         }
     }
