@@ -398,6 +398,7 @@ A nice collection of day-to-day Perl scripts.
     * [Complex logarithm in real numbers](./Math/complex_logarithm_in_real_numbers.pl)
     * [Complex modular multiplicative inverse](./Math/complex_modular_multiplicative_inverse.pl)
     * [Complex zeta in real numbers](./Math/complex_zeta_in_real_numbers.pl)
+    * [Congruence of powers factorization method](./Math/congruence_of_powers_factorization_method.pl)
     * [Consecutive partitions](./Math/consecutive_partitions.pl)
     * [Continued fraction expansion of sqrt(n)](./Math/continued_fraction_expansion_of_sqrt(n).pl)
     * [Continued fraction expansion of sqrt(n) mpz](./Math/continued_fraction_expansion_of_sqrt(n)_mpz.pl)
