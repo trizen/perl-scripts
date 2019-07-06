@@ -1456,7 +1456,7 @@ sub check_perfect_power ($n) {
 
     if ((my $exp = is_power($n)) > 1) {
         my $root = Math::GMPz->new(rootint($n, $exp));
-        say "`-> $root^$exp";
+        say "`-> perfect power: $root^$exp";
         return $root;
     }
 
@@ -1601,6 +1601,7 @@ sub near_power_factorization ($n) {
         @factors;
     };
 
+    # Difference of powers of the form a^k - b^k, where a and b are small
     foreach my $r1 (map { Math::GMPz->new($_) } 2 .. logint($n, 2)) {
 
         my $e1 = logint($n, $r1);
@@ -1615,6 +1616,7 @@ sub near_power_factorization ($n) {
         }
     }
 
+    # Sum of powers of the form a^k + b^k, where a and b are small
     foreach my $r1 (map { Math::GMPz->new($_) } 2 .. logint($n, 2)) {
 
         my $e1 = logint($n, $r1);
