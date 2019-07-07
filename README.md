@@ -350,6 +350,8 @@ A nice collection of day-to-day Perl scripts.
     * [Ascii julia set](./Math/ascii_julia_set.pl)
     * [Ascii mandelbrot set](./Math/ascii_mandelbrot_set.pl)
     * [Batir factorial asymptotic formula mpfr](./Math/batir_factorial_asymptotic_formula_mpfr.pl)
+    * [Bell numbers](./Math/bell_numbers.pl)
+    * [Bell numbers mpz](./Math/bell_numbers_mpz.pl)
     * [Bernoulli denominators](./Math/bernoulli_denominators.pl)
     * [Bernoulli denominators records](./Math/bernoulli_denominators_records.pl)
     * [Bernoulli numbers](./Math/bernoulli_numbers.pl)
