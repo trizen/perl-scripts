@@ -466,6 +466,7 @@ A nice collection of day-to-day Perl scripts.
     * [Fubini numbers](./Math/fubini_numbers.pl)
     * [Fubini numbers recursive](./Math/fubini_numbers_recursive.pl)
     * [Function graph](./Math/function_graph.pl)
+    * [Function inverse binary search](./Math/function_inverse_binary_search.pl)
     * [Gamma function](./Math/gamma_function.pl)
     * [Gaussian integers sum](./Math/gaussian_integers_sum.pl)
     * [General binary multiplier](./Math/general_binary_multiplier.pl)
@@ -772,6 +773,10 @@ A nice collection of day-to-day Perl scripts.
     * [Regex optimizer in source](./Regex/regex_optimizer_in_source.pl)
     * [Regex pair factors](./Regex/regex_pair_factors.pl)
     * [Regexp to strings](./Regex/regexp_to_strings.pl)
+* Search
+    * [Binary search](./Search/binary_search.pl)
+    * [Binary search ge](./Search/binary_search_ge.pl)
+    * [Binary search le](./Search/binary_search_le.pl)
 * Socket
     * [Chat server](./Socket/chat_server.pl)
 * Sort
