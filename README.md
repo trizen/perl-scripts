@@ -580,6 +580,7 @@ A nice collection of day-to-day Perl scripts.
     * [Newton's method recursive](./Math/newton_s_method_recursive.pl)
     * [Next power of two](./Math/next_power_of_two.pl)
     * [Nth prime approx](./Math/nth_prime_approx.pl)
+    * [Nth root good rational approximations](./Math/nth_root_good_rational_approximations.pl)
     * [Nth root recurrence constant](./Math/nth_root_recurrence_constant.pl)
     * [Nth smooth number](./Math/nth_smooth_number.pl)
     * [Number of conditional GCDs](./Math/number_of_conditional_GCDs.pl)
