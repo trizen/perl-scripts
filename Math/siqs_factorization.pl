@@ -45,10 +45,10 @@ use constant {
               TRIAL_DIVISION_LIMIT      => 1_000_000,
               POLLARD_BRENT_ITERATIONS  => 16,
               POLLARD_RHO_ITERATIONS    => 50_000,
-              FERMAT_ITERATIONS         => 500,
+              FERMAT_ITERATIONS         => 100_000,
               NEAR_POWER_ITERATIONS     => 1_000,
               CFRAC_ITERATIONS          => 15_000,
-              HOLF_ITERATIONS           => 15_000,
+              HOLF_ITERATIONS           => 100_000,
               SIQS_TRIAL_DIVISION_EPS   => 25,
               SIQS_MIN_PRIME_POLYNOMIAL => 400,
               SIQS_MAX_PRIME_POLYNOMIAL => 4000,
@@ -1124,15 +1124,26 @@ sub pollard_rho_exp_find_factor ($n, $max_iter) {
 
 sub fermat_find_factor ($n, $max_iter) {
 
-    my $p = Math::GMPz->new(sqrtint($n));
-    my $q = $p * $p - $n;
+    my $p = Math::GMPz::Rmpz_init();    # p = floor(sqrt(n))
+    my $q = Math::GMPz::Rmpz_init();    # q = p^2 - n
 
-    foreach my $i (1 .. $max_iter) {
+    Math::GMPz::Rmpz_sqrtrem($p, $q, $n);
+    Math::GMPz::Rmpz_neg($q, $q);
 
-        $q += 2 * $p++ + 1;
+    for (my $j = 1 ; $j <= $max_iter ; ++$j) {
 
-        if (is_square($q)) {
-            return ($p - Math::GMPz->new(sqrtint($q)));
+        Math::GMPz::Rmpz_addmul_ui($q, $p, 2);
+
+        Math::GMPz::Rmpz_add_ui($q, $q, 1);
+        Math::GMPz::Rmpz_add_ui($p, $p, 1);
+
+        if (Math::GMPz::Rmpz_perfect_square_p($q)) {
+            Math::GMPz::Rmpz_sqrt($q, $q);
+
+            my $r = Math::GMPz::Rmpz_init();
+            Math::GMPz::Rmpz_sub($r, $p, $q);
+
+            return $r;
         }
     }
 
