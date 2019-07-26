@@ -707,7 +707,7 @@ A nice collection of day-to-day Perl scripts.
     * [Solve pell equation fast](./Math/solve_pell_equation_fast.pl)
     * [Solve pell equation generalized](./Math/solve_pell_equation_generalized.pl)
     * [Solve pell equation simple](./Math/solve_pell_equation_simple.pl)
-    * [Sophie germain factorization](./Math/sophie_germain_factorization.pl)
+    * [Sophie germain factorization method](./Math/sophie_germain_factorization_method.pl)
     * [Sorting algorithms](./Math/sorting_algorithms.pl)
     * [Sphere volume](./Math/sphere_volume.pl)
     * [Sqrt mod p tonelli-shanks mpz](./Math/sqrt_mod_p_tonelli-shanks_mpz.pl)

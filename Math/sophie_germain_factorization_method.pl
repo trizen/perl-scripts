@@ -30,7 +30,10 @@ sub sophie_germain_factorization ($n, $verbose = 0) {
     my $f = sub ($A, $B) {
         my @factors;
 
-        foreach my $f ($A**2 + 2 * $B**2 - 2 * $A * $B, $A**2 + 2 * $B**2 + 2 * $A * $B,) {
+        foreach my $f (
+            $A**2 + 2 * $B**2 - 2 * $A * $B,
+            $A**2 + 2 * $B**2 + 2 * $A * $B,
+        ) {
             my $g = Math::GMPz->new(gcd($f, $n));
 
             if ($g > 1 and $g < $n) {
@@ -47,14 +50,12 @@ sub sophie_germain_factorization ($n, $verbose = 0) {
     my $orig = $n;
     my @sophie_params;
 
-    # Try to find n = x^4 + 4*y^4, for x or y small.
-    foreach my $r1 (map { Math::GMPz->new($_) } 2 .. logint($n, 2)) {
-
+    my $sophie_check_root = sub ($r1) {
         {
             my $x  = 4 * $r1**4;
             my $dx = $n - $x;
 
-            if ($dx >= 1 and is_power($dx, 4, \my $r2)) {
+            if (is_power($dx, 4, \my $r2)) {
                 $r2 = Math::GMPz->new($r2);
                 say "[*] Sophie Germain special form detected: $r2^4 + 4*$r1^4" if $verbose;
                 push @sophie_params, [$r2, $r1];
@@ -66,43 +67,24 @@ sub sophie_germain_factorization ($n, $verbose = 0) {
             my $y  = $r1**4;
             my $dy = $n - $y;
 
-            if ($dy >= 4 and ($dy % 4 == 0) and is_power($dy / 4, 4, \my $r2)) {
+            if (($dy % 4 == 0) and is_power($dy >> 2, 4, \my $r2)) {
                 $r2 = Math::GMPz->new($r2);
                 say "[*] Sophie Germain special form detected: $r1^4 + 4*$r2^4" if $verbose;
                 push @sophie_params, [$r1, $r2];
             }
         }
+    };
+
+    # Try to find n = x^4 + 4*y^4, for x or y small.
+    foreach my $r (map { Math::GMPz->new($_) } 2 .. logint($n, 2)) {
+        $sophie_check_root->($r);
     }
 
-    {    # Try to find n = x^4 + 4*y^4 for x,y close to floor(n/5)^(1/4).
-        my $k = Math::GMPz->new(rootint($n / 5, 4));
+    # Try to find n = x^4 + 4*y^4 for x,y close to floor(n/5)^(1/4).
+    my $k = Math::GMPz->new(rootint($n / 5, 4));
 
-        for my $j (0 .. 1000) {
-
-            my $r1 = $k + $j;
-
-            {
-                my $x  = 4 * $r1**4;
-                my $dx = $n - $x;
-
-                if ($dx >= 1 and is_power($dx, 4, \my $r2)) {
-                    $r2 = Math::GMPz->new($r2);
-                    say "[*] Sophie Germain special form detected: $r2^4 + 4*$r1^4" if $verbose;
-                    push @sophie_params, [$r2, $r1];
-                }
-            }
-
-            {
-                my $y  = $r1**4;
-                my $dy = $n - $y;
-
-                if ($dy >= 4 and ($dy % 4 == 0) and is_power($dy / 4, 4, \my $r2)) {
-                    $r2 = Math::GMPz->new($r2);
-                    say "[*] Sophie Germain special form detected: $r1^4 + 4*$r2^4" if $verbose;
-                    push @sophie_params, [$r1, $r2];
-                }
-            }
-        }
+    for my $j (0 .. 1000) {
+        $sophie_check_root->($k + $j);
     }
 
     my @factors;
