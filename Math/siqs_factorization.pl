@@ -1526,11 +1526,12 @@ sub find_all_prime_factors ($n, $factors) {
     }
 }
 
-sub near_power_factorization ($n) {
+sub special_form_factorization ($n) {
 
     my @f_params;
     my @g_params;
     my @h_params;
+    my @sophie_params;
 
     #
     ## Close to a perfect power
@@ -1628,6 +1629,17 @@ sub near_power_factorization ($n) {
             my $r2 = Math::GMPz->new(rootint($dx, $e2));
             say "[*] Sum of powers detected: ", sprintf("%s^%s + %s^%s", $r1, $e1, $r2, $e2);
             push @g_params, [$r1, $e1, $r2, $e2];
+
+            # Sophie Germain's identity:
+            #   n^4 + 4^(2k+1) = n^4 + 4*(4^(2k)) = n^4 + 4*((2^k)^4)
+
+            if ($r1 == 4 and ($e1 % 2 == 1) and $e2 == 4) {    # n = r1^(2k+1) + r2^4
+                push @sophie_params, [$r2, Math::GMPz->new(rootint($r1**($e1 - 1), 4))];
+            }
+
+            if ($r2 == 4 and ($e2 % 2 == 1) and $e1 == 4) {    # n = r2^(2k+1) + r1^4
+                push @sophie_params, [$r1, Math::GMPz->new(rootint($r2**($e2 - 1), 4))];
+            }
         }
     }
 
@@ -1693,6 +1705,84 @@ sub near_power_factorization ($n) {
         }
     }
 
+    # Sophie Germain's identity
+    # x^4 + 4y^4 = (x^2 + 2xy + 2y^2) * (x^2 - 2xy + 2y^2)
+    my $sophie = sub ($A, $B) {
+        my @factors;
+
+        foreach my $f ($A**2 + 2 * $B**2 - 2 * $A * $B, $A**2 + 2 * $B**2 + 2 * $A * $B,) {
+            my $g = Math::GMPz->new(gcd($f, $n));
+
+            if ($g > TRIAL_DIVISION_LIMIT and $g < $n) {
+                while ($n % $g == 0) {
+                    $n /= $g;
+                    push @factors, $g;
+                }
+            }
+        }
+
+        @factors;
+    };
+
+    # Try to find n = x^4 + 4*y^4, for x or y small.
+    foreach my $r1 (map { Math::GMPz->new($_) } 2 .. logint($n, 2)) {
+
+        {
+            my $x  = 4 * $r1**4;
+            my $dx = $n - $x;
+
+            if ($dx >= 1 and is_power($dx, 4, \my $r2)) {
+                $r2 = Math::GMPz->new($r2);
+                say "[*] Sophie Germain special form detected: $r2^4 + 4*$r1^4";
+                push @sophie_params, [$r2, $r1];
+            }
+
+        }
+
+        {
+            my $y  = $r1**4;
+            my $dy = $n - $y;
+
+            if ($dy >= 4 and ($dy % 4 == 0) and is_power($dy / 4, 4, \my $r2)) {
+                $r2 = Math::GMPz->new($r2);
+                say "[*] Sophie Germain special form detected: $r1^4 + 4*$r2^4";
+                push @sophie_params, [$r1, $r2];
+            }
+        }
+    }
+
+    {    # Try to find n = x^4 + 4*y^4 for x and y close to floor(n/5)^(1/4).
+        my $k = Math::GMPz->new(rootint($n / 5, 4));
+
+        for my $j (0 .. 1000) {
+
+            my $r1 = $k + $j;
+
+            {
+                my $x  = 4 * $r1**4;
+                my $dx = $n - $x;
+
+                if ($dx >= 1 and is_power($dx, 4, \my $r2)) {
+                    $r2 = Math::GMPz->new($r2);
+                    say "[*] Sophie Germain special form detected: $r2^4 + 4*$r1^4";
+                    push @sophie_params, [$r2, $r1];
+                }
+            }
+
+            {
+                my $y  = $r1**4;
+                my $dy = $n - $y;
+
+                if ($dy >= 4 and ($dy % 4 == 0) and is_power($dy / 4, 4, \my $r2)) {
+                    $r2 = Math::GMPz->new($r2);
+                    say "[*] Sophie Germain special form detected: $r1^4 + 4*$r2^4";
+                    push @sophie_params, [$r1, $r2];
+                }
+            }
+
+        }
+    }
+
     my @factors;
     foreach my $args (@f_params) {
         push @factors, $f->(@$args);
@@ -1704,6 +1794,10 @@ sub near_power_factorization ($n) {
 
     foreach my $args (@h_params) {
         push @factors, $h->(@$args);
+    }
+
+    foreach my $args (@sophie_params) {
+        push @factors, $sophie->(@$args);
     }
 
     return sort { $a <=> $b } @factors;
@@ -1741,7 +1835,7 @@ sub factorize($n) {
         return verify_prime_factors($n, [(@factors) x $e]);
     }
 
-    my @divisors = (($n > ~0) ? near_power_factorization($n) : ());
+    my @divisors = (($n > ~0) ? special_form_factorization($n) : ());
 
     if (@divisors) {
 
