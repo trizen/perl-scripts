@@ -1539,22 +1539,23 @@ sub find_all_prime_factors ($n, $factors) {
 
 sub special_form_factorization ($n) {
 
-    my @f_params;
-    my @g_params;
-    my @h_params;
+    my @near_power_params;
+    my @diff_powers_params;
+    my @cong_powers_params;
     my @sophie_params;
 
     #
     ## Close to a perfect power
     #
 
-    my $f = sub ($r, $e, $k) {
+    my $near_power = sub ($r, $e, $k) {
         my @factors;
 
         foreach my $d (ntheory::divisors($e)) {
+            my $x = $r**$d;
             foreach my $j (1, -1) {
 
-                my $t = $r**$d - $k * $j;
+                my $t = $x - $k * $j;
                 my $g = Math::GMPz->new(gcd($t, $n));
 
                 if ($g > TRIAL_DIVISION_LIMIT and $g < $n) {
@@ -1577,7 +1578,7 @@ sub special_form_factorization ($n) {
                 if (my $e = is_power($n + $u)) {
                     my $r = Math::GMPz->new(rootint($n + $u, $e));
                     say "[*] Near power detected: $r^$e ", sprintf("%s %s", ($k == 1) ? ('-', $u) : ('+', -$u));
-                    push @f_params, [$r, $e, $j];
+                    push @near_power_params, [$r, $e, $j];
                 }
             }
         }
@@ -1587,17 +1588,19 @@ sub special_form_factorization ($n) {
     ## Difference of powers
     #
 
-    my $g = sub ($r1, $e1, $r2, $e2) {
+    my $diff_powers = sub ($r1, $e1, $r2, $e2) {
         my @factors;
 
         my @d1 = ntheory::divisors($e1);
         my @d2 = ntheory::divisors($e2);
 
         foreach my $d1 (@d1) {
+            my $x = $r1**$d1;
             foreach my $d2 (@d2) {
+                my $y = $r2**$d2;
                 foreach my $j (1, -1) {
 
-                    my $t = $r1**$d1 - $j * $r2**$d2;
+                    my $t = $x - $j * $y;
                     my $g = Math::GMPz->new(gcd($t, $n));
 
                     if ($g > TRIAL_DIVISION_LIMIT and $g < $n) {
@@ -1613,69 +1616,90 @@ sub special_form_factorization ($n) {
         @factors;
     };
 
-    # Difference of powers of the form a^k - b^k, where a and b are small
-    foreach my $r1 (map { Math::GMPz->new($_) } 2 .. logint($n, 2)) {
+    my $diff_power_check = sub ($r1, $e1) {
 
-        my $e1 = logint($n, $r1);
-        my $u  = $r1**($e1 + 1);
-        my $dx = $u - $n;
+        my $u  = $r1**$e1;
+        my $dx = abs($u - $n);
 
-        if ($dx >= 1 and Math::GMPz::Rmpz_perfect_power_p($dx)) {
-            my $e2 = ($dx == 1) ? 1 : is_power($dx);
+        if (Math::GMPz::Rmpz_perfect_power_p($dx)) {
+
+            my $e2 = is_power($dx) || 1;
             my $r2 = Math::GMPz->new(rootint($dx, $e2));
-            say "[*] Difference of powers detected: ", sprintf("%s^%s - %s^%s", $r1, $e1 + 1, $r2, $e2);
-            push @g_params, [$r1, $e1 + 1, $r2, $e2];
+
+            if ($u > $n) {
+                say "[*] Difference of powers detected: ", sprintf("%s^%s - %s^%s", $r1, $e1, $r2, $e2);
+            }
+            else {
+                say "[*] Sum of powers detected: ", sprintf("%s^%s + %s^%s", $r1, $e1, $r2, $e2);
+
+                # Sophie Germain's identity:
+                #   n^4 + 4^(2k+1) = n^4 + 4*(4^(2k)) = n^4 + 4*((2^k)^4)
+
+                if ($r1 == 4 and ($e1 % 2 == 1) and $e2 == 4) {    # n = r1^(2k+1) + r2^4
+                    push @sophie_params, [$r2, Math::GMPz->new(rootint($r1**($e1 - 1), 4))];
+                }
+
+                if ($r2 == 4 and ($e2 % 2 == 1) and $e1 == 4) {    # n = r2^(2k+1) + r1^4
+                    push @sophie_params, [$r1, Math::GMPz->new(rootint($r2**($e2 - 1), 4))];
+                }
+            }
+
+            push @diff_powers_params, [$r1, $e1, $r2, $e2];
         }
+    };
+
+    # Sum and difference of powers of the form a^k ± b^k, where a and b are small.
+    foreach my $r1 (2 .. logint($n, 2)) {
+
+        my $t = logint($n, $r1);
+
+        $diff_power_check->(Math::GMPz->new($r1), $t);        # sum of powers
+        $diff_power_check->(Math::GMPz->new($r1), $t + 1);    # difference of powers
     }
 
-    # Sum of powers of the form a^k + b^k, where a and b are small
-    foreach my $r1 (map { Math::GMPz->new($_) } 2 .. logint($n, 2)) {
+    # Sum and difference of powers of the form a^k ± b^k, where a and b are large.
+    foreach my $e1 (2 .. logint($n, 2)) {
 
-        my $e1 = logint($n, $r1);
-        my $u  = $r1**$e1;
-        my $dx = $n - $u;
+        my $t = Math::GMPz->new(rootint($n, $e1));
 
-        if ($dx >= 1 and Math::GMPz::Rmpz_perfect_power_p($dx)) {
-            my $e2 = ($dx == 1) ? 1 : is_power($dx);
-            my $r2 = Math::GMPz->new(rootint($dx, $e2));
-            say "[*] Sum of powers detected: ", sprintf("%s^%s + %s^%s", $r1, $e1, $r2, $e2);
-            push @g_params, [$r1, $e1, $r2, $e2];
-
-            # Sophie Germain's identity:
-            #   n^4 + 4^(2k+1) = n^4 + 4*(4^(2k)) = n^4 + 4*((2^k)^4)
-
-            if ($r1 == 4 and ($e1 % 2 == 1) and $e2 == 4) {    # n = r1^(2k+1) + r2^4
-                push @sophie_params, [$r2, Math::GMPz->new(rootint($r1**($e1 - 1), 4))];
-            }
-
-            if ($r2 == 4 and ($e2 % 2 == 1) and $e1 == 4) {    # n = r2^(2k+1) + r1^4
-                push @sophie_params, [$r1, Math::GMPz->new(rootint($r2**($e2 - 1), 4))];
-            }
-        }
+        $diff_power_check->($t,     $e1);                     # sum of powers
+        $diff_power_check->($t + 1, $e1);                     # difference of powers
     }
 
     #
     ## Congruence of powers
     #
 
-    my $h = sub ($r, $k, $e) {
+    my $cong_powers = sub ($r, $e1, $k, $e2) {
 
         my @factors;
 
-        foreach my $t ($r + $k, $k - $r) {
-            my $g = Math::GMPz->new(gcd($t, $n));
-            if ($g > TRIAL_DIVISION_LIMIT and $g < $n) {
+        my @divs1 = ntheory::divisors($e1);
+        my @divs2 = ntheory::divisors($e2);
 
-                if ($r == $k) {
-                    say "[*] Congruence of powers: a^$e == b^$e (mod n)";
-                }
-                else {
-                    say "[*] Congruence of powers: $k^$e == $r^$e (mod n)";
-                }
+        foreach my $d1 (@divs1) {
+            my $x = $k**$d1;
+            foreach my $d2 (@divs2) {
+                my $y = $r**$d2;
+                foreach my $j (-1, 1) {
 
-                while ($n % $g == 0) {
-                    $n /= $g;
-                    push @factors, $g;
+                    my $t = $x - $j * $y;
+                    my $g = Math::GMPz->new(gcd($t, $n));
+
+                    if ($g > TRIAL_DIVISION_LIMIT and $g < $n) {
+
+                        if ($r == $k) {
+                            say "[*] Congruence of powers: a^$d1 == b^$d2 (mod n) -> $g";
+                        }
+                        else {
+                            say "[*] Congruence of powers: $k^$d1 == $r^$d2 (mod n) -> $g";
+                        }
+
+                        while ($n % $g == 0) {
+                            $n /= $g;
+                            push @factors, $g;
+                        }
+                    }
                 }
             }
         }
@@ -1683,35 +1707,46 @@ sub special_form_factorization ($n) {
         @factors;
     };
 
-    for my $e (2 .. 20) {
+    for my $e (2 .. 64) {
 
-        my $root = rootint($n, $e);
-
-        if ($root + 1 >= ~0) {
-            $root = Math::GMPz->new("$root");
-        }
+        my $root = Math::GMPz->new(rootint($n, $e));
 
         for my $j (1, 0) {
 
             my $k = $root + $j;
             my $u = Math::GMPz->new(powmod($k, $e, $n));
 
-            if (is_power($u, $e, \my $r)) {
-
-                if (!ref($k) and $r + $k >= ~0) {
-                    $r = Math::GMPz->new("$r");
-                }
-
-                push @h_params, [$r, $k, $e];
+            if (is_power($u, $e)) {
+                my $r = Math::GMPz->new(rootint($u, $e));
+                push @cong_powers_params, [$r, $e, $k, $e];
             }
 
-            if (is_power($n - $u, $e, \my $r)) {
+            if (is_power($n - $u, $e)) {
+                my $r = Math::GMPz->new(rootint($n - $u, $e));
+                push @cong_powers_params, [$r, $e, $k, $e];
+            }
+        }
+    }
 
-                if (!ref($k) and $r + $k >= ~0) {
-                    $r = Math::GMPz->new("$r");
-                }
+    for my $root (2 .. 64) {
 
-                push @h_params, [$r, $k, $e];
+        my $e = Math::GMPz->new(logint($n, $root));
+
+        for my $j (1, 0) {
+
+            my $k = $root + $j;
+            my $u = Math::GMPz->new(powmod($k, $e, $n));
+
+            if (Math::GMPz::Rmpz_perfect_power_p($u)) {
+                my $t = is_power($u) || 1;
+                my $r = rootint($n, $t);
+                push @cong_powers_params, [Math::GMPz->new($r), $t, Math::GMPz->new($k), $e];
+            }
+
+            if (Math::GMPz::Rmpz_perfect_power_p($n - $u)) {
+                my $t = is_power($n - $u) || 1;
+                my $r = rootint($n, $t);
+                push @cong_powers_params, [Math::GMPz->new($r), $t, Math::GMPz->new($k), $e];
             }
         }
     }
@@ -1721,7 +1756,12 @@ sub special_form_factorization ($n) {
     my $sophie = sub ($A, $B) {
         my @factors;
 
-        foreach my $f ($A**2 + 2 * $B**2 - 2 * $A * $B, $A**2 + 2 * $B**2 + 2 * $A * $B,) {
+        foreach my $f (
+#<<<
+            $A*$A + (($B*$B)<<1) - (($A*$B<<1)),
+            $A*$A + (($B*$B)<<1) + (($A*$B)<<1),
+#>>>
+          ) {
             my $g = Math::GMPz->new(gcd($f, $n));
 
             if ($g > TRIAL_DIVISION_LIMIT and $g < $n) {
@@ -1774,16 +1814,16 @@ sub special_form_factorization ($n) {
     }
 
     my @factors;
-    foreach my $args (@f_params) {
-        push @factors, $f->(@$args);
+    foreach my $args (@near_power_params) {
+        push @factors, $near_power->(@$args);
     }
 
-    foreach my $args (@g_params) {
-        push @factors, $g->(@$args);
+    foreach my $args (@diff_powers_params) {
+        push @factors, $diff_powers->(@$args);
     }
 
-    foreach my $args (@h_params) {
-        push @factors, $h->(@$args);
+    foreach my $args (@cong_powers_params) {
+        push @factors, $cong_powers->(@$args);
     }
 
     foreach my $args (@sophie_params) {

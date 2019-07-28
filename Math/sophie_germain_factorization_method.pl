@@ -1,4 +1,4 @@
-#!?usr/bin/perl
+#!/usr/bin/perl
 
 # Daniel "Trizen" Șuteu
 # Date: 26 July 2019
