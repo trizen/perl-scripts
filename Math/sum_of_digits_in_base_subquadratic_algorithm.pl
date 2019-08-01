@@ -17,15 +17,20 @@ use experimental qw(signatures);
 
 sub FastSumOfDigits ($A, $B) {
 
-    if ($A < $B) {
-        return $A;
-    }
-
     # Find k such that B^(2k - 2) <= A < B^(2k)
     my $k = (logint($A, $B) >> 1) + 1;
 
-    my ($Q, $R) = divrem($A, powint($B, $k));
-    vecsum(__SUB__->($Q, $B), __SUB__->($R, $B));
+    sub ($A, $k) {
+
+        if ($A < $B) {
+            return $A;
+        }
+
+        my ($Q, $R) = divrem($A, powint($B, $k));
+        my $t = ($k + 1) >> 1;
+
+        vecsum(__SUB__->($Q, $t), __SUB__->($R, $t));
+    }->($A, $k);
 }
 
 foreach my $B (2 .. 100) {    # run some tests
