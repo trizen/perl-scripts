@@ -725,6 +725,7 @@ A nice collection of day-to-day Perl scripts.
     * [Sum factorial](./Math/sum_factorial.pl)
     * [Sum of an even number of positive squares](./Math/sum_of_an_even_number_of_positive_squares.pl)
     * [Sum of digits](./Math/sum_of_digits.pl)
+    * [Sum of digits in base subquadratic algorithm](./Math/sum_of_digits_in_base_subquadratic_algorithm.pl)
     * [Sum of natural powers in constant base](./Math/sum_of_natural_powers_in_constant_base.pl)
     * [Sum of prime-power exponents of factorial](./Math/sum_of_prime-power_exponents_of_factorial.pl)
     * [Sum of prime-power exponents of product of binomials](./Math/sum_of_prime-power_exponents_of_product_of_binomials.pl)

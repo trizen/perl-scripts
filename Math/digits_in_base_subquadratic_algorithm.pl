@@ -31,7 +31,7 @@ sub FastIntegerOutput ($A, $B) {
 }
 
 foreach my $B (2 .. 100) {    # run some tests
-    my $N = factorial($B); # int(rand(~0));
+    my $N = factorial($B);    # int(rand(~0));
 
     my @a = todigits($N, $B);
     my @b = FastIntegerOutput($N, $B);
