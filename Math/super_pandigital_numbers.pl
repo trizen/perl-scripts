@@ -19,31 +19,22 @@ use List::Util qw(uniq all min);
 use ntheory qw(todigits fromdigits);
 use Algorithm::Combinatorics qw(variations);
 
-my $base = shift(@ARGV) // 10;    # pandigital in all bases 2..$base
-my $first = 10;                   # generate first n numbers
+my $base  = shift(@ARGV) // 10;    # pandigital in all bases 2..$base
+my $first = 10;                    # generate first n numbers
 
-my @digits = (
-               1, 0,
-               (2 .. min($base - 1, 9)),
-               ($base > 10
-                 ? ('a' .. chr(ord('a') + $base - 10 - 1))
-                 : ()
-               )
-             );
+my @digits = (1, 0, 2 .. $base - 1);
+my @bases  = reverse(2 .. $base - 1);
 
-my @bases = reverse(2 .. $base - 1);
-
-my $sum = 0;
+my $sum  = 0;
 my $iter = variations(\@digits, $base);
 
 while (defined(my $t = $iter->next)) {
 
-    if ($t->[0] ne '0') {
-        my $n = join('', @$t);
-        my $d = fromdigits($n, $base);
+    if ($t->[0]) {
+        my $d = fromdigits($t, $base);
 
         if (all { uniq(todigits($d, $_)) == $_ } @bases) {
-            say "Found: $n -> $d";
+            say "Found: $d";
             $sum += $d;
             last if --$first == 0;
         }
@@ -66,3 +57,5 @@ First 10 super-pandigital numbers in bases 2 up to 10:
 2578693140
 2814609357
 2814759360
+
+Sum: 20319792309

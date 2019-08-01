@@ -33,7 +33,7 @@ sub FastIntegerOutput ($A, $B) {
         }
 
         my $t = Math::GMPz::Rmpz_init();
-        Math::GMPz::Rmpz_ui_pow_ui($t, $B, 2 * ($k - 1));
+        Math::GMPz::Rmpz_ui_pow_ui($t, $B, 2 * ($k - 1));   # can this be optimized away?
 
         if (Math::GMPz::Rmpz_cmp($t, $A) > 0) {
             --$k;
