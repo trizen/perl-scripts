@@ -37,7 +37,7 @@ foreach my $B (2 .. 100) {    # run some tests
     my @b = FastIntegerOutput($N, $B);
 
     if ("@a" ne "@b") {
-        die "Error for: FastIntegerOutput($N, $B)";
+        die "Error for FastIntegerOutput($N, $B): (@a) != (@b)";
     }
 }
 

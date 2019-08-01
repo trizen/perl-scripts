@@ -412,6 +412,7 @@ A nice collection of day-to-day Perl scripts.
     * [Continued fractions for square roots](./Math/continued_fractions_for_square_roots.pl)
     * [Continued fractions prime constant](./Math/continued_fractions_prime_constant.pl)
     * [Convergent series](./Math/convergent_series.pl)
+    * [Conversion of digits to number subquadratic algorithm](./Math/conversion_of_digits_to_number_subquadratic_algorithm.pl)
     * [Cosmic calendar](./Math/cosmic_calendar.pl)
     * [Count subtriangles](./Math/count_subtriangles.pl)
     * [Cuboid](./Math/cuboid.pl)
