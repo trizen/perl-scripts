@@ -39,7 +39,7 @@ foreach my $B (2 .. 100) {    # run some tests
     }
 }
 
-say join ', ', FastSumOfDigits(5040, 10);    #=> 5, 0, 4, 0
-say join ', ', FastSumOfDigits(5040, 11);    #=> 3, 8, 7, 2
-say join ', ', FastSumOfDigits(5040, 12);    #=> 2, 11, 0, 0
-say join ', ', FastSumOfDigits(5040, 13);    #=> 2, 3, 10, 9
+say join ', ', FastSumOfDigits(5040, 10);    #=> 9
+say join ', ', FastSumOfDigits(5040, 11);    #=> 20
+say join ', ', FastSumOfDigits(5040, 12);    #=> 13
+say join ', ', FastSumOfDigits(5040, 13);    #=> 24
