@@ -423,6 +423,7 @@ A nice collection of day-to-day Perl scripts.
     * [Difference of three squares solutions](./Math/difference_of_three_squares_solutions.pl)
     * [Difference of two squares solutions](./Math/difference_of_two_squares_solutions.pl)
     * [Digits in base subquadratic algorithm](./Math/digits_in_base_subquadratic_algorithm.pl)
+    * [Digits in base subquadratic algorithm mpz](./Math/digits_in_base_subquadratic_algorithm_mpz.pl)
     * [Dirichlet hyperbola method](./Math/dirichlet_hyperbola_method.pl)
     * [Discrete root](./Math/discrete_root.pl)
     * [Divisors of factorial bellow limit](./Math/divisors_of_factorial_bellow_limit.pl)
