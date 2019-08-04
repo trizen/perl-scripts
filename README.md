@@ -426,6 +426,7 @@ A nice collection of day-to-day Perl scripts.
     * [Digits in base subquadratic algorithm mpz](./Math/digits_in_base_subquadratic_algorithm_mpz.pl)
     * [Dirichlet hyperbola method](./Math/dirichlet_hyperbola_method.pl)
     * [Discrete root](./Math/discrete_root.pl)
+    * [Divisors less than k](./Math/divisors_less_than_k.pl)
     * [Divisors of factorial bellow limit](./Math/divisors_of_factorial_bellow_limit.pl)
     * [Divisors of factorial in range iterator](./Math/divisors_of_factorial_in_range_iterator.pl)
     * [Dixon factorization method](./Math/dixon_factorization_method.pl)
