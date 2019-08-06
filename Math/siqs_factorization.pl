@@ -1649,7 +1649,7 @@ sub special_form_factorization ($n) {
     };
 
     # Sum and difference of powers of the form a^k ± b^k, where a and b are small.
-    foreach my $r1 (2 .. logint($n, 2)) {
+    foreach my $r1 (reverse 2 .. logint($n, 2)) {
 
         my $t = logint($n, $r1);
 
@@ -1658,7 +1658,7 @@ sub special_form_factorization ($n) {
     }
 
     # Sum and difference of powers of the form a^k ± b^k, where a and b are large.
-    foreach my $e1 (2 .. logint($n, 2)) {
+    foreach my $e1 (reverse 2 .. logint($n, 2)) {
 
         my $t = Math::GMPz->new(rootint($n, $e1));
 
@@ -1707,7 +1707,7 @@ sub special_form_factorization ($n) {
         @factors;
     };
 
-    for my $e (2 .. 64) {
+    for my $e (reverse 2 .. 64) {
 
         my $root = Math::GMPz->new(rootint($n, $e));
 
@@ -1728,7 +1728,7 @@ sub special_form_factorization ($n) {
         }
     }
 
-    for my $root (2 .. 64) {
+    for my $root (reverse 2 .. 64) {
 
         my $e = Math::GMPz->new(logint($n, $root));
 
