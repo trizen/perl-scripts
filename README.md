@@ -22,6 +22,7 @@ A nice collection of day-to-day Perl scripts.
     * [Word suffix top](./Analyzers/word_suffix_top.pl)
 * Audio
     * [Auto-mp3tags](./Audio/auto-mp3tags.pl)
+    * [Group audio files](./Audio/group_audio_files.pl)
     * [Rem-mp3tags](./Audio/rem-mp3tags.pl)
     * [Wave-cmp](./Audio/wave-cmp.pl)
     * [Wave-cmp2](./Audio/wave-cmp2.pl)

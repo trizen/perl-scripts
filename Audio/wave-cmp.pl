@@ -148,7 +148,7 @@ my $home_dir =
 my $xdg_config_home = catdir($home_dir, '.config');
 
 my $cache_dir = catdir($xdg_config_home, $pkgname);
-my $cache_db = catfile($cache_dir, 'fp.db');
+my $cache_db  = catfile($cache_dir, 'fp.db');
 
 if (not -d $cache_dir) {
     make_path($cache_dir);
@@ -192,7 +192,7 @@ sub generate_fingerprint {
             foreach my $x ($i .. $i + $sq_x - 1) {
                 foreach my $y ($j .. $j + $sq_y - 1) {
                     my $index = $image->getPixel($x, $y);
-                    my $rgb = $rgb_cache{$index} //= [$image->rgb($index)];
+                    my $rgb   = $rgb_cache{$index} //= [$image->rgb($index)];
                     $fill++ if $rgb->[0] == 255;    # check only the value of red
                 }
             }

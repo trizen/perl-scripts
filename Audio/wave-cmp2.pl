@@ -127,7 +127,7 @@ my $home_dir =
 my $xdg_config_home = catdir($home_dir, '.config');
 
 my $cache_dir = catdir($xdg_config_home, $pkgname);
-my $cache_db = catfile($cache_dir, 'fp.db');
+my $cache_db  = catfile($cache_dir, 'fp.db');
 
 if (not -d $cache_dir) {
     make_path($cache_dir);
@@ -227,10 +227,10 @@ sub find_similar_audio_files(&@) {
             push @files,
               {
                 fingerprint => fingerprint($_) // return,
-                filename => $_,
+                filename    => $_,
               };
-          }
-         } => @_;
+        }
+    } => @_;
 
     #
     ## Populate the %alike hash
@@ -251,7 +251,7 @@ sub find_similar_audio_files(&@) {
     #
     my @alike;
     foreach my $root (
-        map { $_->[0] }
+        map  { $_->[0] }
         sort { ($a->[1] <=> $b->[1]) || ($b->[2] <=> $a->[2]) }
         map {
             my $keys = keys(%{$alike{$_}});
