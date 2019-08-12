@@ -129,18 +129,18 @@ sub dixon_factorization ($n, $verbose = 0) {
     my $B  = 8 * int(exp(sqrt(log("$n") * log(log("$n"))) / 2));                              # B-smooth limit
     my $nf = int(log(log("$n"))) * int(exp(sqrt(log("$n") * log(log("$n"))))**(sqrt(2) / 4)); # number of primes in factor-base
 
-    my @factor_base;
+    my @factor_base = (2);
 
     if (length("$n") <= 25) {
         forprimes {
-            if ($_ <= 97 or Math::GMPz::Rmpz_kronecker_ui($n, $_) == 1) {
+            if (Math::GMPz::Rmpz_kronecker_ui($n, $_) >= 0) {
                 push @factor_base, $_;
             }
-        } $B;
+        } 3, $B;
     }
     else {
-        for (my $p = 2 ; @factor_base < $nf ; $p = next_prime($p)) {
-            if ($p <= 97 or Math::GMPz::Rmpz_kronecker_ui($n, $p) == 1) {
+        for (my $p = 3 ; @factor_base < $nf ; $p = next_prime($p)) {
+            if (Math::GMPz::Rmpz_kronecker_ui($n, $p) >= 0) {
                 push @factor_base, $p;
             }
         }

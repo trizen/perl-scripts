@@ -858,7 +858,7 @@ sub fibonacci_factorization ($n, $upper_bound) {
         my $d = consecutive_integer_lcm($bound);
         my ($U, $V) = map { Math::GMPz::Rmpz_init_set_str($_, 10) } lucas_sequence($n, $P, $Q, $d);
 
-        foreach my $f (sub { gcd($U, $n) }, sub { gcd($V - 2, $n) }, sub { gcd($V, $n) }) {
+        foreach my $f (sub { gcd($U, $n) }, sub { gcd($V - 2, $n) }, sub { gcd($V, $n) }, sub { gcd($V + 2, $n) }) {
             my $g = Math::GMPz->new($f->());
             return $g if ($g > 1 and $g < $n);
         }

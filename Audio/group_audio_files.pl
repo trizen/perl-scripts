@@ -89,7 +89,7 @@ while (my ($key, $group) = each %groups) {
 
     sum(values %$artists) > 1 or next;    # ignore single files
 
-    my ($common_name) = max_by { $artists->{$_} } sort { $a cmp $b } keys %$artists;
+    my $common_name = max_by { $artists->{$_} } sort { $a cmp $b } keys %$artists;
 
     foreach my $file (@{$files}) {
 

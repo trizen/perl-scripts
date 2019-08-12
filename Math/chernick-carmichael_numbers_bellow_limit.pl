@@ -35,7 +35,7 @@ sub is_chernick_carmichael ($n, $m) {
 my @terms;
 my $limit = 0 + ($ARGV[0] // 10**15);
 
-# Generate terms with k distict prime factors
+# Generate terms with k distinct prime factors
 for (my $n = 3 ; ; ++$n) {
 
     # We can stop the search when:
