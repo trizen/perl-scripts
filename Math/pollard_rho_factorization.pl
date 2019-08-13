@@ -1,13 +1,9 @@
 #!/usr/bin/perl
 
-# Pollard's rho integer factorization algorithm.
-
-# This version uses the polynomial:
-#   f(x) = x^e + 2*e - 1
-
-# where e = lcm(1..B), for a small bound B.
+# Simple implementation of Pollard's rho integer factorization algorithm.
 
 # See also:
+#   https://facthacks.cr.yp.to/rho.html
 #   https://en.wikipedia.org/wiki/Pollard%27s_rho_algorithm
 
 use 5.020;
@@ -24,7 +20,7 @@ sub rho_factor ($n, $tries = 50000) {
     }
 
     my $x = f(2);
-    my $y = f(f(2));
+    my $y = f($x);
 
     for (1 .. $tries) {
 

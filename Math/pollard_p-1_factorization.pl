@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Simple implementation of Pollard's p−1 integer factorization algorithm.
+# Simple implementation of Pollard's p-1 integer factorization algorithm.
 
 # See also:
 #   https://en.wikipedia.org/wiki/Pollard%27s_p_%E2%88%92_1_algorithm
