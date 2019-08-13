@@ -984,10 +984,9 @@ sub pollard_pm1_find_factor ($n, $bound) {
     my $g = Math::GMPz::Rmpz_init();
     my $t = Math::GMPz::Rmpz_init_set_ui(random_prime(1e6));
 
-    foreach my $p (sieve_primes(2, $bound)) {
+    for my $k (2 .. $bound) {
 
-        Math::GMPz::Rmpz_powm_ui($t, $t, $p * $p * (logint($bound, $p) + 1), $n);
-
+        Math::GMPz::Rmpz_powm_ui($t, $t, $k, $n);
         Math::GMPz::Rmpz_sub_ui($g, $t, 1);
         Math::GMPz::Rmpz_gcd($g, $g, $n);
 
