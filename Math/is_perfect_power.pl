@@ -1,24 +1,31 @@
 #!/usr/bin/perl
 
-# Author: Daniel "Trizen" Șuteu
-# License: GPLv3
-# Date: 01 June 2016
-# Website: https://github.com/trizen
+# Algorithm for testing if a given number `n` is a perfect
+# power (i.e. can be expressed as: n = a^k with k > 1).
 
-# A simple check to determine if a given number n is a perfect power of k.
+# The value of k is returned when n is an exact k-th power, 1 otherwise.
 
+# Algorithm presented in the book:
+#
+#   Modern Computer Arithmetic
+#           - by Richard P. Brent and Paul Zimmermann
+#
 use 5.010;
 use strict;
 use warnings;
 
-use ntheory qw(factor_exp);
-use List::Util qw(all);
+use ntheory qw(logint rootint powint);
+use experimental qw(signatures);
 
-sub is_perfect_power {
-    my ($n, $k) = @_;
-    all { $_->[1] % $k == 0 } factor_exp($n);
+sub is_perfect_power ($n) {
+
+    for (my $k = logint($n, 2) ; $k >= 2 ; --$k) {
+        if (powint(rootint($n, $k), $k) == $n) {
+            return $k;
+        }
+    }
+
+    return 1;
 }
 
-for my $i (1 .. 1000) {
-    say $i if is_perfect_power($i, 3);    # cubes
-}
+say is_perfect_power(powint(1234, 14));    #=> 14
