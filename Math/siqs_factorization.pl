@@ -987,7 +987,7 @@ sub pollard_pm1_find_factor ($n, $bound) {
 
     foreach my $p (sieve_primes(2, $bound)) {
 
-        Math::GMPz::Rmpz_powm_ui($t, $t, $p**logint(ULONG_MAX >> 4, $p), $n);
+        Math::GMPz::Rmpz_powm_ui($t, $t, $p**int(log(ULONG_MAX >> 4) / log($p)), $n);
         Math::GMPz::Rmpz_sub_ui($g, $t, 1);
         Math::GMPz::Rmpz_gcd($g, $g, $n);
 
