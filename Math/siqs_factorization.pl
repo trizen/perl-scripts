@@ -22,6 +22,7 @@ use strict;
 use warnings;
 
 use Math::GMPz;
+use POSIX qw(ULONG_MAX);
 use experimental qw(signatures);
 
 use ntheory qw(
@@ -984,9 +985,9 @@ sub pollard_pm1_find_factor ($n, $bound) {
     my $g = Math::GMPz::Rmpz_init();
     my $t = Math::GMPz::Rmpz_init_set_ui(random_prime(1e6));
 
-    for my $k (2 .. $bound) {
+    foreach my $p (sieve_primes(2, $bound)) {
 
-        Math::GMPz::Rmpz_powm_ui($t, $t, $k, $n);
+        Math::GMPz::Rmpz_powm_ui($t, $t, $p**logint(ULONG_MAX >> 4, $p), $n);
         Math::GMPz::Rmpz_sub_ui($g, $t, 1);
         Math::GMPz::Rmpz_gcd($g, $g, $n);
 
