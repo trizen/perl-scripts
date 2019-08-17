@@ -121,6 +121,7 @@ A nice collection of day-to-day Perl scripts.
 * Game solvers
     * [Dice game solver](./Game%20solvers/dice_game_solver.pl)
     * [Peg-solitaire-solver](./Game%20solvers/peg-solitaire-solver)
+    * [Reaction time test](./Game%20solvers/reaction_time_test.pl)
     * [Reflex sheep game](./Game%20solvers/reflex_sheep_game.pl)
     * [Sudoku dice game solver](./Game%20solvers/sudoku_dice_game_solver.pl)
     * [Sudoku solver](./Game%20solvers/sudoku_solver.pl)
