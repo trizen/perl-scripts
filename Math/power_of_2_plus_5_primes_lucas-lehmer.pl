@@ -39,6 +39,10 @@ sub is_pow2_plus5_prime($n) {
             return $test;
         };
 
+        if ($@ eq "alarm\n") {
+            `pkill -P $$`;
+        }
+
         return $res if defined($res);
     }
 
