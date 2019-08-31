@@ -585,6 +585,7 @@ A nice collection of day-to-day Perl scripts.
     * [Nearest integer of p^(p+1) ÷ (p+1)^p](./Math/nearest_integer_of_p^(p+1)_÷_(p+1)^p.pl)
     * [Newton's method](./Math/newton_s_method.pl)
     * [Newton's method recursive](./Math/newton_s_method_recursive.pl)
+    * [Next palindrome](./Math/next_palindrome.pl)
     * [Next power of two](./Math/next_power_of_two.pl)
     * [Nth prime approx](./Math/nth_prime_approx.pl)
     * [Nth root good rational approximations](./Math/nth_root_good_rational_approximations.pl)
