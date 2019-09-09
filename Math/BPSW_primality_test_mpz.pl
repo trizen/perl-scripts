@@ -20,6 +20,16 @@ use experimental qw(signatures);
 
 use Math::GMPz;
 
+sub findQ ($n) {
+    for (my $k = 2 ; ; ++$k) {
+        my $D = (-1)**$k * (2 * $k + 1);
+
+        if (Math::GMPz::Rmpz_si_kronecker($D, $n) == -1) {
+            return ((1 - $D) / 4);
+        }
+    }
+}
+
 sub BPSW_primality_test ($n) {
 
     $n = Math::GMPz->new("$n");
@@ -33,20 +43,12 @@ sub BPSW_primality_test ($n) {
     my $d = Math::GMPz::Rmpz_init();
     my $t = Math::GMPz::Rmpz_init_set_ui(2);
 
-    # Fermat base-2 test
+    # Fermat base-2 test (a strong Miller-Rabin test should be preferred instead)
     Math::GMPz::Rmpz_sub_ui($d, $n, 1);
     Math::GMPz::Rmpz_powm($t, $t, $d, $n);
     Math::GMPz::Rmpz_cmp_ui($t, 1) and return 0;
 
-    my $Q;
-    for (my $k = 2 ; ; ++$k) {
-        my $D = (-1)**$k * (2 * $k + 1);
-
-        if (Math::GMPz::Rmpz_si_kronecker($D, $n) == -1) {
-            $Q = (1 - $D) / 4;
-            last;
-        }
-    }
+    my $Q = findQ($n);
 
     Math::GMPz::Rmpz_add_ui($d, $d, 2);                 # d = n+1
     my $s = Math::GMPz::Rmpz_scan1($d, 0);              # s = valuation(n, 2)
