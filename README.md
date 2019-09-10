@@ -446,6 +446,7 @@ A nice collection of day-to-day Perl scripts.
     * [Factorial from primorials](./Math/factorial_from_primorials.pl)
     * [Factorial from trinomial coefficients](./Math/factorial_from_trinomial_coefficients.pl)
     * [Factorial in half steps](./Math/factorial_in_half_steps.pl)
+    * [Factorions in base n](./Math/factorions_in_base_n.pl)
     * [Factorization with difference of prime factors](./Math/factorization_with_difference_of_prime_factors.pl)
     * [Farey rational approximation](./Math/farey_rational_approximation.pl)
     * [Faulhaber's formula](./Math/faulhaber_s_formula.pl)
