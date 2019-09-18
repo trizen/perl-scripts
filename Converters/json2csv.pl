@@ -6,7 +6,7 @@
 # Website: https://github.com/trizen
 
 # Converts a stream of newline separated json data to csv format.
-# Related to: https://github.com/jehiah/json2csv
+# See also: https://github.com/jehiah/json2csv
 
 use 5.010;
 use strict;
@@ -15,9 +15,12 @@ use warnings;
 use Text::CSV qw();
 use JSON qw(from_json);
 use Getopt::Std qw(getopts);
+use Encode qw(decode_utf8);
 use Text::ParseWords qw(quotewords);
 
 use open IO => ':encoding(UTF-8)', ':std';
+
+@ARGV = map { decode_utf8($_) } @ARGV;
 
 my %opt;
 getopts('k:i:o:p:d:', \%opt);
