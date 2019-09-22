@@ -125,6 +125,7 @@ A nice collection of day-to-day Perl scripts.
     * [Reflex sheep game](./Game%20solvers/reflex_sheep_game.pl)
     * [Sudoku dice game solver](./Game%20solvers/sudoku_dice_game_solver.pl)
     * [Sudoku solver](./Game%20solvers/sudoku_solver.pl)
+    * [Visual memory test](./Game%20solvers/visual_memory_test.pl)
 * Games
     * [Asciiplanes](./Games/asciiplanes)
     * [Snake game](./Games/snake_game.pl)
