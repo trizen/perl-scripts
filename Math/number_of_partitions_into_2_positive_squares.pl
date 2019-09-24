@@ -4,7 +4,7 @@
 # Date: 24 September 2019
 # https://github.com/trizen
 
-# Count the number of representations of n as the sum of two non-zero squares, ignoring order and signs.
+# Count the number of representations of n as the sum of two non-zero squares, ignoring order and signs (not necesarily distinct).
 
 # See also:
 #   https://oeis.org/A025426 -- Number of partitions of n into 2 nonzero squares.
@@ -19,7 +19,8 @@ use warnings;
 use experimental qw(signatures);
 use ntheory qw(divisors valuation factor_exp vecsum vecprod);
 
-sub count_representations_as_two_squares_unordered($n) {
+# Number of solutions to `n = a^2 + b^2, with 0 < a <= b.
+sub r2_positive($n) {
 
     my $B  = 1;
     my $a0 = 0;
@@ -46,6 +47,5 @@ sub count_representations_as_two_squares_unordered($n) {
 }
 
 foreach my $n (1 .. 100) {
-    my $count = count_representations_as_two_squares_unordered($n);
-    print($count, ", ");
+    print(r2_positive($n), ", ");
 }
