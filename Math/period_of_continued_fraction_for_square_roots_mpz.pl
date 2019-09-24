@@ -56,7 +56,7 @@ sub period_length_mpz {
 
         Math::GMPz::Rmpz_mul($t, $y, $y);
         Math::GMPz::Rmpz_sub($t, $n, $t);
-        Math::GMPz::Rmpz_div($z, $t, $z);
+        Math::GMPz::Rmpz_divexact($z, $t, $z);
 
         ++$period;
 

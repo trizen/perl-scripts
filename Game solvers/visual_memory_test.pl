@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 # Daniel "Trizen" Șuteu
-# Date: 16 August 2019
+# Date: 22 September 2019
 # https://github.com/trizen
 
 # A simple program that can solve the "Visual Memory Test" from Human Benchmark.
