@@ -19,9 +19,13 @@ use 5.020;
 use warnings;
 use File::Find qw(find);
 
+use Getopt::Std qw(getopts);
 use experimental qw(signatures);
 
-my $extra      = 0;                      # set to 1 to remove additional information, such the camera name
+my %opts;
+getopts('-e', \%opts);    # flag "-e" removes extra tags
+
+my $extra      = $opts{e} || 0;          # true to remove additional information, such the camera name
 my $batch_size = 100;                    # how many files to process at once
 my $image_re   = qr/\.(png|jpe?g)\z/i;
 
@@ -61,7 +65,7 @@ sub strip_tags ($files) {
 
 my @files;
 
-@ARGV or die "usage: perl $0 [dirs | files]\n";
+@ARGV or die "usage: perl script.pl [-e] [dirs | files]\n";
 
 find(
     {
