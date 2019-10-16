@@ -152,6 +152,7 @@ A nice collection of day-to-day Perl scripts.
     * [Dancing shapes](./GD/dancing_shapes.pl)
     * [Divisor circles](./GD/divisor_circles.pl)
     * [Divisor triangle](./GD/divisor_triangle.pl)
+    * [Elementary cellular automaton generalized](./GD/elementary_cellular_automaton_generalized.pl)
     * [Fact exp primorial growing](./GD/fact_exp_primorial_growing.pl)
     * [Factor circles](./GD/factor_circles.pl)
     * [Factor triangle](./GD/factor_triangle.pl)
