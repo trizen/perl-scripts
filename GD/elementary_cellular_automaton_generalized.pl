@@ -82,6 +82,7 @@ sub automaton ($n, $k, $iter, $rule, $cells = [1]) {
 
 automaton(2, 1, 1000, "30")->write(file => "rule_30.png");
 automaton(3, 1, 1000, "3760220742240")->write(file => "sierpinski_3x1.png");
-automaton(3, 1, 1000, "2646595889467")->write(file => "random_3x1.png");
-automaton(2, 2, 1000, "413000741")->write(file => "random_2x2.png");
+automaton(3, 1, 1000, "2646595889467")->write(file => "random_3x1-1.png");
 automaton(3, 1, 1000, "4018294395539")->write(file => "random_3x1-2.png");
+automaton(3, 1, 1000, "5432098941", [2])->write(file => "random_2x2-3.png");
+automaton(2, 2, 1000, "413000741")->write(file => "random_2x2.png");
