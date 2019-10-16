@@ -4,7 +4,7 @@
 # Date: 09 October 2019
 # https://github.com/trizen
 
-# Optimize JPEG and PKG images in a given directory (recursively) using the "jpegoptim" and "optipng" tools.
+# Optimize JPEG and PNG images in a given directory (recursively) using the "jpegoptim" and "optipng" tools.
 
 use 5.020;
 use warnings;

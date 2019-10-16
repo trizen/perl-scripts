@@ -438,6 +438,7 @@ A nice collection of day-to-day Perl scripts.
     * [E from binomial](./Math/e_from_binomial.pl)
     * [E primorial](./Math/e_primorial.pl)
     * [Ecm factorization method](./Math/ecm_factorization_method.pl)
+    * [Elementary cellular automaton generalized](./Math/elementary_cellular_automaton_generalized.pl)
     * [Elliptic-curve factorization method](./Math/elliptic-curve_factorization_method.pl)
     * [Equally spaced squares solutions](./Math/equally_spaced_squares_solutions.pl)
     * [Ethiopian multiplication](./Math/ethiopian_multiplication.pl)

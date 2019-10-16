@@ -25,7 +25,7 @@ use experimental qw(signatures);
 my %opts;
 getopts('-e', \%opts);    # flag "-e" removes extra tags
 
-my $extra      = $opts{e} || 0;          # true to remove additional information, such the camera name
+my $extra      = $opts{e} || 0;          # true to remove additional information, such as the camera name
 my $batch_size = 100;                    # how many files to process at once
 my $image_re   = qr/\.(png|jpe?g)\z/i;
 
