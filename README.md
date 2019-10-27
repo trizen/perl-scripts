@@ -15,10 +15,10 @@ A nice collection of day-to-day Perl scripts.
     * [Kernel config diff](./Analyzers/kernel_config_diff.pl)
     * [Perl code analyzer](./Analyzers/perl_code_analyzer.pl)
     * [Perl code spellcheck](./Analyzers/perl_code_spellcheck.pl)
-    * [Reptop](./Analyzers/reptop)
+    * [Reptop](./Analyzers/reptop.pl)
     * [Text stats](./Analyzers/text_stats.pl)
     * [Unidecode word top](./Analyzers/unidecode_word_top.pl)
-    * [Wcer](./Analyzers/wcer)
+    * [Wcer](./Analyzers/wcer.pl)
     * [Word suffix top](./Analyzers/word_suffix_top.pl)
 * Audio
     * [Auto-mp3tags](./Audio/auto-mp3tags.pl)
@@ -830,7 +830,7 @@ A nice collection of day-to-day Perl scripts.
     * [Calendar](./Time/calendar.pl)
     * [Contdown](./Time/contdown.pl)
 * Visualisators
-    * [Binview](./Visualisators/binview)
+    * [Binview](./Visualisators/binview.pl)
     * [Disk-stats](./Visualisators/disk-stats.pl)
     * [Greycmd](./Visualisators/greycmd.pl)
     * [Human-finder-visual](./Visualisators/human-finder-visual.pl)
