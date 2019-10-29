@@ -36,6 +36,7 @@ A nice collection of day-to-day Perl scripts.
     * [Any to 3gp](./Converters/any_to_3gp.pl)
     * [Euler2pdf](./Converters/euler2pdf.pl)
     * [Json2csv](./Converters/json2csv.pl)
+    * [Notepadfree to txt](./Converters/notepadfree_to_txt.pl)
     * [Unicode2ascii](./Converters/unicode2ascii.pl)
     * [Vnt2txt simple](./Converters/vnt2txt_simple.pl)
     * [Xml2hash](./Converters/xml2hash.pl)
