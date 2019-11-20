@@ -7,7 +7,7 @@
 
 # Updated the README.md file by adding new scripts to the summary.
 
-use 5.014;
+use 5.016;
 use strict;
 use autodie;
 use warnings;
@@ -50,7 +50,8 @@ my $main_dir     = File::Spec->curdir;
         my $cwd = getcwd();
 
         chdir $dir;
-        my @files = map { {name => $_, path => File::Spec->rel2abs($_)} } glob('*');    # sorting for free
+        my @files = sort { $a->{key} cmp $b->{key} }
+          map { {key => fc(s/\.\w+\z//r), name => $_, path => File::Spec->rel2abs($_)} } glob('*');
         chdir $cwd;
 
         my $make_section_url = sub {
@@ -74,7 +75,7 @@ my $main_dir     = File::Spec->curdir;
             else {
                 next if $dir eq $main_dir;
                 my $naked_title = $title =~ s/\.pl\z//ri;
-                my $url_path    =uri_escape($make_section_url->($file->{name}), ' ');
+                my $url_path    = uri_escape($make_section_url->($file->{name}), ' ?');
                 $section .= (' ' x $spaces) . "* [\u$naked_title]($url_path)\n";
             }
         }
@@ -84,7 +85,7 @@ my $main_dir     = File::Spec->curdir;
     }
 }
 
-my $section = make_section($main_dir, 0);
+my $section         = make_section($main_dir, 0);
 my $section_content = add_section($section, $summary_file);
 
 say "** All done!";

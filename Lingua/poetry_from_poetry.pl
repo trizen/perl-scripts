@@ -6,7 +6,7 @@
 # https://github.com/trizen
 
 # An experimental poetry generator, using a given poetry
-# as input, replacing words with other similar ending words.
+# as input, replacing words with other similar words.
 
 # usage:
 #   perl poetry_from_poetry.pl [poetry.txt] [wordlists]
@@ -31,10 +31,16 @@ my $poetry = do {
     <$fh>;
 };
 
-my $ending_len = 3;    # word ending length
+my $starting_len = 2;    # word starting length
+my $ending_len   = 2;    # word ending length
 
 my %words;
 my %seen;
+
+sub generate_key {
+    my ($word) = @_;
+    substr($word, 0, $starting_len) . substr($word, -$ending_len);
+}
 
 sub collect_words {
     my ($file) = @_;
@@ -52,7 +58,8 @@ sub collect_words {
         my $word = CORE::fc($1);
         if (length($word) > $ending_len) {
             next if $seen{$word}++;
-            push @{$words{substr($word, -$ending_len)}}, $word;
+            my $key = generate_key($word);
+            push @{$words{$key}}, $word;
         }
     }
 }
@@ -72,8 +79,8 @@ $poetry =~ s{([\pL]+)}{
         $word;
     }
     else {
-        my $ending = CORE::fc(substr($word, -$ending_len));
-        exists($words{$ending}) ? $words{$ending}[rand @{$words{$ending}}] : $word;
+        my $key = generate_key($word);
+        exists($words{$key}) ? $words{$key}[rand @{$words{$key}}] : $word;
     }
 }ge;
 
