@@ -560,6 +560,7 @@ A nice collection of day-to-day Perl scripts.
     * [Miller-rabin deterministic primality test](./Math/miller-rabin_deterministic_primality_test.pl)
     * [Miller-rabin deterministic primality test mpz](./Math/miller-rabin_deterministic_primality_test_mpz.pl)
     * [Modular bell numbers](./Math/modular_bell_numbers.pl)
+    * [Modular bell numbers mpz](./Math/modular_bell_numbers_mpz.pl)
     * [Modular binomial](./Math/modular_binomial.pl)
     * [Modular binomial fast](./Math/modular_binomial_fast.pl)
     * [Modular binomial ntheory](./Math/modular_binomial_ntheory.pl)

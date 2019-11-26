@@ -11,27 +11,27 @@ use strict;
 use warnings;
 
 use Math::GMPz;
-use ntheory qw(addmod);
 use experimental qw(signatures);
 
 sub bell_number ($n, $m) {
 
     my @acc;
 
-    my $t    = 0;
-    my $bell = 1;
+    my $t    = Math::GMPz::Rmpz_init();
+    my $bell = Math::GMPz::Rmpz_init_set_ui(1);
 
     foreach my $k (1 .. $n) {
 
-        $t = $bell;
+        Math::GMPz::Rmpz_set($t, $bell);
 
-        foreach my $j (@acc) {
-            $t = addmod($t, $j, $m);
-            $j = $t;
+        foreach my $item (@acc) {
+            Math::GMPz::Rmpz_add($t, $t, $item);
+            Math::GMPz::Rmpz_mod_ui($t, $t, $m);
+            Math::GMPz::Rmpz_set($item, $t);
         }
 
-        unshift @acc, $bell;
-        $bell = $acc[-1];
+        unshift @acc, Math::GMPz::Rmpz_init_set($bell);
+        $bell = Math::GMPz::Rmpz_init_set($acc[-1]);
     }
 
     $bell;
