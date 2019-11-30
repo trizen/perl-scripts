@@ -2,13 +2,15 @@
 
 # Daniel "Trizen" Șuteu
 # Date: 02 August 2017
-# Edit: 21 July 2018
+# Edit: 30 November 2019
 # https://github.com/trizen
 
-# A very strong primality test (v3), inspired by Fermat's Little Theorem and the AKS test.
+# A very strong primality test (v4), inspired by Fermat's Little Theorem and the AKS test.
 
-# Only one counter-example is known:
+# Known counter-example to the weak version:
 #   83143326880201568435669099604552661
+
+# When combined with a strong Fermat base-2 primality test, no counter-examples are known.
 
 # See also:
 #   https://oeis.org/A175530
@@ -21,7 +23,7 @@ use warnings;
 
 no warnings 'recursion';
 
-use ntheory qw(is_prime powmod);
+use ntheory qw(is_prime powmod is_strong_pseudoprime);
 use experimental qw(signatures);
 
 sub mulmod {
@@ -81,22 +83,13 @@ sub is_probably_prime($n) {
 
     $n <= 1 && return 0;
 
-    $n == 2     && return 1;
-    $n == 3     && return 1;
-    $n == 5     && return 1;
-    $n == 7     && return 1;
-    $n == 11    && return 1;
-    $n == 17    && return 1;
-    $n == 19    && return 1;
-    $n == 23    && return 1;
-    $n == 43    && return 1;
-    $n == 79    && return 1;
-    $n == 181   && return 1;
-    $n == 1151  && return 1;
-    $n == 6607  && return 1;
-    $n == 14057 && return 1;
+    foreach my $p (2, 3, 5, 7, 11, 17, 19, 23, 43, 79, 181, 1151, 6607, 14057) {
+        if ($n == $p) {
+            return 1;
+        }
+    }
 
-    powmod(2, $n-1, $n) == 1 or return 0;
+    is_strong_pseudoprime($n, 2) || return 0;
 
     my $r1 = modulo_test1($n, $n);
     ($r1 == 1) or ($r1 == $n-1) or return 0;
