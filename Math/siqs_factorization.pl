@@ -842,19 +842,24 @@ sub fast_power_check ($n, $upto) {
     state $t = Math::GMPz::Rmpz_init_nobless();
     state $g = Math::GMPz::Rmpz_init_nobless();
 
-    foreach my $base (2 .. logint($n, 2) >> 1) {
+    my $base_limit = ntheory::vecmin(logint($n, 2), 150);
+
+    foreach my $base (2 .. $base_limit) {
+
+        Math::GMPz::Rmpz_set_ui($t, $base);
+
         foreach my $exp (2 .. $upto) {
 
-            Math::GMPz::Rmpz_ui_pow_ui($t, $base, $exp);
-            Math::GMPz::Rmpz_sub_ui($t, $t, 1);
-            Math::GMPz::Rmpz_gcd($g, $t, $n);
+            Math::GMPz::Rmpz_mul_ui($t, $t, $base);
+            Math::GMPz::Rmpz_sub_ui($g, $t, 1);
+            Math::GMPz::Rmpz_gcd($g, $g, $n);
 
             if (Math::GMPz::Rmpz_cmp_ui($g, 1) > 0 and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
                 return Math::GMPz::Rmpz_init_set($g);
             }
 
-            Math::GMPz::Rmpz_add_ui($t, $t, 2);
-            Math::GMPz::Rmpz_gcd($g, $t, $n);
+            Math::GMPz::Rmpz_add_ui($g, $t, 1);
+            Math::GMPz::Rmpz_gcd($g, $g, $n);
 
             if (Math::GMPz::Rmpz_cmp_ui($g, 1) > 0 and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
                 return Math::GMPz::Rmpz_init_set($g);
@@ -1316,6 +1321,11 @@ sub find_small_factors ($rem, $factors) {
     # Add all identified prime factors to factors, and return 1 if all
     # prime factors were found, or otherwise the remaining factor.
 
+    my %state = (
+                 fast_power_check     => 1,
+                 fast_fibonacci_check => 1,
+                );
+
     my $f;
 
     for (; ;) {
@@ -1364,20 +1374,30 @@ sub find_small_factors ($rem, $factors) {
             next;
         }
 
-        say "=> Fast power check...";
-        $f = fast_power_check($rem, 500);
+        if ($state{fast_power_check}) {
+            say "=> Fast power check...";
+            $f = fast_power_check($rem, 500);
 
-        if (defined($f) and $f < $rem) {
-            store_factor(\$rem, $f, $factors);
-            next;
+            if (defined($f) and $f < $rem) {
+                store_factor(\$rem, $f, $factors);
+                next;
+            }
+            else {
+                $state{fast_power_check} = 0;
+            }
         }
 
-        say "=> Fast Fibonacci check...";
-        $f = fast_fibonacci_factor($rem, 5000);
+        if ($state{fast_fibonacci_check}) {
+            say "=> Fast Fibonacci check...";
+            $f = fast_fibonacci_factor($rem, 5000);
 
-        if (defined($f) and $f < $rem) {
-            store_factor(\$rem, $f, $factors);
-            next;
+            if (defined($f) and $f < $rem) {
+                store_factor(\$rem, $f, $factors);
+                next;
+            }
+            else {
+                $state{fast_fibonacci_check} = 0;
+            }
         }
 
         say "=> CFRAC simple...";
