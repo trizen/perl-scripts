@@ -187,7 +187,7 @@ sub siqs_find_first_poly ($n, $m, $factor_base) {
             }
 
             my $fb = $factor_base->[$p_i];
-            $A *= $fb->{p};
+            $A     *= $fb->{p};
             $log_A += log($fb->{p});
             $Q{$p_i} = $fb;
         }
@@ -821,9 +821,43 @@ sub fast_fibonacci_factor ($n, $upto) {
 
             my ($U, $V) = map { Math::GMPz::Rmpz_init_set_str($_, 10) } lucas_sequence($n, $P, 1, $k);
 
-            foreach my $f (sub { gcd($U, $n) }, sub { gcd($V - 2, $n) }, sub { gcd($V, $n) }, sub { gcd($V + 2, $n) }) {
+            foreach my $f (
+                           sub { gcd($U,     $n) },
+                           sub { gcd($U - 1, $n) },
+                           sub { gcd($V,     $n) },
+                           sub { gcd($V - 1, $n) },
+                           sub { gcd($V - 2, $n) },
+              ) {
                 my $g = Math::GMPz->new($f->());
                 return $g if ($g > 1 and $g < $n);
+            }
+        }
+    }
+
+    return undef;
+}
+
+sub fast_power_check ($n, $upto) {
+
+    state $t = Math::GMPz::Rmpz_init_nobless();
+    state $g = Math::GMPz::Rmpz_init_nobless();
+
+    foreach my $base (2 .. logint($n, 2) >> 1) {
+        foreach my $exp (2 .. $upto) {
+
+            Math::GMPz::Rmpz_ui_pow_ui($t, $base, $exp);
+            Math::GMPz::Rmpz_sub_ui($t, $t, 1);
+            Math::GMPz::Rmpz_gcd($g, $t, $n);
+
+            if (Math::GMPz::Rmpz_cmp_ui($g, 1) > 0 and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
+                return Math::GMPz::Rmpz_init_set($g);
+            }
+
+            Math::GMPz::Rmpz_add_ui($t, $t, 2);
+            Math::GMPz::Rmpz_gcd($g, $t, $n);
+
+            if (Math::GMPz::Rmpz_cmp_ui($g, 1) > 0 and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
+                return Math::GMPz::Rmpz_init_set($g);
             }
         }
     }
@@ -1324,6 +1358,14 @@ sub find_small_factors ($rem, $factors) {
 
         say "=> HOLF method...";
         $f = holf_find_factor($rem, HOLF_ITERATIONS);
+
+        if (defined($f) and $f < $rem) {
+            store_factor(\$rem, $f, $factors);
+            next;
+        }
+
+        say "=> Fast power check...";
+        $f = fast_power_check($rem, 500);
 
         if (defined($f) and $f < $rem) {
             store_factor(\$rem, $f, $factors);
