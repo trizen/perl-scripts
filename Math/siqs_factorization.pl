@@ -842,7 +842,7 @@ sub fast_power_check ($n, $upto) {
     state $t = Math::GMPz::Rmpz_init_nobless();
     state $g = Math::GMPz::Rmpz_init_nobless();
 
-    my $base_limit = ntheory::vecmin(logint($n, 2), 150);
+    my $base_limit = vecmin(logint($n, 2), 150);
 
     foreach my $base (2 .. $base_limit) {
 
@@ -1601,6 +1601,7 @@ sub find_all_prime_factors ($n, $factors) {
 
 sub special_form_factorization ($n) {
 
+    my %seen_divisor;
     my @near_power_params;
     my @diff_powers_params;
     my @cong_powers_params;
@@ -1620,11 +1621,8 @@ sub special_form_factorization ($n) {
                 my $t = $x - $k * $j;
                 my $g = Math::GMPz->new(gcd($t, $n));
 
-                if ($g > TRIAL_DIVISION_LIMIT and $g < $n) {
-                    while ($n % $g == 0) {
-                        $n /= $g;
-                        push @factors, $g;
-                    }
+                if ($g > TRIAL_DIVISION_LIMIT and $g < $n and !$seen_divisor{$g}++) {
+                    push @factors, $g;
                 }
             }
         }
@@ -1665,11 +1663,8 @@ sub special_form_factorization ($n) {
                     my $t = $x - $j * $y;
                     my $g = Math::GMPz->new(gcd($t, $n));
 
-                    if ($g > TRIAL_DIVISION_LIMIT and $g < $n) {
-                        while ($n % $g == 0) {
-                            $n /= $g;
-                            push @factors, $g;
-                        }
+                    if ($g > TRIAL_DIVISION_LIMIT and $g < $n and !$seen_divisor{$g}++) {
+                        push @factors, $g;
                     }
                 }
             }
@@ -1740,27 +1735,24 @@ sub special_form_factorization ($n) {
         my @divs2 = ntheory::divisors($e2);
 
         foreach my $d1 (@divs1) {
-            my $x = $k**$d1;
+            my $x = $r**$d1;
             foreach my $d2 (@divs2) {
-                my $y = $r**$d2;
+                my $y = $k**$d2;
                 foreach my $j (-1, 1) {
 
                     my $t = $x - $j * $y;
                     my $g = Math::GMPz->new(gcd($t, $n));
 
-                    if ($g > TRIAL_DIVISION_LIMIT and $g < $n) {
+                    if ($g > TRIAL_DIVISION_LIMIT and $g < $n and !$seen_divisor{$g}++) {
 
                         if ($r == $k) {
                             say "[*] Congruence of powers: a^$d1 == b^$d2 (mod n) -> $g";
                         }
                         else {
-                            say "[*] Congruence of powers: $k^$d1 == $r^$d2 (mod n) -> $g";
+                            say "[*] Congruence of powers: $r^$d1 == $k^$d2 (mod n) -> $g";
                         }
 
-                        while ($n % $g == 0) {
-                            $n /= $g;
-                            push @factors, $g;
-                        }
+                        push @factors, $g;
                     }
                 }
             }
@@ -1769,48 +1761,37 @@ sub special_form_factorization ($n) {
         @factors;
     };
 
-    for my $e (reverse 2 .. 64) {
+    my @congrunce_range = reverse(2 .. 64);
 
-        my $root = Math::GMPz->new(rootint($n, $e));
+    my $process_congruence = sub ($root, $e) {
 
         for my $j (1, 0) {
 
             my $k = $root + $j;
             my $u = Math::GMPz->new(powmod($k, $e, $n));
 
-            if (is_power($u, $e)) {
-                my $r = Math::GMPz->new(rootint($u, $e));
-                push @cong_powers_params, [$r, $e, $k, $e];
-            }
+            foreach my $z ($u, $n - $u) {
+                if (Math::GMPz::Rmpz_perfect_power_p($z)) {
+                    my $t = is_power($z) || 1;
 
-            if (is_power($n - $u, $e)) {
-                my $r = Math::GMPz->new(rootint($n - $u, $e));
-                push @cong_powers_params, [$r, $e, $k, $e];
+                    my $r1 = rootint($z, $t);
+                    my $r2 = rootint($z, $e);
+
+                    push @cong_powers_params, [Math::GMPz->new($r1), $t, Math::GMPz->new($k), $e];
+                    push @cong_powers_params, [Math::GMPz->new($r2), $e, Math::GMPz->new($k), $e];
+                }
             }
         }
+    };
+
+    for my $e (@congrunce_range) {
+        my $root = Math::GMPz->new(rootint($n, $e));
+        $process_congruence->($root, $e);
     }
 
-    for my $root (reverse 2 .. 64) {
-
+    for my $root (@congrunce_range) {
         my $e = Math::GMPz->new(logint($n, $root));
-
-        for my $j (1, 0) {
-
-            my $k = $root + $j;
-            my $u = Math::GMPz->new(powmod($k, $e, $n));
-
-            if (Math::GMPz::Rmpz_perfect_power_p($u)) {
-                my $t = is_power($u) || 1;
-                my $r = rootint($n, $t);
-                push @cong_powers_params, [Math::GMPz->new($r), $t, Math::GMPz->new($k), $e];
-            }
-
-            if (Math::GMPz::Rmpz_perfect_power_p($n - $u)) {
-                my $t = is_power($n - $u) || 1;
-                my $r = rootint($n, $t);
-                push @cong_powers_params, [Math::GMPz->new($r), $t, Math::GMPz->new($k), $e];
-            }
-        }
+        $process_congruence->($root, $e);
     }
 
     # Sophie Germain's identity
@@ -1826,11 +1807,8 @@ sub special_form_factorization ($n) {
           ) {
             my $g = Math::GMPz->new(gcd($f, $n));
 
-            if ($g > TRIAL_DIVISION_LIMIT and $g < $n) {
-                while ($n % $g == 0) {
-                    $n /= $g;
-                    push @factors, $g;
-                }
+            if ($g > TRIAL_DIVISION_LIMIT and $g < $n and !$seen_divisor{$g}++) {
+                push @factors, $g;
             }
         }
 
@@ -1875,21 +1853,36 @@ sub special_form_factorization ($n) {
         }
     }
 
-    my @factors;
+    my @divisors;
+
     foreach my $args (@near_power_params) {
-        push @factors, $near_power->(@$args);
+        push @divisors, $near_power->(@$args);
     }
 
     foreach my $args (@diff_powers_params) {
-        push @factors, $diff_powers->(@$args);
+        push @divisors, $diff_powers->(@$args);
     }
 
     foreach my $args (@cong_powers_params) {
-        push @factors, $cong_powers->(@$args);
+        push @divisors, $cong_powers->(@$args);
     }
 
     foreach my $args (@sophie_params) {
-        push @factors, $sophie->(@$args);
+        push @divisors, $sophie->(@$args);
+    }
+
+    @divisors = sort { $a <=> $b } @divisors;
+
+    my @factors;
+    foreach my $d (@divisors) {
+        my $g = Math::GMPz->new(gcd($n, $d));
+
+        if ($g > TRIAL_DIVISION_LIMIT and $g < $n) {
+            while ($n % $g == 0) {
+                $n /= $g;
+                push @factors, $g;
+            }
+        }
     }
 
     return sort { $a <=> $b } @factors;
