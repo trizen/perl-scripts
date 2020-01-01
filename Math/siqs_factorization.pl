@@ -46,6 +46,7 @@ use constant {
               TRIAL_DIVISION_LIMIT      => 1_000_000,
               POLLARD_BRENT_ITERATIONS  => 16,
               POLLARD_RHO_ITERATIONS    => 50_000,
+              PHI_FINDER_ITERATIONS     => 100_000,
               FERMAT_ITERATIONS         => 100_000,
               NEAR_POWER_ITERATIONS     => 1_000,
               CFRAC_ITERATIONS          => 15_000,
@@ -1161,6 +1162,38 @@ sub pollard_rho_exp_find_factor ($n, $max_iter) {
     return undef;
 }
 
+sub phi_finder_factor ($n, $max_iter) {
+
+    my $E  = $n - 2 * Math::GMPz->new(sqrtint($n)) + 1;
+    my $E0 = Math::GMPz->new(powmod(2, -$E, $n));
+
+    my $L = logint($n, 2);
+    my $i = 0;
+
+    while ($E0 & ($E0 - 1)) {
+        $E0 <<= $L;
+        $E0 %= $n;
+        ++$i;
+        return undef if ($i > $max_iter);
+    }
+
+    my $t = 0;
+
+    foreach my $k (0 .. $L) {
+        if (powmod(2, $k, $n) == $E0) {
+            $t = $k;
+            last;
+        }
+    }
+
+    my $phi = abs($i * $L - $E - $t);
+
+    my $q = ($n - $phi + 1);
+    my $p = ($q + sqrtint($q * $q - 4 * $n)) >> 1;
+
+    (($n % $p) == 0) ? $p : undef;
+}
+
 sub fermat_find_factor ($n, $max_iter) {
 
     my $p = Math::GMPz::Rmpz_init();    # p = floor(sqrt(n))
@@ -1356,6 +1389,14 @@ sub find_small_factors ($rem, $factors) {
             my @r = (is_prime($f) ? $f : factorize($f));
             push(@$factors, (@r) x $exp);
             return 1;
+        }
+
+        say "=> Phi finder method...";
+        $f = phi_finder_factor($rem, PHI_FINDER_ITERATIONS);
+
+        if (defined($f) and $f < $rem) {
+            store_factor(\$rem, $f, $factors);
+            next;
         }
 
         say "=> Fermat's method...";
