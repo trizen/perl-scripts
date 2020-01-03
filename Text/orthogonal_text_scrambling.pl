@@ -7,6 +7,7 @@
 
 # An interesting text scrambling algorithm, invented by the author in ~2008.
 
+use utf8;
 use 5.010;
 use strict;
 use warnings;
@@ -15,7 +16,7 @@ sub scramble {
     my ($str) = @_;
 
     my $i = length($str);
-    $str =~ s/(.{$i})(.)/$2$1/sg while --$i > 0;
+    $str =~ s/(.{$i})(.)/$2$1/sg while (--$i > 0);
     return $str;
 }
 

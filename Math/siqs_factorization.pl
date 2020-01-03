@@ -1164,6 +1164,8 @@ sub pollard_rho_exp_find_factor ($n, $max_iter) {
 
 sub phi_finder_factor ($n, $max_iter) {
 
+    # Phi-finder algorithm for semiprimes, due to Kyle Kloster (2010)
+
     my $E  = $n - 2 * Math::GMPz->new(sqrtint($n)) + 1;
     my $E0 = Math::GMPz->new(powmod(2, -$E, $n));
 
@@ -1195,6 +1197,9 @@ sub phi_finder_factor ($n, $max_iter) {
 }
 
 sub fermat_find_factor ($n, $max_iter) {
+
+    # Fermat's factorization method, trying to represent `n` as a difference of two squares:
+    #   n = a^2 - b^2, where n = (a-b) * (a+b).
 
     my $p = Math::GMPz::Rmpz_init();    # p = floor(sqrt(n))
     my $q = Math::GMPz::Rmpz_init();    # q = p^2 - n
@@ -1314,6 +1319,9 @@ sub simple_cfrac_find_factor ($n, $max_iter) {
 
 sub store_factor ($rem, $f, $factors) {
 
+    $f // return;
+    $f < $$rem or return;
+
     $$rem % $f == 0 or die 'error';
 
     if (is_prime($f)) {
@@ -1344,6 +1352,8 @@ sub store_factor ($rem, $f, $factors) {
             }
         }
     }
+
+    return 1;
 }
 
 sub find_small_factors ($rem, $factors) {
@@ -1393,34 +1403,21 @@ sub find_small_factors ($rem, $factors) {
 
         say "=> Phi finder method...";
         $f = phi_finder_factor($rem, PHI_FINDER_ITERATIONS);
-
-        if (defined($f) and $f < $rem) {
-            store_factor(\$rem, $f, $factors);
-            next;
-        }
+        next if store_factor(\$rem, $f, $factors);
 
         say "=> Fermat's method...";
         $f = fermat_find_factor($rem, FERMAT_ITERATIONS);
-
-        if (defined($f) and $f < $rem) {
-            store_factor(\$rem, $f, $factors);
-            next;
-        }
+        next if store_factor(\$rem, $f, $factors);
 
         say "=> HOLF method...";
         $f = holf_find_factor($rem, HOLF_ITERATIONS);
-
-        if (defined($f) and $f < $rem) {
-            store_factor(\$rem, $f, $factors);
-            next;
-        }
+        next if store_factor(\$rem, $f, $factors);
 
         if ($state{fast_power_check}) {
             say "=> Fast power check...";
             $f = fast_power_check($rem, 500);
 
-            if (defined($f) and $f < $rem) {
-                store_factor(\$rem, $f, $factors);
+            if (store_factor(\$rem, $f, $factors)) {
                 next;
             }
             else {
@@ -1432,8 +1429,7 @@ sub find_small_factors ($rem, $factors) {
             say "=> Fast Fibonacci check...";
             $f = fast_fibonacci_factor($rem, 5000);
 
-            if (defined($f) and $f < $rem) {
-                store_factor(\$rem, $f, $factors);
+            if (store_factor(\$rem, $f, $factors)) {
                 next;
             }
             else {
@@ -1443,118 +1439,62 @@ sub find_small_factors ($rem, $factors) {
 
         say "=> CFRAC simple...";
         $f = simple_cfrac_find_factor($rem, ($len > 50 ? 2 : 1) * CFRAC_ITERATIONS);
-
-        if (defined($f) and $f < $rem) {
-            store_factor(\$rem, $f, $factors);
-            next;
-        }
+        next if store_factor(\$rem, $f, $factors);
 
         say "=> Pollard rho-sqrt...";
         $f = pollard_rho_sqrt_find_factor($rem, ($len > 50 ? 2 : 1) * POLLARD_RHO_ITERATIONS);
-
-        if (defined($f) and $f < $rem) {
-            store_factor(\$rem, $f, $factors);
-            next;
-        }
+        next if store_factor(\$rem, $f, $factors);
 
         say "=> Pollard p-1 (500K)...";
         $f = pollard_pm1_find_factor($rem, 500_000);
-
-        if (defined($f) and $f < $rem) {
-            store_factor(\$rem, $f, $factors);
-            next;
-        }
+        next if store_factor(\$rem, $f, $factors);
 
         say "=> Fibonacci p±1...";
         $f = fibonacci_factorization($rem, FIBONACCI_BOUND);
-
-        if (defined($f) and $f < $rem) {
-            store_factor(\$rem, $f, $factors);
-            next;
-        }
+        next if store_factor(\$rem, $f, $factors);
 
         say "=> Pollard p-1 (2M)...";
         $f = pollard_pm1_find_factor($rem, 2_000_000);
-
-        if (defined($f) and $f < $rem) {
-            store_factor(\$rem, $f, $factors);
-            next;
-        }
+        next if store_factor(\$rem, $f, $factors);
 
         say "=> Pollard rho...";
         $f = pollard_rho_find_factor($rem, ($len > 50 ? 3 : 2) * POLLARD_RHO_ITERATIONS);
-
-        if (defined($f) and $f < $rem) {
-            store_factor(\$rem, $f, $factors);
-            next;
-        }
+        next if store_factor(\$rem, $f, $factors);
 
         say "=> Pollard rho-sqrt...";
         $f = pollard_rho_sqrt_find_factor($rem, ($len > 50 ? 6 : 3) * POLLARD_RHO_ITERATIONS);
-
-        if (defined($f) and $f < $rem) {
-            store_factor(\$rem, $f, $factors);
-            next;
-        }
+        next if store_factor(\$rem, $f, $factors);
 
         if ($len < 150) {
-
             say "=> Pollard rho-exp...";
             $f = pollard_rho_exp_find_factor($rem, ($len > 50 ? 2 : 1) * 200);
-
-            if (defined($f) and $f < $rem) {
-                store_factor(\$rem, $f, $factors);
-                next;
-            }
+            next if store_factor(\$rem, $f, $factors);
         }
 
         say "=> Pollard rho (Brent)...";
         $f = pollard_brent_find_factor($rem, POLLARD_BRENT_ITERATIONS);
-
-        if (defined($f) and $f < $rem) {
-            store_factor(\$rem, $f, $factors);
-            next;
-        }
+        next if store_factor(\$rem, $f, $factors);
 
         if ($len > 50) {
-
             say "=> Pollard p-1 (10M)...";
             $f = pollard_pm1_find_factor($rem, 10_000_000);
-
-            if (defined($f) and $f < $rem) {
-                store_factor(\$rem, $f, $factors);
-                next;
-            }
+            next if store_factor(\$rem, $f, $factors);
         }
 
         if ($len > 70) {
-
             say "=> Pollard p-1 (20M)...";
             $f = pollard_pm1_find_factor($rem, 20_000_000);
-
-            if (defined($f) and $f < $rem) {
-                store_factor(\$rem, $f, $factors);
-                next;
-            }
+            next if store_factor(\$rem, $f, $factors);
 
             say "=> Pollard rho-exp...";
             $f = pollard_rho_exp_find_factor($rem, 1000);
-
-            if (defined($f) and $f < $rem) {
-                store_factor(\$rem, $f, $factors);
-                next;
-            }
+            next if store_factor(\$rem, $f, $factors);
         }
 
         if ($len > 80) {
-
             say "=> Pollard p-1 (50M)...";
             $f = pollard_pm1_find_factor($rem, 50_000_000);
-
-            if (defined($f) and $f < $rem) {
-                store_factor(\$rem, $f, $factors);
-                next;
-            }
+            next if store_factor(\$rem, $f, $factors);
         }
 
         last;
