@@ -51,6 +51,7 @@ use constant {
               NEAR_POWER_ITERATIONS     => 1_000,
               CFRAC_ITERATIONS          => 15_000,
               HOLF_ITERATIONS           => 100_000,
+              MILLER_RABIN_ITERATIONS   => 100,
               SIQS_TRIAL_DIVISION_EPS   => 25,
               SIQS_MIN_PRIME_POLYNOMIAL => 400,
               SIQS_MAX_PRIME_POLYNOMIAL => 4000,
@@ -1172,9 +1173,9 @@ sub phi_finder_factor ($n, $max_iter) {
     my $L = logint($n, 2);
     my $i = 0;
 
-    while ($E0 & ($E0 - 1)) {
-        $E0 <<= $L;
-        $E0 %= $n;
+    while (Math::GMPz::Rmpz_scan1($E0, 0) < Math::GMPz::Rmpz_sizeinbase($E0, 2) - 1) {
+        Math::GMPz::Rmpz_mul_2exp($E0, $E0, $L);
+        Math::GMPz::Rmpz_mod($E0, $E0, $n);
         ++$i;
         return undef if ($i > $max_iter);
     }
@@ -1182,7 +1183,7 @@ sub phi_finder_factor ($n, $max_iter) {
     my $t = 0;
 
     foreach my $k (0 .. $L) {
-        if (powmod(2, $k, $n) == $E0) {
+        if (Math::GMPz->new(powmod(2, $k, $n)) == $E0) {
             $t = $k;
             last;
         }
@@ -1191,7 +1192,7 @@ sub phi_finder_factor ($n, $max_iter) {
     my $phi = abs($i * $L - $E - $t);
 
     my $q = ($n - $phi + 1);
-    my $p = ($q + sqrtint($q * $q - 4 * $n)) >> 1;
+    my $p = ($q + Math::GMPz->new(sqrtint($q * $q - 4 * $n))) >> 1;
 
     (($n % $p) == 0) ? $p : undef;
 }
@@ -1253,6 +1254,48 @@ sub holf_find_factor ($n, $max_iter) {
                 and Math::GMPz::Rmpz_cmp($m, $n) < 0) {
                 return $m;
             }
+        }
+    }
+
+    return undef;
+}
+
+sub miller_rabin_factor ($n, $max_iter) {
+
+    # Miller-Rabin factorization method.
+    # https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test
+
+    my $D = $n - 1;
+    my $s = Math::GMPz::Rmpz_scan1($D, 0);
+    my $r = $s - 1;
+    my $d = $D >> $s;
+
+    return undef if ($r <= 0);
+
+    my $x = Math::GMPz::Rmpz_init();
+    my $y = Math::GMPz::Rmpz_init();
+
+    foreach my $base (2 .. $max_iter) {
+
+        Math::GMPz::Rmpz_powm($x, Math::GMPz::Rmpz_init_set_ui($base), $d, $n);
+
+        next if (Math::GMPz::Rmpz_cmp_ui($x, 1) == 0);
+        next if (Math::GMPz::Rmpz_cmp($x, $D) == 0);
+
+        foreach my $k (1 .. $r) {
+
+            Math::GMPz::Rmpz_powm_ui($y, $x, 2, $n);
+
+            if (Math::GMPz::Rmpz_cmp_ui($y, 1) == 0) {
+                foreach my $g (map { Math::GMPz->new($_) } (gcd($x + 1, $n), gcd($x - 1, $n))) {
+                    if ($g > 1 and $g < $n) {
+                        return $g;
+                    }
+                }
+            }
+
+            Math::GMPz::Rmpz_set($x, $y);
+            last if (Math::GMPz::Rmpz_cmp($x, $D) == 0);
         }
     }
 
@@ -1400,6 +1443,10 @@ sub find_small_factors ($rem, $factors) {
             push(@$factors, (@r) x $exp);
             return 1;
         }
+
+        say "=> Miller-Rabin method...";
+        $f = miller_rabin_factor($rem, MILLER_RABIN_ITERATIONS);
+        next if store_factor(\$rem, $f, $factors);
 
         say "=> Phi finder method...";
         $f = phi_finder_factor($rem, PHI_FINDER_ITERATIONS);
