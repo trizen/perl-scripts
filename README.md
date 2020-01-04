@@ -559,6 +559,7 @@ A nice collection of day-to-day Perl scripts.
     * [Mertens function fast](./Math/mertens_function_fast.pl)
     * [Miller-rabin deterministic primality test](./Math/miller-rabin_deterministic_primality_test.pl)
     * [Miller-rabin deterministic primality test mpz](./Math/miller-rabin_deterministic_primality_test_mpz.pl)
+    * [Miller-rabin factorization method](./Math/miller-rabin_factorization_method.pl)
     * [Modular bell numbers](./Math/modular_bell_numbers.pl)
     * [Modular bell numbers mpz](./Math/modular_bell_numbers_mpz.pl)
     * [Modular binomial](./Math/modular_binomial.pl)

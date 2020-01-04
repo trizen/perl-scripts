@@ -51,6 +51,7 @@ sub carmichael_factorization ($n, $k = 3, $l = 2, $h = 6) {
 
             if ($g > 1) {
                 @factors = grep { $n % $_ == 0 } ($r, $block->($r, @params));
+                @factors = ($g) if !@factors;
                 lastfor, return @factors;
             }
         }
