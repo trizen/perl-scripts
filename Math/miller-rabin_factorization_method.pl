@@ -49,17 +49,17 @@ sub miller_rabin_factor ($n, $k = 100) {
         next if (($x == 1) || ($x == $D));
 
         foreach my $k (1 .. $r) {
-            $x = powmod($x, 2, $n);
+            my $y = powmod($x, 2, $n);
 
-            if ($x == 1) {
-                my $t = powmod($a, $d << ($k-1), $n);
-                my $g = gcd($t + 1, $n);
+            if ($y == 1) {
+                my $g = gcd($x + 1, $n);
 
                 if ($g > 1 and $g < $n) {
                     return $g;
                 }
             }
 
+            $x = $y;
             last if ($x == $D);
         }
     }
