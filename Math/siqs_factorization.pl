@@ -1023,6 +1023,8 @@ sub lucas_factorization ($n, $d) {
 
 sub pollard_pm1_find_factor ($n, $bound) {
 
+    # Pollard p-1 method.
+
     my $g = Math::GMPz::Rmpz_init();
     my $t = Math::GMPz::Rmpz_init_set_ui(random_prime(1e6));
 
@@ -1047,21 +1049,25 @@ sub pollard_pm1_find_factor ($n, $bound) {
 
 sub pollard_rho_find_factor ($n, $max_iter) {
 
-    my $x = Math::GMPz->new(2);
-    my $y = Math::GMPz->new(3);
+    # Pollard rho method, using the polynomial:
+    #   f(x) = x^2 - 1, with x_0 = 1+floor(log_2(n)).
+
+    my $u = logint($n, 2) + 1;
+    my $x = Math::GMPz::Rmpz_init_set_ui($u);
+    my $y = Math::GMPz::Rmpz_init_set_ui($u * $u - 1);
 
     my $g = Math::GMPz::Rmpz_init();
 
     for (1 .. $max_iter) {
 
-        Math::GMPz::Rmpz_mul($x, $x, $x);
+        # f(x) = x^2 - 1
+        Math::GMPz::Rmpz_powm_ui($x, $x, 2, $n);
         Math::GMPz::Rmpz_sub_ui($x, $x, 1);
-        Math::GMPz::Rmpz_mod($x, $x, $n);
 
-        Math::GMPz::Rmpz_mul($y, $y, $y);
-        Math::GMPz::Rmpz_sub_ui($y, $y, 1);
-        Math::GMPz::Rmpz_powm_ui($y, $y, 2, $n);
-        Math::GMPz::Rmpz_sub_ui($y, $y, 1);
+        # f(f(x)) = (x^2 - 1)^2 - 1 = (x^2 - 2) * x^2
+        Math::GMPz::Rmpz_powm_ui($g, $y, 2, $n);
+        Math::GMPz::Rmpz_sub_ui($y, $g, 2);
+        Math::GMPz::Rmpz_mul($y, $y, $g);
 
         Math::GMPz::Rmpz_sub($g, $x, $y);
         Math::GMPz::Rmpz_gcd($g, $g, $n);
@@ -1077,12 +1083,20 @@ sub pollard_rho_find_factor ($n, $max_iter) {
 
 sub pollard_rho_sqrt_find_factor ($n, $max_iter) {
 
-    my $p = Math::GMPz->new(sqrtint($n));
-    my $q = ($p * $p - $n);
+    # Pollard rho method, using the polynomial:
+    #   f(x) = x^2 + c
+    #
+    # where
+    #   c = floor(sqrt(n)) - (floor(sqrt(n))^2 - n)
+    #   c = n + s - s^2, with s = floor(sqrt(n))
+    #
+    # and
+    #   x_0 = 3^2 + c
 
-    my $c = $q + $p;
+    my $s = Math::GMPz->new(sqrtint($n));
+    my $c = $n + $s - $s * $s;
 
-    my $a0 = 1;
+    my $a0 = 3;
     my $a1 = ($a0 * $a0 + $c);
     my $a2 = ($a1 * $a1 + $c);
 
@@ -1098,17 +1112,14 @@ sub pollard_rho_sqrt_find_factor ($n, $max_iter) {
             return $g;
         }
 
-        Math::GMPz::Rmpz_mul($a1, $a1, $a1);
+        Math::GMPz::Rmpz_powm_ui($a1, $a1, 2, $n);
         Math::GMPz::Rmpz_add($a1, $a1, $c);
-        Math::GMPz::Rmpz_mod($a1, $a1, $n);
 
-        Math::GMPz::Rmpz_mul($a2, $a2, $a2);
+        Math::GMPz::Rmpz_powm_ui($a2, $a2, 2, $n);
         Math::GMPz::Rmpz_add($a2, $a2, $c);
-        Math::GMPz::Rmpz_mod($a2, $a2, $n);
 
-        Math::GMPz::Rmpz_mul($a2, $a2, $a2);
+        Math::GMPz::Rmpz_powm_ui($a2, $a2, 2, $n);
         Math::GMPz::Rmpz_add($a2, $a2, $c);
-        Math::GMPz::Rmpz_mod($a2, $a2, $n);
     }
 
     return undef;
