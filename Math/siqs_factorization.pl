@@ -1203,7 +1203,7 @@ sub phi_finder_factor ($n, $max_iter) {
     my $phi = abs($i * $L - $E - $t);
 
     my $q = ($n - $phi + 1);
-    my $p = ($q + Math::GMPz->new(sqrtint($q * $q - 4 * $n))) >> 1;
+    my $p = ($q + Math::GMPz->new(sqrtint(abs($q * $q - 4 * $n)))) >> 1;
 
     (($n % $p) == 0) ? $p : undef;
 }
