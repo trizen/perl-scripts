@@ -19,7 +19,7 @@ use experimental qw(signatures);
 use List::Util qw(uniq);
 use ntheory qw(is_prime is_prob_prime primes);
 use Math::AnyNum qw(:overload isqrt prod is_coprime irand powmod);
-use Math::Prime::Util::GMP qw(ecm_factor);
+use Math::Prime::Util::GMP qw(ecm_factor is_strong_pseudoprime);
 
 my $SMALL_PRIMES = primes(1000);
 
@@ -63,7 +63,7 @@ sub pocklington_pratt_primality_test ($n, $lim = 2**64) {
             foreach my $p (uniq(@f)) {
                 for (; ;) {
                     my $a = irand(2, $D);
-                    powmod($a, $D, $n) == 1 or return 0;
+                    is_strong_pseudoprime($n, $a) || return 0;
                     if (is_coprime(powmod($a, $D / $p, $n) - 1, $n)) {
                         say "a = $a ; p = $p";
                         last;
@@ -81,8 +81,6 @@ sub pocklington_pratt_primality_test ($n, $lim = 2**64) {
     }
 }
 
-#say pocklington_pratt_primality_test(436038354884290791181179106723869598426480144441);
-#say pocklington_pratt_primality_test(3791200232251482865919745722303442788615510538727);
 say "Is prime: ", pocklington_pratt_primality_test(115792089237316195423570985008687907853269984665640564039457584007913129603823);
 
 __END__
