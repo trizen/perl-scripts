@@ -52,6 +52,7 @@ use constant {
               CFRAC_ITERATIONS          => 15_000,
               HOLF_ITERATIONS           => 100_000,
               MILLER_RABIN_ITERATIONS   => 100,
+              LUCAS_MILLER_ITERATIONS   => 100,
               SIQS_TRIAL_DIVISION_EPS   => 25,
               SIQS_MIN_PRIME_POLYNOMIAL => 400,
               SIQS_MAX_PRIME_POLYNOMIAL => 4000,
@@ -1281,32 +1282,59 @@ sub miller_rabin_factor ($n, $max_iter) {
     my $r = $s - 1;
     my $d = $D >> $s;
 
-    return undef if ($r <= 0);
-
     my $x = Math::GMPz::Rmpz_init();
-    my $y = Math::GMPz::Rmpz_init();
+    my $g = Math::GMPz::Rmpz_init();
 
     foreach my $base (2 .. $max_iter) {
 
         Math::GMPz::Rmpz_powm($x, Math::GMPz::Rmpz_init_set_ui($base), $d, $n);
 
-        next if (Math::GMPz::Rmpz_cmp_ui($x, 1) == 0);
-        next if (Math::GMPz::Rmpz_cmp($x, $D) == 0);
+        foreach my $k (0 .. $r) {
+            foreach my $i (1, -1) {
+                Math::GMPz::Rmpz_gcd($g, $x + $i, $n);
+                if (    Math::GMPz::Rmpz_cmp_ui($g, 1) > 0
+                    and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
+                    return $g;
+                }
+            }
+            Math::GMPz::Rmpz_powm_ui($x, $x, 2, $n);
+        }
+    }
 
-        foreach my $k (1 .. $r) {
+    return undef;
+}
 
-            Math::GMPz::Rmpz_powm_ui($y, $x, 2, $n);
+sub lucas_miller_factor ($n, $max_iter) {
 
-            if (Math::GMPz::Rmpz_cmp_ui($y, 1) == 0) {
-                foreach my $g (map { Math::GMPz->new($_) } (gcd($x + 1, $n), gcd($x - 1, $n))) {
-                    if ($g > 1 and $g < $n) {
-                        return $g;
-                    }
+    # Lucas-Miller factorization method.
+
+    my $D = $n + 1;
+    my $s = Math::GMPz::Rmpz_scan1($D, 0);
+    my $r = $s;
+    my $d = $D >> $s;
+
+    my $x = Math::GMPz::Rmpz_init();
+    my $g = Math::GMPz::Rmpz_init();
+
+    foreach my $P (1 .. $max_iter) {
+
+        my $Q = -(1 + int(rand(1e6)));
+        Math::GMPz::Rmpz_set($x, $d);
+
+        foreach my $k (0 .. $r) {
+
+            my ($U, $V) = lucas_sequence($n, $P, $Q, $x);
+
+            foreach my $t ($U, $V) {
+                Math::GMPz::Rmpz_set_str($g, $t, 10);
+                Math::GMPz::Rmpz_gcd($g, $g, $n);
+                if (    Math::GMPz::Rmpz_cmp_ui($g, 1) > 0
+                    and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
+                    return $g;
                 }
             }
 
-            Math::GMPz::Rmpz_set($x, $y);
-            last if (Math::GMPz::Rmpz_cmp($x, $D) == 0);
+            Math::GMPz::Rmpz_mul_2exp($x, $x, 1);
         }
     }
 
@@ -1457,6 +1485,10 @@ sub find_small_factors ($rem, $factors) {
 
         say "=> Miller-Rabin method...";
         $f = miller_rabin_factor($rem, MILLER_RABIN_ITERATIONS);
+        next if store_factor(\$rem, $f, $factors);
+
+        say "=> Lucas-Miller method...";
+        $f = lucas_miller_factor($rem, LUCAS_MILLER_ITERATIONS);
         next if store_factor(\$rem, $f, $factors);
 
         say "=> Phi finder method...";
