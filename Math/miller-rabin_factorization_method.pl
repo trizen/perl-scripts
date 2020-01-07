@@ -42,25 +42,15 @@ sub miller_rabin_factor ($n, $k = 100) {
     my $r = $s - 1;
     my $d = $D >> $s;
 
-    return 1 if ($r <= 0);
-
     foreach my $a (2 .. $k) {
-        my $x = powmod($a, $d, $n);
-        next if (($x == 1) || ($x == $D));
-
-        foreach my $k (1 .. $r) {
-            my $y = powmod($x, 2, $n);
-
-            if ($y == 1) {
-                my $g = gcd($x + 1, $n);
-
+        foreach my $b (0 .. $r) {
+            my $x = powmod($a, $d << $b, $n);
+            foreach my $i (1, -1) {
+                my $g = gcd($x + $i, $n);
                 if ($g > 1 and $g < $n) {
                     return $g;
                 }
             }
-
-            $x = $y;
-            last if ($x == $D);
         }
     }
 
