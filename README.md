@@ -535,6 +535,7 @@ A nice collection of day-to-day Perl scripts.
     * [Long division](./Math/long_division.pl)
     * [Long multiplication](./Math/long_multiplication.pl)
     * [Lucas-miller factorization method](./Math/lucas-miller_factorization_method.pl)
+    * [Lucas-pratt primality proving](./Math/lucas-pratt_primality_proving.pl)
     * [Lucas-pratt prime records](./Math/lucas-pratt_prime_records.pl)
     * [Lucas factorization method](./Math/lucas_factorization_method.pl)
     * [Lucas factorization method generalized](./Math/lucas_factorization_method_generalized.pl)
