@@ -22,8 +22,12 @@ use experimental qw(signatures);
 
 use List::Util qw(uniq);
 use ntheory qw(is_prime is_prob_prime);
-use Math::AnyNum qw(:overload prod primorial is_coprime irand min is_square lucasUmod gcd);
 use Math::Prime::Util::GMP qw(ecm_factor is_strong_pseudoprime);
+
+use Math::AnyNum qw(
+  :overload prod primorial is_coprime
+  irand min is_square lucasUmod gcd kronecker
+  );
 
 my $primorial = primorial(10**6);
 
@@ -79,6 +83,7 @@ sub lucas_primality_proving ($n, $lim = 2**64) {
             next if is_square($D % $n);
             next if ($P >= $n);
             next if ($Q >= $n);
+            next if (kronecker($D, $n) != -1);
 
             return ($P, $Q, $D);
         }
@@ -87,12 +92,12 @@ sub lucas_primality_proving ($n, $lim = 2**64) {
     my $primality_proving = sub {
         my ($P, $Q, $D) = $find_PQD->();
 
-        is_strong_pseudoprime($n, $P + 1) || return 0;
-        lucasUmod($P, $Q, $n + 1, $n) == 0 or return __SUB__->();
+        is_strong_pseudoprime($n, $P + 1)  or return 0;
+        lucasUmod($P, $Q, $n + 1, $n) == 0 or return 0;
 
         foreach my $p (uniq(@f)) {
             for (; ;) {
-                $D == ($P * $P - 4 * $Q) or die "error: $D != $P^2 - 4*$Q";
+                $D == ($P * $P - 4 * $Q) or die "error: $P^2 - 4*$Q != $D";
 
                 if ($P >= $n or $Q >= $n) {
                     return __SUB__->();
