@@ -38,8 +38,7 @@ sub trial_factor ($n) {
         }
     }
 
-    $n > 1 and push(@f, $n);
-    return @f;
+    return ($n, @f);
 }
 
 sub pocklington_pratt_primality_proving ($n, $lim = 2**64) {
@@ -55,10 +54,9 @@ sub pocklington_pratt_primality_proving ($n, $lim = 2**64) {
     }
 
     my $d = $n - 1;
-    my @f = trial_factor($d);
-    my $B = pop @f;
+    my ($B, @f) = trial_factor($d);
 
-    if (__SUB__->($B, $lim)) {
+    if ($B > 1 and __SUB__->($B, $lim)) {
         push @f, $B;
         $B = 1;
     }
