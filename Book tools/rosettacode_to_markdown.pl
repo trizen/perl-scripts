@@ -408,20 +408,22 @@ my $lwp = LWP::UserAgent::Cached->new(
     nocache_if => sub {
         my ($response) = @_;
         my $code = $response->code;
-        return 1 if ($code >= 500);                               # do not cache any bad response
-        return 1 if ($code == 401);                               # don't cache an unauthorized response
-        return 1 if ($response->{_request}{_method} ne 'GET');    # cache only GET requests
+        return 1 if ($code >= 500);                           # do not cache any bad response
+        return 1 if ($code == 401);                           # don't cache an unauthorized response
+        return 1 if ($response->request->method ne 'GET');    # cache only GET requests
         return;
     },
 );
 
-my $accepted_encodings = HTTP::Message::decodable();
-$lwp->default_header('Accept-Encoding' => $accepted_encodings);
+{
+    my $accepted_encodings = HTTP::Message::decodable();
+    $lwp->default_header('Accept-Encoding' => $accepted_encodings);
 
-require LWP::ConnCache;
-my $cache = LWP::ConnCache->new;
-$cache->total_capacity(undef);                                    # no limit
-$lwp->conn_cache($cache);
+    require LWP::ConnCache;
+    my $cache = LWP::ConnCache->new;
+    $cache->total_capacity(undef);                            # no limit
+    $lwp->conn_cache($cache);
+}
 
 my $lwp_uc = LWP::UserAgent->new(
                                  show_progress => 1,
@@ -430,10 +432,10 @@ my $lwp_uc = LWP::UserAgent->new(
                                 );
 
 my $start_url = $main_url . '/wiki/' . escape_lang($lang);
-my $req       = $lwp_uc->get($start_url);
-$req->is_success || die $req->status_line;
+my $resp      = $lwp_uc->get($start_url);
+$resp->is_success || die $resp->status_line;
 
-my $content = $req->decoded_content;
+my $content = $resp->decoded_content;
 my $tasks   = extract_tasks($content, $lang);
 
 foreach my $task (@{$tasks}) {
@@ -442,11 +444,11 @@ foreach my $task (@{$tasks}) {
     my $title = $task->{title};
     my $url   = "$main_url/wiki/$name";
 
-    my $req = $lwp->get($url);
+    my $resp = $lwp->get($url);
 
-    if ($req->is_success) {
+    if ($resp->is_success) {
 
-        my $content   = $req->decoded_content;
+        my $content   = $resp->decoded_content;
         my $lang_data = extract_lang($content, $lang) // do { $lwp->uncache; next };
 
         my $header   = "[1]: $url\n\n" . "# [$title][1]\n\n";
@@ -455,6 +457,6 @@ foreach my $task (@{$tasks}) {
         write_to_file($base_dir, $name, $markdown, $overwrite);
     }
     else {
-        warn "[" . $req->status_line . "] Can't fetch: $url\n";
+        warn "[" . $resp->status_line . "] Can't fetch: $url\n";
     }
 }
