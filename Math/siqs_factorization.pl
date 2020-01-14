@@ -45,7 +45,6 @@ use constant {
               FIBONACCI_BOUND           => 500_000,
               TRIAL_DIVISION_LIMIT      => 1_000_000,
               POLLARD_BRENT_ITERATIONS  => 16,
-              POLLARD_RHO_ITERATIONS    => 50_000,
               PHI_FINDER_ITERATIONS     => 100_000,
               FERMAT_ITERATIONS         => 100_000,
               NEAR_POWER_ITERATIONS     => 1_000,
@@ -1532,7 +1531,7 @@ sub find_small_factors ($rem, $factors) {
         next if store_factor(\$rem, $f, $factors);
 
         say "=> Pollard rho-sqrt...";
-        $f = pollard_rho_sqrt_find_factor($rem, ($len > 50 ? 2 : 1) * POLLARD_RHO_ITERATIONS);
+        $f = pollard_rho_sqrt_find_factor($rem, sqrtint(1e9));
         next if store_factor(\$rem, $f, $factors);
 
         say "=> Pollard p-1 (500K)...";
@@ -1543,17 +1542,23 @@ sub find_small_factors ($rem, $factors) {
         $f = fibonacci_factorization($rem, FIBONACCI_BOUND);
         next if store_factor(\$rem, $f, $factors);
 
+        say "=> Pollard rho...";
+        $f = pollard_rho_find_factor($rem, sqrtint(1e10));
+        next if store_factor(\$rem, $f, $factors);
+
         say "=> Pollard p-1 (2M)...";
         $f = pollard_pm1_find_factor($rem, 2_000_000);
         next if store_factor(\$rem, $f, $factors);
 
-        say "=> Pollard rho...";
-        $f = pollard_rho_find_factor($rem, ($len > 50 ? 3 : 2) * POLLARD_RHO_ITERATIONS);
+        say "=> Pollard rho-sqrt...";
+        $f = pollard_rho_sqrt_find_factor($rem, sqrtint(1e11));
         next if store_factor(\$rem, $f, $factors);
 
-        say "=> Pollard rho-sqrt...";
-        $f = pollard_rho_sqrt_find_factor($rem, ($len > 50 ? 6 : 3) * POLLARD_RHO_ITERATIONS);
-        next if store_factor(\$rem, $f, $factors);
+        if ($len > 40) {
+            say "=> Pollard rho...";
+            $f = pollard_rho_find_factor($rem, sqrtint(1e13));
+            next if store_factor(\$rem, $f, $factors);
+        }
 
         if ($len < 150) {
             say "=> Pollard rho-exp...";
@@ -1572,6 +1577,10 @@ sub find_small_factors ($rem, $factors) {
         }
 
         if ($len > 70) {
+            say "=> Pollard rho...";
+            $f = pollard_rho_find_factor($rem, sqrtint(1e14));
+            next if store_factor(\$rem, $f, $factors);
+
             say "=> Pollard p-1 (20M)...";
             $f = pollard_pm1_find_factor($rem, 20_000_000);
             next if store_factor(\$rem, $f, $factors);
@@ -1582,6 +1591,10 @@ sub find_small_factors ($rem, $factors) {
         }
 
         if ($len > 80) {
+            say "=> Pollard rho...";
+            $f = pollard_rho_find_factor($rem, sqrtint(1e15));
+            next if store_factor(\$rem, $f, $factors);
+
             say "=> Pollard p-1 (50M)...";
             $f = pollard_pm1_find_factor($rem, 50_000_000);
             next if store_factor(\$rem, $f, $factors);
