@@ -1531,7 +1531,7 @@ sub find_small_factors ($rem, $factors) {
         next if store_factor(\$rem, $f, $factors);
 
         say "=> Pollard rho-sqrt...";
-        $f = pollard_rho_sqrt_find_factor($rem, sqrtint(1e9));
+        $f = pollard_rho_sqrt_find_factor($rem, int sqrt(1e9));
         next if store_factor(\$rem, $f, $factors);
 
         say "=> Pollard p-1 (500K)...";
@@ -1543,7 +1543,7 @@ sub find_small_factors ($rem, $factors) {
         next if store_factor(\$rem, $f, $factors);
 
         say "=> Pollard rho...";
-        $f = pollard_rho_find_factor($rem, sqrtint(1e10));
+        $f = pollard_rho_find_factor($rem, int sqrt(1e10));
         next if store_factor(\$rem, $f, $factors);
 
         say "=> Pollard p-1 (2M)...";
@@ -1551,12 +1551,12 @@ sub find_small_factors ($rem, $factors) {
         next if store_factor(\$rem, $f, $factors);
 
         say "=> Pollard rho-sqrt...";
-        $f = pollard_rho_sqrt_find_factor($rem, sqrtint(1e11));
+        $f = pollard_rho_sqrt_find_factor($rem, int sqrt(1e11));
         next if store_factor(\$rem, $f, $factors);
 
         if ($len > 40) {
             say "=> Pollard rho...";
-            $f = pollard_rho_find_factor($rem, sqrtint(1e13));
+            $f = pollard_rho_find_factor($rem, int sqrt(1e13));
             next if store_factor(\$rem, $f, $factors);
         }
 
@@ -1578,7 +1578,7 @@ sub find_small_factors ($rem, $factors) {
 
         if ($len > 70) {
             say "=> Pollard rho...";
-            $f = pollard_rho_find_factor($rem, sqrtint(1e14));
+            $f = pollard_rho_find_factor($rem, int sqrt(1e14));
             next if store_factor(\$rem, $f, $factors);
 
             say "=> Pollard p-1 (20M)...";
@@ -1591,12 +1591,16 @@ sub find_small_factors ($rem, $factors) {
         }
 
         if ($len > 80) {
-            say "=> Pollard rho...";
-            $f = pollard_rho_find_factor($rem, sqrtint(1e15));
+            say "=> Pollard rho-sqrt...";
+            $f = pollard_rho_sqrt_find_factor($rem, int sqrt(5e14));
             next if store_factor(\$rem, $f, $factors);
 
             say "=> Pollard p-1 (50M)...";
             $f = pollard_pm1_find_factor($rem, 50_000_000);
+            next if store_factor(\$rem, $f, $factors);
+
+            say "=> Pollard rho...";
+            $f = pollard_rho_find_factor($rem, int sqrt(1e15));
             next if store_factor(\$rem, $f, $factors);
         }
 
