@@ -30,8 +30,10 @@ use ntheory qw(
   valuation logint is_power fromdigits is_square
   );
 
-use Math::Prime::Util::GMP
-  qw(powmod vecprod sqrtint rootint gcd random_prime sieve_primes consecutive_integer_lcm lucas_sequence);
+use Math::Prime::Util::GMP qw(
+  powmod vecprod sqrtint rootint gcd random_prime
+  sieve_primes consecutive_integer_lcm lucas_sequence
+  );
 
 my $ZERO = Math::GMPz->new(0);
 my $ONE  = Math::GMPz->new(1);
@@ -687,7 +689,7 @@ sub siqs_factorize ($n, $nf) {
         say "Finding perfect squares using Gaussian elimination...";
         my $perfect_squares = siqs_solve_matrix_opt($M_opt, $M_n, $M_m);
 
-        say "Finding factors from perfect squares...\n";
+        say "Finding factors from congruences of squares...\n";
         @factors = siqs_find_factors($n, $perfect_squares, $smooth_relations);
 
         if (scalar(@factors) > 1) {
@@ -1281,6 +1283,10 @@ sub miller_rabin_factor ($n, $max_iter) {
     my $r = $s - 1;
     my $d = $D >> $s;
 
+    if ($s > 20 and $max_iter > 10) {
+        $max_iter = 10;
+    }
+
     my $x = Math::GMPz::Rmpz_init();
     my $g = Math::GMPz::Rmpz_init();
 
@@ -1311,6 +1317,10 @@ sub lucas_miller_factor ($n, $max_iter) {
     my $s = Math::GMPz::Rmpz_scan1($D, 0);
     my $r = $s;
     my $d = $D >> $s;
+
+    if ($s > 20 and $max_iter > 10) {
+        $max_iter = 10;
+    }
 
     my $x = Math::GMPz::Rmpz_init();
     my $g = Math::GMPz::Rmpz_init();
@@ -1483,11 +1493,11 @@ sub find_small_factors ($rem, $factors) {
         }
 
         say "=> Miller-Rabin method...";
-        $f = miller_rabin_factor($rem, MILLER_RABIN_ITERATIONS);
+        $f = miller_rabin_factor($rem, ($len > 1000) ? 2 : MILLER_RABIN_ITERATIONS);
         next if store_factor(\$rem, $f, $factors);
 
         say "=> Lucas-Miller method...";
-        $f = lucas_miller_factor($rem, LUCAS_MILLER_ITERATIONS);
+        $f = lucas_miller_factor($rem, ($len > 1000) ? 2 : LUCAS_MILLER_ITERATIONS);
         next if store_factor(\$rem, $f, $factors);
 
         say "=> Phi finder method...";

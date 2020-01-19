@@ -6,9 +6,7 @@
 #   If the Generalized Riemann hypothesis is true, then there is a constant C such that
 #   primality of `n` is the same as every a <= C*(log(n))^2 being a Miller-Rabin witness for `n`.
 
-# Bach (1984) showed that we can use C = 2.
-
-# Assuming the GRH, this primality test runs in polynomial time.
+# Eric Bach (1984) showed that we can use C = 2.
 
 # See also:
 #   https://rosettacode.org/wiki/Miller%E2%80%93Rabin_primality_test#Perl
