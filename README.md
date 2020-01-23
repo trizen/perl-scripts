@@ -399,6 +399,7 @@ A nice collection of day-to-day Perl scripts.
     * [Cartesian product iter](./Math/cartesian_product_iter.pl)
     * [Cartesian product rec](./Math/cartesian_product_rec.pl)
     * [Cauchy numbers of first type](./Math/cauchy_numbers_of_first_type.pl)
+    * [Chebyshev factorization method](./Math/chebyshev_factorization_method.pl)
     * [Chernick-carmichael numbers](./Math/chernick-carmichael_numbers.pl)
     * [Chernick-carmichael numbers bellow limit](./Math/chernick-carmichael_numbers_bellow_limit.pl)
     * [Coin change](./Math/coin_change.pl)
