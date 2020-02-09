@@ -855,18 +855,24 @@ sub fast_power_check ($n, $upto) {
         foreach my $exp (2 .. $upto) {
 
             Math::GMPz::Rmpz_mul_ui($t, $t, $base);
-            Math::GMPz::Rmpz_sub_ui($g, $t, 1);
-            Math::GMPz::Rmpz_gcd($g, $g, $n);
 
-            if (Math::GMPz::Rmpz_cmp_ui($g, 1) > 0 and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
-                return Math::GMPz::Rmpz_init_set($g);
-            }
+            foreach my $k ($base <= 10 ? (1 .. ($base_limit >> 1)) : 1) {
+                Math::GMPz::Rmpz_mul_ui($g, $t, $k);
 
-            Math::GMPz::Rmpz_add_ui($g, $t, 1);
-            Math::GMPz::Rmpz_gcd($g, $g, $n);
+                Math::GMPz::Rmpz_sub_ui($g, $g, 1);
+                Math::GMPz::Rmpz_gcd($g, $g, $n);
 
-            if (Math::GMPz::Rmpz_cmp_ui($g, 1) > 0 and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
-                return Math::GMPz::Rmpz_init_set($g);
+                if (Math::GMPz::Rmpz_cmp_ui($g, 1) > 0 and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
+                    return Math::GMPz::Rmpz_init_set($g);
+                }
+
+                Math::GMPz::Rmpz_mul_ui($g, $t, $k);
+                Math::GMPz::Rmpz_add_ui($g, $g, 1);
+                Math::GMPz::Rmpz_gcd($g, $g, $n);
+
+                if (Math::GMPz::Rmpz_cmp_ui($g, 1) > 0 and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
+                    return Math::GMPz::Rmpz_init_set($g);
+                }
             }
         }
     }
@@ -1576,7 +1582,6 @@ sub find_small_factors ($rem, $factors) {
             if ($len > 70) {
                 say "=> Pollard rho...";
                 pollard_rho_find_factor($rem, int sqrt(1e14));
-
             }
         },
 
