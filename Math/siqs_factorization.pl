@@ -880,6 +880,56 @@ sub fast_power_check ($n, $upto) {
     return undef;
 }
 
+sub cyclotomic_polynomial ($n, $x) {
+
+    my @d;
+    foreach my $p (map { $_->[0] } ntheory::factor_exp($n)) {
+        push @d, map { [$_->[0] * $p, $_->[1] + 1] } @d;
+        push @d, [$p, 1];
+    }
+
+    push @d, [1, 0];
+
+    my $t = Math::GMPz::Rmpz_init();
+    my $u = Math::GMPz::Rmpz_init_set_ui(1);
+    my $v = Math::GMPz::Rmpz_init_set_ui(1);
+
+    foreach my $pp (@d) {
+        Math::GMPz::Rmpz_ui_pow_ui($t, $x, int($n / $pp->[0]));
+        Math::GMPz::Rmpz_sub_ui($t, $t, 1);
+
+        if ($pp->[1] % 2 == 0) {
+            Math::GMPz::Rmpz_mul($u, $u, $t);
+        }
+        else {
+            Math::GMPz::Rmpz_mul($v, $v, $t);
+        }
+    }
+
+    Math::GMPz::Rmpz_divexact($u, $u, $v);
+    return $u;
+}
+
+sub cyclotomic_factorization ($n) {
+
+    my $g = Math::GMPz::Rmpz_init();
+
+    for (my $base = 10 ; $base >= 2 ; $base -= 1) {
+        my $lim = 1 + logint($n, $base);
+
+        foreach my $k (1 .. $lim) {
+            my $c = cyclotomic_polynomial($k, $base);
+            Math::GMPz::Rmpz_gcd($g, $n, $c);
+            if (    Math::GMPz::Rmpz_cmp_ui($g, 1) > 0
+                and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
+                return $g;
+            }
+        }
+    }
+
+    return undef;
+}
+
 sub fibonacci_factorization ($n, $upper_bound) {
 
     # The Fibonacci factorization method, taking
@@ -1469,6 +1519,7 @@ sub find_small_factors ($rem, $factors) {
     # prime factors were found, or otherwise the remaining factor.
 
     my %state = (
+                 cyclotomic_check     => 1,
                  fast_power_check     => 1,
                  fast_fibonacci_check => 1,
                 );
@@ -1499,6 +1550,14 @@ sub find_small_factors ($rem, $factors) {
         sub {
             say "=> HOLF method...";
             holf_find_factor($rem, HOLF_ITERATIONS);
+        },
+
+        sub {
+            $state{cyclotomic_check} || return undef;
+            say "=> Fast cyclotomic check...";
+            my $f = cyclotomic_factorization($rem);
+            $f // do { $state{cyclotomic_check} = 0 };
+            $f;
         },
 
         sub {
