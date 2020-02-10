@@ -21,7 +21,9 @@ sub cubefull_count($n) {
     for my $a (1 .. rootint($n, 5)) {
         for my $b (1 .. rootint(divint($n, powint($a, 5)), 4)) {
             my $t = mulint(powint($a, 5), powint($b, 4));
-            $total += rootint(divint($n, $t), 3) * abs(moebius(mulint($a, $b)));
+            if (gcd($a, $b) == 1 and is_square_free($a) and is_square_free($b)) {
+                $total += rootint(divint($n, $t), 3);
+            }
         }
     }
 
