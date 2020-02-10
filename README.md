@@ -609,6 +609,7 @@ A nice collection of day-to-day Perl scripts.
     * [Nth smooth number](./Math/nth_smooth_number.pl)
     * [Number of conditional GCDs](./Math/number_of_conditional_GCDs.pl)
     * [Number of connected permutations](./Math/number_of_connected_permutations.pl)
+    * [Number of cube-full numbers](./Math/number_of_cube-full_numbers.pl)
     * [Number of partitions into 2 distinct positive cubes](./Math/number_of_partitions_into_2_distinct_positive_cubes.pl)
     * [Number of partitions into 2 distinct positive squares](./Math/number_of_partitions_into_2_distinct_positive_squares.pl)
     * [Number of partitions into 2 positive squares](./Math/number_of_partitions_into_2_positive_squares.pl)
