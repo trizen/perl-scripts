@@ -880,7 +880,7 @@ sub fast_power_check ($n, $upto) {
     return undef;
 }
 
-sub cyclotomic_polynomial ($n, $x) {
+sub cyclotomic_polynomial ($n, $r, $x) {    # not really
 
     my @d;
     foreach my $p (map { $_->[0] } ntheory::factor_exp($n)) {
@@ -895,8 +895,19 @@ sub cyclotomic_polynomial ($n, $x) {
     my $v = Math::GMPz::Rmpz_init_set_ui(1);
 
     foreach my $pp (@d) {
+
         Math::GMPz::Rmpz_ui_pow_ui($t, $x, int($n / $pp->[0]));
+        Math::GMPz::Rmpz_mul_ui($t, $t, $r) if ($r > 1);
         Math::GMPz::Rmpz_sub_ui($t, $t, 1);
+
+        if ($pp->[1] % 2 == 0) {
+            Math::GMPz::Rmpz_mul($u, $u, $t);
+        }
+        else {
+            Math::GMPz::Rmpz_mul($v, $v, $t);
+        }
+
+        Math::GMPz::Rmpz_add_ui($t, $t, 2);
 
         if ($pp->[1] % 2 == 0) {
             Math::GMPz::Rmpz_mul($u, $u, $t);
@@ -906,23 +917,32 @@ sub cyclotomic_polynomial ($n, $x) {
         }
     }
 
-    Math::GMPz::Rmpz_divexact($u, $u, $v);
+    if (Math::GMPz::Rmpz_divisible_ui_p($u, $v)) {
+        Math::GMPz::Rmpz_divexact($u, $u, $v);
+    }
+    else {
+        Math::GMPz::Rmpz_mul($u, $u, $v);
+    }
+
     return $u;
 }
 
 sub cyclotomic_factorization ($n) {
 
-    my $g = Math::GMPz::Rmpz_init();
+    my $g          = Math::GMPz::Rmpz_init();
+    my $base_limit = vecmin(logint($n, 2), 150);
 
-    for (my $base = 10 ; $base >= 2 ; $base -= 1) {
+    for (my $base = $base_limit ; $base >= 2 ; $base -= 1) {
         my $lim = 1 + logint($n, $base);
 
         foreach my $k (1 .. $lim) {
-            my $c = cyclotomic_polynomial($k, $base);
-            Math::GMPz::Rmpz_gcd($g, $n, $c);
-            if (    Math::GMPz::Rmpz_cmp_ui($g, 1) > 0
-                and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
-                return $g;
+            foreach my $r ($base <= 10 ? (1 .. ($base_limit >> 1)) : 1) {
+                my $c = cyclotomic_polynomial($k, $r, $base);
+                Math::GMPz::Rmpz_gcd($g, $n, $c);
+                if (    Math::GMPz::Rmpz_cmp_ui($g, 1) > 0
+                    and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
+                    return $g;
+                }
             }
         }
     }
