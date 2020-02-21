@@ -520,6 +520,7 @@ A nice collection of day-to-day Perl scripts.
     * [Is sum of two cubes](./Math/is_sum_of_two_cubes.pl)
     * [Is sum of two squares](./Math/is_sum_of_two_squares.pl)
     * [Iterative difference of central divisors to reach zero](./Math/iterative_difference_of_central_divisors_to_reach_zero.pl)
+    * [K-imperfect numbers](./Math/k-imperfect_numbers.pl)
     * [K-powerful numbers](./Math/k-powerful_numbers.pl)
     * [Karatsuba multiplication](./Math/karatsuba_multiplication.pl)
     * [Kempner binomial numbers](./Math/kempner_binomial_numbers.pl)
