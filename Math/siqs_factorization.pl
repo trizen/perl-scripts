@@ -1703,21 +1703,21 @@ sub find_small_factors ($rem, $factors) {
         },
 
         sub {
-            if ($len > 80) {
+            if ($len > 70) {
                 say "=> Pollard rho-sqrt...";
                 pollard_rho_sqrt_find_factor($rem, int sqrt(5e14));
             }
         },
 
         sub {
-            if ($len > 80) {
+            if ($len > 70) {
                 say "=> Pollard p-1 (50M)...";
                 pollard_pm1_factorial_find_factor($rem, 1_000_000, 50_000_000);
             }
         },
 
         sub {
-            if ($len > 80) {
+            if ($len > 70) {
                 say "=> Pollard rho...";
                 pollard_rho_find_factor($rem, int sqrt(1e15));
             }

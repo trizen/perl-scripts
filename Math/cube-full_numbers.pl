@@ -17,19 +17,22 @@ use experimental qw(signatures);
 
 sub cubefull_numbers ($n) {    # cubefull numbers <= n
 
-    my %cubefull;
+    my @cubeful;
 
     for my $a (1 .. rootint($n, 5)) {
+        is_square_free($a) || next;
         for my $b (1 .. rootint(divint($n, powint($a, 5)), 4)) {
+            gcd($a, $b) == 1 or next;
+            is_square_free($b) || next;
             my $v = mulint(powint($a, 5), powint($b, 4));
             foreach my $c (1 .. rootint(divint($n, $v), 3)) {
                 my $z = vecprod($v, $c, $c, $c);
-                undef $cubefull{$z};
+                push @cubeful, $z;
             }
         }
     }
 
-    sort { $a <=> $b } keys %cubefull;
+    sort { $a <=> $b } @cubeful;
 }
 
 say join(', ', cubefull_numbers(1e4));

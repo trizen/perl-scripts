@@ -19,11 +19,12 @@ sub cubefull_count($n) {
     my $total = 0;
 
     for my $a (1 .. rootint($n, 5)) {
+        is_square_free($a) || next;
         for my $b (1 .. rootint(divint($n, powint($a, 5)), 4)) {
+            gcd($a, $b) == 1 or next;
+            is_square_free($b) || next;
             my $t = mulint(powint($a, 5), powint($b, 4));
-            if (gcd($a, $b) == 1 and is_square_free($a) and is_square_free($b)) {
-                $total += rootint(divint($n, $t), 3);
-            }
+            $total += rootint(divint($n, $t), 3);
         }
     }
 
