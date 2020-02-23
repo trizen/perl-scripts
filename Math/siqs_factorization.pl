@@ -4,13 +4,10 @@
 
 This script factorizes a natural number given as a command line
 parameter into its prime factors. It first attempts to use trial
-division to find very small factors, then uses Brent's version of the
-Pollard rho algorithm [1] to find slightly larger factors. If any large
+division to find very small factors, then uses other special-purpose
+factorization methods to find slightly larger factors. If any large
 factors remain, it uses the Self-Initializing Quadratic Sieve (SIQS) [2]
 to factorize those.
-
-[1] Brent, Richard P. 'An improved Monte Carlo factorization algorithm.'
-    BIT Numerical Mathematics 20.2 (1980): 176-184.
 
 [2] Contini, Scott Patrick. 'Factoring integers with the self-
     initializing quadratic sieve.' (1997).
@@ -26,13 +23,12 @@ use POSIX qw(ULONG_MAX);
 use experimental qw(signatures);
 
 use ntheory qw(
-  sqrtmod invmod is_prime factor_exp vecmin urandomm
-  valuation logint is_power fromdigits is_square
+  urandomm valuation sqrtmod invmod random_prime factor_exp vecmin
   );
 
 use Math::Prime::Util::GMP qw(
-  powmod vecprod sqrtint rootint gcd random_prime
-  sieve_primes consecutive_integer_lcm lucas_sequence
+  is_power powmod vecprod sqrtint rootint logint is_prime
+  gcd sieve_primes consecutive_integer_lcm lucas_sequence
   );
 
 my $ZERO = Math::GMPz->new(0);
@@ -46,7 +42,6 @@ use constant {
               LOOK_FOR_SMALL_FACTORS    => 1,
               FIBONACCI_BOUND           => 500_000,
               TRIAL_DIVISION_LIMIT      => 1_000_000,
-              POLLARD_BRENT_ITERATIONS  => 16,
               PHI_FINDER_ITERATIONS     => 100_000,
               FERMAT_ITERATIONS         => 100_000,
               NEAR_POWER_ITERATIONS     => 1_000,
@@ -381,7 +376,11 @@ sub siqs_build_matrix_opt($M) {
         }
     }
 
-    return ([map { Math::GMPz->new(fromdigits(scalar reverse($_), 2)) } @cols_binary], scalar(@$M), $m);
+#<<<
+    return ([map {
+        Math::GMPz::Rmpz_init_set_str(scalar reverse($_), 2)
+    } @cols_binary], scalar(@$M), $m);
+#>>>
 }
 
 sub find_pivot_column_opt ($M, $j) {
@@ -744,80 +743,6 @@ sub trial_division_small_primes ($n) {
     return ($factors, $rem);
 }
 
-sub pollard_brent_f ($c, $n, $x) {
-
-    # Return f(x) = (x^2 + c)%n. Assume c < n.
-
-    my $x1 = ($x * $x) % $n + $c;
-
-    if ($x1 >= $n) {
-        $x1 -= $n;
-    }
-
-    # (($x1 >= 0) && ($x1 < $n)) or die 'error';
-
-    return $x1;
-}
-
-sub pollard_brent_find_factor ($n, $max_iter) {
-
-    # Perform Brent's variant of the Pollard rho factorization
-    # algorithm to attempt to a non-trivial factor of the given number n.
-    # If max_iter > 0, return undef if no factors were found within
-    # max_iter iterations.
-
-    my ($y, $c, $m) = (map { 1 + urandomm($n - 1) } 1 .. 3);
-    my ($r, $q, $g) = (1, 1, 1);
-
-    my $i = 0;
-    my ($x, $ys);
-
-    while ($g eq '1') {
-        $x = $y;
-
-        for (1 .. $r) {
-            $y = pollard_brent_f($c, $n, $y);
-        }
-
-        my $k = 0;
-
-        while ($k < $r and $g eq '1') {
-            $ys = $y;
-
-            for (1 .. vecmin($m, $r - $k)) {
-                $y = pollard_brent_f($c, $n, $y);
-                $q = ($q * abs($x - $y)) % $n;
-            }
-
-            $g = gcd($q, $n);
-            $k += $m;
-        }
-
-        $r <<= 1;
-
-        if (++$i >= $max_iter) {
-            return undef;
-        }
-    }
-
-    $g = Math::GMPz->new($g);
-
-    if ($g == $n) {
-        for (; ;) {
-            $ys = pollard_brent_f($c, $n, $ys);
-            $g  = gcd($x - $ys, $n);
-
-            if ($g ne '1') {
-                $g = Math::GMPz->new($g);
-                return undef if ($g == $n);
-                return $g;
-            }
-        }
-    }
-
-    return $g;
-}
-
 sub fast_fibonacci_factor ($n, $upto) {
 
     foreach my $k (2 .. $upto) {
@@ -883,7 +808,7 @@ sub fast_power_check ($n, $upto) {
 sub cyclotomic_polynomial ($n, $x) {
 
     my @d;
-    foreach my $p (map { $_->[0] } ntheory::factor_exp($n)) {
+    foreach my $p (map { $_->[0] } factor_exp($n)) {
         push @d, map { [$_->[0] * $p, $_->[1] + 1] } @d;
         push @d, [$p, 1];
     }
@@ -1510,7 +1435,6 @@ sub simple_cfrac_find_factor ($n, $max_iter) {
 
 sub store_factor ($rem, $f, $factors) {
 
-    $f // return;
     $f || return;
 
     if (ref($f) ne 'Math::GMPz') {
@@ -1556,10 +1480,8 @@ sub store_factor ($rem, $f, $factors) {
 
 sub find_small_factors ($rem, $factors) {
 
-    # Perform up to max_iter iterations of Brent's variant of the
-    # Pollard rho factorization algorithm to attempt to find small
-    # prime factors. Restart the algorithm each time a factor was found.
-    # Add all identified prime factors to factors, and return 1 if all
+    # Some special-purpose factorization methods to attempt to find small prime factors.
+    # Collect the identified prime factors in the `$factors` array and return 1 if all
     # prime factors were found, or otherwise the remaining factor.
 
     my %state = (
@@ -1667,11 +1589,6 @@ sub find_small_factors ($rem, $factors) {
                 say "=> Pollard rho-exp...";
                 pollard_rho_exp_find_factor($rem, ($len > 50 ? 2 : 1) * 200);
             }
-        },
-
-        sub {
-            say "=> Pollard rho (Brent)...";
-            pollard_brent_find_factor($rem, POLLARD_BRENT_ITERATIONS);
         },
 
         sub {
@@ -1790,9 +1707,7 @@ sub check_perfect_power ($n) {
 sub find_prime_factors ($n, $factors) {
 
     # Return one or more prime factors of the given number n. Assume
-    # that n is not a prime and does not have very small factors, and that
-    # the global small_primes has already been initialized. Do not return
-    # duplicate factors.
+    # that n is not a prime and does not have very small factors.
 
     my %factors;
 
@@ -1817,9 +1732,8 @@ sub find_prime_factors ($n, $factors) {
 
 sub find_all_prime_factors ($n, $factors) {
 
-    # Return all prime factors of the given number n. Assume that n
-    # does not have very small factors and that the global small_primes
-    # has already been initialized.
+    # Return all prime factors of the given number n.
+    # Assume that n does not have very small factors.
 
     if (!ref($n)) {
         $n = Math::GMPz->new($n);
@@ -2019,7 +1933,13 @@ sub special_form_factorization ($n) {
         for my $j (1, 0) {
 
             my $k = $root + $j;
-            my $u = Math::GMPz->new(powmod($k, $e, $n));
+            my $u = Math::GMPz::Rmpz_init();
+
+            ref($k)
+              ? Math::GMPz::Rmpz_set($u, $k)
+              : Math::GMPz::Rmpz_set_ui($u, $k);
+
+            Math::GMPz::Rmpz_powm_ui($u, $u, $e, $n);
 
             foreach my $z ($u, $n - $u) {
                 if (Math::GMPz::Rmpz_perfect_power_p($z)) {
@@ -2071,8 +1991,8 @@ sub special_form_factorization ($n) {
             my $x  = 4 * $r1**4;
             my $dx = $n - $x;
 
-            if (is_power($dx, 4, \my $r2)) {
-                $r2 = Math::GMPz->new($r2);
+            if (is_power($dx, 4)) {
+                my $r2 = Math::GMPz->new(rootint($dx, 4));
                 say "[*] Sophie Germain special form detected: $r2^4 + 4*$r1^4";
                 push @sophie_params, [$r2, $r1];
             }
@@ -2083,8 +2003,8 @@ sub special_form_factorization ($n) {
             my $y  = $r1**4;
             my $dy = $n - $y;
 
-            if (($dy % 4 == 0) and is_power($dy >> 2, 4, \my $r2)) {
-                $r2 = Math::GMPz->new($r2);
+            if (($dy % 4 == 0) and is_power($dy >> 2, 4)) {
+                my $r2 = Math::GMPz->new(rootint($dy >> 2, 4));
                 say "[*] Sophie Germain special form detected: $r1^4 + 4*$r2^4";
                 push @sophie_params, [$r1, $r2];
             }
