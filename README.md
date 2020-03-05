@@ -425,6 +425,7 @@ A nice collection of day-to-day Perl scripts.
     * [Cosmic calendar](./Math/cosmic_calendar.pl)
     * [Count of cube-full numbers](./Math/count_of_cube-full_numbers.pl)
     * [Count of k-powerful numbers](./Math/count_of_k-powerful_numbers.pl)
+    * [Count of smooth numbers](./Math/count_of_smooth_numbers.pl)
     * [Count subtriangles](./Math/count_subtriangles.pl)
     * [Cube-full numbers](./Math/cube-full_numbers.pl)
     * [Cuboid](./Math/cuboid.pl)
