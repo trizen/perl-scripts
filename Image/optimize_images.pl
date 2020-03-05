@@ -20,6 +20,8 @@ sub optimize_JPEGs ($files) {
     system(
            "jpegoptim",
            "--preserve",    # preserve file modification times
+           ##'--max=90',
+           ##'--all-normal',
            @$files
           );
 }

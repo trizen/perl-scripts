@@ -1,7 +1,9 @@
 #!/usr/bin/perl
 
-# A simple implementation of the Karatsuba multiplication,
-# which was the first subquadratic-time algorithm ever invented.
+# A simple implementation of the Karatsuba multiplication.
+
+# See also:
+#   https://en.wikipedia.org/wiki/Karatsuba_algorithm
 
 use 5.020;
 use strict;

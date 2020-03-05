@@ -13,24 +13,31 @@ use 5.010;
 use strict;
 use warnings;
 
-use ntheory qw(factor sqrtint vecmax);
+use ntheory qw(factor_exp sqrtint vecmax);
 
 sub pseudo_square_root {
     my ($n) = @_;
 
-    my $lim     = sqrtint($n);
-    my @factors = grep { $_ <= $lim } factor($n);
+    my $limit = sqrtint($n);
 
-    my @d = (1);
+    my @d  = (1);
+    my @pp = grep { $_->[0] <= $limit } factor_exp($n);
 
-    my %seen;
-    while (my $p = shift(@factors)) {
+    foreach my $pp (@pp) {
+
+        my $p = $pp->[0];
+        my $e = $pp->[1];
+
         my @t;
-        foreach my $d (@d) {
-            if ($p * $d <= $lim and !$seen{$p * $d}++) {
-                push @t, $p * $d;
+        my $r = 1;
+
+        for my $i (1 .. $e) {
+            $r *= $p;
+            foreach my $u (@d) {
+                push(@t, $u * $r) if ($u * $r <= $limit);
             }
         }
+
         push @d, @t;
     }
 
