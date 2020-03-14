@@ -971,8 +971,7 @@ sub lucas_factorization ($n, $d) {
         return $t;
     }
 
-    Math::GMPz::Rmpz_sub_ui($t, $V1, 2);
-    Math::GMPz::Rmpz_gcd($t, $t, $n);
+    Math::GMPz::Rmpz_gcd($t, $V1, $n);
 
     if (    Math::GMPz::Rmpz_cmp_ui($t, 1) > 0
         and Math::GMPz::Rmpz_cmp($t, $n) < 0) {
@@ -994,8 +993,7 @@ sub lucas_factorization ($n, $d) {
             return $t;
         }
 
-        Math::GMPz::Rmpz_sub_ui($t, $V1, 2);
-        Math::GMPz::Rmpz_gcd($t, $t, $n);
+        Math::GMPz::Rmpz_gcd($t, $V1, $n);
 
         if (    Math::GMPz::Rmpz_cmp_ui($t, 1) > 0
             and Math::GMPz::Rmpz_cmp($t, $n) < 0) {
