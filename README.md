@@ -424,6 +424,8 @@ A nice collection of day-to-day Perl scripts.
     * [Conversion of digits to number subquadratic algorithm](./Math/conversion_of_digits_to_number_subquadratic_algorithm.pl)
     * [Cosmic calendar](./Math/cosmic_calendar.pl)
     * [Count of cube-full numbers](./Math/count_of_cube-full_numbers.pl)
+    * [Count of integers with gpf(n) = p](./Math/count_of_integers_with_gpf(n)%20=%20p.pl)
+    * [Count of integers with lpf(n) = p](./Math/count_of_integers_with_lpf(n)%20=%20p.pl)
     * [Count of k-powerful numbers](./Math/count_of_k-powerful_numbers.pl)
     * [Count of smooth numbers](./Math/count_of_smooth_numbers.pl)
     * [Count subtriangles](./Math/count_subtriangles.pl)
