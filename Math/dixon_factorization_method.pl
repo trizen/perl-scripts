@@ -126,8 +126,8 @@ sub dixon_factorization ($n, $verbose = 0) {
         return @factors;
     }
 
-    my $B  = 8 * int(exp(sqrt(log("$n") * log(log("$n"))) / 2));                              # B-smooth limit
-    my $nf = int(log(log("$n"))) * int(exp(sqrt(log("$n") * log(log("$n"))))**(sqrt(2) / 4)); # number of primes in factor-base
+    my $B  = 8 * int(exp(sqrt(log("$n") * log(log("$n"))) / 2));               # B-smooth limit
+    my $nf = 2 * int(exp(sqrt(log("$n") * log(log("$n"))))**(sqrt(2) / 4));    # number of primes in factor-base
 
     my @factor_base = (2);
 
@@ -136,7 +136,8 @@ sub dixon_factorization ($n, $verbose = 0) {
             if (Math::GMPz::Rmpz_kronecker_ui($n, $_) >= 0) {
                 push @factor_base, $_;
             }
-        } 3, $B;
+        }
+        3, $B;
     }
     else {
         for (my $p = 3 ; @factor_base < $nf ; $p = next_prime($p)) {
@@ -173,9 +174,11 @@ sub dixon_factorization ($n, $verbose = 0) {
     my (@A, @Q);
 
     my $u = Math::GMPz::Rmpz_init();
+    my $t = Math::GMPz::Rmpz_init();
     my $v = Math::GMPz::Rmpz_init();
 
     Math::GMPz::Rmpz_sqrt($u, $n);
+    Math::GMPz::Rmpz_sqrt($t, $n);
 
     while (1) {
 
@@ -185,25 +188,34 @@ sub dixon_factorization ($n, $verbose = 0) {
         # v = (u*u) % n
         Math::GMPz::Rmpz_powm_ui($v, $u, 2, $n);
 
-#<<<
-        if (Math::GMPz::Rmpz_perfect_square_p($v)) {
-            my $g = Math::GMPz->new(gcd($u - Math::GMPz->new(sqrtint($v)), $n));
-
-            if ($g > 1 and $g < $n) {
-                return sort { $a <=> $b } (
-                    __SUB__->($g, $verbose),
-                    __SUB__->($n / $g, $verbose)
-                );
-            }
-        }
-#>>>
-
         if (is_smooth_over_prod($v, $FP)) {
             my @factors = factor_exp($v);
 
             if (@factors) {
                 push @A, exponents_signature(@factors);
                 push @Q, [map { Math::GMPz::Rmpz_init_set($_) } ($u, $v)];
+            }
+
+            if ($verbose) {
+                printf("Progress: %d/%d relations.\r", scalar(@A), $L);
+            }
+
+            last if (@A >= $L);
+        }
+
+        # t -= 1
+        Math::GMPz::Rmpz_sub_ui($t, $t, 1);
+
+        # v = (t*t) % n
+        Math::GMPz::Rmpz_powm_ui($v, $t, 2, $n);
+        Math::GMPz::Rmpz_sub($v, $n, $v);
+
+        if (is_smooth_over_prod($v, $FP)) {
+            my @factors = factor_exp($v);
+
+            if (@factors) {
+                push @A, exponents_signature(@factors);
+                push @Q, [map { Math::GMPz::Rmpz_init_set($_) } ($t, $v)];
             }
 
             if ($verbose) {
