@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Generate the generalized Hamming numbers bellow a certain limit, given a set of primes.
+# Generate the generalized Hamming numbers below a certain limit, given a set of primes.
 
 use 5.020;
 use warnings;
@@ -20,6 +20,6 @@ sub hamming_numbers ($limit, $primes) {
     return \@h;
 }
 
-# Example: 5-smooth numbers bellow 100
+# Example: 5-smooth numbers below 100
 my $h = hamming_numbers(100, [2, 3, 5]);
 say join(', ', sort { $a <=> $b } @$h);

@@ -2,7 +2,7 @@
 
 # The elliptic-curve factorization method (ECM), due to Hendrik Lenstra.
 
-# Algorithm presented in the bellow video:
+# Algorithm presented in the below video:
 #   https://www.youtube.com/watch?v=2JlpeQWtGH8
 
 # See also:

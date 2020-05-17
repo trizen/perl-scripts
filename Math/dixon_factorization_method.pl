@@ -75,7 +75,7 @@ sub is_smooth_over_prod ($n, $k) {
     while (Math::GMPz::Rmpz_cmp_ui($g, 1) > 0) {
         Math::GMPz::Rmpz_remove($t, $t, $g);
         return 1 if Math::GMPz::Rmpz_cmp_ui($t, 1) == 0;
-        Math::GMPz::Rmpz_gcd($g, $t, $k);
+        Math::GMPz::Rmpz_gcd($g, $t, $g);
     }
 
     return 0;

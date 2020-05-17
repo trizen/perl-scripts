@@ -14,7 +14,7 @@ use warnings;
 
 use POSIX qw(floor ceil);
 
-# Based on the recursive function described bellow:
+# Based on the recursive function described below:
 # http://numberworld.blogspot.ro/2013/09/sum-of-divisors-function-eulers.html
 
 sub partitions_count {

@@ -47,7 +47,7 @@ sub p {
     (3 * $_[0]**2 - $_[0]) / 2;
 }
 
-# Based on the recursive function described bellow:
+# Based on the recursive function described below:
 # http://numberworld.blogspot.ro/2013/09/sum-of-divisors-function-eulers.html
 
 sub partitions_count {

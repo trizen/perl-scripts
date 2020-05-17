@@ -4,7 +4,7 @@
 # Date: 22 July 2018
 # https://github.com/trizen
 
-# Generate all the extended Chernick's Carmichael numbers bellow a certain limit.
+# Generate all the extended Chernick's Carmichael numbers below a certain limit.
 
 # OEIS sequences:
 #   https://oeis.org/A317126
@@ -50,7 +50,7 @@ for (my $n = 3 ; ; ++$n) {
     $multiplier *= 5 if ($n > 5);
 
     # Generate the extended Chernick numbers with n distinct prime factors,
-    # that are also Carmichael numbers, bellow the limit we're looking for.
+    # that are also Carmichael numbers, below the limit we're looking for.
     for (my $k = 1 ; ; ++$k) {
 
         my $m = $multiplier * $k;

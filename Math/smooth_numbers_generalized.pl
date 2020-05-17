@@ -4,7 +4,7 @@
 # Date: 06 March 2019
 # https://github.com/trizen
 
-# Generalized algorithm for generating numbers that are smooth over a set A of primes, bellow a given limit.
+# Generalized algorithm for generating numbers that are smooth over a set A of primes, below a given limit.
 
 use 5.020;
 use warnings;

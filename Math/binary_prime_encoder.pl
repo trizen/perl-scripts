@@ -5,9 +5,9 @@
 # Date: 22 September 2016
 # https://github.com/trizen
 
-# Encode prime numbers bellow a certain limit into a large number.
+# Encode prime numbers below a certain limit into a large number.
 
-# Example for primes bellow 7:
+# Example for primes below 7:
 #
 #   x = 110101
 #
@@ -71,9 +71,9 @@ sub decode_primes {
     @primes;
 }
 
-say "Encoded primes bellow 100: ", encode_primes(100);
-say "Decoded primes bellow 100: ", join(' ', decode_primes(encode_primes(100)));
+say "Encoded primes below 100: ", encode_primes(100);
+say "Decoded primes below 100: ", join(' ', decode_primes(encode_primes(100)));
 
 __END__
-Encoded primes bellow 100: 65709066564613793476872782081
-Decoded primes bellow 100: 2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97
+Encoded primes below 100: 65709066564613793476872782081
+Decoded primes below 100: 2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97

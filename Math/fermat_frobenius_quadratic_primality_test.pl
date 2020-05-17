@@ -61,4 +61,4 @@ foreach my $n (1 .. 1e6) {
     }
 }
 
-say "There are $count primes bellow 10^6";
+say "There are $count primes below 10^6";

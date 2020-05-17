@@ -307,7 +307,7 @@ sub siqs_trial_divide ($n, $factor_base_info) {
             return [map { [$factor_index->{$_->[0]}, $_->[1]] } factor_exp($n)];
         }
 
-        Math::GMPz::Rmpz_gcd($g, $t, $factor_prod);
+        Math::GMPz::Rmpz_gcd($g, $t, $g);
     }
 
     return undef;
