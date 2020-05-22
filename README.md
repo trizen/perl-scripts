@@ -426,6 +426,7 @@ A nice collection of day-to-day Perl scripts.
     * [Count of cube-full numbers](./Math/count_of_cube-full_numbers.pl)
     * [Count of integers with gpf(n) = p](./Math/count_of_integers_with_gpf(n)%20=%20p.pl)
     * [Count of integers with lpf(n) = p](./Math/count_of_integers_with_lpf(n)%20=%20p.pl)
+    * [Count of k-almost primes](./Math/count_of_k-almost_primes.pl)
     * [Count of k-powerful numbers](./Math/count_of_k-powerful_numbers.pl)
     * [Count of smooth numbers](./Math/count_of_smooth_numbers.pl)
     * [Count of smooth numbers with k factors](./Math/count_of_smooth_numbers_with_k_factors.pl)
