@@ -45,7 +45,7 @@ use constant {
               PHI_FINDER_ITERATIONS     => 100_000,
               FERMAT_ITERATIONS         => 100_000,
               NEAR_POWER_ITERATIONS     => 1_000,
-              CFRAC_ITERATIONS          => 15_000,
+              CFRAC_ITERATIONS          => 50_000,
               HOLF_ITERATIONS           => 100_000,
               MILLER_RABIN_ITERATIONS   => 100,
               LUCAS_MILLER_ITERATIONS   => 100,
@@ -1030,27 +1030,41 @@ sub pollard_pm1_lcm_find_factor ($n, $bound) {
     return undef;
 }
 
-sub pollard_pm1_factorial_find_factor ($n, $bound1, $bound2) {
+sub pollard_pm1_factorial_find_factor ($n, $bound2) {
 
     # Pollard p-1 method (factorial).
+
+    my $bound1 = 1e5;
+
+    state %cache;
 
     my $g = Math::GMPz::Rmpz_init();
     my $t = Math::GMPz::Rmpz_init_set_ui(random_prime(1e6));
 
-    foreach my $k (2 .. $bound1) {
+    if (exists $cache{$n}) {
+        $t      = $cache{$n}{value};
+        $bound1 = $cache{$n}{bound};
+    }
+    else {
+        foreach my $k (2 .. $bound1) {
 
-        Math::GMPz::Rmpz_powm_ui($t, $t, $k, $n);
-        Math::GMPz::Rmpz_sub_ui($g, $t, 1);
-        Math::GMPz::Rmpz_gcd($g, $g, $n);
+            Math::GMPz::Rmpz_powm_ui($t, $t, $k, $n);
+            Math::GMPz::Rmpz_sub_ui($g, $t, 1);
+            Math::GMPz::Rmpz_gcd($g, $g, $n);
 
-        if (Math::GMPz::Rmpz_cmp_ui($g, 1) > 0) {
+            if (Math::GMPz::Rmpz_cmp_ui($g, 1) > 0) {
 
-            if ($g == $n) {
-                return undef;
+                if ($g == $n) {
+                    return undef;
+                }
+
+                return $g;
             }
-
-            return $g;
         }
+    }
+
+    while ($bound1 >= $bound2) {
+        $bound2 *= 2;
     }
 
     foreach my $p (sieve_primes($bound1, $bound2)) {
@@ -1069,6 +1083,9 @@ sub pollard_pm1_factorial_find_factor ($n, $bound1, $bound2) {
         }
     }
 
+    $cache{$n}{value} = $t;
+    $cache{$n}{bound} = $bound2 + 1;
+
     return undef;
 }
 
@@ -1077,9 +1094,16 @@ sub pollard_rho_find_factor ($n, $max_iter) {
     # Pollard rho method, using the polynomial:
     #   f(x) = x^2 - 1, with x_0 = 1+floor(log_2(n)).
 
+    state %cache;
+
     my $u = logint($n, 2) + 1;
     my $x = Math::GMPz::Rmpz_init_set_ui($u);
     my $y = Math::GMPz::Rmpz_init_set_ui($u * $u - 1);
+
+    if (exists $cache{$n}) {
+        $x = $cache{$n}{x};
+        $y = $cache{$n}{y};
+    }
 
     my $g = Math::GMPz::Rmpz_init();
 
@@ -1103,7 +1127,31 @@ sub pollard_rho_find_factor ($n, $max_iter) {
         }
     }
 
+    $cache{$n}{x} = $x;
+    $cache{$n}{y} = $y;
+
     return undef;
+}
+
+sub pollard_pm1_ntheory_factor ($n, $max_iter) {
+    my ($p, $q) = Math::Prime::Util::GMP::pminus1_factor($n, $max_iter);
+    return $p if defined($q);
+    return pollard_pm1_factorial_find_factor($n, $max_iter);
+}
+
+sub williams_pp1_ntheory_factor ($n, $max_iter) {
+    my ($p, $q) = Math::Prime::Util::GMP::pplus1_factor($n, $max_iter);
+    return $p if defined($q);
+    return undef;
+}
+
+sub pollard_rho_ntheory_factor ($n, $max_iter) {
+    my ($p, $q) =
+        (rand(1) < 0.5)
+      ? (Math::Prime::Util::GMP::prho_factor($n, $max_iter))
+      : (Math::Prime::Util::GMP::pbrent_factor($n, $max_iter));
+    return $p if defined($q);
+    return pollard_rho_find_factor($n, $max_iter >> 1);
 }
 
 sub pollard_rho_sqrt_find_factor ($n, $max_iter) {
@@ -1517,6 +1565,26 @@ sub find_small_factors ($rem, $factors) {
         },
 
         sub {
+            say "=> CFRAC simple...";
+            simple_cfrac_find_factor($rem, CFRAC_ITERATIONS);
+        },
+
+        sub {
+            say "=> Pollard rho (10M)...";
+            pollard_rho_ntheory_factor($rem, int sqrt(1e10));
+        },
+
+        sub {
+            say "=> Pollard p-1 (500K)...";
+            pollard_pm1_ntheory_factor($rem, 500_000);
+        },
+
+        sub {
+            say "=> Williams p±1 (500K)...";
+            williams_pp1_ntheory_factor($rem, 500_000);
+        },
+
+        sub {
             $state{cyclotomic_check} || return undef;
             say "=> Fast cyclotomic check...";
             my $f = cyclotomic_factorization($rem);
@@ -1540,46 +1608,51 @@ sub find_small_factors ($rem, $factors) {
             $f;
         },
 
-        sub {
-            say "=> CFRAC simple...";
-            simple_cfrac_find_factor($rem, ($len > 50 ? 2 : 1) * CFRAC_ITERATIONS);
-        },
+        #~ sub {
+        #~ say "=> Fibonacci p±1...";
+        #~ fibonacci_factorization($rem, FIBONACCI_BOUND);
+        #~ },
 
         sub {
-            say "=> Pollard rho-sqrt...";
-            pollard_rho_sqrt_find_factor($rem, int sqrt(1e10));
-        },
-
-        sub {
-            say "=> Pollard p-1 (1M)...";
-            pollard_pm1_factorial_find_factor($rem, 20_000, 1_000_000);
-        },
-
-        sub {
-            say "=> Fibonacci p±1...";
-            fibonacci_factorization($rem, FIBONACCI_BOUND);
-        },
-
-        sub {
-            say "=> Pollard rho...";
-            pollard_rho_find_factor($rem, int sqrt(1e11));
+            say "=> Pollard rho (12M)...";
+            pollard_rho_ntheory_factor($rem, int sqrt(1e12));
         },
 
         sub {
             say "=> Pollard p-1 (3M)...";
-            pollard_pm1_factorial_find_factor($rem, 100_000, 3_000_000);
+            pollard_pm1_ntheory_factor($rem, 1_000_000);
         },
 
         sub {
-            say "=> Pollard rho-sqrt...";
-            pollard_rho_sqrt_find_factor($rem, int sqrt(1e12));
+            say "=> Williams p±1 (3M)...";
+            williams_pp1_ntheory_factor($rem, 1_000_000);
+        },
+
+        sub {
+            say "=> Pollard rho (13M)...";
+            pollard_rho_ntheory_factor($rem, int sqrt(1e13));
+        },
+
+        sub {
+            say "=> Pollard p-1 (5M)...";
+            pollard_pm1_factorial_find_factor($rem, 5_000_000);
+        },
+
+        sub {
+            say "=> Williams p±1 (5M)...";
+            williams_pp1_ntheory_factor($rem, 5_000_000);
         },
 
         sub {
             if ($len > 40) {
-                say "=> Pollard rho...";
-                pollard_rho_find_factor($rem, int sqrt(1e13));
+                say "=> Pollard rho (14M)...";
+                pollard_rho_ntheory_factor($rem, int sqrt(1e14));
             }
+        },
+
+        sub {
+            say "=> Pollard p-1 (8M)...";
+            pollard_pm1_ntheory_factor($rem, 8_000_000);
         },
 
         sub {
@@ -1592,21 +1665,35 @@ sub find_small_factors ($rem, $factors) {
         sub {
             if ($len > 50) {
                 say "=> Pollard p-1 (10M)...";
-                pollard_pm1_lcm_find_factor($rem, 10_000_000);
+                pollard_pm1_factorial_find_factor($rem, 10_000_000);
+            }
+        },
+
+        sub {
+            if ($len > 50) {
+                say "=> Williams p±1 (10M)...";
+                williams_pp1_ntheory_factor($rem, 10_000_000);
             }
         },
 
         sub {
             if ($len > 70) {
-                say "=> Pollard rho...";
-                pollard_rho_find_factor($rem, int sqrt(1e14));
+                say "=> Pollard rho (15M)...";
+                pollard_rho_ntheory_factor($rem, int sqrt(1e15));
             }
         },
 
         sub {
             if ($len > 70) {
                 say "=> Pollard p-1 (20M)...";
-                pollard_pm1_factorial_find_factor($rem, 500_000, 20_000_000);
+                pollard_pm1_factorial_find_factor($rem, 20_000_000);
+            }
+        },
+
+        sub {
+            if ($len > 70) {
+                say "=> Williams p±1 (20M)...";
+                williams_pp1_ntheory_factor($rem, 20_000_000);
             }
         },
 
@@ -1619,22 +1706,29 @@ sub find_small_factors ($rem, $factors) {
 
         sub {
             if ($len > 70) {
-                say "=> Pollard rho-sqrt...";
-                pollard_rho_sqrt_find_factor($rem, int sqrt(5e14));
+                say "=> Pollard rho (16M)...";
+                pollard_rho_ntheory_factor($rem, int sqrt(1e16));
             }
         },
 
         sub {
             if ($len > 70) {
                 say "=> Pollard p-1 (50M)...";
-                pollard_pm1_factorial_find_factor($rem, 1_000_000, 50_000_000);
+                pollard_pm1_factorial_find_factor($rem, 50_000_000);
             }
         },
 
         sub {
             if ($len > 70) {
-                say "=> Pollard rho...";
-                pollard_rho_find_factor($rem, int sqrt(1e15));
+                say "=> Pollard p+1 (50M)...";
+                williams_pp1_ntheory_factor($rem, 50_000_000);
+            }
+        },
+
+        sub {
+            if ($len > 70) {
+                say "=> Pollard rho (16M)...";
+                pollard_rho_ntheory_factor($rem, int sqrt(1e16));
             }
         },
     );
@@ -1652,6 +1746,11 @@ sub find_small_factors ($rem, $factors) {
         }
 
         $len = length($rem);
+
+        if ($len <= 35) {
+            return $rem;
+        }
+
         printf("\n[*] Factoring %s (%s digits)...\n\n", ($len > MASK_LIMIT ? "C$len" : $rem), $len);
 
         say "=> Perfect power check...";
