@@ -9,44 +9,44 @@
 # Extract markdown code from each task for a given programming language.
 
 use utf8;
-use 5.014;
+use 5.020;
 use strict;
 use autodie;
 use warnings;
+
+use experimental qw(signatures);
 
 use Text::Tabs qw(expand);
 use Encode qw(decode_utf8);
 use Getopt::Long qw(GetOptions);
 use File::Path qw(make_path);
 use LWP::UserAgent::Cached qw();
-use URI::Escape qw(uri_unescape);
+use URI::Escape qw(uri_unescape uri_escape);
 use HTML::Entities qw(decode_entities);
 use File::Spec::Functions qw(catfile catdir);
 
 binmode(STDOUT, ':utf8');
 binmode(STDERR, ':utf8');
 
-sub escape_markdown {
-    my ($t) = @_;
+sub escape_markdown ($t) {
     $t =~ s{([*_`])}{\\$1}g;
     return $t;
 }
 
-sub escape_lang {
-    $_[0] =~ s/\s/_/gr;    # replace whitespace with underscores
+sub escape_lang ($s) {
+    $s =~ s/\s/_/gr;    # replace whitespace with underscores
 }
 
-sub _ulist {
-    $_[0] =~ s{<li>(.*?)</li>}{* $1\n}gsr;
+sub _ulist ($s) {
+    $s =~ s{<li>(.*?)</li>}{* $1\n}gsr;
 }
 
-sub _olist {
+sub _olist ($s) {
     my $i = 1;
-    $_[0] =~ s{<li>(.*?)</li>}{$i++ . '. ' . "$1\n"}egsr;
+    $s =~ s{<li>(.*?)</li>}{$i++ . '. ' . "$1\n"}egsr;
 }
 
-sub tags_to_markdown {
-    my ($t, $escape) = @_;
+sub tags_to_markdown ($t, $escape = 0) {
 
     my $out = '';
     until ($t =~ /\G\z/gc) {
@@ -109,16 +109,15 @@ sub tags_to_markdown {
     return $out;
 }
 
-sub strip_tags {
-    $_[0] =~ s/<.*?>//gsr;    # remove HTML tags
+sub strip_tags ($s) {
+    $s =~ s/<.*?>//gsr;    # remove HTML tags
 }
 
-sub strip_space {
-    unpack('A*', $_[0] =~ s/^\s+//r);    # remove leading and trailing whitespace
+sub strip_space ($s) {
+    unpack('A*', $s =~ s/^\s+//r);    # remove leading and trailing whitespace
 }
 
-sub extract_tasks {
-    my ($content, $lang) = @_;
+sub extract_tasks ($content, $lang) {
 
     my $i = index($content, qq{<h2>Pages in category "$lang"</h2>});
 
@@ -145,8 +144,7 @@ sub extract_tasks {
     return \@tasks;
 }
 
-sub extract_lang {
-    my ($content, $lang) = @_;
+sub extract_lang ($content, $lang, $lang_alias = $lang) {
 
     my $header = sub {
         qq{<span class="mw-headline" id="$_[0]">};
@@ -159,6 +157,16 @@ sub extract_lang {
         $i = index($content, $header->(escape_lang($lang)));
     }
 
+    # Try with the language alias
+    if ($i == -1) {
+        $i = index($content, $header->($lang_alias));
+    }
+
+    # Try with the language alias escaped
+    if ($i == -1) {
+        $i = index($content, $header->(escape_lang($lang_alias)));
+    }
+
     # Give up
     if ($i == -1) {
         warn "[!] Can't find language: <$lang>\n";
@@ -168,10 +176,6 @@ sub extract_lang {
     my $j = index($content, '<h2>', $i);
 
     if ($j == -1) {
-        state $x = 0;
-        if (++$x <= 3) {
-            warn "[!] Is `$lang` the last language in the list?!\n";
-        }
         $j = index($content, '<div class="printfooter">', $i);
     }
 
@@ -248,8 +252,7 @@ sub extract_lang {
     return \@data;
 }
 
-sub to_html {
-    my ($lang_data) = @_;
+sub to_html ($lang_data) {
 
     my $text = '';
     foreach my $item (@{$lang_data}) {
@@ -264,8 +267,7 @@ sub to_html {
     return $text;
 }
 
-sub to_markdown {
-    my ($lang_data) = @_;
+sub to_markdown ($lang_data) {
 
     my $text = '';
     foreach my $item (@{$lang_data}) {
@@ -308,8 +310,7 @@ sub to_markdown {
     return strip_space($text);
 }
 
-sub write_to_file {
-    my ($base_dir, $name, $markdown, $overwrite) = @_;
+sub write_to_file ($base_dir, $name, $markdown, $overwrite = 0) {
 
     # Remove parenthesis
     $name =~ tr/()//d;
@@ -357,9 +358,10 @@ sub write_to_file {
 ## MAIN
 #
 
-my $cache_dir = 'cache';
-my $lang      = 'Sidef';
-my $overwrite = 0;
+my $cache_dir  = 'cache';
+my $lang       = 'Sidef';
+my $lang_alias = undef;
+my $overwrite  = 0;
 
 my $base_dir = 'programming_tasks';
 my $main_url = 'https://rosettacode.org';
@@ -408,7 +410,7 @@ my $lwp = LWP::UserAgent::Cached->new(
     nocache_if => sub {
         my ($response) = @_;
         my $code = $response->code;
-        return 1 if ($code >= 500);                           # do not cache any bad response
+        return 1 if ($code >= 300);                           # do not cache any bad response
         return 1 if ($code == 401);                           # don't cache an unauthorized response
         return 1 if ($response->request->method ne 'GET');    # cache only GET requests
         return;
@@ -438,18 +440,22 @@ $resp->is_success || die $resp->status_line;
 my $content = $resp->decoded_content;
 my $tasks   = extract_tasks($content, $lang);
 
+sub my_uri_escape ($path) {
+    $path =~ s/([?'+])/uri_escape($1)/egr;
+}
+
 foreach my $task (@{$tasks}) {
 
     my $name  = $task->{name};
     my $title = $task->{title};
-    my $url   = "$main_url/wiki/$name";
+    my $url   = "$main_url/wiki/" . my_uri_escape($name);
 
     my $resp = $lwp->get($url);
 
     if ($resp->is_success) {
 
         my $content   = $resp->decoded_content;
-        my $lang_data = extract_lang($content, $lang) // do { $lwp->uncache; next };
+        my $lang_data = extract_lang($content, $lang, $lang_alias) // do { $lwp->uncache; next };
 
         my $header   = "[1]: $url\n\n" . "# [$title][1]\n\n";
         my $markdown = $header . to_markdown($lang_data) . "\n";
