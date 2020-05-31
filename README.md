@@ -78,6 +78,7 @@ A nice collection of day-to-day Perl scripts.
     * [N repeated lines](./File%20Readers/n_repeated_lines.pl)
     * [Tailz](./File%20Readers/tailz)
 * File Workers
+    * [Auto extensions](./File%20Workers/auto_extensions.pl)
     * [Delete if exists](./File%20Workers/delete_if_exists.pl)
     * [Dir file updater](./File%20Workers/dir_file_updater.pl)
     * [File-mover](./File%20Workers/file-mover.pl)
