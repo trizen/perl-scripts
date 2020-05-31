@@ -454,6 +454,7 @@ A nice collection of day-to-day Perl scripts.
     * [Elementary cellular automaton generalized](./Math/elementary_cellular_automaton_generalized.pl)
     * [Elliptic-curve factorization method](./Math/elliptic-curve_factorization_method.pl)
     * [Equally spaced squares solutions](./Math/equally_spaced_squares_solutions.pl)
+    * [Esthetic numbers](./Math/esthetic_numbers.pl)
     * [Ethiopian multiplication](./Math/ethiopian_multiplication.pl)
     * [Ethiopian multiplication binary](./Math/ethiopian_multiplication_binary.pl)
     * [Factorial dsc algorithm](./Math/factorial_dsc_algorithm.pl)

@@ -9,9 +9,7 @@ use 5.020;
 use warnings;
 
 use experimental qw(signatures);
-
-use List::Util qw(sum);
-use Math::AnyNum qw(:overload binomial);
+use Math::AnyNum qw(:overload sum binomial);
 
 sub ramanujan_bernoulli_number ($n, $cache = {}) {
 
