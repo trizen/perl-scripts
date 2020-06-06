@@ -613,6 +613,7 @@ A nice collection of day-to-day Perl scripts.
     * [Newton's method](./Math/newton_s_method.pl)
     * [Newton's method recursive](./Math/newton_s_method_recursive.pl)
     * [Next palindrome](./Math/next_palindrome.pl)
+    * [Next palindrome from non-palindrome](./Math/next_palindrome_from_non-palindrome.pl)
     * [Next palindrome in base](./Math/next_palindrome_in_base.pl)
     * [Next power of two](./Math/next_power_of_two.pl)
     * [Nth composite](./Math/nth_composite.pl)

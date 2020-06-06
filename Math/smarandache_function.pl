@@ -20,8 +20,7 @@ use 5.010;
 use strict;
 use warnings;
 
-use List::Util qw(max sum);
-use ntheory qw(factor_exp factorialmod is_prime);
+use ntheory qw(vecsum vecmax factor_exp factorialmod is_prime);
 
 binmode(STDOUT, ':utf8');
 
@@ -33,7 +32,7 @@ sub smarandache {
     return $n if is_prime($n);
 
     my @f = factor_exp($n);
-    my $Ω = sum(map { $_->[1] } @f);
+    my $Ω = vecsum(map { $_->[1] } @f);
 
     (@f == $Ω)
       && return $f[-1][0];
@@ -57,7 +56,7 @@ sub smarandache {
         return ($cache{$n} = $m);
     }
 
-    max(map { $_->[1] == 1 ? $_->[0] : smarandache($_->[0]**$_->[1]) } @f);
+    vecmax(map { $_->[1] == 1 ? $_->[0] : smarandache($_->[0]**$_->[1]) } @f);
 }
 
 #
