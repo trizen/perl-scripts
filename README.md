@@ -396,6 +396,7 @@ A nice collection of day-to-day Perl scripts.
     * [Brown numbers](./Math/brown_numbers.pl)
     * [Carmichael factorization method](./Math/carmichael_factorization_method.pl)
     * [Carmichael factorization method generalized](./Math/carmichael_factorization_method_generalized.pl)
+    * [Carmichael numbers generation erdos method](./Math/carmichael_numbers_generation_erdos_method.pl)
     * [Carmichael numbers random](./Math/carmichael_numbers_random.pl)
     * [Cartesian product iter](./Math/cartesian_product_iter.pl)
     * [Cartesian product rec](./Math/cartesian_product_rec.pl)

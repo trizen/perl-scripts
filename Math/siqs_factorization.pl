@@ -1747,7 +1747,7 @@ sub find_small_factors ($rem, $factors) {
 
         $len = length($rem);
 
-        if ($len >= 20 and $len <= 35) {    # factorize with SIQS directly
+        if ($len >= 25 and $len <= 35) {    # factorize with SIQS directly
             return $rem;
         }
 
