@@ -47,8 +47,8 @@ use constant {
               NEAR_POWER_ITERATIONS     => 1_000,
               CFRAC_ITERATIONS          => 50_000,
               HOLF_ITERATIONS           => 100_000,
-              MILLER_RABIN_ITERATIONS   => 100,
-              LUCAS_MILLER_ITERATIONS   => 100,
+              MILLER_RABIN_ITERATIONS   => 50,
+              LUCAS_MILLER_ITERATIONS   => 50,
               SIQS_TRIAL_DIVISION_EPS   => 25,
               SIQS_MIN_PRIME_POLYNOMIAL => 400,
               SIQS_MAX_PRIME_POLYNOMIAL => 4000,
@@ -1354,24 +1354,24 @@ sub miller_rabin_factor ($n, $max_iter) {
     my $r = $s - 1;
     my $d = $D >> $s;
 
-    if ($s > 20 and $max_iter > 10) {
-        $max_iter = 10;
+    if ($s > 20 and $max_iter > 15) {
+        $max_iter = 15;
     }
 
     my $x = Math::GMPz::Rmpz_init();
     my $g = Math::GMPz::Rmpz_init();
 
-    foreach my $base (2 .. $max_iter) {
+    foreach my $i (2 .. $max_iter) {
+
+        my $base = random_prime(1e7);
 
         Math::GMPz::Rmpz_powm($x, Math::GMPz::Rmpz_init_set_ui($base), $d, $n);
 
         foreach my $k (0 .. $r) {
-            foreach my $i (1, -1) {
-                Math::GMPz::Rmpz_gcd($g, $x + $i, $n);
-                if (    Math::GMPz::Rmpz_cmp_ui($g, 1) > 0
-                    and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
-                    return $g;
-                }
+            Math::GMPz::Rmpz_gcd($g, $x + 1, $n);
+            if (    Math::GMPz::Rmpz_cmp_ui($g, 1) > 0
+                and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
+                return $g;
             }
             Math::GMPz::Rmpz_powm_ui($x, $x, 2, $n);
         }
@@ -1541,12 +1541,12 @@ sub find_small_factors ($rem, $factors) {
     my @factorization_methods = (
         sub {
             say "=> Miller-Rabin method...";
-            miller_rabin_factor($rem, ($len > 1000) ? 2 : MILLER_RABIN_ITERATIONS);
+            miller_rabin_factor($rem, ($len > 1000) ? 15 : MILLER_RABIN_ITERATIONS);
         },
 
         sub {
             say "=> Lucas-Miller method...";
-            lucas_miller_factor($rem, ($len > 1000) ? 2 : LUCAS_MILLER_ITERATIONS);
+            lucas_miller_factor($rem, ($len > 1000) ? 15 : LUCAS_MILLER_ITERATIONS);
         },
 
         sub {
