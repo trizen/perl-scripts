@@ -890,16 +890,10 @@ sub native_lucasVmod ($P, $n, $m) {    # assumes Q = 1
     return $V1;
 }
 
-sub chebyshev_factorization ($n, $upper_bound, $A = 127) {
+sub chebyshev_factorization ($n, $B, $A = 127) {
 
     # The Chebyshev factorization method, taking
     # advantage of the smoothness of p-1 or p+1.
-
-    my $B = 5 * logint($n, 2)**2;
-
-    if ($B > $upper_bound) {
-        $B = $upper_bound;
-    }
 
     my $x = Math::GMPz::Rmpz_init_set_ui($A);
     my $i = Math::GMPz::Rmpz_init_set_ui(2);
@@ -932,16 +926,10 @@ sub chebyshev_factorization ($n, $upper_bound, $A = 127) {
     return undef;
 }
 
-sub fibonacci_factorization ($n, $upper_bound) {
+sub fibonacci_factorization ($n, $bound) {
 
     # The Fibonacci factorization method, taking
     # advantage of the smoothness of `p - legendre(p, 5)`.
-
-    my $bound = 5 * logint($n, 2)**2;
-
-    if ($bound > $upper_bound) {
-        $bound = $upper_bound;
-    }
 
     my ($P, $Q) = (1, 0);
 
@@ -954,15 +942,23 @@ sub fibonacci_factorization ($n, $upper_bound) {
         }
     }
 
+    state %cache;
+    my $g = Math::GMPz::Rmpz_init();
+
     for (; ;) {
         return undef if $bound <= 1;
 
-        my $d = consecutive_integer_lcm($bound);
+        my $d = ($cache{$bound} //= consecutive_integer_lcm($bound));
         my ($U, $V) = map { Math::GMPz::Rmpz_init_set_str($_, 10) } lucas_sequence($n, $P, $Q, $d);
 
-        foreach my $f (sub { gcd($U, $n) }, sub { gcd($V - 2, $n) }, sub { gcd($V, $n) }, sub { gcd($V + 2, $n) }) {
-            my $g = Math::GMPz->new($f->());
-            return $g if ($g > 1 and $g < $n);
+        foreach my $t ($U, $V - 2, $V, $V + 2) {
+
+            Math::GMPz::Rmpz_gcd($g, $t, $n);
+
+            if (    Math::GMPz::Rmpz_cmp_ui($g, 1) > 0
+                and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
+                return $g;
+            }
         }
 
         if ($U == 0) {
@@ -1093,11 +1089,7 @@ sub pollard_pm1_lcm_find_factor ($n, $bound) {
         Math::GMPz::Rmpz_gcd($g, $g, $n);
 
         if (Math::GMPz::Rmpz_cmp_ui($g, 1) > 0) {
-
-            if ($g == $n) {
-                return undef;
-            }
-
+            return undef if ($g == $n);
             return $g;
         }
     }
@@ -1128,11 +1120,7 @@ sub pollard_pm1_factorial_find_factor ($n, $bound2) {
             Math::GMPz::Rmpz_gcd($g, $g, $n);
 
             if (Math::GMPz::Rmpz_cmp_ui($g, 1) > 0) {
-
-                if ($g == $n) {
-                    return undef;
-                }
-
+                return undef if ($g == $n);
                 return $g;
             }
         }
@@ -1149,11 +1137,7 @@ sub pollard_pm1_factorial_find_factor ($n, $bound2) {
         Math::GMPz::Rmpz_gcd($g, $g, $n);
 
         if (Math::GMPz::Rmpz_cmp_ui($g, 1) > 0) {
-
-            if ($g == $n) {
-                return undef;
-            }
-
+            return undef if ($g == $n);
             return $g;
         }
     }
@@ -1651,28 +1635,6 @@ sub find_small_factors ($rem, $factors) {
         },
 
         sub {
-            say "=> Pollard rho (10M)...";
-            pollard_rho_ntheory_factor($rem, int sqrt(1e10));
-        },
-
-        sub {
-            say "=> Pollard p-1 (500K)...";
-            pollard_pm1_ntheory_factor($rem, 500_000);
-        },
-
-        sub {
-            say "=> Williams p±1 (500K)...";
-            williams_pp1_ntheory_factor($rem, 500_000);
-        },
-
-        sub {
-            if ($len < 1000) {
-                say "=> Chebyshev p±1...";
-                chebyshev_factorization($rem, CHEBYSHEV_BOUND);
-            }
-        },
-
-        sub {
             $state{fast_fibonacci_check} || return undef;
             say "=> Fast Fibonacci check...";
             my $f = fast_fibonacci_factor($rem, 5000);
@@ -1689,11 +1651,47 @@ sub find_small_factors ($rem, $factors) {
         },
 
         sub {
+            say "=> Pollard rho (10M)...";
+            pollard_rho_ntheory_factor($rem, int sqrt(1e10));
+        },
+
+        sub {
+            say "=> Pollard p-1 (500K)...";
+            pollard_pm1_ntheory_factor($rem, 500_000);
+        },
+
+        sub {
+            say "=> Williams p±1 (500K)...";
+            williams_pp1_ntheory_factor($rem, 500_000);
+        },
+
+        sub {
+            if ($len < 1000) {
+                say "=> Chebyshev p±1 (x = 127)...";
+                chebyshev_factorization($rem, CHEBYSHEV_BOUND);
+            }
+        },
+
+        sub {
+            if ($len < 1000) {
+                say "=> Chebyshev p±1 (x = 2)...";
+                chebyshev_factorization($rem, 2 * CHEBYSHEV_BOUND, 2);
+            }
+        },
+
+        sub {
             $state{fast_power_check} || return undef;
             say "=> Fast power check...";
             my $f = fast_power_check($rem, 500);
             $f // do { $state{fast_power_check} = 0 };
             $f;
+        },
+
+        sub {
+            if ($len < 500) {
+                say "=> Fibonacci p±1...";
+                fibonacci_factorization($rem, FIBONACCI_BOUND);
+            }
         },
 
         sub {
@@ -1709,13 +1707,6 @@ sub find_small_factors ($rem, $factors) {
         sub {
             say "=> Williams p±1 (3M)...";
             williams_pp1_ntheory_factor($rem, 3_000_000);
-        },
-
-        sub {
-            if ($len < 500) {
-                say "=> Fibonacci p±1...";
-                fibonacci_factorization($rem, FIBONACCI_BOUND);
-            }
         },
 
         sub {
