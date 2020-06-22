@@ -402,6 +402,7 @@ A nice collection of day-to-day Perl scripts.
     * [Cartesian product rec](./Math/cartesian_product_rec.pl)
     * [Cauchy numbers of first type](./Math/cauchy_numbers_of_first_type.pl)
     * [Chebyshev factorization method](./Math/chebyshev_factorization_method.pl)
+    * [Chebyshev factorization method mpz](./Math/chebyshev_factorization_method_mpz.pl)
     * [Chernick-carmichael numbers](./Math/chernick-carmichael_numbers.pl)
     * [Chernick-carmichael numbers below limit](./Math/chernick-carmichael_numbers_below_limit.pl)
     * [Chernick-carmichael polynomials](./Math/chernick-carmichael_polynomials.pl)

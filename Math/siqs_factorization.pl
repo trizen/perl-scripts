@@ -746,20 +746,20 @@ sub trial_division_small_primes ($n) {
 
 sub fast_fibonacci_factor ($n, $upto) {
 
+    my $g = Math::GMPz::Rmpz_init();
+
     foreach my $k (2 .. $upto) {
         foreach my $P (3, 4) {
 
             my ($U, $V) = map { Math::GMPz::Rmpz_init_set_str($_, 10) } lucas_sequence($n, $P, 1, $k);
 
-            foreach my $f (
-                           sub { gcd($U,     $n) },
-                           sub { gcd($U - 1, $n) },
-                           sub { gcd($V,     $n) },
-                           sub { gcd($V - 1, $n) },
-                           sub { gcd($V - 2, $n) },
-              ) {
-                my $g = Math::GMPz->new($f->());
-                return $g if ($g > 1 and $g < $n);
+            foreach my $t ($U, $U - 1, $V, $V - 1, $V - 2) {
+                Math::GMPz::Rmpz_gcd($g, $t, $n);
+
+                if (    Math::GMPz::Rmpz_cmp_ui($g, 1) > 0
+                    and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
+                    return $g;
+                }
             }
         }
     }
@@ -858,7 +858,7 @@ sub cyclotomic_factorization ($n) {
     return undef;
 }
 
-sub native_lucasVmod ($P, $n, $m) {    # assumes Q = 1
+sub fast_lucasVmod ($P, $n, $m) {    # assumes Q = 1
 
     my ($V1, $V2) = (Math::GMPz::Rmpz_init_set_ui(2), Math::GMPz::Rmpz_init_set($P));
     my ($Q1, $Q2) = (Math::GMPz::Rmpz_init_set_ui(1), Math::GMPz::Rmpz_init_set_ui(1));
@@ -902,7 +902,7 @@ sub chebyshev_factorization ($n, $B, $A = 127) {
 
     my sub chebyshevTmod ($A, $x) {
         Math::GMPz::Rmpz_mul_2exp($x, $x, 1);
-        Math::GMPz::Rmpz_set($x, native_lucasVmod($x, $A, $n));
+        Math::GMPz::Rmpz_set($x, fast_lucasVmod($x, $A, $n));
         Math::GMPz::Rmpz_mul($x, $x, $i);
         Math::GMPz::Rmpz_mod($x, $x, $n);
     }
@@ -1454,8 +1454,8 @@ sub lucas_miller_factor ($n, $tries) {
     my $r = $s;
     my $d = $D >> $s;
 
-    if ($s > 20 and $tries > 10) {
-        $tries = 10;
+    if ($s > 10 and $tries > 5) {
+        $tries = 5;
     }
 
     my $x = Math::GMPz::Rmpz_init();
@@ -1610,8 +1610,10 @@ sub find_small_factors ($rem, $factors) {
         },
 
         sub {
-            say "=> Lucas-Miller method...";
-            lucas_miller_factor($rem, ($len > 1000) ? 15 : LUCAS_MILLER_ITERATIONS);
+            if ($len < 3000) {
+                say "=> Lucas-Miller method...";
+                lucas_miller_factor($rem, ($len > 1000) ? 10 : LUCAS_MILLER_ITERATIONS);
+            }
         },
 
         sub {
@@ -1667,15 +1669,15 @@ sub find_small_factors ($rem, $factors) {
 
         sub {
             if ($len < 1000) {
-                say "=> Chebyshev p±1 (x = 127)...";
-                chebyshev_factorization($rem, CHEBYSHEV_BOUND);
+                say "=> Chebyshev p±1 (x = 128)...";
+                chebyshev_factorization($rem, CHEBYSHEV_BOUND, 128);
             }
         },
 
         sub {
             if ($len < 1000) {
-                say "=> Chebyshev p±1 (x = 2)...";
-                chebyshev_factorization($rem, 2 * CHEBYSHEV_BOUND, 2);
+                say "=> Chebyshev p±1 (x = 127)...";
+                chebyshev_factorization($rem, 2 * CHEBYSHEV_BOUND, 127);
             }
         },
 
