@@ -28,10 +28,10 @@ use 5.020;
 use warnings;
 
 use Math::GMPz;
-use ntheory qw(valuation powmod gcd);
+use ntheory qw(valuation powmod gcd random_prime);
 use experimental qw(signatures);
 
-sub miller_rabin_factor ($n, $k = 100) {
+sub miller_rabin_factor ($n, $tries = 100) {
 
     if (ref($n) ne 'Math::GMPz') {
         $n = Math::GMPz->new("$n");
@@ -42,17 +42,22 @@ sub miller_rabin_factor ($n, $k = 100) {
     my $r = $s - 1;
     my $d = $D >> $s;
 
-    foreach my $a (2 .. $k) {
+    for (1 .. $tries) {
 
-        my $x = powmod($a, $d, $n);
+        my $p = random_prime(1e7);
+        my $x = powmod($p, $d, $n);
 
-        foreach my $b (0 .. $r) {
+        for (0 .. $r) {
+
+            last if (($x == 1) || ($x == $D));
+
             foreach my $i (1, -1) {
                 my $g = gcd($x + $i, $n);
                 if ($g > 1 and $g < $n) {
                     return $g;
                 }
             }
+
             $x = powmod($x, 2, $n);
         }
     }

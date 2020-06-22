@@ -41,13 +41,14 @@ use constant {
               MASK_LIMIT                => 200,         # show Cn if n > MASK_LIMIT, where n ~ log_10(N)
               LOOK_FOR_SMALL_FACTORS    => 1,
               FIBONACCI_BOUND           => 500_000,
+              CHEBYSHEV_BOUND           => 500_000,
               TRIAL_DIVISION_LIMIT      => 1_000_000,
               PHI_FINDER_ITERATIONS     => 100_000,
               FERMAT_ITERATIONS         => 100_000,
               NEAR_POWER_ITERATIONS     => 1_000,
               CFRAC_ITERATIONS          => 50_000,
               HOLF_ITERATIONS           => 100_000,
-              MILLER_RABIN_ITERATIONS   => 50,
+              MILLER_RABIN_ITERATIONS   => 100,
               LUCAS_MILLER_ITERATIONS   => 50,
               SIQS_TRIAL_DIVISION_EPS   => 25,
               SIQS_MIN_PRIME_POLYNOMIAL => 400,
@@ -857,6 +858,80 @@ sub cyclotomic_factorization ($n) {
     return undef;
 }
 
+sub native_lucasVmod ($P, $n, $m) {    # assumes Q = 1
+
+    my ($V1, $V2) = (Math::GMPz::Rmpz_init_set_ui(2), Math::GMPz::Rmpz_init_set($P));
+    my ($Q1, $Q2) = (Math::GMPz::Rmpz_init_set_ui(1), Math::GMPz::Rmpz_init_set_ui(1));
+
+    foreach my $bit (ntheory::todigits($n, 2)) {
+
+        Math::GMPz::Rmpz_mul($Q1, $Q1, $Q2);
+        Math::GMPz::Rmpz_mod($Q1, $Q1, $m);
+
+        if ($bit) {
+            Math::GMPz::Rmpz_mul($V1, $V1, $V2);
+            Math::GMPz::Rmpz_powm_ui($V2, $V2, 2, $m);
+            Math::GMPz::Rmpz_submul($V1, $Q1, $P);
+            Math::GMPz::Rmpz_submul_ui($V2, $Q2, 2);
+            Math::GMPz::Rmpz_mod($V1, $V1, $m);
+        }
+        else {
+            Math::GMPz::Rmpz_set($Q2, $Q1);
+            Math::GMPz::Rmpz_mul($V2, $V2, $V1);
+            Math::GMPz::Rmpz_powm_ui($V1, $V1, 2, $m);
+            Math::GMPz::Rmpz_submul($V2, $Q1, $P);
+            Math::GMPz::Rmpz_submul_ui($V1, $Q2, 2);
+            Math::GMPz::Rmpz_mod($V2, $V2, $m);
+        }
+    }
+
+    Math::GMPz::Rmpz_mod($V1, $V1, $m);
+
+    return $V1;
+}
+
+sub chebyshev_factorization ($n, $upper_bound, $A = 127) {
+
+    # The Chebyshev factorization method, taking
+    # advantage of the smoothness of p-1 or p+1.
+
+    my $B = 5 * logint($n, 2)**2;
+
+    if ($B > $upper_bound) {
+        $B = $upper_bound;
+    }
+
+    my $x = Math::GMPz::Rmpz_init_set_ui($A);
+    my $i = Math::GMPz::Rmpz_init_set_ui(2);
+
+    Math::GMPz::Rmpz_invert($i, $i, $n);
+
+    my sub chebyshevTmod ($A, $x) {
+        Math::GMPz::Rmpz_mul_2exp($x, $x, 1);
+        Math::GMPz::Rmpz_set($x, native_lucasVmod($x, $A, $n));
+        Math::GMPz::Rmpz_mul($x, $x, $i);
+        Math::GMPz::Rmpz_mod($x, $x, $n);
+    }
+
+    my $g   = Math::GMPz::Rmpz_init();
+    my $lnB = log($B);
+
+    foreach my $p (sieve_primes(2, $B)) {
+
+        chebyshevTmod($p**int($lnB / log($p)), $x);    # T_k(x) (mod n)
+
+        Math::GMPz::Rmpz_sub_ui($g, $x, 1);
+        Math::GMPz::Rmpz_gcd($g, $g, $n);
+
+        if (Math::GMPz::Rmpz_cmp_ui($g, 1) > 0) {
+            return undef if (Math::GMPz::Rmpz_cmp($g, $n) == 0);
+            return $g;
+        }
+    }
+
+    return undef;
+}
+
 sub fibonacci_factorization ($n, $upper_bound) {
 
     # The Fibonacci factorization method, taking
@@ -1013,7 +1088,7 @@ sub pollard_pm1_lcm_find_factor ($n, $bound) {
 
     foreach my $p (sieve_primes(2, $bound)) {
 
-        Math::GMPz::Rmpz_powm_ui($t, $t, $p**int(log(ULONG_MAX >> 4) / log($p)), $n);
+        Math::GMPz::Rmpz_powm_ui($t, $t, $p**int(log(ULONG_MAX >> 32) / log($p)), $n);
         Math::GMPz::Rmpz_sub_ui($g, $t, 1);
         Math::GMPz::Rmpz_gcd($g, $g, $n);
 
@@ -1344,7 +1419,7 @@ sub holf_find_factor ($n, $max_iter) {
     return undef;
 }
 
-sub miller_rabin_factor ($n, $max_iter) {
+sub miller_rabin_factor ($n, $tries) {
 
     # Miller-Rabin factorization method.
     # https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test
@@ -1354,25 +1429,31 @@ sub miller_rabin_factor ($n, $max_iter) {
     my $r = $s - 1;
     my $d = $D >> $s;
 
-    if ($s > 20 and $max_iter > 15) {
-        $max_iter = 15;
+    if ($s > 20 and $tries > 10) {
+        $tries = 10;
     }
 
     my $x = Math::GMPz::Rmpz_init();
     my $g = Math::GMPz::Rmpz_init();
 
-    foreach my $i (2 .. $max_iter) {
+    for (1 .. $tries) {
 
-        my $base = random_prime(1e7);
-
-        Math::GMPz::Rmpz_powm($x, Math::GMPz::Rmpz_init_set_ui($base), $d, $n);
+        my $p = random_prime(1e7);
+        Math::GMPz::Rmpz_powm($x, Math::GMPz::Rmpz_init_set_ui($p), $d, $n);
 
         foreach my $k (0 .. $r) {
-            Math::GMPz::Rmpz_gcd($g, $x + 1, $n);
-            if (    Math::GMPz::Rmpz_cmp_ui($g, 1) > 0
-                and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
-                return $g;
+
+            last if (Math::GMPz::Rmpz_cmp_ui($x, 1) == 0);
+            last if (Math::GMPz::Rmpz_cmp($x, $D) == 0);
+
+            foreach my $i (1, -1) {
+                Math::GMPz::Rmpz_gcd($g, $x + $i, $n);
+                if (    Math::GMPz::Rmpz_cmp_ui($g, 1) > 0
+                    and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
+                    return $g;
+                }
             }
+
             Math::GMPz::Rmpz_powm_ui($x, $x, 2, $n);
         }
     }
@@ -1380,7 +1461,7 @@ sub miller_rabin_factor ($n, $max_iter) {
     return undef;
 }
 
-sub lucas_miller_factor ($n, $max_iter) {
+sub lucas_miller_factor ($n, $tries) {
 
     # Lucas-Miller factorization method.
 
@@ -1389,14 +1470,14 @@ sub lucas_miller_factor ($n, $max_iter) {
     my $r = $s;
     my $d = $D >> $s;
 
-    if ($s > 20 and $max_iter > 10) {
-        $max_iter = 10;
+    if ($s > 20 and $tries > 10) {
+        $tries = 10;
     }
 
     my $x = Math::GMPz::Rmpz_init();
     my $g = Math::GMPz::Rmpz_init();
 
-    foreach my $P (1 .. $max_iter) {
+    foreach my $P (1 .. $tries) {
 
         my $Q = -(1 + int(rand(1e6)));
         Math::GMPz::Rmpz_set($x, $d);
@@ -1585,6 +1666,21 @@ sub find_small_factors ($rem, $factors) {
         },
 
         sub {
+            if ($len < 1000) {
+                say "=> Chebyshev p±1...";
+                chebyshev_factorization($rem, CHEBYSHEV_BOUND);
+            }
+        },
+
+        sub {
+            $state{fast_fibonacci_check} || return undef;
+            say "=> Fast Fibonacci check...";
+            my $f = fast_fibonacci_factor($rem, 5000);
+            $f // do { $state{fast_fibonacci_check} = 0 };
+            $f;
+        },
+
+        sub {
             $state{cyclotomic_check} || return undef;
             say "=> Fast cyclotomic check...";
             my $f = cyclotomic_factorization($rem);
@@ -1601,41 +1697,30 @@ sub find_small_factors ($rem, $factors) {
         },
 
         sub {
-            $state{fast_fibonacci_check} || return undef;
-            say "=> Fast Fibonacci check...";
-            my $f = fast_fibonacci_factor($rem, 5000);
-            $f // do { $state{fast_fibonacci_check} = 0 };
-            $f;
-        },
-
-        #~ sub {
-        #~ say "=> Fibonacci p±1...";
-        #~ fibonacci_factorization($rem, FIBONACCI_BOUND);
-        #~ },
-
-        sub {
             say "=> Pollard rho (12M)...";
             pollard_rho_ntheory_factor($rem, int sqrt(1e12));
         },
 
         sub {
-            say "=> Pollard p-1 (3M)...";
-            pollard_pm1_ntheory_factor($rem, 1_000_000);
+            say "=> Pollard p-1 (5M)...";
+            pollard_pm1_factorial_find_factor($rem, 5_000_000);
         },
 
         sub {
             say "=> Williams p±1 (3M)...";
-            williams_pp1_ntheory_factor($rem, 1_000_000);
+            williams_pp1_ntheory_factor($rem, 3_000_000);
+        },
+
+        sub {
+            if ($len < 500) {
+                say "=> Fibonacci p±1...";
+                fibonacci_factorization($rem, FIBONACCI_BOUND);
+            }
         },
 
         sub {
             say "=> Pollard rho (13M)...";
             pollard_rho_ntheory_factor($rem, int sqrt(1e13));
-        },
-
-        sub {
-            say "=> Pollard p-1 (5M)...";
-            pollard_pm1_factorial_find_factor($rem, 5_000_000);
         },
 
         sub {

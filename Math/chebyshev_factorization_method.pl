@@ -23,7 +23,7 @@ use warnings;
 use experimental qw(signatures);
 use Math::AnyNum qw(:overload lucasVmod gcd next_prime invmod ilog);
 
-sub chebyshev_factorization ($n, $B = ilog($n, 2)**2, $a = 3) {
+sub chebyshev_factorization ($n, $B = ilog($n, 2)**2, $a = 127) {
 
     my $x = $a;
     my $G = $B * $B;
@@ -43,7 +43,7 @@ sub chebyshev_factorization ($n, $B = ilog($n, 2)**2, $a = 3) {
 }
 
 say chebyshev_factorization(2**64 + 1,                     20);      #=> 274177           (p-1 is   20-smooth)
-say chebyshev_factorization(257221 * 470783,               1000);    #=> 257221           (p+1 is 1000-smooth)
+say chebyshev_factorization(257221 * 470783,               1000);    #=> 470783           (p-1 is 1000-smooth)
 say chebyshev_factorization(1124075136413 * 3556516507813, 4000);    #=> 1124075136413    (p+1 is 4000-smooth)
 say chebyshev_factorization(7553377229 * 588103349,        800);     #=> 7553377229       (p+1 is  800-smooth)
 
@@ -57,6 +57,6 @@ say chebyshev_factorization(228640480273 * 224774973299,  2000);     #=> 2286404
 
 say '';
 
-say chebyshev_factorization(5140059121 * 8382882743,     2500, 2);    #=> 5140059121       (p-1 is 2500-smooth)
-say chebyshev_factorization(18114813019 * 17402508649,   6000, 2);    #=> 18114813019      (p+1 is 6000-smooth)
-say chebyshev_factorization(533091092393 * 440050095029, 300,  2);    #=> 533091092393     (p+1 is  300-smooth)
+say chebyshev_factorization(5140059121 * 8382882743,     2500);      #=> 5140059121       (p-1 is 2500-smooth)
+say chebyshev_factorization(18114813019 * 17402508649,   6000);      #=> 18114813019      (p+1 is 6000-smooth)
+say chebyshev_factorization(533091092393 * 440050095029, 300);       #=> 533091092393     (p+1 is  300-smooth)
