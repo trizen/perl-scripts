@@ -40,8 +40,6 @@ local $| = 1;
 use constant {
               MASK_LIMIT                => 200,         # show Cn if n > MASK_LIMIT, where n ~ log_10(N)
               LOOK_FOR_SMALL_FACTORS    => 1,
-              FIBONACCI_BOUND           => 500_000,
-              CHEBYSHEV_BOUND           => 500_000,
               TRIAL_DIVISION_LIMIT      => 1_000_000,
               PHI_FINDER_ITERATIONS     => 100_000,
               FERMAT_ITERATIONS         => 100_000,
@@ -1669,15 +1667,15 @@ sub find_small_factors ($rem, $factors) {
 
         sub {
             if ($len < 1000) {
-                say "=> Chebyshev p±1 (x = 128)...";
-                chebyshev_factorization($rem, CHEBYSHEV_BOUND, 128);
+                say "=> Chebyshev p±1 (500K)...";
+                chebyshev_factorization($rem, 500_000, int(rand(1e6)) + 2);
             }
         },
 
         sub {
             if ($len < 1000) {
-                say "=> Chebyshev p±1 (x = 127)...";
-                chebyshev_factorization($rem, 2 * CHEBYSHEV_BOUND, 127);
+                say "=> Chebyshev p±1 (1M)...";
+                chebyshev_factorization($rem, 1_000_000, int(rand(1e6)) + 2);
             }
         },
 
@@ -1690,9 +1688,14 @@ sub find_small_factors ($rem, $factors) {
         },
 
         sub {
+            say "=> Williams p±1 (1M)...";
+            williams_pp1_ntheory_factor($rem, 1_000_000);
+        },
+
+        sub {
             if ($len < 500) {
-                say "=> Fibonacci p±1...";
-                fibonacci_factorization($rem, FIBONACCI_BOUND);
+                say "=> Fibonacci p±1 (500K)...";
+                fibonacci_factorization($rem, 500_000);
             }
         },
 
