@@ -1443,11 +1443,11 @@ sub miller_rabin_factor ($n, $tries) {
     return undef;
 }
 
-sub lucas_miller_factor ($n, $tries) {
+sub lucas_miller_factor ($n, $I, $tries) {
 
     # Lucas-Miller factorization method.
 
-    my $D = $n + 1;
+    my $D = $n + $I;
     my $s = Math::GMPz::Rmpz_scan1($D, 0);
     my $r = $s;
     my $d = $D >> $s;
@@ -1459,9 +1459,15 @@ sub lucas_miller_factor ($n, $tries) {
     my $x = Math::GMPz::Rmpz_init();
     my $g = Math::GMPz::Rmpz_init();
 
-    foreach my $P (1 .. $tries) {
+    foreach my $i (1 .. $tries) {
 
-        my $Q = -(1 + int(rand(1e6)));
+        my $P = 1 + int(rand(1e6));
+        my $Q = 1 + int(rand(1e6));
+
+        $Q *= -1 if (rand(1) < 0.5);
+
+        next if ntheory::is_square($P * $P - 4 * $Q);
+
         Math::GMPz::Rmpz_set($x, $d);
 
         foreach my $k (0 .. $r) {
@@ -1475,6 +1481,15 @@ sub lucas_miller_factor ($n, $tries) {
                     and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
                     return $g;
                 }
+            }
+
+            Math::GMPz::Rmpz_set_str($g, $V, 10);
+            Math::GMPz::Rmpz_sub_ui($g, $g, $P);
+            Math::GMPz::Rmpz_gcd($g, $g, $n);
+
+            if (    Math::GMPz::Rmpz_cmp_ui($g, 1) > 0
+                and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
+                return $g;
             }
 
             Math::GMPz::Rmpz_mul_2exp($x, $x, 1);
@@ -1609,8 +1624,15 @@ sub find_small_factors ($rem, $factors) {
 
         sub {
             if ($len < 3000) {
-                say "=> Lucas-Miller method...";
-                lucas_miller_factor($rem, ($len > 1000) ? 10 : LUCAS_MILLER_ITERATIONS);
+                say "=> Lucas-Miller method (n+1)...";
+                lucas_miller_factor($rem, +1, ($len > 1000) ? 10 : LUCAS_MILLER_ITERATIONS);
+            }
+        },
+
+        sub {
+            if ($len < 3000) {
+                say "=> Lucas-Miller method (n-1)...";
+                lucas_miller_factor($rem, -1, ($len > 1000) ? 10 : LUCAS_MILLER_ITERATIONS);
             }
         },
 

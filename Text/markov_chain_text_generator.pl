@@ -87,7 +87,7 @@ for (1 .. $max) {
     my $idx = int(rand($n_max - $n_min + 1) + $n_min - 1);
 
     if ($idx > $#rotor) {
-        #shift(@rotor) if rand() < 0.5;
+        #shift(@rotor) if rand(1) < 0.5;
     }
     else {
         @rotor = @rotor[$#rotor - $idx + 1 .. $#rotor];

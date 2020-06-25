@@ -9,16 +9,16 @@ cmpthese(
     -1,
     {
      my => sub {
-         my $x = rand();
+         my $x = rand(1);
          $x + 1;
      },
      state => sub {
          state $x;
-         $x = rand();
+         $x = rand(1);
          $x + 1;
      },
      global => sub {
-         $main::global = rand();
+         $main::global = rand(1);
          $main::global + 1;
      }
     }

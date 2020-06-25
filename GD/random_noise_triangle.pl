@@ -18,7 +18,7 @@ sub generate {
     my ($n, $data) = @_;
 
     foreach my $i (1 .. $n) {
-        if (rand() < 0.5) {
+        if (rand(1) < 0.5) {
             $data->{$i} = 1;
         }
     }
