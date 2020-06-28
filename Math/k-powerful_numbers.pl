@@ -22,11 +22,10 @@
 use 5.020;
 use warnings;
 
-use ntheory qw(is_square_free);
+use ntheory qw(:all);
 use experimental qw(signatures);
-use Math::AnyNum qw(:overload idiv iroot ipow is_coprime);
 
-sub k_powerful_numbers ($n, $k = 2) {
+sub powerful_numbers ($n, $k = 2) {
 
     my @powerful;
 
@@ -37,14 +36,14 @@ sub k_powerful_numbers ($n, $k = 2) {
             return;
         }
 
-        for my $v (1 .. iroot(idiv($n, $m), $r)) {
+        foreach my $v (1 .. rootint(divint($n, $m), $r)) {
 
             if ($r > $k) {
-                is_square_free($v) || next;
-                is_coprime($m, $v) || next;
+                gcd($m, $v) == 1   or next;
+                is_square_free($v) or next;
             }
 
-            __SUB__->($m * ipow($v, $r), $r - 1);
+            __SUB__->(mulint($m, powint($v, $r)), $r - 1);
         }
 
     }->(1, 2 * $k - 1);
@@ -53,7 +52,7 @@ sub k_powerful_numbers ($n, $k = 2) {
 }
 
 foreach my $k (1 .. 10) {
-    printf("%2d-powerful: %s, ...\n", $k, join(", ", k_powerful_numbers(5**$k, $k)));
+    printf("%2d-powerful: %s, ...\n", $k, join(", ", powerful_numbers(5**$k, $k)));
 }
 
 __END__
