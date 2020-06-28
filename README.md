@@ -701,6 +701,7 @@ A nice collection of day-to-day Perl scripts.
     * [PSW primality test](./Math/PSW_primality_test.pl)
     * [PSW primality test mpz](./Math/PSW_primality_test_mpz.pl)
     * [Pythagorean triples](./Math/pythagorean_triples.pl)
+    * [Quadratic-integer factorization method](./Math/quadratic-integer_factorization_method.pl)
     * [Quadratic-integer factorization method mpz](./Math/quadratic-integer_factorization_method_mpz.pl)
     * [Quadratic polynomial in terms of its zeros](./Math/quadratic_polynomial_in_terms_of_its_zeros.pl)
     * [Ramanujan sum](./Math/ramanujan_sum.pl)
