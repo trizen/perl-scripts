@@ -84,29 +84,25 @@ use warnings;
 
 use experimental qw(signatures);
 use Math::AnyNum qw(faulhaber_sum ipow);
-use ntheory qw(vecsum logint sqrtint rootint prime_count is_prime_power forprimes);
-
-sub prime_power_count($n) {
-    vecsum(map { prime_count(rootint($n, $_)) } 1 .. logint($n, 2));
-}
+use ntheory qw(logint sqrtint rootint prime_count is_prime_power forprimes prime_power_count divint);
 
 sub prime_bigomega_partial_sum ($n, $m) {
 
     my $s = sqrtint($n);
-    my $u = int($n/($s + 1));
+    my $u = divint($n, $s+1);
 
     my $total = 0;
     my $prev = prime_power_count($n);
 
     for my $k (1 .. $s) {
-        my $curr = prime_power_count(int($n/($k+1)));
+        my $curr = prime_power_count(divint($n, $k+1));
         $total += faulhaber_sum($k, $m) * ($prev - $curr);
         $prev = $curr;
     }
 
     forprimes {
-        foreach my $k (1 .. logint($u, $_)) {
-            $total += faulhaber_sum(int($n / $_**$k), $m);
+        for (my $q = $_; $q <= $u; $q *= $_) {
+            $total += faulhaber_sum(divint($n, $q), $m);
         }
     } $u;
 
@@ -119,8 +115,8 @@ sub prime_bigomega_partial_sum_2 ($n, $m) {
     my $total = 0;
 
     for my $k (1 .. $s) {
-        $total += ipow($k, $m) * prime_power_count(int($n/$k));
-        $total += faulhaber_sum(int($n/$k), $m) if is_prime_power($k);
+        $total += ipow($k, $m) * prime_power_count(divint($n,$k));
+        $total += faulhaber_sum(divint($n,$k), $m) if is_prime_power($k);
     }
 
     $total -= prime_power_count($s) * faulhaber_sum($s, $m);
@@ -133,7 +129,7 @@ sub prime_bigomega_partial_sum_test ($n, $m) {    # just for testing
 
     foreach my $k (1 .. $n) {
         if (is_prime_power($k)) {
-            $total += faulhaber_sum(int($n/$k), $m);
+            $total += faulhaber_sum(divint($n,$k), $m);
         }
     }
 

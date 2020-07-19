@@ -35,13 +35,12 @@ use strict;
 use warnings;
 
 use experimental qw(signatures);
-use Math::AnyNum qw(faulhaber_sum);
-use ntheory qw(vecsum logint sqrtint rootint prime_count is_prime_power forprimes);
+use ntheory qw(vecsum logint rootint prime_count);
 
 sub prime_power_count($n) {
     vecsum(map { prime_count(rootint($n, $_)) } 1 .. logint($n, 2));
 }
 
-foreach my $n (1 .. 10) {
+foreach my $n (1 .. 14) {   # takes ~2.1s
     say "a(10^$n) = ", prime_power_count(10**$n);
 }
