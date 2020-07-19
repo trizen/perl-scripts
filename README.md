@@ -432,6 +432,7 @@ A nice collection of day-to-day Perl scripts.
     * [Count of k-almost primes](./Math/count_of_k-almost_primes.pl)
     * [Count of k-powerful numbers](./Math/count_of_k-powerful_numbers.pl)
     * [Count of smooth numbers](./Math/count_of_smooth_numbers.pl)
+    * [Count of smooth numbers mpz](./Math/count_of_smooth_numbers_mpz.pl)
     * [Count of smooth numbers with k factors](./Math/count_of_smooth_numbers_with_k_factors.pl)
     * [Count subtriangles](./Math/count_subtriangles.pl)
     * [Cube-full numbers](./Math/cube-full_numbers.pl)

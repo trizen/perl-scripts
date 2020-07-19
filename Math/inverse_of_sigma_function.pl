@@ -16,6 +16,7 @@ use warnings;
 use ntheory qw(:all);
 use experimental qw(signatures);
 use List::Util qw(uniq);
+#use Math::AnyNum qw(:overload);
 
 binmode(STDOUT, ':utf8');
 
@@ -33,7 +34,7 @@ sub inverse_sigma ($n, $m = 3) {
         }
     }
 
-    return uniq(@R);
+    sort { $a <=> $b } uniq(@R);
 }
 
 foreach my $n (1 .. 70) {

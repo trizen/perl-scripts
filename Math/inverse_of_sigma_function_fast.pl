@@ -13,8 +13,7 @@ use 5.020;
 use strict;
 use warnings;
 
-use integer;
-use ntheory qw(:all);
+use Math::Prime::Util::GMP qw(:all);
 use List::Util qw(uniq);
 use experimental qw(signatures);
 
@@ -24,7 +23,6 @@ sub inverse_sigma {
     my ($n) = @_;
 
     my %cache;
-    my %mpz_cache;
     my %factor_cache;
     my %divisor_cache;
 
@@ -47,7 +45,7 @@ sub inverse_sigma {
 
                 $factor_cache{$d} //= do {
                     my %factors;
-                    @factors{factor($D[-1] - 1)} = ();
+                    @factors{factor(subint($D[-1], 1))} = ();
                     [keys %factors];
                 };
             }
@@ -56,20 +54,20 @@ sub inverse_sigma {
         foreach my $d (@D) {
             foreach my $p (@{$factor_cache{$d}}) {
 
-                my $r = $d * ($p - 1) + 1;
+                my $r = addint(mulint($d, subint($p, 1)), 1);
                 my $k = valuation($r, $p) - 1;
                 next if ($k < 1);
 
                 my $s = powint($p, $k + 1);
-                next if ($r != $s);
+                next if ("$r" ne "$s");
                 my $z = powint($p, $k);
 
-                my $u   = $n / $d;
+                my $u   = divint($n, $d);
                 my $arr = __SUB__->($u, $d);
 
                 foreach my $v (@$arr) {
-                    if ($v % $p != 0) {
-                        push @R, $v * $z;
+                    if (modint($v, $p) != 0) {
+                        push @R, mulint($v, $z);
                     }
                 }
             }
@@ -78,7 +76,7 @@ sub inverse_sigma {
         $cache{$key} = \@R;
     }->($n, 3);
 
-    uniq(@$results);
+    sort { $a <=> $b } uniq(@$results);
 }
 
 my %tests = (
@@ -93,6 +91,14 @@ while (my ($n, $k) = each %tests) {
         die "Error for k = $k";
     }
 }
+
+use Test::More;
+plan tests => 4;
+
+is(join(' ', inverse_sigma(42)), join(' ', 20, 26, 41));
+is(join(' ', inverse_sigma(7688)), join(' ', 2800, 2928, 4575, 7687));
+is(join(' ', inverse_sigma("110680464442257309690")), "46116860184273879040");
+is(join(' ', inverse_sigma("9325257382230393314439814176")), "3535399776779654608221686964 4302950338161146561477374638 4637009852153025247015401018 4661529533007908774933879778 4884658628787348878992283572 5187814889839710566412258045 5311639278156872382400698772 5326520187917077557965023252 5328493035801953244119300732 5495240957385767488866317781 6208298641832871739558373002 6411114450283395403677372213 6417519160023938256228496989 6454455748546107757077838269 6799666841209661791779031135 6938435552254756930386764875 6992294299511863162400845113 7215972974344947207602237095 8501184728947212952861568533 8546137477181166087378779593 9130981186767260120388984667 9214242413394317203553625829 9323102747899933426890262757 9325091641128050246166715829 9325201015147968294835238387");
 
 __END__
 σ−¹(6187272) = [2855646 2651676]
