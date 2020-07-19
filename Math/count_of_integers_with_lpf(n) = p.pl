@@ -8,6 +8,11 @@
 #    lpf(k) = p
 # where `lpf(k)` is the least prime factor of k.
 
+# This is equivalent with the number of p-rough numbers <= floor(n/p).
+
+# See also:
+#   https://en.wikipedia.org/wiki/Rough_number
+
 use 5.020;
 use integer;
 use warnings;
@@ -16,6 +21,8 @@ use ntheory qw(:all);
 use experimental qw(signatures);
 
 sub count_with_lpf ($n, $p) {
+
+    #~ return rough_count($n/$p, $p);
 
     if ($p > sqrt($n)) {
         return 1;

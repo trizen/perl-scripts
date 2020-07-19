@@ -8,6 +8,9 @@
 
 # Inspired by Dana Jacobsen's "smooth_count(n,k)" algorithm from Math::Prime::Util::PP.
 
+# See also:
+#   https://en.wikipedia.org/wiki/Smooth_number
+
 use 5.020;
 use ntheory qw(:all);
 use experimental qw(signatures);

@@ -9,6 +9,9 @@
 # Problem inspired by:
 #   https://projecteuler.net/problem=268
 
+# See also:
+#   https://en.wikipedia.org/wiki/Smooth_number
+
 use 5.020;
 use warnings;
 

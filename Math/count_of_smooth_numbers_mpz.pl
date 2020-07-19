@@ -6,6 +6,9 @@
 
 # Count the number of B-smooth numbers <= n.
 
+# See also:
+#   https://en.wikipedia.org/wiki/Smooth_number
+
 use 5.020;
 use ntheory qw(:all);
 use experimental qw(signatures);

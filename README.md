@@ -431,6 +431,7 @@ A nice collection of day-to-day Perl scripts.
     * [Count of integers with lpf(n) = p](./Math/count_of_integers_with_lpf(n)%20=%20p.pl)
     * [Count of k-almost primes](./Math/count_of_k-almost_primes.pl)
     * [Count of k-powerful numbers](./Math/count_of_k-powerful_numbers.pl)
+    * [Count of rough numbers](./Math/count_of_rough_numbers.pl)
     * [Count of smooth numbers](./Math/count_of_smooth_numbers.pl)
     * [Count of smooth numbers mpz](./Math/count_of_smooth_numbers_mpz.pl)
     * [Count of smooth numbers mpz 2](./Math/count_of_smooth_numbers_mpz_2.pl)

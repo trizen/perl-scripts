@@ -8,6 +8,11 @@
 #    gpf(k) = p
 # where `gpf(k)` is the greatest prime factor of k.
 
+# This is equivalent with the number of p-smooth numbers <= floor(n/p).
+
+# See also:
+#   https://en.wikipedia.org/wiki/Smooth_number
+
 use 5.020;
 use integer;
 use warnings;
@@ -15,30 +20,8 @@ use warnings;
 use ntheory qw(:all);
 use experimental qw(signatures);
 
-sub count_with_gpf ($n, $p, $q = 2) {
-
-    my $t = logint($n, $p);
-
-    if ($t == 0) {
-        return 0;
-    }
-
-    if ($q == $p) {
-        return $t;
-    }
-
-    my $w = logint($n, $q);
-
-    if ($w == 1) {
-        return 1;
-    }
-
-    my $count = 0;
-    foreach my $k (0 .. $w) {
-        $count += __SUB__->(divint($n, powint($q, $k)), $p, next_prime($q));
-    }
-
-    return $count;
+sub count_with_gpf ($n, $p) {
+    smooth_count($n/$p, $p);
 }
 
 foreach my $n (1 .. 10) {
