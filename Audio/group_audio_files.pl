@@ -31,7 +31,7 @@ use File::Spec::Functions qw(catdir catfile curdir);
 use List::Util qw(sum);
 use List::UtilsBy qw(max_by);
 
-my $file_formats = qr{\.(?:mp3|mp4|webm|mkv)\z}i;    # file formats
+my $file_formats = qr{\.(?:mp3|mp4|webm|mkv|opus|ogg|oga)\z}i;    # file formats
 my (@files) = grep { -e $_ } @ARGV;
 
 my @mp3_files;
