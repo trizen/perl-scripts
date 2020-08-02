@@ -10,7 +10,7 @@ use 5.010;
 use strict;
 use warnings;
 
-use ntheory qw(factor_exp divisors sqrtint);
+use ntheory qw(factor_exp divisors);
 
 sub divisors_le {
     my ($n, $k) = @_;
