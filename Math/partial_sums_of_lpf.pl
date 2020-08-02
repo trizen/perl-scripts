@@ -9,7 +9,7 @@
 #   Sum_{k=2..n} lpf(k)
 #
 # where:
-#   lpf(k) = the lest prime factor of k
+#   lpf(k) = the least prime factor of k
 
 # See also:
 #   https://projecteuler.net/problem=521

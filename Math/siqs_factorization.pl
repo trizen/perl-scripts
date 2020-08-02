@@ -45,6 +45,7 @@ use constant {
               FERMAT_ITERATIONS         => 100_000,
               NEAR_POWER_ITERATIONS     => 1_000,
               CFRAC_ITERATIONS          => 50_000,
+              ORDER_ITERATIONS          => 200_000,
               HOLF_ITERATIONS           => 100_000,
               MILLER_RABIN_ITERATIONS   => 100,
               LUCAS_MILLER_ITERATIONS   => 50,
@@ -1295,8 +1296,8 @@ sub pollard_rho_exp_find_factor ($n, $max_iter) {
         Math::GMPz::Rmpz_sub($g, $x, $y);
         Math::GMPz::Rmpz_gcd($g, $g, $n);
 
-        if (Math::GMPz::Rmpz_cmp_ui($g, 1) != 0) {
-            return undef if ($g == $n);
+        if (Math::GMPz::Rmpz_cmp_ui($g, 1) > 0) {
+            return undef if (Math::GMPz::Rmpz_cmp($g, $n) == 0);
             return $g;
         }
     }
@@ -1336,6 +1337,40 @@ sub phi_finder_factor ($n, $max_iter) {
     my $p = ($q + Math::GMPz->new(sqrtint(abs($q * $q - 4 * $n)))) >> 1;
 
     (($n % $p) == 0) ? $p : undef;
+}
+
+sub order_find_factor ($n, $max_iter) {
+
+    # Find a prime factor of n if all the prime factors of n are close to each other.
+    # Inpsired by Fermat's little theorem.
+
+    state $TWO = Math::GMPz::Rmpz_init_set_ui_nobless(2);
+
+    state $z = Math::GMPz::Rmpz_init_nobless();
+    state $t = Math::GMPz::Rmpz_init_nobless();
+
+    my $g = Math::GMPz::Rmpz_init();
+
+    Math::GMPz::Rmpz_powm($z, $TWO, $n, $n);
+
+    # Cannot factor Fermat pseudoprimes
+    if (Math::GMPz::Rmpz_cmp_ui($z, 2) == 0) {
+        return undef;
+    }
+
+    for (my $k = 1 ; $k <= $max_iter ; $k += 2) {
+
+        Math::GMPz::Rmpz_powm_ui($t, $TWO, $k, $n);
+        Math::GMPz::Rmpz_sub($g, $z, $t);
+        Math::GMPz::Rmpz_gcd($g, $g, $n);
+
+        if (Math::GMPz::Rmpz_cmp_ui($g, 1) > 0) {
+            return undef if (Math::GMPz::Rmpz_cmp($g, $n) == 0);
+            return $g;
+        }
+    }
+
+    return undef;
 }
 
 sub fermat_find_factor ($n, $max_iter) {
@@ -1654,6 +1689,11 @@ sub find_small_factors ($rem, $factors) {
         sub {
             say "=> CFRAC simple...";
             simple_cfrac_find_factor($rem, CFRAC_ITERATIONS);
+        },
+
+        sub {
+            say "=> Fermat's little theorem...";
+            order_find_factor($rem, ORDER_ITERATIONS);
         },
 
         sub {
