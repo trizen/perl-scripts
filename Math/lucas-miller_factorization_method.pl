@@ -20,13 +20,13 @@ use Math::GMPz;
 use ntheory qw(:all);
 use experimental qw(signatures);
 
-sub lucas_miller_factor ($n, $I = 1, $k = 100) {
+sub lucas_miller_factor ($n, $j = 1, $k = 100) {
 
     if (ref($n) ne 'Math::GMPz') {
         $n = Math::GMPz->new("$n");
     }
 
-    my $D = $n + $I;
+    my $D = $n + $j;
     my $s = valuation($D, 2);
     my $r = $s - 1;
     my $d = $D >> $s;

@@ -4,11 +4,10 @@
 # Date: 28 January 2019
 # https://github.com/trizen
 
-# A new algorithm for generating Fermat pseudoprimes to base 2.
+# A new algorithm for generating Fermat super-pseudoprimes to base 2.
 
 # See also:
 #   https://oeis.org/A050217 -- Super-Poulet numbers: Poulet numbers whose divisors d all satisfy d|2^d-2.
-#   https://oeis.org/A214305 -- Fermat pseudoprimes to base 2 with two prime factors.
 
 # See also:
 #   https://en.wikipedia.org/wiki/Fermat_pseudoprime
@@ -19,20 +18,21 @@ use warnings;
 use experimental qw(signatures);
 
 use Math::AnyNum qw(prod);
-use ntheory qw(forcomb forprimes kronecker divisors lucas_sequence powmod);
+use ntheory qw(forcomb forprimes kronecker divisors lucas_sequence powmod znorder);
 
-sub fermat_pseudoprimes ($limit, $callback) {
+sub fermat_superpseudoprimes ($limit, $callback) {
 
     my %common_divisors;
 
     forprimes {
         my $p = $_;
+        my $z = znorder(2, $p);
         foreach my $d (divisors($p - 1)) {
-            if (powmod(2, $d, $p) == 1) {
+            if ($d % $z == 0) {
                 push @{$common_divisors{$d}}, $p;
             }
         }
-    } $limit;
+    } 3, $limit;
 
     my %seen;
 
@@ -59,7 +59,7 @@ sub is_fibonacci_pseudoprime($n) {
 
 my @pseudoprimes;
 
-fermat_pseudoprimes(
+fermat_superpseudoprimes(
     20_000,
     sub ($n, @f) {
 
