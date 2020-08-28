@@ -21,7 +21,8 @@ sub optimize_JPEGs ($files) {
            "jpegoptim",
            "--preserve",    # preserve file modification times
            ##'--max=90',
-           ##'--all-normal',
+           ##'--size=2048',
+           '--all-progressive',
            @$files
           );
 }

@@ -1447,7 +1447,7 @@ sub miller_rabin_factor ($n, $tries) {
     my $d = $D >> $s;
 
     if ($s > 20 and $tries > 10) {
-        $tries = 10;
+        $tries = 1+int(2 * (100/$s));
     }
 
     my $x = Math::GMPz::Rmpz_init();
@@ -1478,17 +1478,17 @@ sub miller_rabin_factor ($n, $tries) {
     return undef;
 }
 
-sub lucas_miller_factor ($n, $I, $tries) {
+sub lucas_miller_factor ($n, $j, $tries) {
 
     # Lucas-Miller factorization method.
 
-    my $D = $n + $I;
+    my $D = $n + $j;
     my $s = Math::GMPz::Rmpz_scan1($D, 0);
     my $r = $s;
     my $d = $D >> $s;
 
     if ($s > 10 and $tries > 5) {
-        $tries = 5;
+        $tries //= 1+int(100/$s);
     }
 
     my $x = Math::GMPz::Rmpz_init();
@@ -1509,22 +1509,13 @@ sub lucas_miller_factor ($n, $I, $tries) {
 
             my ($U, $V) = lucas_sequence($n, $P, $Q, $x);
 
-            foreach my $t ($U, $V) {
+            foreach my $t ($U, $V, Math::Prime::Util::GMP::subint($V, $P)) {
                 Math::GMPz::Rmpz_set_str($g, $t, 10);
                 Math::GMPz::Rmpz_gcd($g, $g, $n);
                 if (    Math::GMPz::Rmpz_cmp_ui($g, 1) > 0
                     and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
                     return $g;
                 }
-            }
-
-            Math::GMPz::Rmpz_set_str($g, $V, 10);
-            Math::GMPz::Rmpz_sub_ui($g, $g, $P);
-            Math::GMPz::Rmpz_gcd($g, $g, $n);
-
-            if (    Math::GMPz::Rmpz_cmp_ui($g, 1) > 0
-                and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
-                return $g;
             }
 
             Math::GMPz::Rmpz_mul_2exp($x, $x, 1);

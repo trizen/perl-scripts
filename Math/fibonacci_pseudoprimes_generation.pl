@@ -6,11 +6,12 @@
 
 # A new algorithm for generating Fibonacci pseudoprimes.
 
-# See also:
+# OEIS:
 #   https://oeis.org/A081264 -- Odd Fibonacci pseudoprimes.
 #   https://oeis.org/A212424 -- Frobenius pseudoprimes with respect to Fibonacci polynomial x^2 - x - 1.
 
-# For more info, see:
+# See also:
+#   https://trizenx.blogspot.com/2020/08/pseudoprimes-construction-methods-and.html
 #   https://trizenx.blogspot.com/2018/08/investigating-fibonacci-numbers-modulo-m.html
 
 use 5.020;
@@ -31,7 +32,7 @@ sub fibonacci_pseudoprimes ($limit, $callback) {
                 push @{$common_divisors{$d}}, $p;
             }
         }
-    } $limit;
+    } 3, $limit;
 
     my %seen;
 

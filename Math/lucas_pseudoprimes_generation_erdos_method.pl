@@ -27,7 +27,7 @@ sub lambda_primes ($L, $D) {
     sort { $a <=> $b } uniq(@A, @B);
 }
 
-sub lucas_pseudoprimes ($L, $P = 1, $Q = -1) {    # smallest numbers first
+sub lucas_pseudoprimes ($L, $P = 1, $Q = -1) {
 
     my $D = ($P * $P - 4 * $Q);
     my @P = lambda_primes($L, $D);
