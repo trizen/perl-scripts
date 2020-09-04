@@ -565,6 +565,7 @@ A nice collection of day-to-day Perl scripts.
     * [Lucas pseudoprimes generation erdos method](./Math/lucas_pseudoprimes_generation_erdos_method.pl)
     * [Lucas sequences U V](./Math/lucas_sequences_U_V.pl)
     * [Lucas sequences U V mpz](./Math/lucas_sequences_U_V_mpz.pl)
+    * [Lucas theorem](./Math/lucas_theorem.pl)
     * [LUP decomposition](./Math/LUP_decomposition.pl)
     * [Magic 3-gon ring](./Math/magic_3-gon_ring.pl)
     * [Magic 5-gon ring](./Math/magic_5-gon_ring.pl)
