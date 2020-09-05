@@ -862,6 +862,7 @@ A nice collection of day-to-day Perl scripts.
     * [SmartWordWrap simple](./Text/smartWordWrap_simple.pl)
     * [Unique prefixes](./Text/unique_prefixes.pl)
     * [Word roots](./Text/word_roots.pl)
+    * [Word unscrambler](./Text/word_unscrambler.pl)
 * Time
     * [Calendar](./Time/calendar.pl)
     * [Contdown](./Time/contdown.pl)

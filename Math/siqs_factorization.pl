@@ -748,17 +748,17 @@ sub fast_fibonacci_factor ($n, $upto) {
     my $g = Math::GMPz::Rmpz_init();
 
     foreach my $k (2 .. $upto) {
-        foreach my $P (3, 4) {
 
-            my ($U, $V) = map { Math::GMPz::Rmpz_init_set_str($_, 10) } lucas_sequence($n, $P, 1, $k);
+        my ($U, $V) = lucas_sequence($n, 3, 1, $k);
 
-            foreach my $t ($U, $U - 1, $V, $V - 1, $V - 2) {
-                Math::GMPz::Rmpz_gcd($g, $t, $n);
+        foreach my $t ($U, $V, Math::Prime::Util::GMP::subint($V, 1), Math::Prime::Util::GMP::addint($V, 1)) {
 
-                if (    Math::GMPz::Rmpz_cmp_ui($g, 1) > 0
-                    and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
-                    return $g;
-                }
+            Math::GMPz::Rmpz_set_str($g, $t, 10);
+            Math::GMPz::Rmpz_gcd($g, $g, $n);
+
+            if (    Math::GMPz::Rmpz_cmp_ui($g, 1) > 0
+                and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
+                return $g;
             }
         }
     }
@@ -1447,7 +1447,7 @@ sub miller_rabin_factor ($n, $tries) {
     my $d = $D >> $s;
 
     if ($s > 20 and $tries > 10) {
-        $tries = 1+int(2 * (100/$s));
+        $tries = 1 + int(2 * (100 / $s));
     }
 
     my $x = Math::GMPz::Rmpz_init();
@@ -1488,7 +1488,7 @@ sub lucas_miller_factor ($n, $j, $tries) {
     my $d = $D >> $s;
 
     if ($s > 10 and $tries > 5) {
-        $tries //= 1+int(100/$s);
+        $tries //= 1 + int(100 / $s);
     }
 
     my $x = Math::GMPz::Rmpz_init();
