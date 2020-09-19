@@ -40,7 +40,7 @@ sub modular_binomial ($n, $k, $m) {
         }
     } $n;
 
-    $prod;
+    return $prod;
 }
 
 say modular_binomial(100, 50, 139);        #=> 71

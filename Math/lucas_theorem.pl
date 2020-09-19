@@ -16,6 +16,35 @@ use warnings;
 use experimental qw(signatures);
 use ntheory qw(:all);
 
+sub factorial_valuation ($n, $p) {
+    ($n - vecsum(todigits($n, $p))) / ($p - 1);
+}
+
+sub modular_binomial ($n, $k, $m) {    # fast for small n
+
+    my $j    = $n - $k;
+    my $prod = 1;
+
+    forprimes {
+        my $p = factorial_valuation($n, $_);
+
+        if ($_ <= $k) {
+            $p -= factorial_valuation($k, $_);
+        }
+
+        if ($_ <= $j) {
+            $p -= factorial_valuation($j, $_);
+        }
+
+        if ($p > 0) {
+            $prod *= ($p == 1) ? ($_ % $m) : powmod($_, $p, $m);
+            $prod %= $m;
+        }
+    } $n;
+
+    return $prod;
+}
+
 sub lucas_theorem ($n, $k, $p) {
 
     if ($n < $k) {
@@ -32,13 +61,13 @@ sub lucas_theorem ($n, $k, $p) {
         }
 
         ($n, $k) = (divint($n, $p), divint($k, $p));
-        $res = mulmod($res, binomial($Nr, $Kr), $p);
+        $res = mulmod($res, modular_binomial($Nr, $Kr, $p), $p);
     }
 
     return $res;
 }
 
-sub lucas_theorem_alt ($n, $k, $p) {        # alternative implementation
+sub lucas_theorem_alt ($n, $k, $p) {    # alternative implementation
 
     if ($n < $k) {
         return 0;
@@ -58,7 +87,7 @@ sub lucas_theorem_alt ($n, $k, $p) {        # alternative implementation
             return 0;
         }
 
-        $res = mulmod($res, binomial($Nr, $Kr), $p);
+        $res = mulmod($res, modular_binomial($Nr, $Kr, $p), $p);
     }
 
     return $res;
