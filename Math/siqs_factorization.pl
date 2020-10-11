@@ -1487,11 +1487,12 @@ sub lucas_miller_factor ($n, $j, $tries) {
     my $r = $s;
     my $d = $D >> $s;
 
+    $d = Math::GMPz::Rmpz_get_str($d, 10);
+
     if ($s > 10 and $tries > 5) {
         $tries //= 1 + int(100 / $s);
     }
 
-    my $x = Math::GMPz::Rmpz_init();
     my $g = Math::GMPz::Rmpz_init();
 
     foreach my $i (1 .. $tries) {
@@ -1503,22 +1504,30 @@ sub lucas_miller_factor ($n, $j, $tries) {
 
         next if ntheory::is_square($P * $P - 4 * $Q);
 
-        Math::GMPz::Rmpz_set($x, $d);
+        my ($U1, $V1, $Q1) =
+          map { Math::GMPz::Rmpz_init_set_str($_, 10) } Math::Prime::Util::GMP::lucas_sequence($n, $P, $Q, $d);
 
-        foreach my $k (0 .. $r) {
+        foreach my $k (1 .. $r) {
 
-            my ($U, $V) = lucas_sequence($n, $P, $Q, $x);
-
-            foreach my $t ($U, $V, Math::Prime::Util::GMP::subint($V, $P)) {
-                Math::GMPz::Rmpz_set_str($g, $t, 10);
-                Math::GMPz::Rmpz_gcd($g, $g, $n);
+            foreach my $t ($U1, $V1, $P) {
+                if (ref($t)) {
+                    Math::GMPz::Rmpz_gcd($g, $t, $n);
+                }
+                else {
+                    Math::GMPz::Rmpz_sub_ui($g, $V1, $t);
+                    Math::GMPz::Rmpz_gcd($g, $g, $n);
+                }
                 if (    Math::GMPz::Rmpz_cmp_ui($g, 1) > 0
                     and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
                     return $g;
                 }
             }
 
-            Math::GMPz::Rmpz_mul_2exp($x, $x, 1);
+            Math::GMPz::Rmpz_mul($U1, $U1, $V1);
+            Math::GMPz::Rmpz_mod($U1, $U1, $n);
+            Math::GMPz::Rmpz_powm_ui($V1, $V1, 2, $n);
+            Math::GMPz::Rmpz_submul_ui($V1, $Q1, 2);
+            Math::GMPz::Rmpz_powm_ui($Q1, $Q1, 2, $n);
         }
     }
 
