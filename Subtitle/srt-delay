@@ -17,27 +17,30 @@
 #
 #-------------------------------------------------------
 #  Appname: srt-delay
-#  Version: 0.0.5
-#  Created on: 26 December 2011
-#  Latest edit on: 23 December 2017
+#  Version: 0.0.6
+#  Created: 26 December 2011
+#  Edit on: 19 October 2020
 #  https://github.com/trizen
 #-------------------------------------------------------
 
 use 5.014;
 use strict;
+use warnings;
 
-use Scalar::Util qw(looks_like_number);
+use Getopt::Long qw(GetOptions);
 
 sub usage {
     print <<"USAGE";
 usage: $0 [options] [seconds] [file.srt]
 
 Options:
-    -b, --backup  : backup original to .bak
+    -b  --backup    : backup original to .bak
+    -d  --delay=f   : number of seconds of delay
+    -s  --scale=f   : scale the timestamps by a multiple
 
-Examples: $0 -b 1.439 file.srt
-          $0 -b 0.321 file.srt
-          $0 -b -3.14 file.srt
+Examples: $0 -b -d=1.439 file.srt
+          $0 -b -d=0.321 file.srt
+          $0 -b -d-=-3.14 file.srt
 USAGE
     exit 0;
 }
@@ -60,9 +63,16 @@ sub sec2time {
     return @out;
 }
 
-my $addition = (grep { looks_like_number($_) } @ARGV)[0] // usage();
+my $delay  = 0;
+my $backup = 0;
+my $scale  = 1;
 
-my $backup = (grep { $_ eq '-b' or $_ eq '--backup' } @ARGV) ? 1 : 0;
+GetOptions(
+           "b|backup!" => \$backup,
+           "s|scale=f" => \$scale,
+           "d|delay=f" => \$delay,
+          )
+  or die("Error in command line arguments");
 
 foreach my $file (grep { -f $_ } @ARGV) {
     my @output;
@@ -73,11 +83,11 @@ foreach my $file (grep { -f $_ } @ARGV) {
                 ' --> ',
                 sec2time(
                     map ({
-                            my $sec = $_ + $addition;
+                            my $sec = $scale * $_ + $delay;
                             $sec >= 0
                               ? $sec
                               : !warn "[!] Time cannot be lower than zero at line $.\n";
-                        } time2sec(split(/\s*-->\s*/, $line, 2)))
+                    } time2sec(split(/\s*-->\s*/, $line, 2)))
                 )
               )
               . $1;
