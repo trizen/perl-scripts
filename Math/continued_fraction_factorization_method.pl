@@ -8,10 +8,11 @@
 # combined with modular arithmetic (variation of the Brillhart-Morrison algorithm).
 
 # See also:
+#   https://en.wikipedia.org/wiki/Pell%27s_equation
 #   https://en.wikipedia.org/wiki/Continued_fraction_factorization
 #   https://trizenx.blogspot.com/2018/10/continued-fraction-factorization-method.html
 
-# Some parts of code inspired by:
+# "Gaussian elimination" algorithm from:
 #    https://github.com/martani/Quadratic-Sieve
 
 use 5.020;
@@ -25,9 +26,7 @@ use List::Util qw(first);
 use ntheory qw(is_prime factor_exp forprimes next_prime is_square_free);
 use Math::Prime::Util::GMP qw(is_power vecprod sqrtint rootint gcd urandomb);
 
-use constant {
-              USE_B_SMOOTH_METHOD => 0,    # 1 to use primes in factor-base up to B=floor(exp(sqrt(log(n) * log(log(n))) / 2))
-             };
+use constant {USE_B_SMOOTH_METHOD => 0,};
 
 sub gaussian_elimination ($rows, $n) {
 

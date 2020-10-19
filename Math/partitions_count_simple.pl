@@ -1,21 +1,25 @@
 #!/usr/bin/perl
 
-# Author: Daniel "Trizen" Șuteu
-# License: GPLv3
+# Daniel "Trizen" Șuteu
 # Date: 24 August 2016
 # Website: https://github.com/trizen
 
 # A very fast algorithm for counting the number of partitions of a given number.
-# See the sequence at: http://oeis.org/A000041
+
+# OEIS:
+#   https://oeis.org/A000041
+
+# See also:
+#   https://www.youtube.com/watch?v=iJ8pnCO0nTY
 
 use 5.010;
 use strict;
 use warnings;
 
-use POSIX qw(floor ceil);
+use Math::AnyNum qw(:overload floor ceil);
 
-# Based on the recursive function described below:
-# http://numberworld.blogspot.ro/2013/09/sum-of-divisors-function-eulers.html
+# Based on the recursive function described by Christian Schridde:
+# https://numberworld.blogspot.com/2013/09/sum-of-divisors-function-eulers.html
 
 sub partitions_count {
     my ($n, $cache) = @_;
