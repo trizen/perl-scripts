@@ -30,6 +30,7 @@ use warnings;
 use Getopt::Long qw(GetOptions);
 
 sub usage {
+    my ($exit_code) = @_;
     print <<"USAGE";
 usage: $0 [options] [seconds] [file.srt]
 
@@ -40,9 +41,9 @@ Options:
 
 Examples: $0 -b -d=1.439 file.srt
           $0 -b -d=0.321 file.srt
-          $0 -b -d-=-3.14 file.srt
+          $0 -b -d=-3.14 file.srt
 USAGE
-    exit 0;
+    exit($exit_code // 0);
 }
 
 sub time2sec {
@@ -71,10 +72,15 @@ GetOptions(
            "b|backup!" => \$backup,
            "s|scale=f" => \$scale,
            "d|delay=f" => \$delay,
+           "h|help"    => sub { usage(0) },
           )
   or die("Error in command line arguments");
 
-foreach my $file (grep { -f $_ } @ARGV) {
+my @files = grep { -f $_ } @ARGV;
+
+@files || usage(2);
+
+foreach my $file (@files) {
     my @output;
     open my $fh, '<', $file or die "Unable to open for read ${file}: $!\n";
     while (defined(my $line = <$fh>)) {
