@@ -803,6 +803,7 @@ A nice collection of day-to-day Perl scripts.
     * [Tangent numbers](./Math/tangent_numbers.pl)
     * [Triangle hyperoperation](./Math/triangle_hyperoperation.pl)
     * [Triangle interior angles](./Math/triangle_interior_angles.pl)
+    * [Tribonacci primality test](./Math/tribonacci_primality_test.pl)
     * [Trip2mars](./Math/trip2mars.pl)
     * [Unitary divisors](./Math/unitary_divisors.pl)
     * [Unitary divisors fast](./Math/unitary_divisors_fast.pl)
