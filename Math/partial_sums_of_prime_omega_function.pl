@@ -59,7 +59,7 @@
 
 # Asymptotic formulas:
 #   A_1(n) ~ 0.4522474200410654985065... * n*(n+1)/2               (see: https://oeis.org/A085548)
-#   A_2(n) ~ 0.1747626392994435364231... * n*(n-1)*(2*n - 1)/6     (see: https://oeis.org/A085541)
+#   A_2(n) ~ 0.1747626392994435364231... * n*(n+1)*(2*n+1)/6       (see: https://oeis.org/A085541)
 
 # For `m >= 1`, `A_m(n)` can be described asymptotically in terms of the prime zeta function:
 #   A_m(n) ~ F_m(n) * P(m+1)

@@ -58,7 +58,7 @@
 
 # Asymptotic formulas:
 #   B_1(n) ~ 0.55169329765699918... * n*(n+1)/2
-#   B_2(n) ~ 0.19411816983263379... * n*(n-1)*(2*n - 1)/6
+#   B_2(n) ~ 0.19411816983263379... * n*(n+1)*(2*n+1)/6
 
 # In general, for `m>=1`, we have the following asymptotic formula:
 #   B_m(n) ~ (Sum_{k>=1} primezeta((m+1)*k)) * F_m(n)

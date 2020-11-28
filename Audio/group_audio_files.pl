@@ -34,18 +34,29 @@ use List::UtilsBy qw(max_by);
 my $file_formats = qr{\.(?:mp3|mp4|webm|mkv|opus|ogg|oga)\z}i;    # file formats
 my (@files) = grep { -e $_ } @ARGV;
 
-my @mp3_files;
+if (not @files) {
+    die "usage: $0 [dir]\n";
+}
+
+my @audio_files;
 
 find(\&wanted_files, @files);
 
 sub wanted_files {
     my $file = $File::Find::name;
-    push @mp3_files, $file if ($file =~ $file_formats);
+    push @audio_files, $file if ($file =~ $file_formats);
+}
+
+if (@audio_files) {
+    say ":: Found ", scalar(@audio_files), " audio files...";
+}
+else {
+    say ":: No file found...";
 }
 
 my %groups;
 
-foreach my $filename (@mp3_files) {
+foreach my $filename (@audio_files) {
 
     my $basename = decode_utf8(basename($filename));
 
