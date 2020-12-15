@@ -81,7 +81,7 @@ foreach my $dir (@dirs) {
         }
     }
 
-    if ($error == 0) {
+    if ($error == 0 and $opt{d}) {
         foreach my $key (keys %dirs) {
             rmdir($key);
         }

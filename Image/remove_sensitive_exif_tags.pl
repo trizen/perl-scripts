@@ -23,9 +23,10 @@ use Getopt::Std qw(getopts);
 use experimental qw(signatures);
 
 my %opts;
-getopts('-e', \%opts);    # flag "-e" removes extra tags
+getopts('ea', \%opts);    # flag "-e" removes extra tags
 
 my $extra      = $opts{e} || 0;          # true to remove additional information, such as the camera name
+my $all        = $opts{a} || 0;          # true to remove all tags
 my $batch_size = 100;                    # how many files to process at once
 my $image_re   = qr/\.(png|jpe?g)\z/i;
 
@@ -59,13 +60,15 @@ sub strip_tags ($files) {
          : ()
         ),
 
+        ($all ? ("-all=") : ()),
+
         @$files
           );
 }
 
 my @files;
 
-@ARGV or die "usage: perl script.pl [-e] [dirs | files]\n";
+@ARGV or die "usage: perl script.pl -[ea] [dirs | files]\n";
 
 find(
     {
