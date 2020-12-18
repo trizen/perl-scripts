@@ -260,6 +260,7 @@ A nice collection of day-to-day Perl scripts.
     * [Mime types](./Greppers/mime_types.pl)
     * [Mp3grep](./Greppers/mp3grep.pl)
     * [Scgrep](./Greppers/scgrep)
+    * [Unigrep](./Greppers/unigrep.pl)
 * GTK+
     * [Mouse position](./GTK+/mouse_position.pl)
     * [Tray-file-browser](./GTK+/tray-file-browser.pl)
