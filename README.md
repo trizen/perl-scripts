@@ -301,6 +301,7 @@ A nice collection of day-to-day Perl scripts.
     * [Matrix visual](./Image/matrix_visual.pl)
     * [Nearest neighbor interpolation](./Image/nearest_neighbor_interpolation.pl)
     * [Optimize images](./Image/optimize_images.pl)
+    * [Optimize images littleutils](./Image/optimize_images_littleutils.pl)
     * [Photo mosaic from images](./Image/photo_mosaic_from_images.pl)
     * [Remove sensitive exif tags](./Image/remove_sensitive_exif_tags.pl)
     * [Sharp 2x zoom](./Image/sharp_2x_zoom.pl)

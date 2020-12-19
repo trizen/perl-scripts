@@ -1,10 +1,13 @@
 #!/usr/bin/perl
 
 # Daniel "Trizen" Șuteu
-# Date: 09 October 2019
+# Date: 19 December 2020
 # https://github.com/trizen
 
-# Optimize JPEG and PNG images in a given directory (recursively) using the "jpegoptim" and "optipng" tools.
+# Optimize JPEG, PNG and GIF images in a given directory (recursively) using the "opt-png", "opt-jpg" and "opt-gif" tools from littleutils.
+
+# Littleutils:
+#   https://sourceforge.net/projects/littleutils/
 
 use 5.020;
 use warnings;
@@ -19,11 +22,9 @@ sub optimize_JPEGs (@files) {
     say ":: Optimizing a batch of ", scalar(@files), " JPEG images...";
 
     system(
-           "jpegoptim",
-           "--preserve",    # preserve file modification times
-           ##'--max=90',
-           ##'--size=2048',
-           '--all-progressive',
+           "opt-jpg",
+           "-m", "all",     # copy all extra markers
+           "-t",            # preserve timestamp on modified files
            @files
           );
 }
@@ -33,9 +34,19 @@ sub optimize_PNGs (@files) {
     say ":: Optimizing a batch of ", scalar(@files), " PNG images...";
 
     system(
-           "optipng",
-           "-preserve",    # preserve file attributes if possible
-           "-o1",          # optimization level
+           "opt-png",
+           "-t",            # preserve timestamp on modified files
+           @files
+          );
+}
+
+sub optimize_GIFs (@files) {
+
+    say ":: Optimizing a batch of ", scalar(@files), " GIF images...";
+
+    system(
+           "opt-gif",
+           "-t",            # preserve timestamp on modified files
            @files
           );
 }
@@ -48,6 +59,10 @@ my %types = (
              'image/png' => {
                              files => [],
                              call  => \&optimize_PNGs,
+                            },
+             'image/gif' => {
+                             files => [],
+                             call  => \&optimize_GIFs,
                             },
             );
 
