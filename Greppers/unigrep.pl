@@ -18,13 +18,17 @@ use warnings;
 
 use Encode qw(decode_utf8);
 use Text::Unidecode qw(unidecode);
+use Getopt::Std qw(getopts);
 
-my $param = shift(@ARGV);
-my $regex = qr/$param/o;
+my %opt;
+getopts('i', \%opt);
+
+my $param = shift(@ARGV) // '';
+my $regex = ($opt{i} ? qr/$param/oi : qr/$param/o);
 
 my $uniregex = do {
     my $t = decode_utf8($param);
-    qr/$t/o;
+    $opt{i} ? qr/$t/io : qr/$t/o;
 };
 
 while (<>) {
