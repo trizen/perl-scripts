@@ -110,7 +110,7 @@ my $term = Term::ReadLine->new("Word Unscrambler");
 
 while (1) {
 
-    chomp(my $word = decode_utf8($term->readline("Word: ")));
+    chomp(my $word = decode_utf8($term->readline("Word: ") // last));
 
     my @unscrambled = find_unscrambled_words($word, $dict);
 

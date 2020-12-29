@@ -15,7 +15,6 @@ use strict;
 use warnings;
 
 use ntheory qw(:all);
-use List::Util qw(uniq);
 use experimental qw(signatures);
 
 sub inverse_usigma ($n) {
@@ -28,28 +27,21 @@ sub inverse_usigma ($n) {
         is_prime_power($D) || next;
 
         my %temp;
-        foreach my $k (1 .. valuation($n, $D) + 1) {
 
-            my $v = powint($D, $k);
-            my $u = addint($v, 1);
-
-            modint($n, $u) == 0 or next;
-
-            foreach my $f (divisors(divint($n, $u))) {
-                if (exists $r{$f}) {
-                    push @{$temp{mulint($f, $u)}}, map { mulint($v, $_) }
-                      grep { gcd($v, $_) == 1 } @{$r{$f}};
-                }
+        foreach my $f (divisors(divint($n, $d))) {
+            if (exists $r{$f}) {
+                push @{$temp{mulint($f, $d)}}, map { mulint($D, $_) }
+                  grep { gcd($D, $_) == 1 } @{$r{$f}};
             }
         }
 
-        while (my ($i, $v) = each(%temp)) {
-            push @{$r{$i}}, @$v;
+        while (my ($key, $value) = each(%temp)) {
+            push @{$r{$key}}, @$value;
         }
     }
 
     return if not exists $r{$n};
-    return sort { $a <=> $b } uniq(@{$r{$n}});
+    return sort { $a <=> $b } @{$r{$n}};
 }
 
 my $n = 186960;
