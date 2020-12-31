@@ -525,6 +525,7 @@ A nice collection of day-to-day Perl scripts.
     * [Inverse of p adic valuation](./Math/inverse_of_p_adic_valuation.pl)
     * [Inverse of sigma function](./Math/inverse_of_sigma_function.pl)
     * [Inverse of sigma function fast](./Math/inverse_of_sigma_function_fast.pl)
+    * [Inverse of sigma function generalized](./Math/inverse_of_sigma_function_generalized.pl)
     * [Inverse of usigma function](./Math/inverse_of_usigma_function.pl)
     * [Invert transform of factorials](./Math/invert_transform_of_factorials.pl)
     * [Is absolute euler pseudoprime](./Math/is_absolute_euler_pseudoprime.pl)
