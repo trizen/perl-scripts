@@ -1339,28 +1339,32 @@ sub phi_finder_factor ($n, $max_iter) {
     (($n % $p) == 0) ? $p : undef;
 }
 
-sub order_find_factor ($n, $max_iter) {
+sub FLT_find_factor ($n, $base = 2, $reps = 1e4) {
 
     # Find a prime factor of n if all the prime factors of n are close to each other.
     # Inpsired by Fermat's little theorem.
-
-    state $TWO = Math::GMPz::Rmpz_init_set_ui_nobless(2);
 
     state $z = Math::GMPz::Rmpz_init_nobless();
     state $t = Math::GMPz::Rmpz_init_nobless();
 
     my $g = Math::GMPz::Rmpz_init();
 
-    Math::GMPz::Rmpz_powm($z, $TWO, $n, $n);
+    Math::GMPz::Rmpz_set_ui($t, $base);
+    Math::GMPz::Rmpz_set_ui($z, $base);
+
+    Math::GMPz::Rmpz_powm($z, $z, $n, $n);
 
     # Cannot factor Fermat pseudoprimes
-    if (Math::GMPz::Rmpz_cmp_ui($z, 2) == 0) {
+    if (Math::GMPz::Rmpz_cmp_ui($z, $base) == 0) {
         return undef;
     }
 
-    for (my $k = 1 ; $k <= $max_iter ; $k += 2) {
+    my $multiplier = $base * $base;
 
-        Math::GMPz::Rmpz_powm_ui($t, $TWO, $k, $n);
+    for (my $k = 1 ; $k <= $reps ; $k += 1) {
+
+        Math::GMPz::Rmpz_mul_ui($t, $t, $multiplier);
+        Math::GMPz::Rmpz_mod($t, $t, $n) if ($k % 10 == 0);
         Math::GMPz::Rmpz_sub($g, $z, $t);
         Math::GMPz::Rmpz_gcd($g, $g, $n);
 
@@ -1692,8 +1696,13 @@ sub find_small_factors ($rem, $factors) {
         },
 
         sub {
-            say "=> Fermat's little theorem...";
-            order_find_factor($rem, ORDER_ITERATIONS);
+            say "=> Fermat's little theorem (base 2)...";
+            FLT_find_factor($rem, 2, ($len > 1000) ? 1e4 : ORDER_ITERATIONS);
+        },
+
+        sub {
+            say "=> Fermat's little theorem (base 3)...";
+            FLT_find_factor($rem, 3, ($len > 1000) ? 1e4 : ORDER_ITERATIONS);
         },
 
         sub {
