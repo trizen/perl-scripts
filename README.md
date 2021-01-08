@@ -659,6 +659,7 @@ A nice collection of day-to-day Perl scripts.
     * [Partial sums of jordan totient function](./Math/partial_sums_of_jordan_totient_function.pl)
     * [Partial sums of jordan totient function fast](./Math/partial_sums_of_jordan_totient_function_fast.pl)
     * [Partial sums of jordan totient function times k to the m](./Math/partial_sums_of_jordan_totient_function_times_k_to_the_m.pl)
+    * [Partial sums of lcm count function](./Math/partial_sums_of_lcm_count_function.pl)
     * [Partial sums of liouville function](./Math/partial_sums_of_liouville_function.pl)
     * [Partial sums of lpf](./Math/partial_sums_of_lpf.pl)
     * [Partial sums of n over k-almost prime divisors](./Math/partial_sums_of_n_over_k-almost_prime_divisors.pl)

@@ -27,17 +27,17 @@ use 5.020;
 use strict;
 use warnings;
 
-use ntheory qw(moebius);
+use ntheory qw(:all);
 use experimental qw(signatures);
-use Math::AnyNum qw(:overload isqrt zeta EulerGamma round);
+use Math::AnyNum qw(:overload zeta EulerGamma round);
 
 sub squarefree_count ($n) {
     my $count = 0;
 
     my $k = 1;
-    foreach my $mu (moebius(1, isqrt($n))) {
+    foreach my $mu (moebius(1, sqrtint($n))) {
         if ($mu) {
-            $count += $mu * int($n / ($k * $k));
+            $count += $mu * divint($n, $k * $k);
         }
         ++$k;
     }
@@ -58,24 +58,20 @@ sub unitary_divisors_partial_sum_1 ($n) {    # O(sqrt(n)) complexity
 
     my $total = 0;
 
-    my $s = isqrt($n);
-    my $u = int($n / ($s + 1));
+    my $s = sqrtint($n);
+    my $u = divint($n, $s + 1);
 
     my $prev = squarefree_count($n);
 
     for my $k (1 .. $s) {
-        my $curr = squarefree_count(int($n / ($k + 1)));
+        my $curr = squarefree_count(divint($n, $k + 1));
         $total += $k * ($prev - $curr);
         $prev = $curr;
     }
 
-    my $k = 1;
-    foreach my $mu (moebius(1, $u)) {
-        if ($mu) {
-            $total += int($n / $k);
-        }
-        ++$k;
-    }
+    forsquarefree {
+        $total += divint($n, $_);
+    } $u;
 
     return $total;
 }
@@ -85,15 +81,15 @@ sub unitary_divisors_partial_sum_2 ($n) {    # based on formula by Jerome Raulin
     my $total = 0;
 
     my $k = 1;
-    foreach my $mu (moebius(1, isqrt($n))) {
+    foreach my $mu (moebius(1, sqrtint($n))) {
         if ($mu) {
 
             my $t = 0;
-            foreach my $j (1 .. isqrt($n / ($k * $k))) {
-                $t += int($n / ($j * $k * $k));
+            foreach my $j (1 .. sqrtint(divint($n, $k * $k))) {
+                $t += divint($n, $j * $k * $k);
             }
 
-            my $r = isqrt($n / ($k * $k));
+            my $r = sqrtint(divint($n, $k * $k));
             $total += $mu * (2 * $t - $r * $r);
         }
         ++$k;
