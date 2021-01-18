@@ -11,12 +11,15 @@
 
 # See also:
 #   https://www.youtube.com/watch?v=iJ8pnCO0nTY
+#   https://rosettacode.org/wiki/Partition_function_P
+#   https://en.wikipedia.org/wiki/Partition_(number_theory)#Partition_function
 
 use 5.010;
 use strict;
 use warnings;
 
-use Math::AnyNum qw(:overload floor ceil);
+no warnings 'recursion';
+use Math::AnyNum qw(floor ceil);
 
 # Based on the recursive function described by Christian Schridde:
 # https://numberworld.blogspot.com/2013/09/sum-of-divisors-function-eulers.html
@@ -30,20 +33,21 @@ sub partitions_count {
         return $cache->{$n};
     }
 
-    my $sum_1 = 0;
-    foreach my $i (1 .. floor((sqrt(24 * $n + 1) + 1) / 6)) {
-        $sum_1 += (-1)**($i - 1) * partitions_count($n - int($i * (3 * $i - 1) / 2), $cache);
+    my @terms;
+
+    foreach my $i (1 .. floor((sqrt(24*$n + 1) + 1) / 6)) {
+        push @terms, (-1)**($i - 1) * partitions_count($n - (($i * (3*$i - 1)) >> 1), $cache);
     }
 
-    my $sum_2 = 0;
-    foreach my $i (1 .. ceil((sqrt(24 * $n + 1) - 7) / 6)) {
-        $sum_2 += (-1)**($i - 1) * partitions_count($n - int(-$i * (-3 * $i - 1) / 2), $cache);
+    foreach my $i (1 .. ceil((sqrt(24*$n + 1) - 7) / 6)) {
+        push @terms, (-1)**($i - 1) * partitions_count($n - (($i * (3*$i + 1)) >> 1), $cache);
     }
 
-    $cache->{$n} = $sum_1 + $sum_2;
+    $cache->{$n} = Math::AnyNum::sum(@terms);
 }
 
 my %cache;
+
 foreach my $n (1 .. 100) {
     say "p($n) = ", partitions_count($n + 1, \%cache);
 }
