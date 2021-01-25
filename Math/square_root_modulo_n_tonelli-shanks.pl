@@ -17,7 +17,7 @@
 # which represents:
 #   x^2 = 472 (mod 972)
 #
-# this algorithm is not able to find a solution, although there exist four solutions:
+# this algorithm may fail find all the solutions, although there exist four solutions in this case:
 #   x = {38, 448, 524, 934}
 
 # Code inspired from:
@@ -79,9 +79,9 @@ sub tonelli_shanks ($n, $p) {
 
 sub sqrt_mod_n ($a, $n) {
 
-    kronecker($a, $n) == 1 or return;
-
     $a %= $n;
+
+    return 0 if ($a == 0);
 
     if (($n & ($n - 1)) == 0) {    # n is a power of 2
 
@@ -112,6 +112,7 @@ sub sqrt_mod_n ($a, $n) {
     }
 
     if (is_prime($n)) {    # n is a prime
+        kronecker($a, $n) == 1 or return;
         my $r = tonelli_shanks($a, $n);
         return ($r, $n - $r);
     }
@@ -166,6 +167,7 @@ say join(' ', sqrt_mod_n(993, 2048));    #=> 369 1679 655 1393
 say join(' ', sqrt_mod_n(441, 920));     #=> 761 481 209 849 531 251 899 619 301 21 669 389 71 711 439 159
 say join(' ', sqrt_mod_n(841, 905));     #=> 391 876 29 514
 say join(' ', sqrt_mod_n(289, 992));     #=> 417 513 975 79 913 17 479 575
+say join(' ', sqrt_mod_n(472, 972));     #=> 448 524
 
 # The algorithm works for arbitrary large integers
 say join(' ', sqrt_mod_n(13**18 * 5**7 - 1, 13**18 * 5**7));    #=> 633398078861605286438568 2308322911594648160422943 6477255756527023177780182 8152180589260066051764557
