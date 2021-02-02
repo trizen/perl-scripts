@@ -11,10 +11,10 @@ use strict;
 use warnings;
 
 use Math::GMPz;
-use ntheory qw(is_prob_prime random_nbit_prime);
+use ntheory qw(:all);
 
-my $reps = 3;     # number of bases to test
-my $bits = 50;    # bits of p
+my @bases = (2, 3, 5);    # Miller-Rabin pseudoprimes to these bases
+my $bits  = 50;           # bits of p
 
 foreach my $n (1 .. 1e6) {
     my $p = Math::GMPz->new(random_nbit_prime($bits));
@@ -22,7 +22,7 @@ foreach my $n (1 .. 1e6) {
     if (is_prob_prime(2 * $p - 1)) {
         my $n = $p * ($p * 2 - 1);
 
-        if (Math::GMPz::Rmpz_probab_prime_p($n, $reps)) {
+        if (is_strong_pseudoprime($n, @bases)) {
             say $n;
         }
     }

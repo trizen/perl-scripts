@@ -76,7 +76,7 @@ sub sqrt_mod_n ($z, $n) {
     $z %= $n;
 
     if ($z == 0) {
-        return $n;
+        return 0;
     }
 
     if (!($n & 1)) {    # n is even
