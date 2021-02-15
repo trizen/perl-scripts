@@ -15,37 +15,24 @@ use experimental qw(signatures);
 
 sub almost_prime_numbers ($n, $k, $callback) {
 
-    if ($k == 1) {
-        forprimes {
-            $callback->($_);
-        } $n;
-        return;
-    }
-
-    my $count = 0;
-
     sub ($m, $p, $r) {
 
         my $s = rootint(divint($n, $m), $r);
 
-        if ($r == 2) {
+        if ($r == 1) {
 
             forprimes {
-                my $u = mulint($m, $_);
-                forprimes {
-                    $callback->(mulint($u, $_));
-                } $_, divint($n, $u);
-            } $p, $s;
+                $callback->(mulint($m, $_));
+            } $p, divint($n, $m);
 
             return;
         }
 
         for (my $q = $p ; $q <= $s ; $q = next_prime($q)) {
-            __SUB__->($m * $q, $q, $r - 1);
+            __SUB__->(mulint($m, $q), $q, $r - 1);
         }
     }->(1, 2, $k);
-
-    return $count;
 }
 
+# Generate all the numbers k <= 100 for which bigomega(k) = 4
 almost_prime_numbers(100, 4, sub ($n) { say $n });
