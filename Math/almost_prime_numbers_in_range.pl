@@ -22,11 +22,11 @@ sub almost_prime_numbers ($A, $B, $k, $callback) {
 
     $A = vecmax($A, powint(2, $k));
 
-    sub ($m, $p, $r) {
+    sub ($m, $p, $k) {
 
-        my $s = rootint(divint($B, $m), $r);
+        my $s = rootint(divint($B, $m), $k);
 
-        if ($r == 1) {
+        if ($k == 1) {
 
             forprimes {
                 $callback->(mulint($m, $_));
@@ -35,8 +35,18 @@ sub almost_prime_numbers ($A, $B, $k, $callback) {
             return;
         }
 
-        for (my $q = $p ; $q <= $s ; $q = next_prime($q)) {
-            __SUB__->(mulint($m, $q), $q, $r - 1);
+        while ($p <= $s) {
+
+            my $t = mulint($m, $p);
+
+            # Optional optimization
+            if (divceil($A, $t) > divint($B, $t)) {
+                $p = next_prime($p);
+                next;
+            }
+
+            __SUB__->($t, $p, $k - 1);
+            $p = next_prime($p);
         }
     }->(1, 2, $k);
 }
