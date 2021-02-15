@@ -352,6 +352,7 @@ A nice collection of day-to-day Perl scripts.
     * [Additive binomial](./Math/additive_binomial.pl)
     * [Alexandrian integers](./Math/alexandrian_integers.pl)
     * [Almost prime divisors](./Math/almost_prime_divisors.pl)
+    * [Almost prime numbers](./Math/almost_prime_numbers.pl)
     * [Area of triangle](./Math/area_of_triangle.pl)
     * [Arithmetic derivative](./Math/arithmetic_derivative.pl)
     * [Arithmetic expressions](./Math/arithmetic_expressions.pl)
