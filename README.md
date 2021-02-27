@@ -774,6 +774,7 @@ A nice collection of day-to-day Perl scripts.
     * [Solve pell equation fast](./Math/solve_pell_equation_fast.pl)
     * [Solve pell equation generalized](./Math/solve_pell_equation_generalized.pl)
     * [Solve pell equation simple](./Math/solve_pell_equation_simple.pl)
+    * [Solve quadratic diophantine reciprocals](./Math/solve_quadratic_diophantine_reciprocals.pl)
     * [Sophie germain factorization method](./Math/sophie_germain_factorization_method.pl)
     * [Sorting algorithms](./Math/sorting_algorithms.pl)
     * [Sphere volume](./Math/sphere_volume.pl)
