@@ -35,7 +35,7 @@ while (<>) {
 
     my $orig   = $_;
     my $line   = decode_utf8($_);
-    my $unidec = unidecode(decode_utf8($_));
+    my $unidec = unidecode($line);
 
     if (   $orig =~ $regex
         or $line   =~ $uniregex

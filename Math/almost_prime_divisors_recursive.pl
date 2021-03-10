@@ -1,52 +1,64 @@
 #!/usr/bin/perl
 
 # Daniel "Trizen" Șuteu
-# Date: 02 August 2020
+# Date: 10 March 2021
 # https://github.com/trizen
 
 # Generate all the k-almost prime divisors of n.
 
 use 5.020;
-use strict;
-use warnings;
-
 use ntheory qw(:all);
 use experimental qw(signatures);
 
 sub almost_prime_divisors ($n, $k) {
 
-    my @pp = factor_exp($n);
-    my @d  = ([1, 0]);
+    my @factor_exp = factor_exp($n);
+    my @factors    = map { $_->[0] } @factor_exp;
+    my %valuations = map { @$_ } @factor_exp;
 
-    foreach my $pp (@pp) {
-
-        my $p = $pp->[0];
-        my $e = $pp->[1];
-
-        my @t;
-        my $r = [1, 0];
-
-        for my $i (1 .. $e) {
-
-            $r->[0] = mulint($r->[0], $p);
-            $r->[1]++;
-
-            if ($r->[1] == $k) {
-                push @t, [$r->[0], $r->[1]];
-                last;
-            }
-
-            foreach my $u (@d) {
-                if ($u->[1] + $r->[1] <= $k) {
-                    push @t, [mulint($u->[0], $r->[0]), $u->[1] + $r->[1]];
-                }
-            }
-        }
-
-        push @d, @t;
+    if ($k == 0) {
+        return (1);
     }
 
-    sort { $a <=> $b } map { $_->[0] } grep { $_->[1] == $k } @d;
+    if ($k == 1) {
+        return @factors;
+    }
+
+    my @list;
+
+    sub ($m, $p, $k) {
+
+        my $s = rootint(divint($n, $m), $k);
+
+        if ($k == 1) {
+
+            my $limit = divint($n, $m);
+
+            foreach my $q (@factors) {
+
+                $q < $p     and next;
+                $q > $limit and last;
+
+                valuation($m, $q) < $valuations{$q} or next;
+
+                push @list, mulint($m, $q);
+            }
+
+            return;
+        }
+
+        foreach my $q (@factors) {
+
+            $q < $p and next;
+            $q > $s and last;
+
+            valuation($m, $q) < $valuations{$q} or next;
+
+            __SUB__->(mulint($m, $q), $q, $k - 1);
+        }
+    }->(1, $factors[0], $k);
+
+    sort { $a <=> $b } @list;
 }
 
 my $n = factorial(10);
