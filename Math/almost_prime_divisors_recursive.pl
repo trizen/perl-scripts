@@ -28,16 +28,14 @@ sub almost_prime_divisors ($n, $k) {
 
     sub ($m, $p, $k) {
 
-        my $s = rootint(divint($n, $m), $k);
-
         if ($k == 1) {
 
-            my $limit = divint($n, $m);
+            my $L = divint($n, $m);
 
             foreach my $q (@factors) {
 
-                $q < $p     and next;
-                $q > $limit and last;
+                $q < $p and next;
+                $q > $L and last;
 
                 valuation($m, $q) < $valuations{$q} or next;
 
@@ -46,6 +44,8 @@ sub almost_prime_divisors ($n, $k) {
 
             return;
         }
+
+        my $s = rootint(divint($n, $m), $k);
 
         foreach my $q (@factors) {
 

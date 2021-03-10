@@ -24,8 +24,6 @@ sub almost_prime_numbers ($A, $B, $k, $callback) {
 
     sub ($m, $p, $k) {
 
-        my $s = rootint(divint($B, $m), $k);
-
         if ($k == 1) {
 
             forprimes {
@@ -34,6 +32,8 @@ sub almost_prime_numbers ($A, $B, $k, $callback) {
 
             return;
         }
+
+        my $s = rootint(divint($B, $m), $k);
 
         while ($p <= $s) {
 

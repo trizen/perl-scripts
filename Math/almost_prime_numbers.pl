@@ -17,8 +17,6 @@ sub almost_prime_numbers ($n, $k, $callback) {
 
     sub ($m, $p, $r) {
 
-        my $s = rootint(divint($n, $m), $r);
-
         if ($r == 1) {
 
             forprimes {
@@ -27,6 +25,8 @@ sub almost_prime_numbers ($n, $k, $callback) {
 
             return;
         }
+
+        my $s = rootint(divint($n, $m), $r);
 
         for (my $q = $p ; $q <= $s ; $q = next_prime($q)) {
             __SUB__->(mulint($m, $q), $q, $r - 1);

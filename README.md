@@ -786,6 +786,7 @@ A nice collection of day-to-day Perl scripts.
     * [Square root convergents](./Math/square_root_convergents.pl)
     * [Square root method](./Math/square_root_method.pl)
     * [Square root modulo n tonelli-shanks](./Math/square_root_modulo_n_tonelli-shanks.pl)
+    * [Squarefree almost primes in range](./Math/squarefree_almost_primes_in_range.pl)
     * [Squarefree count](./Math/squarefree_count.pl)
     * [Squarefree divisors](./Math/squarefree_divisors.pl)
     * [Stern brocot encoding](./Math/stern_brocot_encoding.pl)
