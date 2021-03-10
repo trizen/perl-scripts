@@ -799,6 +799,7 @@ A nice collection of day-to-day Perl scripts.
     * [Sum of natural powers in constant base](./Math/sum_of_natural_powers_in_constant_base.pl)
     * [Sum of prime-power exponents of factorial](./Math/sum_of_prime-power_exponents_of_factorial.pl)
     * [Sum of prime-power exponents of product of binomials](./Math/sum_of_prime-power_exponents_of_product_of_binomials.pl)
+    * [Sum of remainders](./Math/sum_of_remainders.pl)
     * [Sum of sigma](./Math/sum_of_sigma.pl)
     * [Sum of sigma 2](./Math/sum_of_sigma_2.pl)
     * [Sum of the number of divisors](./Math/sum_of_the_number_of_divisors.pl)
