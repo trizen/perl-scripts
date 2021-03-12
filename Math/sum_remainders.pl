@@ -65,15 +65,15 @@ sub g ($a, $b) {    # g(a,b) = Sum_{k=a..b} k*floor(b/k)
     return $T;
 }
 
-sub sum_of_remainders ($n, $v) {    # sub-linear formula
+sub sum_remainders ($n, $v) {    # sub-linear formula
     addint(subint(mulint($n, $v), sum_of_sigma($v)), g(addint($n, 1), $v));
 }
 
-say sprintf "[%s]", join(', ', map { sum_of_remainders($_,     nth_prime($_)) } 1 .. 20);      #=> A099726
-say sprintf "[%s]", join(', ', map { sum_of_remainders($_ - 1, divisor_sum($_)) } 1 .. 20);    #=> A340976
+say sprintf "[%s]", join(', ', map { sum_remainders($_,     nth_prime($_)) } 1 .. 20);      #=> A099726
+say sprintf "[%s]", join(', ', map { sum_remainders($_ - 1, divisor_sum($_)) } 1 .. 20);    #=> A340976
 
 foreach my $k (1 .. 8) {
-    say("A099726(10^$k) = ", sum_of_remainders(powint(10, $k), nth_prime(powint(10, $k))));
+    say("A099726(10^$k) = ", sum_remainders(powint(10, $k), nth_prime(powint(10, $k))));
 }
 
 __END__
