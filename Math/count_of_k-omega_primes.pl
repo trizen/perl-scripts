@@ -27,11 +27,13 @@ sub omega_prime_count_rec ($n, $k = 1) {
 
     my $count = 0;
 
-    sub ($m, $p, $k) {
-
-        my $s = rootint(divint($n, $m), $k);
+    sub ($m, $p, $k, $s = rootint(divint($n, $m), $k)) {
 
         if ($k == 2) {
+
+            if ($p > $s) {
+                return;
+            }
 
             my $j = prime_count($p) - 1;
 
@@ -82,7 +84,9 @@ sub omega_prime_count_rec ($n, $k = 1) {
             }
 
             for (my $t = mulint($m, $p) ; $t <= $n ; $t = mulint($t, $p)) {
-                __SUB__->($t, $p, $k - 1) if (mulint($t, $p) <= $n);
+                my $s = rootint(divint($n, $t), $k-1);
+                last if ($p > $s);
+                __SUB__->($t, $p, $k - 1, $s);
             }
         }
     }->(1, 2, $k);
