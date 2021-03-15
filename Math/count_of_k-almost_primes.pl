@@ -35,27 +35,43 @@ sub k_prime_count ($n, $k) {
 
     my $count = 0;
 
-    sub ($m, $p, $r) {
+    sub ($m, $p, $k, $j = 0) {
 
-        my $s = rootint(divint($n, $m), $r);
+        my $s = rootint(divint($n, $m), $k);
 
-        if ($r == 2) {
-            my $j = prime_count($p) - 2;
+        if ($k == 2) {
 
-            forprimes {
-                $count += (prime_count(divint($n, $m * $_)) - ++$j);
-            } $p, $s;
+            foreach my $q (@{primes($p, $s)}) {
+                $count += prime_count(divint($n, mulint($m, $q))) - $j++;
+            }
 
             return;
         }
 
         for (my $q = $p ; $q <= $s ; $q = next_prime($q)) {
-            __SUB__->($m * $q, $q, $r - 1);
+            __SUB__->($m * $q, $q, $k - 1, $j++);
         }
     }->(1, 2, $k);
 
     return $count;
 }
+
+# Run some tests
+
+foreach my $k (1 .. 10) {
+
+    my $upto = pn_primorial($k) + int(rand(1e5));
+
+    my $x = k_prime_count($upto, $k);
+    my $y = almost_prime_count($k, $upto);
+
+    say "Testing: $k with n = $upto -> $x";
+
+    $x == $y
+      or die "Error: $x != $y";
+}
+
+say '';
 
 foreach my $k (1 .. 10) {
     printf("Count of %2d-almost primes <= 10^n: %s\n", $k, join(', ', map { k_prime_count(powint(10, $_), $k) } 0 .. 10));

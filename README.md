@@ -443,6 +443,7 @@ A nice collection of day-to-day Perl scripts.
     * [Count of smooth numbers mpz](./Math/count_of_smooth_numbers_mpz.pl)
     * [Count of smooth numbers mpz 2](./Math/count_of_smooth_numbers_mpz_2.pl)
     * [Count of smooth numbers with k factors](./Math/count_of_smooth_numbers_with_k_factors.pl)
+    * [Count of squarefree k-almost primes](./Math/count_of_squarefree_k-almost_primes.pl)
     * [Count subtriangles](./Math/count_subtriangles.pl)
     * [Cube-full numbers](./Math/cube-full_numbers.pl)
     * [Cuboid](./Math/cuboid.pl)
