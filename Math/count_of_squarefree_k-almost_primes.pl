@@ -21,7 +21,7 @@ sub squarefree_almost_prime_count ($n, $k) {
 
     my $count = 0;
 
-    sub ($m, $p, $k, $j = 1) {
+    sub ($m, $p, $k, $j = 0) {
 
         my $s = rootint(divint($n, $m), $k);
 
@@ -29,11 +29,11 @@ sub squarefree_almost_prime_count ($n, $k) {
 
             foreach my $q (@{primes($p, $s)}) {
 
+                ++$j;
+
                 if (modint($m, $q) != 0) {
                     $count += prime_count(divint($n, mulint($m, $q))) - $j;
                 }
-
-                ++$j;
             }
 
             return;

@@ -26,7 +26,10 @@ use List::Util qw(first);
 use ntheory qw(is_prime factor_exp forprimes next_prime is_square_free);
 use Math::Prime::Util::GMP qw(is_power vecprod sqrtint rootint gcd urandomb);
 
-use constant {USE_B_SMOOTH_METHOD => 0,};
+use constant {
+              B_SMOOTH_METHOD => 0,    # 1 to use the B-smooth formula for the factor base
+              ROUND_DIVISION  => 0,    # 1 to use round division instead of floor division
+             };
 
 sub gaussian_elimination ($rows, $n) {
 
@@ -78,7 +81,7 @@ sub is_smooth_over_prod ($n, $k) {
 
     while (Math::GMPz::Rmpz_cmp_ui($g, 1) > 0) {
         Math::GMPz::Rmpz_remove($t, $t, $g);
-        return 1 if Math::GMPz::Rmpz_cmp_ui($t, 1) == 0;
+        return 1 if Math::GMPz::Rmpz_cmpabs_ui($t, 1) == 0;
         Math::GMPz::Rmpz_gcd($g, $t, $g);
     }
 
@@ -110,30 +113,6 @@ sub next_multiplier ($k) {
     }
 
     return $k;
-}
-
-sub round {
-    my ($n, $z) = @_;
-
-    state $half = do {
-        require Math::GMPq;
-        Math::GMPq->new('1/2');
-    };
-
-    my $sgn = Math::GMPq::Rmpq_sgn($n);
-
-    if ($sgn < 0) {
-        Math::GMPq::Rmpq_neg($n, $n);
-    }
-
-    Math::GMPq::Rmpq_add($n, $n, $half);
-    Math::GMPz::Rmpz_set_q($z, $n);
-
-    if ($sgn < 0) {
-        Math::GMPz::Rmpz_neg($z, $z);
-    }
-
-    $z;
 }
 
 sub cffm ($n, $verbose = 0, $multiplier = 1) {
@@ -176,7 +155,7 @@ sub cffm ($n, $verbose = 0, $multiplier = 1) {
     my @factor_base = (2);
 
 #<<<
-    if (USE_B_SMOOTH_METHOD) {
+    if (B_SMOOTH_METHOD) {
         forprimes {
             if (Math::GMPz::Rmpz_kronecker_ui($N, $_) >= 0) {
                 push @factor_base, $_;
@@ -218,9 +197,6 @@ sub cffm ($n, $verbose = 0, $multiplier = 1) {
 
     my $t = Math::GMPz::Rmpz_init();
 
-    #~ require Math::GMPq;
-    #~ my $q = Math::GMPq->new();
-
     while (@A < $L) {
 
         # y = r*z - y
@@ -234,14 +210,20 @@ sub cffm ($n, $verbose = 0, $multiplier = 1) {
 
         # r = (x + y) / z
         Math::GMPz::Rmpz_add($t, $x, $y);
-        Math::GMPz::Rmpz_div($r, $t, $z);
 
-        # Alternatively, we can round (x+y)/z to nearest integer
-        #~ Math::GMPz::Rmpz_add($t, $x, $y);
-        #~ Math::GMPq::Rmpq_set_num($q, $t);
-        #~ Math::GMPq::Rmpq_set_den($q, $z);
-        #~ Math::GMPq::Rmpq_canonicalize($q);
-        #~ round($q, $r);
+        if (ROUND_DIVISION) {
+
+            # Round (x+y)/z to nearest integer
+            Math::GMPz::Rmpz_set($r, $z);
+            Math::GMPz::Rmpz_addmul_ui($r, $t, 2);
+            Math::GMPz::Rmpz_div($r, $r, $z);
+            Math::GMPz::Rmpz_div_2exp($r, $r, 1);
+        }
+        else {
+
+            # Floor division: floor((x+y)/z)
+            Math::GMPz::Rmpz_div($r, $t, $z);
+        }
 
         # f1 = (f1 + r*f2) % n
         Math::GMPz::Rmpz_addmul($f1, $f2, $r);
@@ -264,11 +246,13 @@ sub cffm ($n, $verbose = 0, $multiplier = 1) {
 #>>>
 
         if (is_smooth_over_prod($z, $FP)) {
-            my @factors = factor_exp($z);
+
+            my $abs_z   = abs($z);
+            my @factors = factor_exp($abs_z);
 
             if (@factors) {
                 push @A, exponents_signature(@factors);
-                push @Q, [map { Math::GMPz::Rmpz_init_set($_) } ($f1, $z)];
+                push @Q, [map { Math::GMPz::Rmpz_init_set($_) } ($f1, $abs_z)];
             }
 
             if ($verbose) {
@@ -276,7 +260,7 @@ sub cffm ($n, $verbose = 0, $multiplier = 1) {
             }
         }
 
-        if (!Math::GMPz::Rmpz_cmp_ui($z, 1)) {
+        if (Math::GMPz::Rmpz_cmpabs_ui($z, 1) == 0) {
 
             my $k = next_multiplier($multiplier);
 

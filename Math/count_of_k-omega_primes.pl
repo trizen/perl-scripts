@@ -27,11 +27,13 @@ sub omega_prime_count_rec ($n, $k = 1) {
 
     my $count = 0;
 
-    sub ($m, $p, $k, $s = rootint(divint($n, $m), $k), $j = 1) {
+    sub ($m, $p, $k, $s = rootint(divint($n, $m), $k), $j = 0) {
 
         if ($k == 2) {
 
-            for (my $q = $p ; $q <= $s ; ++$j, ($q = next_prime($q))) {
+            for (my $q = $p ; $q <= $s ; $q = next_prime($q)) {
+
+                ++$j;
 
                 if (modint($m, $q) == 0) {
                     next;
