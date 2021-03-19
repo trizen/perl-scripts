@@ -15,6 +15,10 @@ use experimental qw(signatures);
 
 sub squarefree_almost_prime_count ($n, $k) {
 
+    if ($k == 0) {
+        return (($n <= 0) ? 0 : 1);
+    }
+
     if ($k == 1) {
         return prime_count($n);
     }

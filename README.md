@@ -658,6 +658,7 @@ A nice collection of day-to-day Perl scripts.
     * [Partial sums of euler totient function](./Math/partial_sums_of_euler_totient_function.pl)
     * [Partial sums of euler totient function fast](./Math/partial_sums_of_euler_totient_function_fast.pl)
     * [Partial sums of euler totient function times k to the m](./Math/partial_sums_of_euler_totient_function_times_k_to_the_m.pl)
+    * [Partial sums of exponential prime omega functions](./Math/partial_sums_of_exponential_prime_omega_functions.pl)
     * [Partial sums of gcd-sum function](./Math/partial_sums_of_gcd-sum_function.pl)
     * [Partial sums of gcd-sum function fast](./Math/partial_sums_of_gcd-sum_function_fast.pl)
     * [Partial sums of gcd-sum function faster](./Math/partial_sums_of_gcd-sum_function_faster.pl)
