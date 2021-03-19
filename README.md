@@ -64,6 +64,7 @@ A nice collection of day-to-day Perl scripts.
     * [Lzt-simple 2](./Encoders/lzt-simple_2.pl)
     * [Lzw compression](./Encoders/lzw_compression.pl)
     * [Math expr encoder](./Encoders/math_expr_encoder.pl)
+    * [String to integer encoding based on base primes](./Encoders/string_to_integer_encoding_based_on_base_primes.pl)
     * [Tac-compressor](./Encoders/tac-compressor.pl)
     * [Tacc-compressor](./Encoders/tacc-compressor.pl)
     * [Tlen compressor](./Encoders/tlen_compressor.pl)
