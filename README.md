@@ -652,6 +652,7 @@ A nice collection of day-to-day Perl scripts.
     * [Number of representations as sum of four squares](./Math/number_of_representations_as_sum_of_four_squares.pl)
     * [Number of representations as sum of two squares](./Math/number_of_representations_as_sum_of_two_squares.pl)
     * [Numbers with pow 2 divisors](./Math/numbers_with_pow_2_divisors.pl)
+    * [Omega prime divisors](./Math/omega_prime_divisors.pl)
     * [Omega prime numbers in range](./Math/omega_prime_numbers_in_range.pl)
     * [Order factorization method](./Math/order_factorization_method.pl)
     * [Palindrome iteration](./Math/palindrome_iteration.pl)

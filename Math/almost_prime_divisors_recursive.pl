@@ -12,13 +12,13 @@ use experimental qw(signatures);
 
 sub almost_prime_divisors ($n, $k) {
 
-    my @factor_exp = factor_exp($n);
-    my @factors    = map { $_->[0] } @factor_exp;
-    my %valuations = map { @$_ } @factor_exp;
-
     if ($k == 0) {
         return (1);
     }
+
+    my @factor_exp = factor_exp($n);
+    my @factors    = map { $_->[0] } @factor_exp;
+    my %valuations = map { @$_ } @factor_exp;
 
     if ($k == 1) {
         return @factors;
