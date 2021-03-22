@@ -27,7 +27,7 @@ sub squarefree_almost_primes ($A, $B, $k, $callback) {
         if ($k == 1) {
 
             forprimes {
-                $callback->(mulint($m, $_)) if modint($m, $_);
+                $callback->(mulint($m, $_));
             } $u, $v;
 
             return;
@@ -35,24 +35,18 @@ sub squarefree_almost_primes ($A, $B, $k, $callback) {
 
         my $s = rootint(divint($B, $m), $k);
 
-        foreach my $p (@{primes($p, $s)}) {
+        while ($p <= $s) {
 
-            if (modint($m, $p) == 0) {
-                next;
-            }
-
+            my $r = next_prime($p);
             my $t = mulint($m, $p);
             my $u = divceil($A, $t);
             my $v = divint($B, $t);
 
-            # Optional optimization for tight ranges
-            if ($u > $v) {
-                next;
+            if ($u <= $v) {
+                __SUB__->($t, $r, $k - 1, (($k==2 && $r>$u) ? $r : $u), $v);
             }
 
-            $u = $p if ($k==2 && $p>$u);
-
-            __SUB__->($t, $p, $k - 1, $u, $v);
+            $p = $r;
         }
     }->(1, 2, $k);
 }

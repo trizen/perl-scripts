@@ -27,18 +27,17 @@ sub omega_prime_count_rec ($n, $k = 1) {
 
     my $count = 0;
 
-    sub ($m, $p, $k, $s = rootint(divint($n, $m), $k), $j = 0) {
+    sub ($m, $p, $k, $s = rootint(divint($n, $m), $k), $j = 1) {
 
         if ($k == 2) {
 
-            for (my $q = $p ; $q <= $s ; $q = next_prime($q)) {
+            for (; $p <= $s ; ++$j) {
 
-                ++$j;
+                my $r = next_prime($p);
 
-                for (my $t = mulint($m, $q) ; $t <= $n ; $t = mulint($t, $q)) {
+                for (my $t = mulint($m, $p) ; $t <= $n ; $t = mulint($t, $p)) {
 
                     my $w = divint($n, $t);
-                    my $r = next_prime($q);
 
                     if ($r > $w) {
                         last;
@@ -46,19 +45,21 @@ sub omega_prime_count_rec ($n, $k = 1) {
 
                     $count += prime_count($w) - $j;
 
-                    for (; $r <= $w ; $r = next_prime($r)) {
+                    for (my $r2 = $r ; $r2 <= $w ; $r2 = next_prime($r2)) {
 
-                        my $u = vecprod($t, $r, $r);
+                        my $u = vecprod($t, $r2, $r2);
 
                         if ($u > $n) {
                             last;
                         }
 
-                        for (; $u <= $n ; $u = mulint($u, $r)) {
+                        for (; $u <= $n ; $u = mulint($u, $r2)) {
                             ++$count;
                         }
                     }
                 }
+
+                $p = $r;
             }
 
             return;

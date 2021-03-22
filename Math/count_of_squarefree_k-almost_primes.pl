@@ -25,29 +25,23 @@ sub squarefree_almost_prime_count ($n, $k) {
 
     my $count = 0;
 
-    sub ($m, $p, $k, $j = 0) {
+    sub ($m, $p, $k, $j = 1) {
 
         my $s = rootint(divint($n, $m), $k);
 
         if ($k == 2) {
 
-            foreach my $q (@{primes($p, $s)}) {
-
-                ++$j;
-
-                if (modint($m, $q) != 0) {
-                    $count += prime_count(divint($n, mulint($m, $q))) - $j;
-                }
+            for (; $p <= $s ; $p = next_prime($p)) {
+                $count += prime_count(divint($n, mulint($m, $p))) - $j++;
             }
 
             return;
         }
 
-        foreach my $p (@{primes($p, $s)}) {
-            if (modint($m, $p) != 0) {
-                __SUB__->(mulint($m, $p), $p, $k - 1, $j);
-            }
-            ++$j;
+        for (; $p <= $s ; ++$j) {
+            my $r = next_prime($p);
+            __SUB__->(mulint($m, $p), $r, $k - 1, $j + 1);
+            $p = $r;
         }
     }->(1, 2, $k);
 
@@ -72,7 +66,8 @@ foreach my $k (1 .. 7) {
 say '';
 
 foreach my $k (1 .. 8) {
-    say("Count of squarefree $k-almost primes for 10^n: ", join(', ', map { squarefree_almost_prime_count(10**$_, $k) } 0 .. 9));
+    say("Count of squarefree $k-almost primes for 10^n: ",
+        join(', ', map { squarefree_almost_prime_count(10**$_, $k) } 0 .. 9));
 }
 
 __END__
