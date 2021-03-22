@@ -41,7 +41,10 @@ sub omega_prime_divisors ($n, $k) {
         foreach my $j ($i .. $factors_end) {
 
             my $q = $factors[$j];
-            $q > $L and last;
+
+            if (($k > 1 and $j == $factors_end) or ($q > $L)) {
+                last;
+            }
 
             my $t = mulint($m, $q);
 
@@ -50,7 +53,7 @@ sub omega_prime_divisors ($n, $k) {
                 if ($k == 1) {
                     push @list, $t;
                 }
-                elsif ($j < $factors_end) {
+                else {
                     __SUB__->($t, $k - 1, $j + 1);
                 }
 
