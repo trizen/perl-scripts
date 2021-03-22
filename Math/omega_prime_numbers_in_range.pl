@@ -25,21 +25,19 @@ sub omega_prime_numbers ($A, $B, $k, $callback) {
 
         my $s = rootint(divint($B, $m), $k);
 
-        foreach my $p (@{primes($p, $s)}) {
+        foreach my $q (@{primes($p, $s)}) {
+            for (my $v = mulint($m, $q); $v <= $B ; $v = mulint($v, $q)) {
 
-            if (modint($m, $p) == 0) {
-                next;
-            }
-
-            for (my $t = mulint($m, $p); $t <= $B ; $t = mulint($t, $p)) {
                 if ($k == 1) {
-                    $callback->($t) if ($t >= $A);
+                    $callback->($v) if ($v >= $A);
                 }
                 else {
-                    __SUB__->($t, $p, $k - 1) if (mulint($t, $p) <= $B);
+                    my $r = next_prime($q);
+                    if (mulint($v, $r) <= $B) {
+                         __SUB__->($v, $r, $k - 1);
+                    }
                 }
             }
-
         }
     }->(1, 2, $k);
 }
