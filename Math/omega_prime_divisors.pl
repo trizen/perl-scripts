@@ -23,9 +23,10 @@ sub omega_prime_divisors ($n, $k) {
         return (1);
     }
 
-    my @factor_exp = factor_exp($n);
-    my @factors    = map { $_->[0] } @factor_exp;
-    my %valuations = map { @$_ } @factor_exp;
+    my @factor_exp  = factor_exp($n);
+    my @factors     = map { $_->[0] } @factor_exp;
+    my %valuations  = map { @$_ } @factor_exp;
+    my $factors_end = $#factors;
 
     if ($k > scalar(@factor_exp)) {
         return;
@@ -33,18 +34,14 @@ sub omega_prime_divisors ($n, $k) {
 
     my @list;
 
-    sub ($m, $p, $k) {
+    sub ($m, $k, $i = 0) {
 
-        my $s = rootint(divint($n, $m), $k);
+        my $L = rootint(divint($n, $m), $k);
 
-        foreach my $q (@factors) {
+        foreach my $j ($i .. $factors_end) {
 
-            $q < $p and next;
-            $q > $s and last;
-
-            if (modint($m, $q) == 0) {
-                next;
-            }
+            my $q = $factors[$j];
+            $q > $L and last;
 
             my $t = mulint($m, $q);
 
@@ -53,14 +50,14 @@ sub omega_prime_divisors ($n, $k) {
                 if ($k == 1) {
                     push @list, $t;
                 }
-                else {
-                    __SUB__->($t, $q, $k - 1);
+                elsif ($j < $factors_end) {
+                    __SUB__->($t, $k - 1, $j + 1);
                 }
 
                 $t = mulint($t, $q);
             }
         }
-    }->(1, $factors[0], $k);
+    }->(1, $k);
 
     sort { $a <=> $b } @list;
 }

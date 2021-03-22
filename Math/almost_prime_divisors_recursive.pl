@@ -16,9 +16,10 @@ sub almost_prime_divisors ($n, $k) {
         return (1);
     }
 
-    my @factor_exp = factor_exp($n);
-    my @factors    = map { $_->[0] } @factor_exp;
-    my %valuations = map { @$_ } @factor_exp;
+    my @factor_exp  = factor_exp($n);
+    my @factors     = map { $_->[0] } @factor_exp;
+    my %valuations  = map { @$_ } @factor_exp;
+    my $factors_end = $#factors;
 
     if ($k == 1) {
         return @factors;
@@ -26,37 +27,37 @@ sub almost_prime_divisors ($n, $k) {
 
     my @list;
 
-    sub ($m, $p, $k) {
+    sub ($m, $k, $i = 0) {
 
         if ($k == 1) {
 
             my $L = divint($n, $m);
 
-            foreach my $q (@factors) {
+            foreach my $j ($i .. $factors_end) {
 
-                $q < $p and next;
+                my $q = $factors[$j];
                 $q > $L and last;
 
-                valuation($m, $q) < $valuations{$q} or next;
-
-                push @list, mulint($m, $q);
+                if (valuation($m, $q) < $valuations{$q}) {
+                    push(@list, mulint($m, $q));
+                }
             }
 
             return;
         }
 
-        my $s = rootint(divint($n, $m), $k);
+        my $L = rootint(divint($n, $m), $k);
 
-        foreach my $q (@factors) {
+        foreach my $j ($i .. $factors_end) {
 
-            $q < $p and next;
-            $q > $s and last;
+            my $q = $factors[$j];
+            $q > $L and last;
 
-            valuation($m, $q) < $valuations{$q} or next;
-
-            __SUB__->(mulint($m, $q), $q, $k - 1);
+            if (valuation($m, $q) < $valuations{$q}) {
+                __SUB__->(mulint($m, $q), $k - 1, $j);
+            }
         }
-    }->(1, $factors[0], $k);
+    }->(1, $k);
 
     sort { $a <=> $b } @list;
 }
