@@ -278,6 +278,8 @@ A nice collection of day-to-day Perl scripts.
 * Image
     * [2x zoom](./Image/2x_zoom.pl)
     * [Bitmap monochrome encoding decoding](./Image/bitmap_monochrome_encoding_decoding.pl)
+    * [Collage](./Image/collage.pl)
+    * Collages
     * [Complex transform](./Image/complex_transform.pl)
     * [Cyan vision](./Image/cyan_vision.pl)
     * [Darken image](./Image/darken_image.pl)
