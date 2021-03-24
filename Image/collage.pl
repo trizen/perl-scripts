@@ -154,8 +154,6 @@ while (($width / $size) * ($height / $size) < $images_len) {
     $height += $size;
 }
 
-$height -= $size * ($height % $size);
-
 my $collage = GD::Image->new($width, $height);
 
 foreach my $y (0 .. $height / $size - 1) {

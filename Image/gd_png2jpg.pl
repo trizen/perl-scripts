@@ -18,7 +18,7 @@ use GD;
 GD::Image->trueColor(1);
 
 my $batch_size = 100;    # how many files to process at once
-my $quality    = 90;     # default quality value for JPEG (between 0-100)
+my $quality    = 95;     # default quality value for JPEG (between 0-100)
 
 sub convert_PNGs (@files) {
 
