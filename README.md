@@ -279,7 +279,6 @@ A nice collection of day-to-day Perl scripts.
     * [2x zoom](./Image/2x_zoom.pl)
     * [Bitmap monochrome encoding decoding](./Image/bitmap_monochrome_encoding_decoding.pl)
     * [Collage](./Image/collage.pl)
-    * Collages
     * [Complex transform](./Image/complex_transform.pl)
     * [Cyan vision](./Image/cyan_vision.pl)
     * [Darken image](./Image/darken_image.pl)
@@ -796,6 +795,7 @@ A nice collection of day-to-day Perl scripts.
     * [Square root convergents](./Math/square_root_convergents.pl)
     * [Square root method](./Math/square_root_method.pl)
     * [Square root modulo n tonelli-shanks](./Math/square_root_modulo_n_tonelli-shanks.pl)
+    * [Squarefree almost prime divisors](./Math/squarefree_almost_prime_divisors.pl)
     * [Squarefree almost primes in range](./Math/squarefree_almost_primes_in_range.pl)
     * [Squarefree count](./Math/squarefree_count.pl)
     * [Squarefree divisors](./Math/squarefree_divisors.pl)
