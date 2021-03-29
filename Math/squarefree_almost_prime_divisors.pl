@@ -34,10 +34,8 @@ sub squarefree_almost_prime_divisors ($n, $k) {
             my $L = divint($n, $m);
 
             foreach my $j ($i .. $factors_end) {
-
                 my $q = $factors[$j];
-                $q > $L and last;
-
+                last if ($q > $L);
                 push(@list, mulint($m, $q));
             }
 
@@ -47,10 +45,8 @@ sub squarefree_almost_prime_divisors ($n, $k) {
         my $L = rootint(divint($n, $m), $k);
 
         foreach my $j ($i .. $factors_end - 1) {
-
             my $q = $factors[$j];
-            $q > $L and last;
-
+            last if ($q > $L);
             __SUB__->(mulint($m, $q), $k - 1, $j + 1);
         }
     }->(1, $k);

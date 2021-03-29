@@ -359,6 +359,7 @@ A nice collection of day-to-day Perl scripts.
     * [Almost prime divisors recursive](./Math/almost_prime_divisors_recursive.pl)
     * [Almost prime numbers](./Math/almost_prime_numbers.pl)
     * [Almost prime numbers in range](./Math/almost_prime_numbers_in_range.pl)
+    * [Almost primes from factor list](./Math/almost_primes_from_factor_list.pl)
     * [Area of triangle](./Math/area_of_triangle.pl)
     * [Arithmetic derivative](./Math/arithmetic_derivative.pl)
     * [Arithmetic expressions](./Math/arithmetic_expressions.pl)
