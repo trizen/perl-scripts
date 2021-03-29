@@ -796,6 +796,7 @@ A nice collection of day-to-day Perl scripts.
     * [Square root method](./Math/square_root_method.pl)
     * [Square root modulo n tonelli-shanks](./Math/square_root_modulo_n_tonelli-shanks.pl)
     * [Squarefree almost prime divisors](./Math/squarefree_almost_prime_divisors.pl)
+    * [Squarefree almost primes from factor list](./Math/squarefree_almost_primes_from_factor_list.pl)
     * [Squarefree almost primes in range](./Math/squarefree_almost_primes_in_range.pl)
     * [Squarefree count](./Math/squarefree_count.pl)
     * [Squarefree divisors](./Math/squarefree_divisors.pl)
