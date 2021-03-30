@@ -533,6 +533,7 @@ A nice collection of day-to-day Perl scripts.
     * [Inverse of factorial](./Math/inverse_of_factorial.pl)
     * [Inverse of factorial stirling](./Math/inverse_of_factorial_stirling.pl)
     * [Inverse of fibonacci](./Math/inverse_of_fibonacci.pl)
+    * [Inverse of multiplicative functions](./Math/inverse_of_multiplicative_functions.pl)
     * [Inverse of p adic valuation](./Math/inverse_of_p_adic_valuation.pl)
     * [Inverse of sigma function](./Math/inverse_of_sigma_function.pl)
     * [Inverse of sigma function fast](./Math/inverse_of_sigma_function_fast.pl)
