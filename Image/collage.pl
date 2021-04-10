@@ -31,7 +31,7 @@ my $height = undef;
 sub usage {
     my ($code) = @_;
     print <<"EOT";
-usage: $0 [options] [main_image] [photos_dir]
+usage: $0 [options] [photos_dir]
 
 options:
     --size=i   : the size of a mosaic square (default: $size)
@@ -42,7 +42,7 @@ options:
     --output=s : output filename (default: $output_file)
 
 example:
-    perl $0 --size=20 main.jpg images
+    perl $0 --size=20 ~/Pictures
 EOT
     exit($code);
 }

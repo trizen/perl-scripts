@@ -6,6 +6,8 @@
 
 # Convert PNG images to JPEG, using the GD library.
 
+# The original PNG files are deleted.
+
 use 5.020;
 use warnings;
 use File::Find qw(find);
@@ -34,30 +36,32 @@ sub convert_PNGs (@files) {
 
         my $jpeg_data = $image->jpeg($quality);
 
-        my $png_file = $file;
+        my $orig_file = $file;
+        my $jpeg_file = $file;
 
-        if ($file =~ s/\.png\z/.jpg/i) {
+        if ($jpeg_file =~ s/\.png\z/.jpg/i) {
             ## ok
         }
         else {
-            $file .= '.jpg';
+            $jpeg_file .= '.jpg';
         }
 
-        if (-e $file) {
-            warn "[!] File <<$file>> already exists...\n";
+        if (-e $jpeg_file) {
+            warn "[!] File <<$jpeg_file>> already exists...\n";
             next;
         }
 
-        open(my $fh, '>:raw', $file) or do {
-            warn "[!] Can't open file <<$file>> for writing: $!\n";
+        open(my $fh, '>:raw', $jpeg_file) or do {
+            warn "[!] Can't open file <<$jpeg_file>> for writing: $!\n";
             next;
         };
 
         print {$fh} $jpeg_data;
         close $fh;
 
-        if (-e $file and ($png_file ne $file)) {
-            unlink($png_file);
+        if (-e $jpeg_file and ($orig_file ne $jpeg_file)) {
+            say ":: Saved as: $jpeg_file";
+            unlink($orig_file);    # remove the original PNG file
         }
     }
 }

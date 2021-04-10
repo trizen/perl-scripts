@@ -4,7 +4,7 @@
 # Date: 29 March 2021
 # https://github.com/trizen
 
-# Generate all the squarefree k-almost primes <= n, using a given list of prime factors.
+# Generate all the possible k-almost primes <= n, using a given list of prime factors.
 
 use 5.020;
 use ntheory qw(:all);

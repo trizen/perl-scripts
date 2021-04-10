@@ -309,6 +309,7 @@ A nice collection of day-to-day Perl scripts.
     * [Photo mosaic from images](./Image/photo_mosaic_from_images.pl)
     * [Remove sensitive exif tags](./Image/remove_sensitive_exif_tags.pl)
     * [Sharp 2x zoom](./Image/sharp_2x_zoom.pl)
+    * [Webp2png](./Image/webp2png.pl)
 * JAPH
     * [Alien japh](./JAPH/alien_japh.pl)
     * [Alpha ascii japh](./JAPH/alpha_ascii_japh.pl)

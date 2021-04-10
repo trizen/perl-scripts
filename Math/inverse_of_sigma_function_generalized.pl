@@ -61,7 +61,7 @@ sub cook_sigma ($N, $k) {
 }
 
 sub inverse_sigma ($N, $k = 1) {
-    ($N == 1) ? (1) : dynamicPreimage($N, cook_sigma($N, $k));
+    dynamicPreimage($N, cook_sigma($N, $k));
 }
 
 say join ', ', inverse_sigma(120);         #=> [54, 56, 87, 95]
