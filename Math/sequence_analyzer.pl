@@ -1,21 +1,17 @@
 #!/usr/bin/perl
 
-# Author: Daniel "Trizen" Șuteu
+# Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 13 April 2016
-# Website: https://github.com/trizen
+# Edit: 15 May 2021
+# https://github.com/trizen
 
 # Analyze a sequence of numbers and generate a report with the results.
 
-################################################
-#                  [WARNING]                   #
-#-----------------------------------------------
-#   This script is still a work in progress!   #
-#----------------------------------------------#
-################################################
+# The sequence file must contain one term per line.
+# Alternatively, the terms can be specified as command-line arguments.
 
 use 5.014;
-
 use strict;
 use warnings;
 
@@ -329,7 +325,7 @@ package Sequence::Report {
 
 package Sequence {
 
-    use Math::BigNum qw(Inf);
+    use Math::AnyNum qw(Inf);
     use ntheory qw(factor divisors divisor_sum);
     use List::Util qw(all pairmap);
 
@@ -401,10 +397,10 @@ package Sequence {
                     }
                 }
 
-                if ($n->is_psqr) {
+                if ($n->is_square) {
                     ++$data{perfect_squares};
                 }
-                elsif ($n->is_ppow) {
+                elsif ($n->is_power) {
                     ++$data{perfect_powers};
                 }
 
@@ -470,7 +466,7 @@ package Sequence {
 
             if (++$i > 500) {
                 while (my ($key, $value) = each %data) {
-                    if (ref($value) eq 'Math::BigNum') {
+                    if (ref($value) eq 'Math::AnyNum') {
                         $data{$key} = $value->float;
                     }
                 }
@@ -481,7 +477,7 @@ package Sequence {
         $data{harmonic_mean} = $data{count} / $data{harmonic_mean};
 
         while (my ($key, $value) = each %data) {
-            if (ref($value) eq 'Math::BigNum') {
+            if (ref($value) eq 'Math::AnyNum') {
                 $data{$key} = $value->round(-30);
             }
         }
@@ -568,47 +564,63 @@ GetOptions(
           )
   or die "Error in command-line arguments";
 
-local $Math::BigNum::PREC = 4 * $prec;
+local $Math::AnyNum::PREC = 4 * $prec;
 
 my @numbers;
 
 my $value_re = qr/(?:=([-+]?\d+(?:\.\d+)?+)\b)?/;
 my $trans_re = qr/\b(log|sqrt|root|pow|sqr|abs|exp|int|floor|ceil|inv|add|mul|div|sub|cos|sin)\b$value_re/o;
 
-while (<>) {
-    my $num = (split(' '))[-1];
-    push @numbers, Math::BigNum->new($num);
+my @terms;
+
+if (@ARGV) {
+    @terms = (map { Math::AnyNum->new($_) } grep { /[0-9]/ } map { split(' ') } map { split(/\s*,\s*/) } @ARGV)
+}
+else {
+    while (<>) {
+
+        my $num = (split(' '))[-1];
+
+        if ($num =~ /[0-9]/) {
+            push @terms, Math::AnyNum->new($num);
+        }
+    }
+}
+
+foreach my $num (@terms) {
+
+    push @numbers, $num;
 
     while ($map =~ /$trans_re/go) {
         if ($1 eq 'log') {
-            defined($2)
-              ? $numbers[-1]->blog($2)
-              : $numbers[-1]->blog;
+            $numbers[-1] = (defined($2)
+              ? $numbers[-1]->log($2)
+              : $numbers[-1]->log);
         }
         elsif ($1 eq 'sqrt') {
-            $numbers[-1]->bsqrt;
+            $numbers[-1] = $numbers[-1]->sqrt;
         }
         elsif ($1 eq 'root') {
-            defined($2)
-              ? $numbers[-1]->broot($2)
-              : $numbers[-1]->broot($.);
+            $numbers[-1] = (defined($2)
+              ? $numbers[-1]->root($2)
+              : $numbers[-1]->root($.));
         }
         elsif ($1 eq 'pow') {
-            defined($2)
-              ? $numbers[-1]->bpow($2)
-              : $numbers[-1]->bpow($.);
+            $numbers[-1] = (defined($2)
+              ? $numbers[-1]->pow($2)
+              : $numbers[-1]->pow($.));
         }
         elsif ($1 eq 'sqr') {
-            $numbers[-1]->bsqr;
+            $numbers[-1] = $numbers[-1]->sqr;
         }
         elsif ($1 eq 'inv') {
-            $numbers[-1]->binv;
+            $numbers[-1] = $numbers[-1]->inv;
         }
         elsif ($1 eq 'abs') {
-            $numbers[-1]->babs;
+            $numbers[-1] = $numbers[-1]->abs;
         }
         elsif ($1 eq 'int') {
-            $numbers[-1]->bint;
+            $numbers[-1] = $numbers[-1]->int;
         }
         elsif ($1 eq 'cos') {
             $numbers[-1] = $numbers[-1]->cos;
@@ -626,24 +638,24 @@ while (<>) {
             $numbers[-1]->bexp;
         }
         elsif ($1 eq 'add') {
-            defined($2)
-              ? $numbers[-1]->badd($2)
-              : $numbers[-1]->badd($.);
+            $numbers[-1] = (defined($2)
+              ? $numbers[-1]->add($2)
+              : $numbers[-1]->add($.));
         }
         elsif ($1 eq 'sub') {
-            defined($2)
-              ? $numbers[-1]->bsub($2)
-              : $numbers[-1]->bsub($.);
+            $numbers[-1] = (defined($2)
+              ? $numbers[-1]->sub($2)
+              : $numbers[-1]->sub($.));
         }
         elsif ($1 eq 'mul') {
-            defined($2)
-              ? $numbers[-1]->bmul($2)
-              : $numbers[-1]->bmul($.);
+            $numbers[-1] = (defined($2)
+              ? $numbers[-1]->mul($2)
+              : $numbers[-1]->mul($.));
         }
         elsif ($1 eq 'div') {
-            defined($2)
-              ? $numbers[-1]->bdiv($2)
-              : $numbers[-1]->bdiv($.);
+            $numbers[-1] = (defined($2)
+              ? $numbers[-1]->div($2)
+              : $numbers[-1]->div($.));
         }
         else {
             die "ERROR: unknown map type: `$1`";
@@ -804,6 +816,7 @@ First 10 terms:
 
 => Summary:
     contains no primes
+    all terms are even
     all terms are in a strictly increasing order
     geometric sequence (ratio = 3)
     possible closed-form: 3^(n + log(6)/log(3) - 1)

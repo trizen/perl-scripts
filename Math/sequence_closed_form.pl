@@ -1,13 +1,14 @@
 #!/usr/bin/perl
 
-# Author: Daniel "Trizen" Șuteu
-# License: GPLv3
+# Daniel "Trizen" Șuteu
 # Date: 15 April 2016
-# Website: https://github.com/trizen
+# Edit: 15 May 2021
+# https://github.com/trizen
 
 # Analyze a sequence of numbers and find a closed-form expression.
 
-# WARNING: This program is under heavy development.
+# Unfinished work...
+# Use the script "sequence_analyzer.pl" instead.
 
 use 5.010;
 use strict;
@@ -15,7 +16,7 @@ use warnings;
 
 package Sequence::ClosedForm {
 
-    use Math::BigNum qw(Inf);
+    use Math::AnyNum qw(Inf);
 
     sub new {
         my ($class, %opt) = @_;
@@ -216,7 +217,7 @@ package Sequence::ClosedForm {
     }
 }
 
-use Math::BigNum;
+use Math::AnyNum;
 use List::Util qw(first);
 
 my $seq       = Sequence::ClosedForm->new();
@@ -271,12 +272,12 @@ sub generate_actions {
     map { /_constant\z/ ? [$_, make_constant_obj($_)] : [$_, $seq->$_] } @_;
 }
 
-my @numbers = (map { Math::BigNum->new($_) } 1 .. 9);
+my @numbers = (map { Math::AnyNum->new($_) } 1 .. 9);
 
 #my @seq = map { 3**$_ + 2} @numbers;
 #my @seq = map { 3 * $_  } @numbers;
 #my @seq = map { $_ * ($_ + 1) / 2 + 1 } @numbers;
-my @seq = map { $_->fac + 2 } @numbers;
+my @seq = map { $_->factorial + 2 } @numbers;
 
 say "\nseq: @seq\n";
 

@@ -104,7 +104,7 @@ use strict;
 use warnings;
 
 #use integer;
-#use Math::BigNum qw(:constant);
+#use Math::AnyNum qw(:overload);
 
 use ntheory qw(powmod is_power);
 use List::Util qw(pairmap any sum0);
@@ -160,7 +160,7 @@ sub get_partitions {
     return @p;
 }
 
-#use Math::BigNum qw(:constant);
+#use Math::AnyNum qw(:overload);
 
 #~ my $n = 33;
 #~ my $x = 0;

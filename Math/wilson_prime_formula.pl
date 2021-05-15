@@ -1,29 +1,26 @@
 #!/usr/bin/perl
 
-# Author: Trizen
-# License: GPLv3
+# Daniel "Trizen" Șuteu
 # Date: 27 September 2014
+# Edit: 15 May 2021
 # http://github.com/trizen
 
 # See also:
 #   https://en.wikipedia.org/wiki/Wilson's_theorem
 
-use 5.010;
+use 5.020;
 use strict;
 use warnings;
 
-use Math::BigNum;
-my $prime = Math::BigNum->new(3);
-my $fac  = Math::BigNum->new(2);
+use Math::AnyNum qw(factorial);
+use experimental qw(signatures);
 
-say 2;    # print the first prime number
+sub is_wilson_prime($n) {
+    factorial($n-1) % $n == $n-1;
+}
 
-while (1) {
-    if ($fac->inc->bmod($prime)->is_zero) {
-        say $prime;
+for my $n (2..100) {
+    if (is_wilson_prime($n)) {
+        print($n, ", ");
     }
-
-    $fac->bmul($prime);
-    $fac->bmul($prime->binc);
-    $prime->binc;
 }

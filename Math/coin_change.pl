@@ -1,11 +1,11 @@
 #!/usr/bin/perl
 
-# Author: Daniel "Trizen" Șuteu
-# License: GPLv3
+# Daniel "Trizen" Șuteu
 # Date: 14 November 2015
-# Website: https://github.com/trizen
+# Edit: 15 May 2021
+# https://github.com/trizen
 
-# The classic coin-change problem
+# The classic coin-change problem.
 
 use 5.010;
 use strict;
@@ -13,7 +13,6 @@ use warnings;
 
 use List::Util qw(sum0);
 no warnings qw(recursion);
-use Math::BigNum qw(:constant);
 
 my @denominations = (.01, .05, .1, .25, .5, 1, 2, 5, 10, 20, 50, 100);
 
