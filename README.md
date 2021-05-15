@@ -776,6 +776,8 @@ A nice collection of day-to-day Perl scripts.
     * [Siqs factorization](./Math/siqs_factorization.pl)
     * [Smallest k-gonal inverse](./Math/smallest_k-gonal_inverse.pl)
     * [Smallest k-gonal inverse brute force](./Math/smallest_k-gonal_inverse_brute_force.pl)
+    * [Smallest number with at least n divisors](./Math/smallest_number_with_at_least_n_divisors.pl)
+    * [Smallest number with n divisors](./Math/smallest_number_with_n_divisors.pl)
     * [Smarandache function](./Math/smarandache_function.pl)
     * [Smooth numbers generalized](./Math/smooth_numbers_generalized.pl)
     * [Solutions to x squared equals -1 mod n](./Math/solutions_to_x_squared_equals_-1_mod_n.pl)
