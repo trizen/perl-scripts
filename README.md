@@ -71,6 +71,7 @@ A nice collection of day-to-day Perl scripts.
     * [Tzip](./Encoders/tzip)
     * [Tzip2](./Encoders/tzip2)
 * Encryption
+    * [Crypt rsa](./Encryption/crypt_rsa.pl)
     * [One-time pad](./Encryption/one-time_pad.pl)
     * [RSA encryption](./Encryption/RSA_encryption.pl)
 * File Readers
@@ -299,6 +300,7 @@ A nice collection of day-to-day Perl scripts.
     * [Img composition](./Image/img_composition.pl)
     * [Img rewrite](./Image/img_rewrite.pl)
     * [Julia transform](./Image/julia_transform.pl)
+    * [Lookalike images](./Image/lookalike_images.pl)
     * [Magick png2jpg](./Image/magick_png2jpg.pl)
     * [Magick similar images](./Image/magick_similar_images.pl)
     * [Magick star trails](./Image/magick_star_trails.pl)

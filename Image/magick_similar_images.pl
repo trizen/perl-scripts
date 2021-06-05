@@ -5,7 +5,10 @@
 # Date: 26 August 2015
 # Website: https://github.com/trizen
 
-# Find images that look similar
+# Find images that look similar.
+
+# Blog post:
+#   https://trizenx.blogspot.com/2015/08/finding-similar-images.html
 
 use 5.022;
 use strict;
