@@ -255,7 +255,7 @@ package Sequence::Report {
                                    : (
                                       $log->is_int
                                         || length($log->as_rat) < 20
-                                        || length($self->{min}->as_rat) > 20 ? (' ' . $log->sign . ' ' . $log->abs)
+                                        || length($self->{min}->as_rat) > 20 ? (' ' . $log->sgn . ' ' . $log->abs)
                                       : (" + log($self->{min})/log($self->{lowest_ratio}) - 1")
                                      );
                                }
@@ -297,7 +297,7 @@ package Sequence::Report {
                         ($self->{lowest_diff} == 1 ? 'n' : "$self->{lowest_diff}n")
                         . (
                            $min == 0 ? ''
-                           : (' ' . $min->sign . ' ' . $min->abs)
+                           : (' ' . $min->sgn . ' ' . $min->abs)
                           )
                        )
                     );
