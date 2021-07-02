@@ -38,8 +38,7 @@ sub nth_composite($n) {
     while (1) {
         $k = ($min + $max) >> 1;
 
-        my $pi  = prime_count($k);
-        my $cmp = ($k <=> ($pi + 1 + $n));
+        my $cmp = ($k - prime_count($k) - 1) <=> $n;
 
         if ($cmp > 0) {
             $max = $k - 1;

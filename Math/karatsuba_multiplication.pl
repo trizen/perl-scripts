@@ -12,7 +12,7 @@ use warnings;
 use experimental qw(signatures);
 
 use Math::AnyNum qw(:overload);
-use Math::AnyNum qw(ceil divmod ipow2);
+use Math::AnyNum qw(divmod);
 
 sub karatsuba_multiplication ($x, $y, $n = 8) {
 
@@ -20,16 +20,16 @@ sub karatsuba_multiplication ($x, $y, $n = 8) {
         return $x * $y;
     }
 
-    my $m = ceil($n / 2);
+    my $m = ($n % 2 == 0) ? ($n >> 1) : (($n >> 1) + 1);
 
-    my ($a, $b) = divmod($x, ipow2($m));
-    my ($c, $d) = divmod($y, ipow2($m));
+    my ($a, $b) = divmod($x, 1 << $m);
+    my ($c, $d) = divmod($y, 1 << $m);
 
-    my $e = karatsuba_multiplication($a,      $c,      $m);
-    my $f = karatsuba_multiplication($b,      $d,      $m);
-    my $g = karatsuba_multiplication($a - $b, $c - $d, $m);
+    my $e = __SUB__->($a,      $c,      $m);
+    my $f = __SUB__->($b,      $d,      $m);
+    my $g = __SUB__->($a - $b, $c - $d, $m);
 
-    (ipow2(2 * $m) * $e) + (ipow2($m) * ($e + $f - $g)) + $f;
+    ($e << (2*$m)) + (($e + $f - $g) << $m) + $f;
 }
 
 say karatsuba_multiplication(122, 422);    # 122 * 422 = 51484

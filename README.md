@@ -632,6 +632,7 @@ A nice collection of day-to-day Perl scripts.
     * [Modular square root](./Math/modular_square_root.pl)
     * [Modular square root 2](./Math/modular_square_root_2.pl)
     * [Modular square root 3](./Math/modular_square_root_3.pl)
+    * [Modular square root all solutions](./Math/modular_square_root_all_solutions.pl)
     * [Multi sqrt nums](./Math/multi_sqrt_nums.pl)
     * [Multinomial coefficient](./Math/multinomial_coefficient.pl)
     * [Multinomial coefficient from binomial](./Math/multinomial_coefficient_from_binomial.pl)
