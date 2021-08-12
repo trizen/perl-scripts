@@ -657,6 +657,7 @@ A nice collection of day-to-day Perl scripts.
     * [Number of connected permutations](./Math/number_of_connected_permutations.pl)
     * [Number of partitions into 2 distinct positive cubes](./Math/number_of_partitions_into_2_distinct_positive_cubes.pl)
     * [Number of partitions into 2 distinct positive squares](./Math/number_of_partitions_into_2_distinct_positive_squares.pl)
+    * [Number of partitions into 2 nonnegative cubes](./Math/number_of_partitions_into_2_nonnegative_cubes.pl)
     * [Number of partitions into 2 positive squares](./Math/number_of_partitions_into_2_positive_squares.pl)
     * [Number of representations as sum of 3 triangles](./Math/number_of_representations_as_sum_of_3_triangles.pl)
     * [Number of representations as sum of four squares](./Math/number_of_representations_as_sum_of_four_squares.pl)

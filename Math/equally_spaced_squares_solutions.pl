@@ -37,10 +37,10 @@ sub equally_spaced_squares {
 
         last if $d > $limit;
 
-        my $x = $d / 2;
-        my $y = ($n / $d) / 2;
+        my $x = $d;
+        my $y = ($n / $d);
 
-        unshift @solutions, 4 * ($x**2 + $y**2);
+        unshift @solutions, $x**2 + $y**2;
     }
 
     return @solutions;

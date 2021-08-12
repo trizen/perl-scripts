@@ -8,9 +8,9 @@
 
 use 5.020;
 use warnings;
-use experimental qw(signatures);
 
 use ntheory qw(:all);
+use experimental qw(signatures);
 
 # Number of solutions to `n = a^3 + b^3, with 0 < a < b.
 sub r2_cubes_positive_distinct ($n) {
@@ -34,3 +34,6 @@ sub r2_cubes_positive_distinct ($n) {
 foreach my $n (1 .. 100) {
     print(r2_cubes_positive_distinct($n), ", ");
 }
+
+__END__
+0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0
