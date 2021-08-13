@@ -40,15 +40,20 @@ sub lucas_miller_factor ($n, $j = 1, $k = 100) {
 
         next if is_square($P * $P - 4 * $Q);
 
+        my ($U, $V, $T) = lucas_sequence($n, $P, $Q, $d);
+
         foreach my $z (0 .. $r) {
 
-            my ($U, $V) = lucas_sequence($n, $P, $Q, $d << $z);
-
-            foreach my $g (gcd($U, $n), gcd($V, $n), gcd($V - $P, $n)) {
+            foreach my $g (gcd($U, $n), gcd($V, $n), gcd(subint($V, $P), $n)) {
                 if ($g > 1 and $g < $n) {
                     return $g;
                 }
             }
+
+            $U = mulmod($U, $V, $n);
+            $V = mulmod($V, $V, $n);
+            $V = modint(subint($V, addint($T, $T)), $n);
+            $T = mulmod($T, $T, $n);
         }
     }
 
