@@ -52,7 +52,7 @@ sub lucas_miller_factor ($n, $j = 1, $k = 100) {
 
             $U = mulmod($U, $V, $n);
             $V = mulmod($V, $V, $n);
-            $V = modint(subint($V, addint($T, $T)), $n);
+            $V = submod($V, addint($T, $T), $n);
             $T = mulmod($T, $T, $n);
         }
     }

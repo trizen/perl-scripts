@@ -28,7 +28,7 @@ use 5.020;
 use warnings;
 
 use Math::GMPz;
-use ntheory qw(valuation powmod gcd random_prime);
+use ntheory qw(:all);
 use experimental qw(signatures);
 
 sub miller_rabin_factor ($n, $tries = 100) {
@@ -58,7 +58,7 @@ sub miller_rabin_factor ($n, $tries = 100) {
                 }
             }
 
-            $x = powmod($x, 2, $n);
+            $x = mulmod($x, $x, $n);
         }
     }
 
