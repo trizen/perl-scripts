@@ -713,6 +713,7 @@ A nice collection of day-to-day Perl scripts.
     * [Polygonal numbers](./Math/polygonal_numbers.pl)
     * [Polygonal representations](./Math/polygonal_representations.pl)
     * [Polynomial interpolation](./Math/polynomial_interpolation.pl)
+    * [Power divisors](./Math/power_divisors.pl)
     * [Power of factorial ramanujan](./Math/power_of_factorial_ramanujan.pl)
     * [Powers of primes in factorial](./Math/powers_of_primes_in_factorial.pl)
     * [Powers of primes modulus in factorial](./Math/powers_of_primes_modulus_in_factorial.pl)
