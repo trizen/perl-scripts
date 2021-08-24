@@ -3,12 +3,11 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 15th October 2013
-# http://trizenx.blogspot.com
-# http://trizenx.blogspot.ro/2013/11/smart-word-wrap.html
-# Email: <echo dHJpemVueEBnbWFpbC5jb20K | base64 -d>
+# https://trizenx.blogspot.com
+# https://trizenx.blogspot.com/2013/11/smart-word-wrap.html
 
 # Smart word wrap algorithm
-# See: http://en.wikipedia.org/wiki/Word_wrap#Minimum_raggedness
+# See: https://en.wikipedia.org/wiki/Word_wrap#Minimum_raggedness
 
 use 5.010;
 use strict;

@@ -3,7 +3,6 @@
 # Author: Daniel "Trizen" Șuteu
 # Date: 29 August 2012
 # Edit: 18 January 2015
-# Email: echo dHJpemVueEBnbWFpbC5jb20K | base64 -d
 # Website: https://github.com/trizen
 
 # Put two or more lines together as columns. (with unicode char width support)

@@ -1,27 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright (C) 2010-2014 Trizen <echo dHJpemVueEBnbWFpbC5jb20K | base64 -d>.
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-#-------------------------------------------------------
-#  Appname: wimp-viewer
-#  License: GPLv3
-#  Created on: 24 August 2010
-#  Latest edit on: 01 January 2018
-#  https://github.com/trizen
-#-------------------------------------------------------
+# List and play the most recent videos from: https://www.wimp.com/
 
 # Requires 'youtube-viewer' and 'mpv'
 
@@ -29,13 +8,15 @@ use 5.010;
 use strict;
 use warnings;
 
-use LWP::Simple qw(get);
+use open ':std' => ':utf8';
+
+use Encode qw(encode_utf8);
 use XML::Fast qw(xml2hash);
 use Term::ANSIColor qw(colored);
 use Getopt::Std qw(getopts);
 
 my $appname = 'wimp-viewer';
-my $version = '0.32';
+my $version = '0.33';
 
 my $BASE_URL = 'https://www.wimp.com';
 
@@ -44,12 +25,13 @@ my $term = Term::ReadLine->new($appname);
 
 require WWW::Mechanize;
 my $mech = WWW::Mechanize->new(
-              autocheck => 1,
-              env_proxy => 1,
+              autocheck     => 1,
+              env_proxy     => 1,
+              show_progress => 0,
               agent => 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1941.0 Safari/537.36',
 );
 
-$mech->get($BASE_URL . '/?old=1/');
+$mech->default_header('Accept-Encoding' => scalar HTTP::Message::decodable());
 
 sub output_usage {
     print <<"HELP";
@@ -106,16 +88,18 @@ foreach my $url (@ARGV) {
 sub play {
     my ($url) = @_;
 
-    my $req     = $mech->get($url);
-    my $content = $req->decoded_content // $req->content;
+    my $resp    = $mech->get($url);
+    my $content = $resp->decoded_content // $resp->content;
 
     my $real_url = $mech->uri;
 
     if (   $content =~ m{\byoutube\.com/watch\?v=([\w-]{11})"}
-        or $content =~ m{<div data-autoplay='1' data-start='0' data-id='([\w-]{11})'}) {
+        or $content =~ m{<div data-autoplay='1' data-start='0' data-id='([\w-]{11})'}
+        or $content =~ m{src="https://www.youtube.com/embed/([\w-]{11})}) {
         system 'youtube-viewer', "--no-interactive", "--id=$1", ($opt{f} ? '-fs' : ());
     }
-    elsif ($content =~ /"file"\h*,\h*"(.*?)"/) {
+    elsif (   $content =~ /"file"\h*,\h*"(.*?)"/
+           or $content =~ m{source type="video/mp4" src="(https://.*?)"}) {
         system('mpv', ($opt{f} ? '--fullscreen' : ()), $1);
     }
     else {
@@ -126,8 +110,12 @@ sub play {
     return 1;
 }
 
-my $hash_xml = xml2hash(get("$BASE_URL/rss"));
-my @results  = @{$hash_xml->{rss}{channel}{item}};
+my @results;
+
+foreach my $url ("$BASE_URL/feed/?hot=1", "$BASE_URL/feed/") {
+    my $hash_xml = xml2hash(encode_utf8($mech->get($url)->decoded_content));
+    push @results, @{$hash_xml->{rss}{channel}{item}};
+}
 
 sub play_picked_videos {
     my (@list) = @_;
@@ -171,7 +159,6 @@ sub parse_date {
 i               : play the corresponding video
 all             : play all the video results
 3-8, 3..8       : same as 3 4 5 6 7 8
-http://URL      : play a specific video by URL
 /my?[regex]*$/  : play videos matched by a regex (/i)
 q, quit, exit   : exit application
 STDIN_HELP

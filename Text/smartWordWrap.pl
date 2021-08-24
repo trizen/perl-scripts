@@ -4,7 +4,6 @@
 # License: GPLv3
 # Date: 15th October 2013
 # http://trizenx.blogspot.com
-# Email: <echo dHJpemVueEBnbWFpbC5jb20K | base64 -d>
 
 # Smart word wrap algorithm
 # See: http://en.wikipedia.org/wiki/Word_wrap#Minimum_raggedness

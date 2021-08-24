@@ -853,6 +853,8 @@ A nice collection of day-to-day Perl scripts.
     * [Zeta for primes](./Math/zeta_for_primes.pl)
     * [Zeta function](./Math/zeta_function.pl)
     * [Zeta prime count approx](./Math/zeta_prime_count_approx.pl)
+* Media
+    * [Wimp-viewer](./Media/wimp-viewer)
 * Microphone
     * Alsa
         * [Raw from microphone](./Microphone/Alsa/raw_from_microphone.pl)
@@ -920,4 +922,3 @@ A nice collection of day-to-day Perl scripts.
     * [Triangle sub-string finder](./Visualisators/triangle_sub-string_finder.pl)
     * [Visual lz77 compression](./Visualisators/visual_lz77_compression.pl)
     * [Visual sudoku dice solver](./Visualisators/visual_sudoku_dice_solver.pl)
-    * [Wimp-viewer](./Visualisators/wimp-viewer)
