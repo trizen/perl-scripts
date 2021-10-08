@@ -1744,6 +1744,11 @@ sub find_small_factors ($rem, $factors) {
         },
 
         sub {
+            say "=> Williams p±1 (1M)...";
+            williams_pp1_ntheory_factor($rem, 1_000_000);
+        },
+
+        sub {
             if ($len < 1000) {
                 say "=> Chebyshev p±1 (1M)...";
                 chebyshev_factorization($rem, 1_000_000, int(rand(1e6)) + 2);
@@ -1756,11 +1761,6 @@ sub find_small_factors ($rem, $factors) {
             my $f = fast_power_check($rem, 500);
             $f // do { $state{fast_power_check} = 0 };
             $f;
-        },
-
-        sub {
-            say "=> Williams p±1 (1M)...";
-            williams_pp1_ntheory_factor($rem, 1_000_000);
         },
 
         sub {
