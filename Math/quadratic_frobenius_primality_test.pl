@@ -24,16 +24,13 @@ use Math::GMPz;
 use ntheory qw(:all);
 use experimental qw(signatures);
 
-sub quadratic_powmod ($a, $b, $w, $n, $m) {
+sub quadratic_powmod ($x, $y, $a, $b, $w, $n, $m) {
 
     state $t = Math::GMPz::Rmpz_init_nobless();
 
-    my $x = Math::GMPz::Rmpz_init_set_ui(1);
-    my $y = Math::GMPz::Rmpz_init_set_ui(0);
+    foreach my $bit (split(//, scalar reverse Math::GMPz::Rmpz_get_str($n, 2))) {
 
-    do {
-
-        if ($n & 1) {
+        if ($bit) {
 
             # (x, y) = ((a*x + b*y*w) % m, (a*y + b*x) % m)
             Math::GMPz::Rmpz_mul_ui($t, $b, $w);
@@ -52,11 +49,7 @@ sub quadratic_powmod ($a, $b, $w, $n, $m) {
         Math::GMPz::Rmpz_powm_ui($b, $b, 2, $m);
         Math::GMPz::Rmpz_addmul_ui($a, $b, $w);
         Math::GMPz::Rmpz_mod($b, $t, $m);
-
-    } while ($n >>= 1);
-
-    Math::GMPz::Rmpz_set($a, $x);
-    Math::GMPz::Rmpz_set($b, $y);
+    }
 }
 
 sub find_discriminant ($n) {
@@ -87,14 +80,24 @@ sub is_quadratic_frobenius_pseudoprime ($n) {
 
     my $c = find_discriminant($n) // return 0;
 
-    my $x_a = Math::GMPz->new(1);
-    my $x_b = Math::GMPz->new(1);
-    my $w   = Math::GMPz->new($c);
+    state $a = Math::GMPz::Rmpz_init();
+    state $b = Math::GMPz::Rmpz_init();
+    state $w = Math::GMPz::Rmpz_init();
 
-    quadratic_powmod($x_a, $x_b, $w, $n, $n);
+    state $x = Math::GMPz::Rmpz_init();
+    state $y = Math::GMPz::Rmpz_init();
 
-    Math::GMPz::Rmpz_congruent_ui_p($x_a, 1, $n)
-      && Math::GMPz::Rmpz_congruent_p($x_b, $n - 1, $n);
+    Math::GMPz::Rmpz_set_ui($a, 1);
+    Math::GMPz::Rmpz_set_ui($b, 1);
+    Math::GMPz::Rmpz_set_ui($w, $c);
+
+    Math::GMPz::Rmpz_set_ui($x, 1);
+    Math::GMPz::Rmpz_set_ui($y, 0);
+
+    quadratic_powmod($x, $y, $a, $b, $w, $n, $n);
+
+    Math::GMPz::Rmpz_congruent_ui_p($x, 1, $n)
+      && Math::GMPz::Rmpz_congruent_p($y, $n - 1, $n);
 }
 
 my $count = 0;
