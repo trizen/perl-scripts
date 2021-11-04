@@ -34,9 +34,7 @@ use strict;
 use warnings;
 
 use experimental qw(signatures);
-
-use Set::Product::XS qw(product);
-use ntheory qw(sqrtmod factor_exp chinese is_polygonal);
+use ntheory qw(sqrtmod factor_exp chinese is_polygonal forsetproduct);
 
 sub sum_of_two_squares ($n) {
 
@@ -80,7 +78,7 @@ sub sum_of_two_squares ($n) {
 
     my @square_roots;
 
-    product {
+    forsetproduct {
         push @square_roots, chinese(@_);
     } values %table;
 

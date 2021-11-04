@@ -29,8 +29,7 @@ use warnings;
 use experimental qw(signatures);
 
 use List::Util qw(uniq);
-use Set::Product::XS qw(product);
-use ntheory qw(factor_exp is_prime chinese);
+use ntheory qw(factor_exp is_prime chinese forsetproduct);
 use Math::AnyNum qw(:overload kronecker powmod invmod valuation ipow);
 
 sub tonelli_shanks ($n, $p) {
@@ -156,7 +155,7 @@ sub sqrt_mod_n ($a, $n) {
 
     my @roots;
 
-    product {
+    forsetproduct {
         push @roots, chinese(@_);
     } @chinese;
 

@@ -20,8 +20,7 @@ use 5.010;
 use strict;
 use warnings;
 
-use Set::Product::XS qw(product);
-use ntheory qw(sqrtmod factor_exp chinese mulmod);
+use ntheory qw(sqrtmod factor_exp chinese mulmod forsetproduct);
 
 sub modular_square_root {
     my ($k, $n) = @_;
@@ -35,7 +34,7 @@ sub modular_square_root {
 
     my %solutions;
 
-    product {
+    forsetproduct {
         undef $solutions{chinese(@_)};
     } values %table;
 

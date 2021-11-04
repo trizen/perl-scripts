@@ -26,8 +26,7 @@ use warnings;
 use experimental qw(signatures);
 
 use Math::GMPz;
-use Set::Product::XS qw(product);
-use ntheory qw(sqrtmod factor_exp chinese);
+use ntheory qw(sqrtmod factor_exp chinese forsetproduct);
 
 sub sum_of_two_squares_solutions ($n) {
 
@@ -71,7 +70,7 @@ sub sum_of_two_squares_solutions ($n) {
 
     my @square_roots;
 
-    product {
+    forsetproduct {
         push @square_roots, Math::GMPz->new(chinese(@_));
     } values %table;
 

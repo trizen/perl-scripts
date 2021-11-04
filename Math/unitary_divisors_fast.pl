@@ -13,16 +13,16 @@ use 5.010;
 use strict;
 use warnings;
 
-use ntheory qw(factor_exp);
+use ntheory qw(factor_exp powint mulint);
 
 sub udivisors {
     my ($n) = @_;
 
     my @d  = (1);
-    my @pp = map { $_->[0]**$_->[1] } factor_exp($n);
+    my @pp = map { powint($_->[0], $_->[1]) } factor_exp($n);
 
     foreach my $p (@pp) {
-        push @d, map { $_ * $p } @d;
+        push @d, map { mulint($_, $p) } @d;
     }
 
     return sort { $a <=> $b } @d;

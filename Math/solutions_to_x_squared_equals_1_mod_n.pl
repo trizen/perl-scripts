@@ -16,8 +16,7 @@ use warnings;
 
 use Test::More;
 
-use Set::Product::XS qw(product);
-use ntheory qw(factor_exp chinese);
+use ntheory qw(factor_exp chinese forsetproduct);
 
 plan tests => 8;
 
@@ -46,7 +45,7 @@ sub solve_quadratic_congruence {
 
     my @solutions;
 
-    product {
+    forsetproduct {
         push @solutions, chinese(@_);
     } values %table;
 

@@ -13,8 +13,7 @@ use warnings;
 use experimental qw(signatures);
 
 use List::Util qw(uniq);
-use Set::Product::XS qw(product);
-use ntheory qw(factor_exp chinese);
+use ntheory qw(factor_exp chinese forsetproduct);
 use Math::Prime::Util::GMP qw(sqrtmod);
 use Math::AnyNum qw(:overload powmod ipow);
 
@@ -87,7 +86,7 @@ sub sqrt_mod_n ($z, $n) {
 
         my @roots;
 
-        product {
+        forsetproduct {
             push @roots, chinese(@_);
         } values %congruences;
 

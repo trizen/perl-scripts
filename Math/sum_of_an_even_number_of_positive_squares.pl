@@ -18,9 +18,7 @@ use strict;
 use warnings;
 
 use experimental qw(signatures);
-
-use Set::Product::XS qw(product);
-use ntheory qw(sqrtmod factor_exp vecprod vecsum);
+use ntheory qw(sqrtmod factor_exp vecprod vecsum forsetproduct);
 
 sub primitive_sum_of_two_squares ($p) {
 
@@ -64,7 +62,7 @@ sub sum_of_squares_solution ($n) {
 
     my @solution;
 
-    product {
+    forsetproduct {
         push @solution, vecprod($left_prod, @_);
     } @primitives;
 

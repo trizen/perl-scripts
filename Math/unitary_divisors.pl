@@ -13,7 +13,7 @@ use 5.010;
 use strict;
 use warnings;
 
-use ntheory qw(forcomb factor_exp vecprod);
+use ntheory qw(forcomb factor_exp vecprod powint);
 
 # This algorithm nicely illustrates the identity:
 #
@@ -24,7 +24,7 @@ use ntheory qw(forcomb factor_exp vecprod);
 sub udivisors {
     my ($n) = @_;
 
-    my @pp  = map { $_->[0]**$_->[1] } factor_exp($n);
+    my @pp  = map { powint($_->[0], $_->[1]) } factor_exp($n);
     my $len = scalar(@pp);
 
     my @d;

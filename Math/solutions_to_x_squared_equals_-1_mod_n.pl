@@ -13,8 +13,7 @@ use 5.010;
 use strict;
 use warnings;
 
-use Set::Product::XS qw(product);
-use ntheory qw(sqrtmod factor_exp chinese mulmod);
+use ntheory qw(sqrtmod factor_exp chinese mulmod forsetproduct);
 
 sub solve_quadratic_congruence {
     my ($n) = @_;
@@ -28,7 +27,7 @@ sub solve_quadratic_congruence {
 
     my %solutions;
 
-    product {
+    forsetproduct {
         undef $solutions{chinese(@_)};
     } values %table;
 

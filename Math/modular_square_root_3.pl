@@ -13,7 +13,7 @@ use warnings;
 
 use Math::GMPz;
 use experimental qw(signatures);
-use Set::Product::XS qw();
+use ntheory qw();
 use Math::Prime::Util::GMP qw();
 
 sub modular_square_root ($x, $y) {
@@ -105,7 +105,7 @@ sub modular_square_root ($x, $y) {
     my @roots;
 
 #<<<
-    Set::Product::XS::product {
+    ntheory::forsetproduct {
         push @roots, Math::Prime::Util::GMP::chinese(@_);
     } values %congruences;
 #>>>
