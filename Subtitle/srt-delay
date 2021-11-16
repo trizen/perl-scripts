@@ -88,12 +88,12 @@ foreach my $file (@files) {
             push @output, join(
                 ' --> ',
                 sec2time(
-                    map ({
-                            my $sec = $scale * $_ + $delay;
-                            $sec >= 0
-                              ? $sec
-                              : !warn "[!] Time cannot be lower than zero at line $.\n";
-                    } time2sec(split(/\s*-->\s*/, $line, 2)))
+                    map {
+                        my $sec = $scale * $_ + $delay;
+                        ($sec >= 0)
+                          ? $sec
+                          : !warn "[!] Time cannot be lower than zero at line $.\n";
+                    } time2sec(split(/\s*-->\s*/, $line, 2))
                 )
               )
               . $1;

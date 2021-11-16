@@ -28,7 +28,7 @@ sub walk {
 sub mktree {
     my %freq = @_;
 
-    my @nodes = map([$_, $freq{$_}], keys %freq);
+    my @nodes = map { [$_, $freq{$_}] } keys %freq;
 
     if (@nodes == 1) {
         return {$nodes[0][0] => '0'};
@@ -36,7 +36,7 @@ sub mktree {
 
     do {    # poor man's priority queue
         @nodes = sort { $a->[1] <=> $b->[1] } @nodes;
-        my ($x, $y) = splice @nodes, 0, 2;
+        my ($x, $y) = splice(@nodes, 0, 2);
         push @nodes, [[$x, $y], $x->[1] + $y->[1]];
     } while (@nodes > 1);
 

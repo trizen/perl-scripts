@@ -12,6 +12,6 @@ do {
         $num = int(rand 6) + 1;
     }
     ++$count;
-} until grep({$_ == $list[0]} @list) == @list;
+} until ((grep { $_ == $list[0] } @list) == @list);
 
 print "Rolls: $count\tNumber: $list[0]\n";

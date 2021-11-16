@@ -42,7 +42,7 @@ sub reduce_dirs {
         }
     }
 
-    grep !$substring_count{$_}, keys %substring_count;
+    grep { !$substring_count{$_} } keys %substring_count;
 }
 
 my @dirs;
@@ -58,7 +58,7 @@ for my $dirname (@INC) {
 
 my $inc_re = do {
     local $" = q{|};
-    qr{^(?>@{[map quotemeta(s{/}{::}gr), @dirs]})::};
+    qr{^(?>@{[map { quotemeta(s{/}{::}gr) } @dirs]})::};
 };
 
 foreach my $arg (@ARGV) {

@@ -59,9 +59,10 @@ foreach my $arg (@ARGV) {
 }
 
 unless (defined $phrase) {
+    my @words = grep { substr($_, 0, 1) ne '-' } @ARGV;
     $phrase =
-      grep({ chr ord $_ ne '-' } @ARGV)
-      ? join(' ', grep({ chr ord $_ ne '-' } @ARGV))
+      @words
+      ? join(' ', @words)
       : 'Just another Perl hacker,';
 }
 
@@ -155,8 +156,8 @@ LOOP_1: foreach my $letter (split(//, $phrase, 0)) {
 }
 
 if ($compact) {
-    print q[''=~('(?{'.('], map({ $content[$_][0] } 0 .. $#content), q['^'],
-      map({ $content[$_][1] } 0 .. $#content), q[').'~})');], "\n";
+    print q[''=~('(?{'.('], (map { $content[$_][0] } 0 .. $#content), q['^'],
+      (map { $content[$_][1] } 0 .. $#content), q[').'~})');], "\n";
 }
 else {
     for (my $i = $brake_after - 1 ; $i <= $#content ; $i += $brake_after) {

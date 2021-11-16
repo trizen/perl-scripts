@@ -20,7 +20,7 @@ sub encode_decode ($$) {
     my $i      = 1;
     my $output = '';
 
-  LOOP_1: foreach my $c (map ord, split //, $text) {
+  LOOP_1: foreach my $c (map { ord } split //, $text) {
         foreach my $o ([32, 121]) {
             if ($c > $o->[0] && $c <= $o->[1]) {
 

@@ -12,7 +12,7 @@ use 5.010;
 sub cuboid {
 
     # Constant dimensions of the cuboid
-    my ($x, $y, $z) = map int, @_[0 .. 2];
+    my ($x, $y, $z) = map { int } @_[0 .. 2];
 
     # ASCII characters
     # $c = corner point

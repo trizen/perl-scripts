@@ -4,6 +4,7 @@
 # License: GPLv3
 # Date: 27 December 2011
 # Edit: 18 February 2012
+# Edit: 16 November 2021
 # https://github.com/trizen
 
 # Find files which have the exact or almost the exact name in a path.
@@ -13,31 +14,33 @@ use strict;
 use warnings;
 use Getopt::Long;
 
+use experimental qw(smartmatch);
+
 sub usage {
     print <<"HELP";
 usage: $0 [options] [dir]
 
 options:
-    --aprox=i : amount of approximateness (default: 0)
-    --hidden! : verify hidden files and folders (default: false)
+    --approx=i : amount of approximateness (default: 0)
+    --hidden!  : verify hidden files and folders (default: false)
 
-example: $0 --aprox=4 /my/dir
+example: $0 --approx=4 /my/dir
 HELP
     exit 0;
 }
 
 my $show_hidden_files;
-my $aproximate_n;
+my $approximate_n;
 
 GetOptions(
-           'aproximate=i' => \$aproximate_n,
-           'hidden!'      => \$show_hidden_files,
-           'help|h'       => \&usage,
+           'approximate=i' => \$approximate_n,
+           'hidden!'       => \$show_hidden_files,
+           'help|h'        => \&usage,
           )
   or die "Error in command-line arguments!";
 
-if (defined $aproximate_n) {
-    $aproximate_n += 1;
+if (defined $approximate_n) {
+    $approximate_n += 1;
 }
 
 my @files;
@@ -81,16 +84,15 @@ sub editdist {
 sub find_similar_names {
     my ($name, $array_ref) = @_;
 
-    my (@names) = (
-        sort { $$a[1] <=> $$b[1] } grep({defined} map({
-                 my $d = editdist($_, $name);
-                   $d < $aproximate_n ? [$_, $d] : undef;
-                } grep({$_ ne $name} @$array_ref)))
-    );
+    my (@names) =
+      sort { $a->[1] <=> $b->[1] } grep { defined } map {
+        my $d = editdist($_, $name);
+        $d < $approximate_n ? [$_, $d] : undef;
+      } grep { $_ ne $name } @$array_ref;
 
     if (@names) {
         my $best = $names[0][1];
-        @names = map({$$_[0]} grep({$$_[1] == $best} @names));
+        @names = map { $_->[0] } grep { $_->[1] == $best } @names;
     }
 
     \@names;
@@ -101,24 +103,25 @@ sub diff {
     my %table;
     my @found;
 
-    if (defined $aproximate_n) {
-        my (@names) = map({$$_{'file'}} @files);
+    if (defined $approximate_n) {
+        my (@names) = map { $_->{'file'} } @files;
 
         foreach my $file (@files) {
 
-            my (@names) = map { $$_{'file'} }
+            my (@names) =
+              map { $_->{'file'} }
               grep {
 
-                my $length_1 = length $$_{'file'};
-                my $length_2 = length $$file{'file'};
+                my $length_1 = length $_->{'file'};
+                my $length_2 = length $file->{'file'};
 
-                $length_1 <= $length_2 + $aproximate_n and $length_1 >= $length_2 - $aproximate_n
-                  or $length_1 == $length_2
-                  if $$_{'file'} ne $$file{'file'};
+                ($length_1 <= $length_2 + $approximate_n) and ($length_1 >= $length_2 - $approximate_n)
+                  or ($length_1 == $length_2)
+                  if ($_->{'file'} ne $file->{'file'});
 
               } @files;
 
-            push @{$table{$$file{$$file{'file'}}}}, @{find_similar_names $$file{'file'}, \@names};
+            push @{$table{$file->{$file->{'file'}}}}, @{find_similar_names $file->{'file'}, \@names};
         }
 
         foreach my $array_1_ref (values %table) {
@@ -129,21 +132,26 @@ sub diff {
                 }
             }
         }
-        return +(sort { lc substr($a, rindex($a, '/')) cmp lc substr($b, rindex($b, '/')) } keys %alike);
+
+        return map { $_->[1] }
+          sort     { $a->[0] cmp $b->[0] }
+          map      { [lc(substr($_, rindex($_, '/'))), $_] }
+          keys %alike;
     }
-    else {
-        foreach my $file (@files, @files) {
-            $alike{$$file{$$file{'file'}}} = () if $table{$$file{'file'}}++ >= 2;
-        }
-        return
-          +(sort { lc substr($a, rindex($a, '/')) cmp lc substr($b, rindex($b, '/')) }
-            grep({length} keys %alike));
+
+    foreach my $file (@files, @files) {
+        $alike{$file->{$file->{'file'}}} = () if $table{$file->{'file'}}++ >= 2;
     }
+
+    return map { $_->[1] }
+      sort     { $a->[0] cmp $b->[0] }
+      map      { [lc(substr($_, rindex($_, '/'))), $_] }
+      grep     { length } keys %alike;
 }
 
 foreach my $arg (@ARGV) {
     $arg =~ s[(?<=.)/+$][];
-    my (@dir) = -d $arg ? $arg : next;
+    my (@dir) = (-d $arg) ? $arg : next;
     local $, = "\n";
     say diff(locate_files(\@dir));
     undef @files;

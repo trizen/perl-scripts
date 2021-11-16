@@ -43,7 +43,7 @@ HELP
 
 --$min;    # starting with zero
 
-foreach my $file (grep -f, @ARGV) {
+foreach my $file (grep { -f } @ARGV) {
     my %table;
     open my $fh, '<', $file or do { warn "$0: can't open file $file: $!"; next };
     while (defined(my $line = <$fh>)) {
@@ -72,7 +72,7 @@ foreach my $file (grep -f, @ARGV) {
             next if length($key) > $max;
             @{$table{$key}} = do {
                 my %s;
-                grep !$s{$_}++, @{$table{$key}};
+                grep { !$s{$_}++ } @{$table{$key}};
             };
             my $items = @{$table{$key}};
             next if $items < $min_words;
