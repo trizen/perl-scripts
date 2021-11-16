@@ -28,6 +28,7 @@ A nice collection of day-to-day Perl scripts.
     * [Wave-cmp2](./Audio/wave-cmp2.pl)
 * Benchmarks
     * [Array range vs shift](./Benchmarks/array_range_vs_shift.pl)
+    * [Schwartzian transform](./Benchmarks/schwartzian_transform.pl)
     * [Types of variables](./Benchmarks/types_of_variables.pl)
 * Book tools
     * [Rosettacode to markdown](./Book%20tools/rosettacode_to_markdown.pl)

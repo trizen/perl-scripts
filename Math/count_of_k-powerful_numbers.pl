@@ -25,7 +25,7 @@
 use 5.020;
 use warnings;
 
-use ntheory qw(:all);
+use ntheory qw(rootint divint gcd is_square_free mulint powint);
 use experimental qw(signatures);
 
 sub powerful_count ($n, $k = 2) {

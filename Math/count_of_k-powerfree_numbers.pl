@@ -16,7 +16,7 @@ use 5.020;
 use strict;
 use warnings;
 
-use ntheory qw(:all);
+use ntheory qw(vecall factor_exp powint divint forsquarefree rootint);
 use experimental qw(signatures);
 
 sub is_powerfree ($n, $k = 2) {
