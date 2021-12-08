@@ -12,7 +12,7 @@
 #   http://trizenx.blogspot.ro/2015/03/similar-audio-files.html
 
 # Requirements:
-#   - sox: http://sox.sourceforge.net/
+#   - ffmpeg: https://ffmpeg.org
 #   - wav2png: https://github.com/beschulz/wav2png
 
 use utf8;
@@ -31,6 +31,7 @@ use List::Util qw(sum);
 use Getopt::Long qw(GetOptions);
 
 use File::Find qw(find);
+use File::Temp qw(tempdir);
 use File::Path qw(make_path);
 use File::Spec::Functions qw(catfile catdir);
 
@@ -111,6 +112,7 @@ my @audio_formats = qw(
   wav
   wma
   wv
+  webm
   );
 
 my $audio_formats_re = do {
@@ -133,14 +135,29 @@ if (not -d $cache_dir) {
     make_path($cache_dir);
 }
 
+my $tmpdir = tempdir(CLEANUP => 1);
 tie my %db, 'GDBM_File', $cache_db, &GDBM_File::GDBM_WRCREAT, 0640;
 
 #
-#-- execute the sox and wave2png commands and return the waveform PNG data
+#-- execute the ffmpeg and wave2png commands and return the waveform PNG data
 #
 sub generate_waveform {
     my ($file, $output) = @_;
-`sox \Q$file\E -q --norm -V0 --multi-threaded -t wav --encoding signed-integer - | wav2png -w $width -h $height -f ffffffff -b 00000000 -o /dev/stdout /dev/stdin`;
+
+#<<<
+    # Using sox (currently broken)
+    # return scalar `sox \Q$file\E -q --norm -V0 --multi-threaded -t wav --encoding signed-integer - | wav2png -w $width -h $height -f ffffffff -b 00000000 -o /dev/stdout /dev/stdin`;
+#>>>
+
+    my $tmpfile = catfile($tmpdir, $file . '.wav');
+
+    system("ffmpeg", "-loglevel", "quiet", "-i", $file, $tmpfile);
+    $? == 0 or return;
+
+    my $waveform = `wav2png -w $width -h $height -f 000000ff -b ffffff00 -o /dev/stdout \Q$tmpfile\E`;
+
+    unlink($tmpfile);
+    return $waveform;
 }
 
 #
@@ -174,6 +191,8 @@ sub avg {
 #
 sub generate_fingerprint {
     my ($image_data) = @_;
+
+    $image_data eq '' and return;
 
     my $img = GD::Image->new($image_data) // return;
 
