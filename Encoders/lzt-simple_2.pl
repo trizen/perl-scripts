@@ -4,7 +4,7 @@
 # License: GPLv3
 # Created on: 21 May 2014
 # Latest edit on: 28 May 2014
-# Website: http://github.com/trizen
+# Website: https://github.com/trizen
 
 # A new type of LZ compression, featuring a very short decompression time.
 
