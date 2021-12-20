@@ -49,10 +49,10 @@ sub solve_sudoku {
                     if (!exists $t{$k}) {
                         $grid[$i] = $k;
                         __SUB__->();
+                        $grid[$i] = 0;
                     }
                 }
 
-                $grid[$i] = 0;
                 return;
             }
         }

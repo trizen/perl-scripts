@@ -126,6 +126,7 @@ A nice collection of day-to-day Perl scripts.
     * [Word columner](./Formatters/word_columner.pl)
 * Game solvers
     * [Dice game solver](./Game%20solvers/dice_game_solver.pl)
+    * [Generate sudoku](./Game%20solvers/generate_sudoku.pl)
     * [Peg-solitaire-solver](./Game%20solvers/peg-solitaire-solver)
     * [Reaction time test](./Game%20solvers/reaction_time_test.pl)
     * [Reflex sheep game](./Game%20solvers/reflex_sheep_game.pl)
