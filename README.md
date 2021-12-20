@@ -299,6 +299,7 @@ A nice collection of day-to-day Perl scripts.
     * [Img-autocrop-whitebg](./Image/img-autocrop-whitebg.pl)
     * [Img2ascii](./Image/img2ascii.pl)
     * [Img2html](./Image/img2html.pl)
+    * [Img2png](./Image/img2png.pl)
     * [Img composition](./Image/img_composition.pl)
     * [Img rewrite](./Image/img_rewrite.pl)
     * [Julia transform](./Image/julia_transform.pl)
@@ -313,7 +314,6 @@ A nice collection of day-to-day Perl scripts.
     * [Photo mosaic from images](./Image/photo_mosaic_from_images.pl)
     * [Remove sensitive exif tags](./Image/remove_sensitive_exif_tags.pl)
     * [Sharp 2x zoom](./Image/sharp_2x_zoom.pl)
-    * [Svg2png](./Image/svg2png.pl)
     * [Webp2png](./Image/webp2png.pl)
 * JAPH
     * [Alien japh](./JAPH/alien_japh.pl)

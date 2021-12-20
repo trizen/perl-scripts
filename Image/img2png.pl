@@ -4,7 +4,9 @@
 # 19 December 2021
 # https://github.com/trizen
 
-# Convert SVG images to PNG, using the Gtk3::Gdk::Pixbuf library.
+# Convert any images to PNG, using the Gtk3::Gdk::Pixbuf library.
+
+# It can convert SVG, WEBP, JPEG, and more...
 
 use 5.020;
 use strict;
@@ -62,9 +64,16 @@ sub svg2png ($input_file, $output_file = undef) {
     my $pixbuf;
 
     if (defined($CONFIG{width}) or defined($CONFIG{height})) {
-        my $width  = $CONFIG{width}  // $CONFIG{height};
-        my $height = $CONFIG{height} // $CONFIG{width};
-        $pixbuf = "Gtk3::Gdk::Pixbuf"->new_from_file_at_scale($input_file, $width, $height, 0);
+
+        my $width = $CONFIG{width} // do {
+            my (undef, $x, $y) = Gtk3::Gdk::Pixbuf::get_file_info($input_file);
+            int($x / ($y / $CONFIG{height}));
+        };
+
+        my $height            = $CONFIG{height} // $CONFIG{width};
+        my $keep_aspect_ratio = ($CONFIG{width} && $CONFIG{height}) ? 0 : 1;
+
+        $pixbuf = "Gtk3::Gdk::Pixbuf"->new_from_file_at_scale($input_file, $width, $height, $keep_aspect_ratio);
     }
     elsif (defined($CONFIG{scale_factor})) {
         my (undef, $width, $height) = Gtk3::Gdk::Pixbuf::get_file_info($input_file);
@@ -89,7 +98,7 @@ sub svg2png ($input_file, $output_file = undef) {
             my $output_dir = $CONFIG{output_dir} // dirname($input_file);
             my $basename   = basename($input_file);
 
-            if (not $basename =~ s/\.svg\z/.png/i) {
+            if (not $basename =~ s/\.(svg|jpe?g|webp|gif|avif|jfif|pjpeg|pjp|bmp|ico|tiff?|xpm)\z/.png/i) {
                 $basename .= '.png';
             }
 
