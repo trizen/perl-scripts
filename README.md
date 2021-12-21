@@ -47,6 +47,8 @@ A nice collection of day-to-day Perl scripts.
     * [Base64 decoding-tutorial](./Decoders/base64_decoding-tutorial.pl)
     * [Cnp info](./Decoders/cnp_info.pl)
     * [Named parameters](./Decoders/named_parameters.pl)
+* Digest
+    * [Brute-force resistant hashing](./Digest/brute-force_resistant_hashing.pl)
 * Encoders
     * [77](./Encoders/77.pl)
     * [Arithmetic coding](./Encoders/arithmetic_coding.pl)
