@@ -37,6 +37,7 @@ A nice collection of day-to-day Perl scripts.
 * Converters
     * [Any to 3gp](./Converters/any_to_3gp.pl)
     * [Euler2pdf](./Converters/euler2pdf.pl)
+    * [From hex](./Converters/from_hex.pl)
     * [Json2csv](./Converters/json2csv.pl)
     * [Notepadfree to txt](./Converters/notepadfree_to_txt.pl)
     * [Unicode2ascii](./Converters/unicode2ascii.pl)
@@ -290,6 +291,7 @@ A nice collection of day-to-day Perl scripts.
     * [Darken image](./Image/darken_image.pl)
     * [Diff negative](./Image/diff_negative.pl)
     * [Edge detector](./Image/edge_detector.pl)
+    * [Extract jpegs](./Image/extract_jpegs.pl)
     * [Fractal frame](./Image/fractal_frame.pl)
     * [Fractal frame transparent](./Image/fractal_frame_transparent.pl)
     * [Gd png2jpg](./Image/gd_png2jpg.pl)
@@ -317,6 +319,7 @@ A nice collection of day-to-day Perl scripts.
     * [Photo mosaic from images](./Image/photo_mosaic_from_images.pl)
     * [Remove sensitive exif tags](./Image/remove_sensitive_exif_tags.pl)
     * [Sharp 2x zoom](./Image/sharp_2x_zoom.pl)
+    * [Visualize binary](./Image/visualize_binary.pl)
     * [Webp2png](./Image/webp2png.pl)
 * JAPH
     * [Alien japh](./JAPH/alien_japh.pl)
