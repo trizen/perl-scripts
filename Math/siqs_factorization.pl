@@ -1408,6 +1408,12 @@ sub fermat_find_factor ($n, $max_iter) {
     return undef;
 }
 
+sub holf_ntheory_find_factor($n, $max_iter) {
+    my ($p, $q) = Math::Prime::Util::GMP::holf_factor($n, $max_iter);
+    return $p if defined($q);
+    return undef;
+}
+
 sub holf_find_factor ($n, $max_iter) {
 
     # Hart’s One-Line Factoring Algorithm
@@ -1688,6 +1694,11 @@ sub find_small_factors ($rem, $factors) {
         sub {
             say "=> HOLF method...";
             holf_find_factor($rem, HOLF_ITERATIONS);
+        },
+
+        sub {
+            say "=> HOLF method (ntheory)...";
+            holf_ntheory_find_factor($rem, 2 * HOLF_ITERATIONS);
         },
 
         sub {
