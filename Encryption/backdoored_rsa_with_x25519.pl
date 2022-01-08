@@ -111,7 +111,7 @@ my $ephem_pub     = $random_ephem_key->key2hash->{pub};
 my $shared_secret = $random_ephem_key->shared_secret($master_public_key);
 
 # Generate the backdoored RSA key, using the ephemeral random public key, which will be embeded
-# in the RSA modulus, and pass use the shared secret value as a seed for the random number generator.
+# in the RSA modulus, and pass the shared secret value as a seed for the random number generator.
 my $rsa_key = generate_rsa_key($BITS, $ephem_pub, $POS, $shared_secret);
 
 my $message = "Hello, world!";

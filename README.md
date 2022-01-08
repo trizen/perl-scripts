@@ -38,6 +38,7 @@ A nice collection of day-to-day Perl scripts.
     * [Any to 3gp](./Converters/any_to_3gp.pl)
     * [Euler2pdf](./Converters/euler2pdf.pl)
     * [From hex](./Converters/from_hex.pl)
+    * [Html2text](./Converters/html2text.pl)
     * [Json2csv](./Converters/json2csv.pl)
     * [Notepadfree to txt](./Converters/notepadfree_to_txt.pl)
     * [Unicode2ascii](./Converters/unicode2ascii.pl)
