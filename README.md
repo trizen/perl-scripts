@@ -29,6 +29,7 @@ A nice collection of day-to-day Perl scripts.
 * Benchmarks
     * [Array range vs shift](./Benchmarks/array_range_vs_shift.pl)
     * [Compression algorithms](./Benchmarks/compression_algorithms.pl)
+    * [Json vs storable](./Benchmarks/json_vs_storable.pl)
     * [Schwartzian transform](./Benchmarks/schwartzian_transform.pl)
     * [Types of variables](./Benchmarks/types_of_variables.pl)
 * Book tools

@@ -6,6 +6,15 @@
 
 # Convert HTML to text (UTF-8), given either an HTML file, or an URL.
 
+# Dependencies:
+#   perl-html-tree
+#   perl-html-formatter
+#   perl-libwww                 (optional: when given URLs)
+#   perl-lwp-protocol-https     (optional: when given https:// URLs)
+
+# See also:
+#   https://github.com/grobian/html2text
+
 use 5.020;
 use strict;
 use warnings;
@@ -29,6 +38,7 @@ sub extract_html ($source) {
                                      timeout   => 15,
                                      agent => "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0",
                                      cookie_jar => {},
+                                     ssl_opts   => {verify_hostname => 0},
         );
 
         my $resp = $lwp->get($source);
@@ -48,7 +58,7 @@ sub extract_html ($source) {
 
     my $html = do {
         open my $fh, '<:utf8', $source
-          or die "Can't open <<$source>> for reading: $!";
+          or die "Can't open file <<$source>> for reading: $!";
         local $/;
         <$fh>;
     };
