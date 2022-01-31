@@ -24,12 +24,12 @@ use experimental qw(signatures);
 
 use ntheory qw(
   urandomm valuation sqrtmod invmod random_prime factor_exp vecmin
-  );
+);
 
 use Math::Prime::Util::GMP qw(
   is_power powmod vecprod sqrtint rootint logint is_prime
   gcd sieve_primes consecutive_integer_lcm lucas_sequence
-  );
+);
 
 my $ZERO = Math::GMPz->new(0);
 my $ONE  = Math::GMPz->new(1);
@@ -360,7 +360,7 @@ sub siqs_build_matrix ($factor_base, $smooth_relations) {
     return \@matrix;
 }
 
-sub siqs_build_matrix_opt($M) {
+sub siqs_build_matrix_opt ($M) {
 
     # Convert the given matrix M of 0s and 1s into a list of numbers m
     # that correspond to the columns of the matrix.
@@ -474,7 +474,7 @@ sub siqs_factor_from_square ($n, $square_indices, $smooth_relations) {
     return Math::GMPz->new(gcd($sqrt1 - $sqrt2, $n));
 }
 
-sub siqs_find_more_factors_gcd(@numbers) {
+sub siqs_find_more_factors_gcd (@numbers) {
     my %res;
 
     foreach my $i (0 .. $#numbers) {
@@ -599,7 +599,7 @@ sub siqs_choose_range ($n) {
     return sprintf('%.0f', exp(sqrt(log($n) * log(log($n))) / 2));
 }
 
-sub siqs_choose_nf($n) {
+sub siqs_choose_nf ($n) {
 
     # Choose parameters nf (sieve of factor base)
 
@@ -608,7 +608,7 @@ sub siqs_choose_nf($n) {
     return sprintf('%.0f', exp(sqrt(log($n) * log(log($n))))**(sqrt(2) / 4));
 }
 
-sub siqs_choose_nf2($n) {
+sub siqs_choose_nf2 ($n) {
 
     # Choose parameters nf (sieve of factor base)
     $n = "$n";
@@ -1408,7 +1408,7 @@ sub fermat_find_factor ($n, $max_iter) {
     return undef;
 }
 
-sub holf_ntheory_find_factor($n, $max_iter) {
+sub holf_ntheory_find_factor ($n, $max_iter) {
     my ($p, $q) = Math::Prime::Util::GMP::holf_factor($n, $max_iter);
     return $p if defined($q);
     return undef;
@@ -2330,9 +2330,62 @@ sub verify_prime_factors ($n, $factors) {
     sort { $a <=> $b } @$factors;
 }
 
-sub factorize($n) {
+sub fast_trial_factor ($n, $L = 1e5, $R = 1e6) {
+
+    my @factors;
+    my @P = sieve_primes(2, $L);
+
+    my $g = Math::GMPz::Rmpz_init();
+    my $t = Math::GMPz::Rmpz_init();
+
+    while (1) {
+
+        # say "L = $L with $#P";
+
+        Math::GMPz::Rmpz_set_str($g, vecprod(@P), 10);
+        Math::GMPz::Rmpz_gcd($g, $g, $n);
+
+        # Early stop when n seems to no longer have small factors
+        if (Math::GMPz::Rmpz_cmp_ui($g, 1) == 0) {
+            last;
+        }
+
+        # Factorize n over primes in P
+        foreach my $p (@P) {
+            if (Math::GMPz::Rmpz_divisible_ui_p($g, $p)) {
+
+                Math::GMPz::Rmpz_set_ui($t, $p);
+                my $valuation = Math::GMPz::Rmpz_remove($n, $n, $t);
+                push @factors, ($p) x $valuation;
+
+                # Stop the loop early when no more primes divide `u` (optional)
+                Math::GMPz::Rmpz_divexact_ui($g, $g, $p);
+                last if (Math::GMPz::Rmpz_cmp_ui($g, 1) == 0);
+            }
+        }
+
+        # Early stop when n has been fully factored
+        if (Math::GMPz::Rmpz_cmp_ui($n, 1) == 0) {
+            last;
+        }
+
+        # Early stop when the trial range has been exhausted
+        if ($L > $R) {
+            last;
+        }
+
+        @P = sieve_primes($L + 1, $L << 1);
+        $L <<= 1;
+    }
+
+    return @factors;
+}
+
+sub factorize ($n) {
 
     # Factorize the given integer n >= 1 into its prime factors.
+
+    my $orig = Math::GMPz::Rmpz_init_set($n);
 
     if ($n < 1) {
         die "Number needs to be an integer >= 1";
@@ -2351,7 +2404,10 @@ sub factorize($n) {
         return verify_prime_factors($n, [(@factors) x $e]);
     }
 
-    my @divisors = (($n > ~0) ? special_form_factorization($n) : ());
+    my @divisors;
+
+    push @divisors, fast_trial_factor($n);
+    push @divisors, (($n > ~0) ? special_form_factorization($n) : ());
 
     if (@divisors) {
 
@@ -2371,13 +2427,13 @@ sub factorize($n) {
         }
 
         push @factors, map { factorize($_) } reverse @composite;
-        my $rem = $n / Math::GMPz->new(vecprod(@factors));
+        my $rem = $orig / Math::GMPz->new(vecprod(@factors));
 
         if ($rem > 1) {
             push @factors, factorize($rem);
         }
 
-        return verify_prime_factors($n, \@factors);
+        return verify_prime_factors($orig, \@factors);
     }
 
     my ($factors, $rem) = trial_division_small_primes($n);
@@ -2404,7 +2460,7 @@ sub factorize($n) {
         }
     }
 
-    return verify_prime_factors($n, $factors);
+    return verify_prime_factors($orig, $factors);
 }
 
 if (@ARGV) {
