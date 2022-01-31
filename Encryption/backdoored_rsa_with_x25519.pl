@@ -96,7 +96,8 @@ my $POS  = $BITS >> 5;
 my $MASTER_PUBLIC  = "c10811d4e424305c6696f9b5f787efb67f80530e6115e367bd7967ba05093e3d";
 my $MASTER_PRIVATE = "3a35b10511bcd20bcb9b12bd73ab9ad0bf8f7f469ffb70d2ae8fb110b761df97";
 
-# Generate a random ephemeral key-pair, using in created the shared secret
+# Generate a random ephemeral key-pair. The private key will be used in creating
+# the shared secret, while the public key will be embeded in the RSA modulus.
 my $random_ephem_key = Crypt::PK::X25519->new->generate_key;
 
 # Import the master public key
