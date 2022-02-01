@@ -20,13 +20,12 @@ sub fast_trial_factor ($n, $L = 1e4, $R = 1e6) {
 
     $n = Math::GMPz->new("$n");
 
-    my @factors;
-    my $remainder = 1;
-
     my @P = sieve_primes(2, $L);
 
     my $g = Math::GMPz::Rmpz_init();
     my $t = Math::GMPz::Rmpz_init();
+
+    my @factors;
 
     while (1) {
 
@@ -37,7 +36,6 @@ sub fast_trial_factor ($n, $L = 1e4, $R = 1e6) {
 
         # Early stop when n seems to no longer have small factors
         if (Math::GMPz::Rmpz_cmp_ui($g, 1) == 0) {
-            $remainder = $n;
             last;
         }
 
@@ -49,20 +47,14 @@ sub fast_trial_factor ($n, $L = 1e4, $R = 1e6) {
                 my $valuation = Math::GMPz::Rmpz_remove($n, $n, $t);
                 push @factors, ($p) x $valuation;
 
-                # Stop the loop early when no more primes divide `u` (optional)
+                # Stop the loop early when no more primes divide `g` (optional)
                 Math::GMPz::Rmpz_divexact_ui($g, $g, $p);
                 last if (Math::GMPz::Rmpz_cmp_ui($g, 1) == 0);
             }
         }
 
-        # Early stop when n has been fully factored
-        if (Math::GMPz::Rmpz_cmp_ui($n, 1) == 0) {
-            last;
-        }
-
-        # Early stop when the trial range has been exhausted
-        if ($L > $R) {
-            $remainder = $n;
+        # Early stop when n has been fully factored or the trial range has been exhausted
+        if ($L >= $R or Math::GMPz::Rmpz_cmp_ui($n, 1) == 0) {
             last;
         }
 
@@ -70,7 +62,7 @@ sub fast_trial_factor ($n, $L = 1e4, $R = 1e6) {
         $L <<= 1;
     }
 
-    return (\@factors, $remainder);
+    return (\@factors, $n);
 }
 
 my $n = consecutive_integer_lcm(138861);

@@ -37,6 +37,7 @@ A nice collection of day-to-day Perl scripts.
     * [Update summary](./Book%20tools/update_summary.pl)
 * Converters
     * [Any to 3gp](./Converters/any_to_3gp.pl)
+    * [Ass2srt](./Converters/ass2srt.pl)
     * [Euler2pdf](./Converters/euler2pdf.pl)
     * [From hex](./Converters/from_hex.pl)
     * [Html2text](./Converters/html2text.pl)
