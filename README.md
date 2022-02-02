@@ -213,6 +213,7 @@ A nice collection of day-to-day Perl scripts.
     * [Pascal special triangle](./GD/pascal_special_triangle.pl)
     * [Pattern triangle](./GD/pattern_triangle.pl)
     * [Peacock triangles](./GD/peacock_triangles.pl)
+    * [Pi abstract art](./GD/pi_abstract_art.pl)
     * [Pi turtle](./GD/pi_turtle.pl)
     * [Prime consecutive sums](./GD/prime_consecutive_sums.pl)
     * [Prime gaps](./GD/prime_gaps.pl)

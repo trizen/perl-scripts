@@ -7,8 +7,8 @@
 # Convert ASS/SSA subtitles to SRT.
 
 # See also:
+#   http://www.tcax.org/docs/ass-specs.htm
 #   http://matroska.sourceforge.net/technical/specs/subtitles/ssa.html
-#   https://moodub.free.fr/video/ass-specs.doc
 
 use 5.020;
 use strict;

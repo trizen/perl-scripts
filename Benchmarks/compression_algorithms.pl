@@ -9,7 +9,7 @@ use warnings;
 use Time::HiRes qw(gettimeofday tv_interval);
 
 my $data_str = do {
-    open(my $fh, '<:raw', $ARGV[0])
+    open(my $fh, '<:raw', $ARGV[0] // $0)
       or die "Can't open file <<$ARGV[0]>> for reading: $!";
     local $/;
     <$fh>;
@@ -64,6 +64,36 @@ eval {
     IO::Compress::Zip::zip(\$data_str, \my $data_zip);
 
     say "Zip : ", length($data_zip);
+    say "Time: ", tv_interval($t0, [gettimeofday]);
+    say '';
+};
+
+eval {
+    my $t0 = [gettimeofday];
+    require IO::Compress::Lzf;
+    IO::Compress::Lzf::lzf(\$data_str, \my $data_lzf);
+
+    say "Lzf : ", length($data_lzf);
+    say "Time: ", tv_interval($t0, [gettimeofday]);
+    say '';
+};
+
+eval {
+    my $t0 = [gettimeofday];
+    require IO::Compress::Lzip;
+    IO::Compress::Lzip::lzip(\$data_str, \my $data_lzip);
+
+    say "Lzip: ", length($data_lzip);
+    say "Time: ", tv_interval($t0, [gettimeofday]);
+    say '';
+};
+
+eval {
+    my $t0 = [gettimeofday];
+    require IO::Compress::Lzop;
+    IO::Compress::Lzop::lzop(\$data_str, \my $data_lzop);
+
+    say "Lzop: ", length($data_lzop);
     say "Time: ", tv_interval($t0, [gettimeofday]);
     say '';
 };
