@@ -82,6 +82,7 @@ A nice collection of day-to-day Perl scripts.
     * [Backdoored rsa with x25519](./Encryption/backdoored_rsa_with_x25519.pl)
     * [Crypt rsa](./Encryption/crypt_rsa.pl)
     * [One-time pad](./Encryption/one-time_pad.pl)
+    * [Plage](./Encryption/plage.pl)
     * [RSA encryption](./Encryption/RSA_encryption.pl)
 * File Readers
     * [Ldump](./File%20Readers/ldump)
