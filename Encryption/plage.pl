@@ -32,7 +32,7 @@ use experimental qw(signatures);
 
 use Crypt::CBC;
 
-use Digest::SHA qw(sha256_hex);
+use Digest::SHA qw(sha256);
 use Crypt::PK::X25519;
 use Crypt::PK::Ed25519;
 
@@ -49,6 +49,10 @@ use Storable qw(store retrieve);
 use constant {
               SHORT_APPNAME     => "plage",
               JSON_LENGTH_WIDTH => 6,
+              USER_ID_SIZE      => 32,
+              HASH_SIZE         => 32,
+              PK_HEX_SIZE       => 64,
+              SIGNATURE_SIZE    => 64,
               EXPORT_KEY_BASE   => 62,
               VERSION           => '0.01',
              };
@@ -330,7 +334,7 @@ sub create_clear_signed_message ($text, $ed_private_key) {
                );
 
     my $json_data = encode_json(\%info);
-    my $sha256    = sha256_hex($json_data);
+    my $sha256    = sha256($json_data);
 
     $signed_message .= encode_base64($sha256 . sign_message($sha256, $ed_private_key) . $json_data);
     $signed_message .= "-----END PLAGE SIGNATURE-----\n";
@@ -368,14 +372,14 @@ sub verify_clear_signed_message ($message, $callback = sub { print $_[0] }) {
 
     my $json_data = decode_base64($base64_sig);
 
-    my $sha256     = substr($json_data, 0, 64, '');
-    my $sha256_sig = substr($json_data, 0, 64, '');
+    my $sha256     = substr($json_data, 0, HASH_SIZE,      '');
+    my $sha256_sig = substr($json_data, 0, SIGNATURE_SIZE, '');
 
     if ($sha256 eq '' or $sha256_sig eq '') {
         die "No signature found!\n";
     }
 
-    if (sha256_hex($json_data) ne $sha256) {
+    if (sha256($json_data) ne $sha256) {
         die "The signature has been modified: the SHA256 hash does not match!\n";
     }
 
@@ -427,8 +431,9 @@ sub create_armor ($enc) {
     my $json       = encode_json(\%info);
     my $length     = length($json);
     my $content    = sprintf("%*d%s%s", JSON_LENGTH_WIDTH, $length, $json, $ciphertext);
+    my $sha256     = sha256($content);
 
-    $armor .= encode_base64($content);
+    $armor .= encode_base64($sha256 . $content);
     $armor .= "-----END PLAGE ENCRYPTED DATA-----\n";
 
     return $armor;
@@ -453,7 +458,13 @@ sub decode_armor ($armor) {
     }
 
     my $content = decode_base64($base64_data);
-    my $length  = substr($content, 0, JSON_LENGTH_WIDTH, '');
+    my $sha256  = substr($content, 0, HASH_SIZE, '');
+
+    if (sha256($content) ne $sha256) {
+        die "The message has been modified: the SHA256 hash does not match!\n";
+    }
+
+    my $length = substr($content, 0, JSON_LENGTH_WIDTH, '');
 
     if ($length =~ /^\s*([0-9]+)\z/) {
         $length = 0 + $1;
@@ -508,10 +519,12 @@ sub read_password ($text) {
 
 sub create_cipher_password ($passphrase, $x_public_key, $ed_public_key) {
 #<<<
-    sha256_hex(
-            pack("H*", sha256_hex(pack("H*", $x_public_key)))  .
-            pack("H*", sha256_hex($passphrase))                .
-            pack("H*", sha256_hex(pack("H*", $ed_public_key)))
+    unpack("H*",
+        sha256(
+            sha256(pack("H*", $x_public_key)) .
+            sha256($passphrase) .
+            sha256(pack("H*", $ed_public_key))
+        )
     );
 #>>>
 }
@@ -559,8 +572,8 @@ sub import_key ($public_key) {
 
     if (   not defined($x_pub)
         or not defined($ed_pub)
-        or length($x_pub) != 64
-        or length($ed_pub) != 64) {
+        or length($x_pub) != PK_HEX_SIZE
+        or length($ed_pub) != PK_HEX_SIZE) {
         die "Invalid public key!\n";
     }
 
@@ -709,7 +722,7 @@ sub make_unique_username ($username, $x_public_key) {
         $username .= '-';
     }
 
-    $username .= substr($x_public_key, -32);
+    $username .= substr($x_public_key, -(USER_ID_SIZE));
 
     return $username;
 }
