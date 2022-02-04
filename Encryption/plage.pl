@@ -54,6 +54,7 @@ use constant {
               PK_HEX_SIZE       => 64,
               SIGNATURE_SIZE    => 64,
               EXPORT_KEY_BASE   => 62,
+              PASSPHRASE_CIPHER => 'Serpent',
               VERSION           => '0.01',
              };
 
@@ -342,6 +343,10 @@ sub create_clear_signed_message ($text, $ed_private_key) {
     return $signed_message;
 }
 
+sub get_user_info_for_ed25519_public ($ed_pub) {
+    $KEYRING{keys}{Ed25519}{$ed_pub};
+}
+
 sub verify_clear_signed_message ($message, $callback = sub { print $_[0] }) {
 
     my $collect_msg = 0;
@@ -388,7 +393,7 @@ sub verify_clear_signed_message ($message, $callback = sub { print $_[0] }) {
     my $ed_pub     = $info->{ed_pub};
     my $x_pub      = $info->{x_pub};
     my $ed_pub_key = ed25519_from_public($ed_pub);
-    my $user_info  = $KEYRING{keys}{Ed25519}{$ed_pub};
+    my $user_info  = get_user_info_for_ed25519_public($ed_pub);
 
     if (not verify_signature($sha256, $sha256_sig, $ed_pub_key)) {
         die "The signature has been modified: invalid signature for the SHA256 hash!\n";
@@ -419,21 +424,22 @@ sub verify_clear_signed_message ($message, $callback = sub { print $_[0] }) {
 
     warn "Created on: " . scalar localtime($info->{time}) . "\n";
     warn "\nGood signature!\n\n";
-    return 1;
+    return $user_info;
 }
 
-sub create_armor ($enc) {
+sub create_armor ($enc, $ed_key) {
 
-    my %info  = %$enc;
     my $armor = "-----BEGIN PLAGE ENCRYPTED DATA-----\n";
 
+    my %info       = %$enc;
     my $ciphertext = delete $info{ciphertext};
     my $json       = encode_json(\%info);
     my $length     = length($json);
     my $content    = sprintf("%*d%s%s", JSON_LENGTH_WIDTH, $length, $json, $ciphertext);
     my $sha256     = sha256($content);
+    my $signature  = sign_message($sha256, $ed_key);
 
-    $armor .= encode_base64($sha256 . $content);
+    $armor .= encode_base64($sha256 . $signature . $content);
     $armor .= "-----END PLAGE ENCRYPTED DATA-----\n";
 
     return $armor;
@@ -457,8 +463,13 @@ sub decode_armor ($armor) {
         }
     }
 
-    my $content = decode_base64($base64_data);
-    my $sha256  = substr($content, 0, HASH_SIZE, '');
+    my $content    = decode_base64($base64_data);
+    my $sha256     = substr($content, 0, HASH_SIZE,      '');
+    my $sha256_sig = substr($content, 0, SIGNATURE_SIZE, '');
+
+    if ($sha256 eq '' or $sha256_sig eq '') {
+        die "Invalid armor!\n";
+    }
 
     if (sha256($content) ne $sha256) {
         die "The message has been modified: the SHA256 hash does not match!\n";
@@ -474,11 +485,14 @@ sub decode_armor ($armor) {
         die "Invalid armor!\n";
     }
 
-    my $json       = substr($content, 0, $length, '');
-    my $ciphertext = $content;
-
+    my $json = substr($content, 0, $length, '');
     my $info = decode_json($json) // die "Invalid JSON data!\n";
-    $info->{ciphertext} = $ciphertext;
+
+    if (not verify_signature($sha256, $sha256_sig, ed25519_from_public($info->{ed_pub}))) {
+        die "Failed to decode the armor: the signature of the SHA256 hash does not match!\n";
+    }
+
+    $info->{ciphertext} = $content;
     return $info;
 }
 
@@ -545,7 +559,7 @@ sub decrypt_private_keys ($info, $prompt = 'Passphrase: ') {
         }
 
         my $pass   = create_cipher_password($passphrase, $x_pub, $ed_pub);
-        my $cipher = create_cipher($pass, 'Serpent');
+        my $cipher = create_cipher($pass, PASSPHRASE_CIPHER);
 
         my $x_raw = $cipher->decrypt($x_priv);
         my $x_key = eval { x25519_from_private_raw($x_raw) } // next;
@@ -748,7 +762,7 @@ sub read_confirmed_passphrase ($prompt = 'Passprhase: ') {
 sub encrypt_private_keys ($passphrase, $x_key, $ed_key) {
 
     my $cipher_password = create_cipher_password($passphrase, $x_key->{pub}, $ed_key->{pub});
-    my $cipher          = create_cipher($cipher_password, 'Serpent');
+    my $cipher          = create_cipher($cipher_password, PASSPHRASE_CIPHER);
 
     my $x_private_key  = $cipher->encrypt(pack("H*", $x_key->{priv}));
     my $ed_private_key = $cipher->encrypt(pack("H*", $ed_key->{priv}));
@@ -1094,12 +1108,23 @@ if (defined($CONFIG{encrypt})) {
 
     my $x_pub = get_public_x25519_for_user($CONFIG{encrypt});
 
-    my $text  = read_input();
-    my $enc   = encrypt($text, $x_pub);
-    my $armor = create_armor($enc);
+    my $text   = read_input();
+    my $enc    = encrypt($text, $x_pub);
+    my $ed_key = undef;
 
     if ($CONFIG{sign}) {
-        my (undef, $ed_key) = $local_user->();
+        (undef, $ed_key) = $local_user->();
+    }
+    else {
+        $ed_key = ed25519_random_key();
+    }
+
+    $enc->{ed_pub}    = $ed_key->key2hash->{pub};
+    $enc->{signature} = encode_base64(sign_message($text, $ed_key));
+
+    my $armor = create_armor($enc, $ed_key);
+
+    if ($CONFIG{sign}) {
         print create_clear_signed_message($armor, $ed_key);
     }
     else {
@@ -1110,27 +1135,39 @@ if (defined($CONFIG{encrypt})) {
 }
 
 if ($CONFIG{decrypt}) {
-    my $armor = read_input();
+    my $armor      = read_input();
+    my $exped_info = undef;
 
     if ($armor =~ /^-----BEGIN PLAGE SIGNED MESSAGE-----\s*$/m) {
-        verify_clear_signed_message($armor, sub ($msg) { $armor = $msg });
+        $exped_info = verify_clear_signed_message($armor, sub ($msg) { $armor = $msg });
     }
 
-    my $enc_info  = decode_armor($armor);
-    my $dest_info = get_info_for_public_x25519($enc_info->{dest});
+    my $enc = decode_armor($armor);
+
+    if (defined($exped_info) and $enc->{ed_pub} ne $exped_info->{ed_pub}) {
+        die "The expeditor public signature key does not match!\n";
+    }
+
+    my $dest_info = get_info_for_public_x25519($enc->{dest});
 
     if (not defined $dest_info) {
         die "Sorry! You don't have the private key to decrypt this message!\n";
     }
 
     warn "Destination  : " . $dest_info->{username} . "\n";
-    warn "Cipher used  : " . $enc_info->{cipher} . "\n";
-    warn "Compressed   : " . ($enc_info->{compressed} ? "Yes" : "No") . "\n";
-    warn "Encrypted on : " . localtime($enc_info->{time}) . "\n";
+    warn "Cipher used  : " . $enc->{cipher} . "\n";
+    warn "Compressed   : " . ($enc->{compressed} ? "Yes" : "No") . "\n";
+    warn "Encrypted on : " . localtime($enc->{time}) . "\n";
 
-    my ($x_priv, undef) = get_private_keys_for_public_x25519($enc_info->{dest});
+    my ($x_priv, undef) = get_private_keys_for_public_x25519($enc->{dest});
 
-    print decrypt($enc_info, $x_priv);
+    my $data = decrypt($enc, $x_priv);
+
+    if (not verify_signature($data, decode_base64($enc->{signature}), ed25519_from_public($enc->{ed_pub}))) {
+        die "The signature of the message does not match!\n";
+    }
+
+    print $data;
     exit 0;
 }
 
