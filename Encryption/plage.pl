@@ -277,7 +277,7 @@ sub encrypt ($data, $public_key) {
            };
 }
 
-sub decrypt ($cipher_data, $private_key) {
+sub decrypt ($enc, $private_key) {
 
     if (not defined $private_key) {
         die "No private key provided!\n";
@@ -287,8 +287,8 @@ sub decrypt ($cipher_data, $private_key) {
         die "Invalid private key!\n";
     }
 
-    my $ephem_pub  = $cipher_data->{ephem_pub};
-    my $ciphertext = $cipher_data->{ciphertext};
+    my $ephem_pub  = $enc->{ephem_pub};
+    my $ciphertext = $enc->{ciphertext};
 
     # Import the public key
     my $ephem_pub_key = x25519_from_public($ephem_pub);
@@ -296,10 +296,10 @@ sub decrypt ($cipher_data, $private_key) {
     # Recover the shared secret
     my $shared_secret = $private_key->shared_secret($ephem_pub_key);
 
-    my $cipher = create_cipher($shared_secret, $cipher_data->{cipher});
+    my $cipher = create_cipher($shared_secret, $enc->{cipher});
     my $data   = $cipher->decrypt($ciphertext);
 
-    if ($cipher_data->{compressed}) {
+    if ($enc->{compressed}) {
         $data = uncompress_data($data);
     }
 
@@ -909,13 +909,8 @@ sub change_user ($username) {
 }
 
 sub read_input {
-    my $text = '';
-
-    while (defined(my $line = <>)) {
-        $text .= $line;
-    }
-
-    return $text;
+    local $/;
+    <>;
 }
 
 sub help ($exit_code) {
