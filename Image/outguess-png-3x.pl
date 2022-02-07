@@ -1,22 +1,22 @@
 #!/usr/bin/perl
 
 # Author: Trizen
-# Date: 06 February 2022
+# Date: 07 February 2022
 # https://github.com/trizen
 
-# Hide arbitrary data into the pixels of a PNG image, storing 1 bit in each pixel color.
+# Hide arbitrary data into the pixels of a PNG image, storing 3 bits in each pixel color.
 
 # Concept inspired by outguess:
 #   https://github.com/resurrecting-open-source-projects/outguess
 #   https://uncovering-cicada.fandom.com/wiki/OutGuess
 
 # Q: How does it work?
-# A: The script uses the GD library to read the index color of each pixel, which ranges from 0 to 2^24-1.
-#    Then it changes the last bit of this value to one bit from the data to be encoded.
+# A: The script uses the Imager library to read the RGB color values of each pixel.
+#    Then it changes the last bit of each value to one bit from the data to be encoded.
 
 # Q: How does the decoding work?
-# A: The first 32 bits from the first 32 pixels of the image, form the length of the encoded data.
-#    Then the remaining bits (1 bit from each pixel) are collected to form the encoded data.
+# A: The first 32 bits form the length of the encoded data.
+#    Then the remaining bits (3 bits from each pixels) are collected to form the encoded data.
 
 use 5.020;
 use strict;
@@ -24,19 +24,17 @@ use warnings;
 
 no warnings 'once';
 
-use GD qw();
+use Imager;
 use Getopt::Long qw(GetOptions);
 use experimental qw(signatures);
-
-GD::Image->trueColor(1);
 
 binmode(STDIN,  ':raw');
 binmode(STDOUT, ':raw');
 
 sub encode_data ($data, $img_file) {
 
-    my $image = GD::Image->new($img_file)
-      or die "Can't open image <<$img_file>>: $!";
+    my $image = Imager->new(file => $img_file)
+      or die Imager->errstr();
 
     require IO::Compress::RawDeflate;
     IO::Compress::RawDeflate::rawdeflate(\$data, \my $compressed_data)
@@ -44,10 +42,11 @@ sub encode_data ($data, $img_file) {
 
     $data = $compressed_data;
 
-    my $bin = unpack("B*", $data);
-    my ($width, $height) = $image->getBounds();
+    my $bin    = unpack("B*", $data);
+    my $width  = $image->getwidth();
+    my $height = $image->getheight();
 
-    my $maximum_data_size = ($width * $height - 32) >> 3;
+    my $maximum_data_size = 3 * (($width * $height - 32) >> 3);
     my $data_size         = length($bin) >> 3;
 
     if ($data_size == 0) {
@@ -74,17 +73,19 @@ sub encode_data ($data, $img_file) {
     my $size = length($bin);
 
   OUTER: foreach my $y (0 .. $height - 1) {
-        foreach my $x (0 .. $width - 1) {
-            my $index = $image->getPixel($x, $y);
+        my $x = 0;
+        foreach my $color ($image->getscanline(x => 0, y => $y, width => $width)) {
+            my ($red, $green, $blue, $alpha) = $color->rgba();
 
-            if (--$size >= 0) {
-                $index = (($index >> 1) << 1) | chop($bin);
+            if ($size > 0) {
+                $color->set((map { (($_ >> 1) << 1) | (chop($bin) || 0) } ($red, $green, $blue)), $alpha);
+                $size -= 3;
             }
             else {
                 last OUTER;
             }
 
-            $image->setPixel($x, $y, $index);
+            $image->setpixel(x => $x++, y => $y, color => $color);
         }
     }
 
@@ -93,32 +94,34 @@ sub encode_data ($data, $img_file) {
 
 sub decode_data ($img_file) {
 
-    my $image = GD::Image->new($img_file)
-      or die "Can't open image <<$img_file>>: $!";
+    my $image = Imager->new(file => $img_file)
+      or die Imager->errstr();
 
-    my ($width, $height) = $image->getBounds();
+    my $width  = $image->getwidth;
+    my $height = $image->getheight;
 
     my $bin  = '';
     my $size = 0;
 
     my $length        = $width * $height;
     my $find_length   = 1;
-    my $max_data_size = $length - 4;
+    my $max_data_size = 3 * ($length - 4);
 
   OUTER: foreach my $y (0 .. $height - 1) {
-        foreach my $x (0 .. $width - 1) {
-            my $index = $image->getPixel($x, $y);
+        foreach my $color ($image->getscanline(x => 0, y => $y, width => $width)) {
+            my ($red, $green, $blue) = $color->rgba();
 
-            if (++$size <= $length) {
+            if ($size < $length) {
 
-                $bin .= $index & 1;
+                $bin .= join('', map { $_ & 1 } ($red, $green, $blue));
+                $size += 3;
 
-                if ($find_length and $size == 32) {
+                if ($find_length and $size >= 32) {
 
-                    $length      = unpack("N*", pack("B*", $bin));
+                    $length      = unpack("N*", pack("B*", substr($bin, 0, 32)));
                     $find_length = 0;
-                    $size        = 0;
-                    $bin         = '';
+                    $size        = length($bin) - 32;
+                    $bin         = substr($bin, 32);
 
                     if ($length > $max_data_size or $length == 0) {
                         die "No hidden data was found in this image!\n";
@@ -134,7 +137,7 @@ sub decode_data ($img_file) {
         }
     }
 
-    my $data = pack("B*", $bin);
+    my $data = pack("B*", substr($bin, 0, $length));
 
     require IO::Uncompress::RawInflate;
     IO::Uncompress::RawInflate::rawinflate(\$data, \my $uncompressed)
@@ -194,13 +197,12 @@ if (defined($data_file)) {
             die "The output image must have the '.png' extension!\n";
         }
 
-        open my $fh, '>:raw', $output_image
-          or die "Can't open file <<$output_image>> for writing: $!";
-        print $fh $img->png(9);
-        close $fh;
+        $img->write(file => $output_image)
+          or die $img->errstr;
     }
     else {
-        print $img->png(9);
+        $img->write(fh => \*STDOUT, type => 'png')
+          or die $img->errstr;
     }
 }
 else {
