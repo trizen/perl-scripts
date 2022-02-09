@@ -15,8 +15,10 @@
 #    Then it changes the last bit of each value to one bit from the data to be encoded.
 
 # Q: How does the decoding work?
-# A: The first 32 bits form the length of the encoded data.
-#    Then the remaining bits (3 bits from each pixels) are collected to form the encoded data.
+# A: The first 32 bits from the encoded PNG image, form the length of the encoded data.
+#    Then the remaining bits (3 bits from each pixel) are collected to form the encoded data.
+
+# The script also does transparent Deflate compression and decompression of the encoded data.
 
 use 5.020;
 use strict;
@@ -75,9 +77,9 @@ sub encode_data ($data, $img_file) {
   OUTER: foreach my $y (0 .. $height - 1) {
         my $x = 0;
         foreach my $color ($image->getscanline(x => 0, y => $y, width => $width)) {
-            my ($red, $green, $blue, $alpha) = $color->rgba();
 
             if ($size > 0) {
+                my ($red, $green, $blue, $alpha) = $color->rgba;
                 $color->set((map { (($_ >> 1) << 1) | (chop($bin) || 0) } ($red, $green, $blue)), $alpha);
                 $size -= 3;
             }
@@ -109,10 +111,10 @@ sub decode_data ($img_file) {
 
   OUTER: foreach my $y (0 .. $height - 1) {
         foreach my $color ($image->getscanline(x => 0, y => $y, width => $width)) {
-            my ($red, $green, $blue) = $color->rgba();
 
             if ($size < $length) {
 
+                my ($red, $green, $blue) = $color->rgba;
                 $bin .= join('', map { $_ & 1 } ($red, $green, $blue));
                 $size += 3;
 

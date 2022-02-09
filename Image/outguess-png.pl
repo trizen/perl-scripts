@@ -18,6 +18,8 @@
 # A: The first 32 bits from the first 32 pixels of the image, form the length of the encoded data.
 #    Then the remaining bits (1 bit from each pixel) are collected to form the encoded data.
 
+# The script also does transparent Deflate compression and decompression of the encoded data.
+
 use 5.020;
 use strict;
 use warnings;

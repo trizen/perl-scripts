@@ -2,12 +2,13 @@
 
 # Author: Trizen
 # Date: 02 February 2022
-# Edit: 03 February 2022
+# Edit: 09 February 2022
 # https://github.com/trizen
 
-# A message encryption tool, inspired by Age and GnuPG, using Curve25519 and CBC for encrypting data.
+# A message encryption tool, inspired by Age and GnuPG, using Curve25519 and CBC+Serpent for encrypting data.
 
 # Main features include:
+#   - ASCII armor
 #   - generation of X25519 and Ed25519 key-pairs
 #   - encryption and decryption of messages
 #   - signing and verification of signatures
@@ -15,7 +16,8 @@
 #   - import and export of public keys
 #   - local encryption of private keys
 #   - local keyring, similar to PGP
-#   - ASCII armor
+#   - support for various modern ciphers, like: Serpent (default), Twofish, AES, etc.
+#   - support for various chaining modes, like: CBC (default), PCBC, CFB, OFB, CTR.
 
 # See also:
 #   https://github.com/FiloSottile/age
@@ -47,15 +49,16 @@ use File::Spec::Functions qw(catdir catfile curdir);
 use Storable qw(store retrieve);
 
 use constant {
-              SHORT_APPNAME     => "plage",
-              JSON_LENGTH_WIDTH => 6,
-              USER_ID_SIZE      => 32,
-              HASH_SIZE         => 32,
-              PK_HEX_SIZE       => 64,
-              SIGNATURE_SIZE    => 64,
-              EXPORT_KEY_BASE   => 62,
-              PASSPHRASE_CIPHER => 'Serpent',
-              VERSION           => '0.01',
+              SHORT_APPNAME            => "plage",
+              JSON_LENGTH_WIDTH        => 6,
+              USER_ID_SIZE             => 32,
+              HASH_SIZE                => 32,
+              PK_HEX_SIZE              => 64,
+              SIGNATURE_SIZE           => 64,
+              EXPORT_KEY_BASE          => 62,
+              PASSPHRASE_CIPHER        => 'Serpent',
+              PASSPHRASE_CHAINING_MODE => 'CBC',
+              VERSION                  => '0.01',
              };
 
 my $term = Term::ReadLine->new(SHORT_APPNAME);
@@ -83,6 +86,7 @@ my %KEYRING = %{retrieve($keyring_file)};
 
 my %CONFIG = (
               cipher          => 'Serpent',
+              chain_mode      => 'CBC',
               sign            => 0,
               compress        => 1,
               compress_method => 'gzip',
@@ -99,11 +103,12 @@ my %COMPRESSION_METHODS = (
                            lzip  => \&lzip_compress_data,
                           );
 
-sub create_cipher ($pass, $cipher = $CONFIG{cipher}) {
+sub create_cipher ($pass, $cipher = $CONFIG{cipher}, $chain_mode = $CONFIG{chain_mode}) {
     Crypt::CBC->new(
-                    -pass   => $pass,
-                    -cipher => 'Cipher::' . $cipher,
-                    -pbkdf  => 'pbkdf2'
+                    -pass       => $pass,
+                    -cipher     => 'Cipher::' . $cipher,
+                    -chain_mode => lc($chain_mode),
+                    -pbkdf      => 'pbkdf2',
                    );
 }
 
@@ -271,6 +276,7 @@ sub encrypt ($data, $public_key) {
             time       => time,
             dest       => $dest_pub,
             cipher     => $CONFIG{cipher},
+            chain_mode => $CONFIG{chain_mode},
             compressed => $CONFIG{compress},
             ephem_pub  => $ephem_pub,
             ciphertext => $ciphertext,
@@ -296,7 +302,7 @@ sub decrypt ($enc, $private_key) {
     # Recover the shared secret
     my $shared_secret = $private_key->shared_secret($ephem_pub_key);
 
-    my $cipher = create_cipher($shared_secret, $enc->{cipher});
+    my $cipher = create_cipher($shared_secret, $enc->{cipher}, $enc->{chain_mode});
     my $data   = $cipher->decrypt($ciphertext);
 
     if ($enc->{compressed}) {
@@ -322,7 +328,7 @@ sub create_clear_signed_message ($text, $ed_private_key) {
 
     my $signature = sign_message($text, $ed_private_key);
 
-    $signed_message .= ($text =~ s/^/~/mgr);
+    $signed_message .= ($text =~ s/^/ /mgr);
     $signed_message .= "-----BEGIN PLAGE SIGNATURE-----\n";
 
     my $ed_pub = $ed_private_key->key2hash->{pub};
@@ -368,7 +374,7 @@ sub verify_clear_signed_message ($message, $callback = sub { print $_[0] }) {
             last;
         }
         elsif ($collect_msg) {
-            $msg .= ($line =~ s/^~//r);
+            $msg .= ($line =~ s/^ //r);
         }
         elsif ($collect_sig) {
             $base64_sig .= $line;
@@ -489,7 +495,7 @@ sub decode_armor ($armor) {
     my $info = decode_json($json) // die "Invalid JSON data!\n";
 
     if (not verify_signature($sha256, $sha256_sig, ed25519_from_public($info->{ed_pub}))) {
-        die "Failed to decode the armor: the signature of the SHA256 hash does not match!\n";
+        die "Invalid armor: the signature of the SHA256 hash does not match!\n";
     }
 
     $info->{ciphertext} = $content;
@@ -559,7 +565,7 @@ sub decrypt_private_keys ($info, $prompt = 'Passphrase: ') {
         }
 
         my $pass   = create_cipher_password($passphrase, $x_pub, $ed_pub);
-        my $cipher = create_cipher($pass, PASSPHRASE_CIPHER);
+        my $cipher = create_cipher($pass, PASSPHRASE_CIPHER, PASSPHRASE_CHAINING_MODE);
 
         my $x_raw = $cipher->decrypt($x_priv);
         my $x_key = eval { x25519_from_private_raw($x_raw) } // next;
@@ -762,7 +768,7 @@ sub read_confirmed_passphrase ($prompt = 'Passprhase: ') {
 sub encrypt_private_keys ($passphrase, $x_key, $ed_key) {
 
     my $cipher_password = create_cipher_password($passphrase, $x_key->{pub}, $ed_key->{pub});
-    my $cipher          = create_cipher($cipher_password, PASSPHRASE_CIPHER);
+    my $cipher          = create_cipher($cipher_password, PASSPHRASE_CIPHER, PASSPHRASE_CHAINING_MODE);
 
     my $x_private_key  = $cipher->encrypt(pack("H*", $x_key->{priv}));
     my $ed_private_key = $cipher->encrypt(pack("H*", $ed_key->{priv}));
@@ -921,6 +927,8 @@ sub help ($exit_code) {
         eval { uncompress_data($COMPRESSION_METHODS{$_}('test')) eq 'test' }
     } sort keys %COMPRESSION_METHODS;
 
+    my @chaining_modes = map { uc } qw(cbc pcbc cfb ofb ctr);
+
     my @valid_ciphers = sort grep {
         eval { require "Crypt/Cipher/$_.pm"; 1 };
       } qw(
@@ -938,6 +946,8 @@ Encryption and signing:
        --clear-sign     : Create a signed message, without encryption
        --cipher=s       : Change the symmetric cipher (default: $CONFIG{cipher})
                           valid: @valid_ciphers
+       --chain-mode=s   : Change the chaining mode (default: $CONFIG{chain_mode})
+                          valid: @chaining_modes
 
 Users:
 
@@ -993,6 +1003,7 @@ sub version {
 
 GetOptions(
            'cipher=s'          => \$CONFIG{cipher},
+           'chain-mode|mode=s' => \$CONFIG{chain_mode},
            'compress!'         => \$CONFIG{compress},
            'compress-method=s' => \$CONFIG{compress_method},
            'name=s'            => \$CONFIG{name},
@@ -1150,7 +1161,7 @@ if ($CONFIG{decrypt}) {
     }
 
     warn "Destination  : " . $dest_info->{username} . "\n";
-    warn "Cipher used  : " . $enc->{cipher} . "\n";
+    warn "Cipher used  : " . join('+', uc($enc->{chain_mode}), $enc->{cipher}) . "\n";
     warn "Compressed   : " . ($enc->{compressed} ? "Yes" : "No") . "\n";
     warn "Encrypted on : " . localtime($enc->{time}) . "\n";
 
