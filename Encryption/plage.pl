@@ -177,11 +177,33 @@ sub ed25519_from_private_raw ($raw_key) {
 }
 
 sub x25519_random_key {
-    Crypt::PK::X25519->new->generate_key;
+    while (1) {
+        my $key  = Crypt::PK::X25519->new->generate_key;
+        my $hash = $key->key2hash;
+
+        next if substr($hash->{pub},  0, 1) eq '0';
+        next if substr($hash->{priv}, 0, 1) eq '0';
+
+        next if substr($hash->{pub},  -1) eq '0';
+        next if substr($hash->{priv}, -1) eq '0';
+
+        return $key;
+    }
 }
 
 sub ed25519_random_key {
-    Crypt::PK::Ed25519->new->generate_key;
+    while (1) {
+        my $key  = Crypt::PK::Ed25519->new->generate_key;
+        my $hash = $key->key2hash;
+
+        next if substr($hash->{pub},  0, 1) eq '0';
+        next if substr($hash->{priv}, 0, 1) eq '0';
+
+        next if substr($hash->{pub},  -1) eq '0';
+        next if substr($hash->{priv}, -1) eq '0';
+
+        return $key;
+    }
 }
 
 sub uncompress_data ($data) {
