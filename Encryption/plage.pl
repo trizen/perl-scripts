@@ -936,9 +936,22 @@ sub change_user ($username) {
     return 1;
 }
 
+sub get_input_fh {
+    my $fh = \*STDIN;
+
+    if (@ARGV and -t $fh) {
+        sysopen(my $file_fh, $ARGV[0], 0)
+          or die "Can't open file <<$ARGV[0]>> for reading: $!";
+        return $file_fh;
+    }
+
+    return $fh;
+}
+
 sub read_input {
+    my $fh = get_input_fh();
     local $/;
-    <>;
+    <$fh>;
 }
 
 sub help ($exit_code) {
@@ -1153,10 +1166,10 @@ if (defined($CONFIG{encrypt})) {
     my $armor = create_armor($enc, $ed_key);
 
     if ($CONFIG{sign}) {
-        print create_clear_signed_message($armor, $ed_key);
+        syswrite(STDOUT, create_clear_signed_message($armor, $ed_key));
     }
     else {
-        print $armor;
+        syswrite(STDOUT, $armor);
     }
 
     exit 0;
@@ -1195,7 +1208,7 @@ if ($CONFIG{decrypt}) {
         die "The signature of the message does not match!\n";
     }
 
-    print $data;
+    syswrite(STDOUT, $data);
     exit 0;
 }
 

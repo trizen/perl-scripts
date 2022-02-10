@@ -20,12 +20,10 @@ use 5.020;
 use strict;
 use warnings;
 
-no warnings 'once';
 use experimental qw(signatures);
 
 use Crypt::CBC;
 use Crypt::PK::X25519;
-use Crypt::PK::Ed25519;
 
 use JSON::PP qw(encode_json decode_json);
 use Getopt::Long qw(GetOptions :config no_ignore_case);
@@ -108,16 +106,16 @@ sub encrypt ($fh, $public_key) {
                );
 
     my $json = encode_json(\%info);
-    print pack("N*", length($json));
-    print $json;
+    syswrite(STDOUT, pack("N*", length($json)));
+    syswrite(STDOUT, $json);
 
     $cipher->start('encrypting');
 
-    while (read($fh, (my $buffer), BUFFER_SIZE)) {
-        print $cipher->crypt($buffer);
+    while (sysread($fh, (my $buffer), BUFFER_SIZE)) {
+        syswrite(STDOUT, $cipher->crypt($buffer) // '');
     }
 
-    print $cipher->finish;
+    syswrite(STDOUT, $cipher->finish);
 }
 
 sub decrypt ($fh, $private_key) {
@@ -130,8 +128,8 @@ sub decrypt ($fh, $private_key) {
         die "Invalid private key!\n";
     }
 
-    read($fh, (my $json_length), 32 >> 3);
-    read($fh, (my $json),        unpack("N*", $json_length));
+    sysread($fh, (my $json_length), 32 >> 3);
+    sysread($fh, (my $json),        unpack("N*", $json_length));
 
     my $enc = decode_json($json);
 
@@ -154,11 +152,11 @@ sub decrypt ($fh, $private_key) {
 
     $cipher->start('decrypting');
 
-    while (read($fh, (my $buffer), BUFFER_SIZE)) {
-        print $cipher->crypt($buffer);
+    while (sysread($fh, (my $buffer), BUFFER_SIZE)) {
+        syswrite(STDOUT, $cipher->crypt($buffer) // '');
     }
 
-    print $cipher->finish;
+    syswrite(STDOUT, $cipher->finish);
 }
 
 sub export_key ($x_public_key) {
@@ -176,8 +174,14 @@ sub decode_public_key ($key) {
 }
 
 sub decode_private_key ($file) {
+
+    if (not -T $file) {
+        die "Invalid key file!\n";
+    }
+
     open(my $fh, '<:utf8', $file)
       or die "Can't open file <<$file>>: $!";
+
     local $/;
     my $key = decode_json(<$fh>);
     x25519_from_private(decode_exported_key($key->{x_priv}));
@@ -197,7 +201,7 @@ sub generate_new_key {
                );
 
     say encode_json(\%info);
-    warn sprintf("Public key: %s\n", export_key($x_public_key));
+    warn sprintf("Public key: %s\n", $info{x_pub});
     return 1;
 }
 
@@ -220,7 +224,7 @@ Encryption and signing:
 
     -g --generate-key   : Generate a new key-pair
     -e --encrypt=key    : Encrypt data with a given public key
-    -d --decrypt        : Decrypt data encrypted for you
+    -d --decrypt=key    : Decrypt data with a given private key file
        --cipher=s       : Change the symmetric cipher (default: $CONFIG{cipher})
                           valid: @valid_ciphers
        --chain-mode=s   : Change the chaining mode (default: $CONFIG{chain_mode})
@@ -269,15 +273,27 @@ if ($CONFIG{generate_key}) {
     exit 0;
 }
 
+sub get_input_fh {
+    my $fh = \*STDIN;
+
+    if (@ARGV and -t $fh) {
+        sysopen(my $file_fh, $ARGV[0], 0)
+          or die "Can't open file <<$ARGV[0]>> for reading: $!";
+        return $file_fh;
+    }
+
+    return $fh;
+}
+
 if (defined($CONFIG{encrypt})) {
     my $x_pub = decode_public_key($CONFIG{encrypt});
-    encrypt(\*STDIN, $x_pub);
+    encrypt(get_input_fh(), $x_pub);
     exit 0;
 }
 
 if ($CONFIG{decrypt}) {
     my $x_priv = decode_private_key($CONFIG{decrypt});
-    decrypt(\*STDIN, $x_priv);
+    decrypt(get_input_fh(), $x_priv);
     exit 0;
 }
 
