@@ -85,6 +85,7 @@ A nice collection of day-to-day Perl scripts.
     * [One-time pad](./Encryption/one-time_pad.pl)
     * [Plage](./Encryption/plage.pl)
     * [RSA encryption](./Encryption/RSA_encryption.pl)
+    * [Simple XOR cipher](./Encryption/simple_XOR_cipher.pl)
 * File Readers
     * [Ldump](./File%20Readers/ldump)
     * [Multi-file-line-reader](./File%20Readers/multi-file-line-reader.pl)

@@ -11,7 +11,6 @@
 #   https://github.com/FiloSottile/age
 #   https://metacpan.org/pod/Crypt::CBC
 #   https://metacpan.org/pod/Crypt::PK::X25519
-#   https://metacpan.org/pod/Crypt::PK::Ed25519
 
 # This is a simplified version of `plage`, optimized for large files:
 #   https://github.com/trizen/perl-scripts/blob/master/Encryption/plage.pl
@@ -35,7 +34,6 @@ use constant {
               SHORT_APPNAME   => "age-lf",
               BUFFER_SIZE     => 1024 * 1024,
               EXPORT_KEY_BASE => 62,
-              PK_HEX_SIZE     => 64,
               VERSION         => '0.01',
              };
 
@@ -291,7 +289,7 @@ if (defined($CONFIG{encrypt})) {
     exit 0;
 }
 
-if ($CONFIG{decrypt}) {
+if (defined($CONFIG{decrypt})) {
     my $x_priv = decode_private_key($CONFIG{decrypt});
     decrypt(get_input_fh(), $x_priv);
     exit 0;
