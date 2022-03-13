@@ -18,8 +18,6 @@ use strict;
 use warnings;
 
 use experimental qw(signatures);
-use ntheory qw(todigits);
-use Math::AnyNum qw(powmod gcd idiv);
 use Math::GMPz;
 
 sub MBE ($a, $b, $c, $n) {
@@ -60,8 +58,8 @@ sub MBE_factor ($n, $max_k = 1000) {
     return 1;
 }
 
-say MBE_factor(3034271543203);                                      #=> 5017589
-say MBE_factor(43120971427631);                                     #=> 7838351
+say MBE_factor(3034271543203);                                      #=> 604727
+say MBE_factor(43120971427631);                                     #=> 5501281
 say MBE_factor(1548517437362569);                                   #=> 24970961
 say MBE_factor("18446744073709551617");                             #=> 274177
 say MBE_factor("5889680315647781787273935275179391");               #=> 133337

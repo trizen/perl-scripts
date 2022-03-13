@@ -47,6 +47,7 @@ use constant {
               CFRAC_ITERATIONS          => 50_000,
               ORDER_ITERATIONS          => 200_000,
               HOLF_ITERATIONS           => 100_000,
+              MBE_ITERATIONS            => 1_000,
               MILLER_RABIN_ITERATIONS   => 100,
               LUCAS_MILLER_ITERATIONS   => 50,
               SIQS_TRIAL_DIVISION_EPS   => 25,
@@ -1377,6 +1378,40 @@ sub FLT_find_factor ($n, $base = 2, $reps = 1e4) {
     return undef;
 }
 
+sub _MBE ($a, $b, $c, $n) {
+
+    foreach my $i (0 .. Math::GMPz::Rmpz_sizeinbase($b, 2) - 1) {
+        Math::GMPz::Rmpz_powm($c, $a, $c, $n) if Math::GMPz::Rmpz_tstbit($b, $i);
+        Math::GMPz::Rmpz_powm($a, $a, $a, $n);
+    }
+
+    return $c;
+}
+
+sub MBE_find_factor ($n, $max_k = 1000) {
+
+    my $t = Math::GMPz::Rmpz_init();
+    my $g = Math::GMPz::Rmpz_init();
+
+    foreach my $k (1 .. $max_k) {
+
+        Math::GMPz::Rmpz_div_ui($t, $n, $k);
+        Math::GMPz::Rmpz_set_ui($g, 1);
+
+        #MBE($t, $t, $g, $n);
+        _MBE(Math::GMPz::Rmpz_init_set($t), Math::GMPz::Rmpz_init_set($t), $g, $n);
+
+        Math::GMPz::Rmpz_sub_ui($g, $g, 1);
+        Math::GMPz::Rmpz_gcd($g, $g, $n);
+
+        if (Math::GMPz::Rmpz_cmp_ui($g, 1) > 0 and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
+            return $g;
+        }
+    }
+
+    return undef;
+}
+
 sub fermat_find_factor ($n, $max_iter) {
 
     # Fermat's factorization method, trying to represent `n` as a difference of two squares:
@@ -1745,6 +1780,11 @@ sub find_small_factors ($rem, $factors) {
         sub {
             say "=> Williams p±1 (500K)...";
             williams_pp1_ntheory_factor($rem, 500_000);
+        },
+
+        sub {
+            say "=> MBE method...";
+            MBE_find_factor($rem, ($len > 1000) ? 1e2 : MBE_ITERATIONS);
         },
 
         sub {
