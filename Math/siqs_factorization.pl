@@ -47,7 +47,7 @@ use constant {
               CFRAC_ITERATIONS          => 50_000,
               ORDER_ITERATIONS          => 200_000,
               HOLF_ITERATIONS           => 100_000,
-              MBE_ITERATIONS            => 1_000,
+              MBE_ITERATIONS            => 100,
               MILLER_RABIN_ITERATIONS   => 100,
               LUCAS_MILLER_ITERATIONS   => 50,
               SIQS_TRIAL_DIVISION_EPS   => 25,
@@ -1388,28 +1388,39 @@ sub _MBE ($a, $b, $c, $n) {
     return $c;
 }
 
-sub MBE_find_factor ($n, $max_k = 1000) {
+{
+    state $state = Math::GMPz::zgmp_randinit_mt_nobless();
+    Math::GMPz::zgmp_randseed_ui($state, scalar srand());
 
-    my $t = Math::GMPz::Rmpz_init();
-    my $g = Math::GMPz::Rmpz_init();
+    sub MBE_find_factor ($n, $max_k = 1000) {
 
-    foreach my $k (1 .. $max_k) {
+        my $t = Math::GMPz::Rmpz_init();
+        my $g = Math::GMPz::Rmpz_init();
 
-        Math::GMPz::Rmpz_div_ui($t, $n, $k);
-        Math::GMPz::Rmpz_set_ui($g, 1);
+        foreach my $k (1 .. $max_k) {
 
-        #MBE($t, $t, $g, $n);
-        _MBE(Math::GMPz::Rmpz_init_set($t), Math::GMPz::Rmpz_init_set($t), $g, $n);
+            # Deterministic version
+            # Math::GMPz::Rmpz_div_ui($t, $n, $k);
 
-        Math::GMPz::Rmpz_sub_ui($g, $g, 1);
-        Math::GMPz::Rmpz_gcd($g, $g, $n);
+            # Randomized version
+            Math::GMPz::Rmpz_urandomm($t, $state, $n, 1);
 
-        if (Math::GMPz::Rmpz_cmp_ui($g, 1) > 0 and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
-            return $g;
+            Math::GMPz::Rmpz_set_ui($g, 1);
+
+            #MBE($t, $t, $g, $n);
+            _MBE(Math::GMPz::Rmpz_init_set($t), Math::GMPz::Rmpz_init_set($t), $g, $n);
+
+            Math::GMPz::Rmpz_sub_ui($g, $g, 1);
+            Math::GMPz::Rmpz_gcd($g, $g, $n);
+
+            if (Math::GMPz::Rmpz_cmp_ui($g, 1) > 0 and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
+                return $g;
+            }
         }
+
+        return undef;
     }
 
-    return undef;
 }
 
 sub fermat_find_factor ($n, $max_iter) {
@@ -1747,6 +1758,13 @@ sub find_small_factors ($rem, $factors) {
         },
 
         sub {
+            my $len_2 = $len * (log(10) / log(2));
+            my $iter  = ($len_2 * MBE_ITERATIONS > 1_000) ? int(1_000 / $len_2) : MBE_ITERATIONS;
+            say "=> MBE method ($iter iter)...";
+            MBE_find_factor($rem, $iter);
+        },
+
+        sub {
             say "=> Fermat's little theorem (base 3)...";
             FLT_find_factor($rem, 3, ($len > 1000) ? 1e4 : ORDER_ITERATIONS);
         },
@@ -1780,11 +1798,6 @@ sub find_small_factors ($rem, $factors) {
         sub {
             say "=> Williams p±1 (500K)...";
             williams_pp1_ntheory_factor($rem, 500_000);
-        },
-
-        sub {
-            say "=> MBE method...";
-            MBE_find_factor($rem, ($len > 1000) ? 1e2 : MBE_ITERATIONS);
         },
 
         sub {
