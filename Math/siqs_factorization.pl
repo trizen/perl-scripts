@@ -1407,7 +1407,7 @@ sub _MBE ($a, $b, $c, $n) {
 
             Math::GMPz::Rmpz_set_ui($g, 1);
 
-            #MBE($t, $t, $g, $n);
+            #_MBE($t, $t, $g, $n);
             _MBE(Math::GMPz::Rmpz_init_set($t), Math::GMPz::Rmpz_init_set($t), $g, $n);
 
             Math::GMPz::Rmpz_sub_ui($g, $g, 1);
@@ -1420,7 +1420,6 @@ sub _MBE ($a, $b, $c, $n) {
 
         return undef;
     }
-
 }
 
 sub fermat_find_factor ($n, $max_iter) {

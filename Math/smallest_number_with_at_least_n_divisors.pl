@@ -16,10 +16,9 @@ use experimental qw(signatures);
 use ntheory qw(nth_prime);
 use Math::AnyNum qw(:overload);
 
-sub smallest_number_with_at_least_n_divisors ($threshold, $least_solution = Inf, $k = 1, $max_a = Inf, $solutions = 1, $n = 1)
-{
+sub smallest_number_with_at_least_n_divisors ($threshold, $least_solution = Inf, $k = 1, $max_a = Inf, $sigma0 = 1, $n = 1) {
 
-    if ($solutions >= $threshold) {
+    if ($sigma0 >= $threshold) {
         return $n;
     }
 
@@ -28,7 +27,7 @@ sub smallest_number_with_at_least_n_divisors ($threshold, $least_solution = Inf,
     for (my $a = 1 ; $a <= $max_a ; ++$a) {
         $n *= $p;
         last if ($n > $least_solution);
-        $least_solution = __SUB__->($threshold, $least_solution, $k + 1, $a, $solutions * ($a + 1), $n);
+        $least_solution = __SUB__->($threshold, $least_solution, $k + 1, $a, $sigma0 * ($a + 1), $n);
     }
 
     return $least_solution;
