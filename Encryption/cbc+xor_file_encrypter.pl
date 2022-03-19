@@ -26,7 +26,7 @@ package SimpleXORCipher {
 
     sub new ($class, %opt) {
 
-        $opt{rounds} ||= 3;
+        $opt{rounds} ||= 1;
 
         if (!defined($opt{key})) {
             die "Undefined key parameter";
@@ -93,13 +93,15 @@ package SimpleXORCipher {
     }
 
     sub generate_iv ($self) {
-        my $iv = Digest::SHA::sha512(scalar reverse $self->{key});
+        my $iv = Digest::SHA::sha512($self->{key});
         foreach my $i (1 .. $self->{rounds}) {
             $iv = Digest::SHA::sha512(($i % 2 == 0) ? $iv : scalar(reverse($iv)));
         }
         return $iv;
     }
 }
+
+use constant {BUFFER_SIZE => 1024 * 10,};
 
 sub encrypt_file ($file, $key) {
 
@@ -115,7 +117,7 @@ sub encrypt_file ($file, $key) {
 
     my $key_size = length($crypt->{key});
 
-    while (read($fh, (my $buffer), 1024 * 1024)) {
+    while (read($fh, (my $buffer), BUFFER_SIZE)) {
         my @blocks = unpack("(a$key_size)*", $buffer);
         $crypt->cbc_encrypt(\$iv, \(my $result), \@blocks);
         print $result;
@@ -126,21 +128,21 @@ sub encrypt_file ($file, $key) {
 
 sub decrypt_file ($file, $key) {
 
-    my $crypt = SimpleXORCipher->new(key => $key);
-    my $iv    = $crypt->generate_iv;
+    my $crypt    = SimpleXORCipher->new(key => $key);
+    my $iv       = $crypt->generate_iv;
+    my $key_size = length($crypt->{key});
 
     open(my $fh, '<:raw', $file)
       or die "can't open file <<$file>> for reading: $!";
 
-    read($fh, (my $size), 64);
+    read($fh, (my $size), $key_size);
 
     $crypt->cbc_decrypt(\$iv, \(my $size_dec), [$size]);
     $size = unpack("N*", substr($size_dec, 0, 4));
 
     my $dec_size = 0;
-    my $key_size = length($crypt->{key});
 
-    while (read($fh, (my $buffer), 1024 * 1024)) {
+    while (read($fh, (my $buffer), BUFFER_SIZE)) {
         my @blocks = unpack("(a$key_size)*", $buffer);
 
         $crypt->cbc_decrypt(\$iv, \(my $result), \@blocks);
@@ -183,7 +185,7 @@ EOT
 
 use Getopt::Long qw(GetOptions);
 
-my $key     = '';
+my $key     = undef;
 my $decrypt = 0;
 
 GetOptions(

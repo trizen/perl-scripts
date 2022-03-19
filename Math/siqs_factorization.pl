@@ -2458,12 +2458,15 @@ sub factorize ($n) {
 
     my @divisors;
 
-    push @divisors, fast_trial_factor($n);
     push @divisors, (($n > ~0) ? special_form_factorization($n) : ());
+
+    if (!@divisors) {
+        push @divisors, fast_trial_factor($n);
+    }
 
     if (@divisors) {
 
-        say "[*] Divisors found so far: ", join(', ', @divisors);
+        say "[*] Divisors found so far: ", join(', ', sort { $a <=> $b } @divisors);
 
         my @composite;
         my @factors;

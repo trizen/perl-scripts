@@ -18,10 +18,8 @@ use ntheory qw(factor);
 sub arithmetic_derivative {
     my ($n) = @_;
 
-    my @factors = factor($n);
-
     my $sum = 0;
-    foreach my $p (@factors) {
+    foreach my $p (factor($n)) {
         $sum += $n / $p;
     }
 
