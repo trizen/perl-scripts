@@ -731,6 +731,7 @@ A nice collection of day-to-day Perl scripts.
     * [Pisano periods](./Math/pisano_periods.pl)
     * [Pisano periods efficient algorithm](./Math/pisano_periods_efficient_algorithm.pl)
     * [Pocklington-pratt primality proving](./Math/pocklington-pratt_primality_proving.pl)
+    * [Pollard-strassen factorization method](./Math/pollard-strassen_factorization_method.pl)
     * [Pollard p-1 factorization](./Math/pollard_p-1_factorization.pl)
     * [Pollard rho exp factorization](./Math/pollard_rho_exp_factorization.pl)
     * [Pollard rho factorization](./Math/pollard_rho_factorization.pl)

@@ -2,7 +2,7 @@
 
 # Daniel "Trizen" Șuteu
 # Date: 03 July 2019
-# Edit: 28 July 2019
+# Edit: 22 March 2022
 # https://github.com/trizen
 
 # A simple factorization method for numbers that can be expressed as a difference of powers.
@@ -21,6 +21,11 @@ use experimental qw(signatures);
 
 use Math::GMPz;
 use ntheory qw(divisors rootint logint is_power gcd vecprod powint);
+
+use constant {
+              MIN_FACTOR => 1,    # ignore small factors
+              LOG_BRANCH => 0,    # true to use the log branch in addition to the root branch
+             };
 
 sub diff_power_factorization ($n, $verbose = 0) {
 
@@ -46,7 +51,7 @@ sub diff_power_factorization ($n, $verbose = 0) {
                     my $t = $x - $j * $y;
                     my $g = gcd($t, $n);
 
-                    if ($g > 1 and $g < $n) {
+                    if ($g > MIN_FACTOR and $g < $n) {
                         while ($n % $g == 0) {
                             $n /= $g;
                             push @factors, $g;
@@ -82,22 +87,27 @@ sub diff_power_factorization ($n, $verbose = 0) {
         }
     };
 
-    # Sum and difference of powers of the form a^k ± b^k, where a and b are small.
-    foreach my $r1 (2 .. logint($n, 2)) {
-
-        my $t = logint($n, $r1);
-
-        $diff_power_check->(Math::GMPz->new($r1), $t);        # sum of powers
-        $diff_power_check->(Math::GMPz->new($r1), $t + 1);    # difference of powers
-    }
-
     # Sum and difference of powers of the form a^k ± b^k, where a and b are large.
     foreach my $e1 (reverse 2 .. logint($n, 2)) {
 
         my $t = Math::GMPz->new(rootint($n, $e1));
 
-        $diff_power_check->($t,     $e1);                     # sum of powers
-        $diff_power_check->($t + 1, $e1);                     # difference of powers
+        $diff_power_check->($t,     $e1);    # sum of powers
+        $diff_power_check->($t + 1, $e1);    # difference of powers
+    }
+
+    # Sum and difference of powers of the form a^k ± b^k, where a and b are small.
+    if (LOG_BRANCH) {
+        foreach my $r1 (2 .. logint($n, 2)) {
+
+            my $t = logint($n, $r1);
+
+            $diff_power_check->(Math::GMPz->new($r1), $t);        # sum of powers
+            $diff_power_check->(Math::GMPz->new($r1), $t + 1);    # difference of powers
+        }
+
+        my %seen_param;
+        @diff_powers_params = grep { !$seen_param{join(' ', @$_)}++ } @diff_powers_params;
     }
 
     my @factors;

@@ -2,7 +2,7 @@
 
 # Daniel "Trizen" Șuteu
 # Date: 04 July 2019
-# Edit: 28 July 2019
+# Edit: 22 March 2022
 # https://github.com/trizen
 
 # A simple factorization method, based on congruences of powers.
@@ -22,9 +22,13 @@ use ntheory qw(:all);
 use Math::AnyNum qw(ipow);
 use experimental qw(signatures);
 
-my $MIN_FACTOR = 1e6;    # ignore small factors
+use constant {
+              MIN_FACTOR => 1e6,    # ignore small factors
+              LOG_BRANCH => 1,      # true to use the log branch in addition to the root branch
+              FULL_RANGE => 0,      # true to use the full range from 0 to log_2(n)
+             };
 
-sub is_perfect_power($n) {
+sub perfect_power ($n) {
     return 1 if ($n == 0);
     return 1 if ($n == 1);
     return is_power($n);
@@ -53,7 +57,7 @@ sub cgpow_factor ($n, $verbose = 0) {
                     my $t = $x - $j * $y;
                     my $g = Math::GMPz->new(gcd($t, $n));
 
-                    if ($g > $MIN_FACTOR and $g < $n and !$seen{$g}++) {
+                    if ($g > MIN_FACTOR and $g < $n and !$seen{$g}++) {
 
                         if ($verbose) {
                             if ($r == $k) {
@@ -77,7 +81,14 @@ sub cgpow_factor ($n, $verbose = 0) {
     my $orig  = $n;
     my $const = 64;
 
-    my @range = reverse(2 .. vecmin($const, logint($n, 2)));
+    my @range;
+
+    if (FULL_RANGE) {
+        @range = reverse(2 .. logint($n, 2));
+    }
+    else {
+        @range = reverse(2 .. vecmin($const, logint($n, 2)));
+    }
 
     my $process = sub ($root, $e) {
 
@@ -88,26 +99,32 @@ sub cgpow_factor ($n, $verbose = 0) {
 
             foreach my $z ($u, $n - $u) {
 
-                if (my $t = is_perfect_power($z)) {
+                if (my $t = perfect_power($z)) {
 
                     my $r1 = rootint($z, $t);
-                    my $r2 = rootint($z, $e);
+                    ##my $r2 = rootint($z, $e);
 
                     push @params, [Math::GMPz->new($r1), $t, Math::GMPz->new($k), $e];
-                    push @params, [Math::GMPz->new($r2), $e, Math::GMPz->new($k), $e];
+                    ##push @params, [Math::GMPz->new($r2), $e, Math::GMPz->new($k), $e];
                 }
             }
         }
     };
 
-    for my $root (@range) {
-        my $e = Math::GMPz->new(logint($n, $root));
-        $process->($root, $e);
-    }
-
     for my $e (@range) {
         my $root = Math::GMPz->new(rootint($n, $e));
         $process->($root, $e);
+    }
+
+    if (LOG_BRANCH) {
+
+        for my $root (@range) {
+            my $e = Math::GMPz->new(logint($n, $root));
+            $process->($root, $e);
+        }
+
+        my %seen_param;
+        @params = grep { !$seen_param{join(' ', @$_)}++ } @params;
     }
 
     my @divisors;
@@ -122,7 +139,7 @@ sub cgpow_factor ($n, $verbose = 0) {
     foreach my $d (@divisors) {
         my $g = Math::GMPz->new(gcd($n, $d));
 
-        if ($g > $MIN_FACTOR and $g < $n) {
+        if ($g > MIN_FACTOR and $g < $n) {
             while ($n % $g == 0) {
                 $n /= $g;
                 push @factors, $g;

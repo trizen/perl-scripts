@@ -2519,7 +2519,13 @@ sub factorize ($n) {
 }
 
 if (@ARGV) {
-    my $n = Math::GMPz->new($ARGV[0]);
+    my $n = eval { Math::GMPz->new($ARGV[0]) };
+
+    if ($@) {   # evaluate the expression using PARI/GP
+        chomp(my $str = `echo \Q$ARGV[0]\E | gp -q -f`);
+        $n = Math::GMPz->new($str);
+    }
+
     say "\nPrime factors: ", join(', ', factorize($n));
 }
 else {
