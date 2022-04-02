@@ -359,6 +359,7 @@ A nice collection of day-to-day Perl scripts.
     * [Leet japh](./JAPH/leet_japh.pl)
     * [Length obfuscation](./JAPH/length_obfuscation.pl)
     * [Log japh](./JAPH/log_japh.pl)
+    * [Log japh 2](./JAPH/log_japh_2.pl)
     * [Non-alphanumeric japh](./JAPH/non-alphanumeric_japh.pl)
     * [Re eval japh](./JAPH/re_eval_japh.pl)
     * [Slash r japh](./JAPH/slash_r_japh.pl)
