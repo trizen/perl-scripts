@@ -1,27 +1,28 @@
 #!/usr/bin/perl
 
 # Daniel "Trizen" Șuteu
-# Date: 07 February 2019
+# Date: 05 April 2022
 # https://github.com/trizen
 
-# A sublinear algorithm for computing the partial sums of the Euler totient function times k^m.
+# A sublinear algorithm for computing the partial sums of the Euler totient function.
 
 # The partial sums of the Euler totient function is defined as:
 #
-#   a(n,m) = Sum_{k=1..n} k^m * phi(k)
+#   a(n,m) = Sum_{k=1..n} phi(k)
 #
 # where phi(k) is the Euler totient function.
 
 # Example:
-#    a(10^1, 1) = 217
-#    a(10^2, 1) = 203085
-#    a(10^3, 1) = 202870719
-#    a(10^4, 1) = 202653667159
-#    a(10^5, 1) = 202643891472849
-#    a(10^6, 1) = 202642368741515819
-#    a(10^7, 1) = 202642380629476099463
-#    a(10^8, 1) = 202642367994273571457613
-#    a(10^9, 1) = 202642367530671221417109931
+#   a(10^1)  = 32
+#   a(10^2)  = 3044
+#   a(10^3)  = 304192
+#   a(10^4)  = 30397486
+#   a(10^5)  = 3039650754
+#   a(10^6)  = 303963552392
+#   a(10^7)  = 30396356427242
+#   a(10^8)  = 3039635516365908
+#   a(10^9)  = 303963551173008414
+#   a(10^10) = 30396355092886216366
 
 # General asymptotic formula:
 #
@@ -44,20 +45,23 @@ use 5.020;
 use strict;
 use warnings;
 
+use ntheory qw(:all);
 use experimental qw(signatures);
-use Math::AnyNum qw(faulhaber_sum ipow);
-use ntheory qw(euler_phi sqrtint rootint);
 
-sub partial_sums_of_euler_totient ($n, $m) {
+sub triangular ($n) {
+    divint(mulint($n, $n + 1), 2);
+}
+
+sub partial_sums_of_euler_totient ($n) {
     my $s = sqrtint($n);
 
     my @euler_sum_lookup = (0);
 
-    my $lookup_size = 2 * rootint($n, 3)**2;
+    my $lookup_size = int(2 * rootint($n, 3)**2);
     my @euler_phi   = euler_phi(0, $lookup_size);
 
     foreach my $i (1 .. $lookup_size) {
-        $euler_sum_lookup[$i] = $euler_sum_lookup[$i - 1] + ipow($i, $m) * $euler_phi[$i];
+        $euler_sum_lookup[$i] = addint($euler_sum_lookup[$i - 1], $euler_phi[$i]);
     }
 
     my %seen;
@@ -73,14 +77,18 @@ sub partial_sums_of_euler_totient ($n, $m) {
         }
 
         my $s = sqrtint($n);
-        my $T = faulhaber_sum($n, $m + 1);
+        my $T = triangular($n);
 
-        foreach my $k (2 .. int($n / ($s + 1))) {
-            $T -= ipow($k, $m) * __SUB__->(int($n / $k));
+        foreach my $k (2 .. divint($n, $s + 1)) {
+            $T = subint($T, __SUB__->(divint($n, $k)));
         }
 
+        my $prev = $n;
+
         foreach my $k (1 .. $s) {
-            $T -= (faulhaber_sum(int($n / $k), $m) - faulhaber_sum(int($n / ($k + 1)), $m)) * __SUB__->($k);
+            my $curr = (divint($n, $k + 1));
+            $T    = subint($T, mulint(subint($prev, $curr), $euler_sum_lookup[$k]));
+            $prev = $curr;
         }
 
         $seen{$n} = $T;
@@ -88,6 +96,6 @@ sub partial_sums_of_euler_totient ($n, $m) {
     }->($n);
 }
 
-foreach my $n (1 .. 7) {    # takes ~2.8 seconds
-    say "a(10^$n, 1) = ", partial_sums_of_euler_totient(10**$n, 1);
+foreach my $n (1 .. 8) {    # takes less than 1 second
+    say "a(10^$n) = ", partial_sums_of_euler_totient(powint(10, $n));
 }

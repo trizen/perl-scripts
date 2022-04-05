@@ -693,6 +693,7 @@ A nice collection of day-to-day Perl scripts.
     * [Partial sums of dedekind psi function](./Math/partial_sums_of_dedekind_psi_function.pl)
     * [Partial sums of euler totient function](./Math/partial_sums_of_euler_totient_function.pl)
     * [Partial sums of euler totient function fast](./Math/partial_sums_of_euler_totient_function_fast.pl)
+    * [Partial sums of euler totient function fast 2](./Math/partial_sums_of_euler_totient_function_fast_2.pl)
     * [Partial sums of euler totient function times k](./Math/partial_sums_of_euler_totient_function_times_k.pl)
     * [Partial sums of euler totient function times k to the m](./Math/partial_sums_of_euler_totient_function_times_k_to_the_m.pl)
     * [Partial sums of exponential prime omega functions](./Math/partial_sums_of_exponential_prime_omega_functions.pl)
