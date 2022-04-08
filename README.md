@@ -428,6 +428,7 @@ A nice collection of day-to-day Perl scripts.
     * [BPSW primality test](./Math/BPSW_primality_test.pl)
     * [BPSW primality test mpz](./Math/BPSW_primality_test_mpz.pl)
     * [Brazilian primes constant](./Math/brazilian_primes_constant.pl)
+    * [Brilliant numbers count](./Math/brilliant_numbers_count.pl)
     * [Brown numbers](./Math/brown_numbers.pl)
     * [Carmichael factorization method](./Math/carmichael_factorization_method.pl)
     * [Carmichael factorization method generalized](./Math/carmichael_factorization_method_generalized.pl)
