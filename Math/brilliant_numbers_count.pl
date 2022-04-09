@@ -18,22 +18,50 @@ use ntheory qw(:all);
 use experimental qw(signatures);
 
 sub brilliant_numbers_count ($n) {
-    my $count = 0;
 
-    foreach my $k (1 .. length(sqrtint($n))) {
-        my $P = primes(10**($k - 1), 10**$k - 1);
-        foreach my $i (0 .. $#{$P}) {
-            foreach my $j ($i .. $#{$P}) {
-                $P->[$i] * $P->[$j] > $n ? last : ++$count;
-            }
+    use integer;
+
+    my $count = 0;
+    my $len   = length(sqrtint($n));
+
+    foreach my $k (1 .. $len - 1) {
+        my $pi = prime_count(10**($k - 1), 10**$k - 1);
+        $count += binomial($pi, 2) + $pi;
+    }
+
+    my $min = 10**($len - 1);
+    my $max = 10**$len - 1;
+
+    forprimes {
+        $count += prime_count($_, vecmin($max, $n / $_));
+    } $min, $max;
+
+    return $count;
+}
+
+sub brilliant_numbers_count_slow ($n) {
+
+    my $count = 0;
+    my $len   = length(sqrtint($n));
+
+    foreach my $k (1 .. $len - 1) {
+        my $pi = prime_count(10**($k - 1), 10**$k - 1);
+        $count += binomial($pi, 2) + $pi;
+    }
+
+    my $P = primes(10**($len - 1), 10**$len - 1);
+
+    foreach my $i (0 .. $#{$P}) {
+        foreach my $j ($i .. $#{$P}) {
+            $P->[$i] * $P->[$j] > $n ? last : ++$count;
         }
     }
 
     return $count;
 }
 
-foreach my $n (1 .. 9) {
-    my $v = vecprod((10) x $n)-1;
+foreach my $n (1 .. 11) {
+    my $v = vecprod((10) x $n) - 1;
     printf("Less than 10^%s, there are %s brilliant numbers\n", $n, brilliant_numbers_count($v));
 }
 
@@ -49,3 +77,4 @@ Less than 10^8, there are 573928 brilliant numbers
 Less than 10^9, there are 7407840 brilliant numbers
 Less than 10^10, there are 35547994 brilliant numbers
 Less than 10^11, there are 491316166 brilliant numbers
+Less than 10^12, there are 2409600865 brilliant numbers
