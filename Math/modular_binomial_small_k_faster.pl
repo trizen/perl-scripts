@@ -22,7 +22,7 @@ use experimental qw(signatures);
 use ntheory qw(
     mulmod factor_exp vecsum todigits powint
     chinese divint forfactored modint valuation
-    is_square_free
+    is_square_free mulint subint absint
 );
 
 sub factorial_power ($n, $p) {
@@ -92,12 +92,28 @@ sub lucas_theorem ($n, $k, $p) {
 
 sub modular_binomial ($n, $k, $m) {
 
-    is_square_free($m)
-        || return modular_binomial_small_k($n, $k, $m);
+    if ($k < 0 or $m == 1) {
+        return 0;
+    }
+
+    if ($n < 0) {
+        return mulint(powint(-1, $k), __SUB__->(subint($k, $n) - 1, $k, $m));
+    }
+
+    if ($k > $n) {
+        return 0;
+    }
+
+    if ($k == 0 or $k == $n) {
+        return modint(1, $m);
+    }
+
+    is_square_free(absint($m))
+        || return modular_binomial_small_k($n, $k, absint($m));
 
     my @congruences;
 
-    foreach my $pp (factor_exp($m)) {
+    foreach my $pp (factor_exp(absint($m))) {
         my ($p, $e) = @$pp;
 
         my $pk = powint($p, $e);
@@ -110,7 +126,7 @@ sub modular_binomial ($n, $k, $m) {
         }
     }
 
-    chinese(@congruences);
+    modint(chinese(@congruences), $m);
 }
 
 say modular_binomial(12,   5,   100000);     #=> 792
