@@ -634,6 +634,7 @@ A nice collection of day-to-day Perl scripts.
     * [Modular bell numbers mpz](./Math/modular_bell_numbers_mpz.pl)
     * [Modular binomial](./Math/modular_binomial.pl)
     * [Modular binomial fast](./Math/modular_binomial_fast.pl)
+    * [Modular binomial faster](./Math/modular_binomial_faster.pl)
     * [Modular binomial ntheory](./Math/modular_binomial_ntheory.pl)
     * [Modular binomial small k](./Math/modular_binomial_small_k.pl)
     * [Modular binomial small k faster](./Math/modular_binomial_small_k_faster.pl)
