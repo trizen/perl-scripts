@@ -174,17 +174,18 @@ sub modular_binomial ($n, $k, $m) {
         @R = map { $_->[2] } @NKR;
 
         my @acc = (1);
+        my $nfac = 1;
 
         if ($prq < ~0 and $p < $n) {
-            my $t = 0;
+            my $count = 0;
             foreach my $k (1 .. vecmin(vecmax(@N, @K, @R), 1e4)) {
-                if (++$t == $p) {
-                    push @acc, $acc[-1];
-                    $t = 0;
+                if (++$count == $p) {
+                    $count = 0;
                 }
                 else {
-                    push @acc, mulmod($acc[-1], $k, $prq);
+                    $nfac = mulmod($nfac, $k, $prq);
                 }
+                push @acc, $nfac;
             }
         }
 
