@@ -109,7 +109,7 @@ sub modular_binomial ($n, $k, $m) {
 
     my @F;
 
-    foreach my $pp (factor_exp($m)) {
+    foreach my $pp (factor_exp(absint($m))) {
         my ($p, $q) = @$pp;
 
         if ($q == 1) {
@@ -219,20 +219,22 @@ sub modular_binomial ($n, $k, $m) {
         push @F, [$v, $pq];
     }
 
-    chinese(@F);
+    modint(chinese(@F), $m);
 }
 
 #
 ## Run some tests
 #
 
-use Test::More tests => 41;
+use Test::More tests => 42;
 
 is(modular_binomial(10, 2, 43), 2);
 is(modular_binomial(10, 8, 43), 2);
 
 is(modular_binomial(10, 2, 24), 21);
 is(modular_binomial(10, 8, 24), 21);
+
+is(modular_binomial(100, 42, -127), binomial(100, 42) % -127);
 
 is(modular_binomial(12,    5,   100000),     792);
 is(modular_binomial(16,    4,   100000),     1820);
