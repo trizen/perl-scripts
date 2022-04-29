@@ -22,12 +22,24 @@ use experimental qw(signatures);
 
 sub modular_binomial ($n, $k, $m) {
 
-    if ($k < 0 or $m == 1) {
+    if ($m == 0) {
+        return undef;
+    }
+
+    if ($m == 1) {
+        return 0;
+    }
+
+    if ($k < 0) {
+        $k = subint($n, $k);
+    }
+
+    if ($k < 0) {
         return 0;
     }
 
     if ($n < 0) {
-        return mulint(powint(-1, $k), __SUB__->(subint($k, $n) - 1, $k, $m));
+        return modint(mulint(powint(-1, $k), __SUB__->(subint($k, $n) - 1, $k, $m)), $m);
     }
 
     if ($k > $n) {
@@ -115,13 +127,16 @@ sub lucas_theorem ($n, $k, $p) {    # p is prime
 
         if ($kp > $np) { return 0 }
 
-        $r = (
-              mulmod(
-                     $r,
-                     divmod(factorialmod($np, $p), mulmod(factorialmod($kp, $p), factorialmod(subint($np, $kp), $p), $p), $p),
-                     $p
-                    )
-             );
+        my $rp = subint($np, $kp);
+
+        my $x = factorialmod($np, $p);
+        my $y = factorialmod($kp, $p);
+        my $z = factorialmod($rp, $p);
+
+        $y = mulmod($y, $z, $p);
+        $x = divmod($x, $y, $p);
+
+        $r = mulmod($r, $x, $p);
 
         $n = divint($n, $p);
         $k = divint($k, $p);
@@ -197,14 +212,14 @@ sub modular_binomial_prime_power ($n, $k, $p, $e) {
         return 0;
     }
 
-    my $modpow = $e - $pow;
-    my $r      = modint(binomial_non_prime_part($n, $k, $p, $modpow), powint($p, $modpow));
+    my $er = $e - $pow;
+    my $r  = modint(binomial_non_prime_part($n, $k, $p, $er), powint($p, $er));
 
     my $pe = powint($p, $e);
     return mulmod(powmod($p, $pow, $pe), $r, $pe);
 }
 
-use Test::More tests => 42;
+use Test::More tests => 44;
 
 is(modular_binomial(10, 2, 43), 2);
 is(modular_binomial(10, 8, 43), 2);
@@ -214,13 +229,15 @@ is(modular_binomial(10, 8, 24), 21);
 
 is(modular_binomial(100, 42, -127), binomial(100, 42) % -127);
 
-is(modular_binomial(12,    5,   100000),     792);
-is(modular_binomial(16,    4,   100000),     1820);
-is(modular_binomial(100,   50,  139),        71);
-is(modular_binomial(1000,  10,  1243),       848);
-is(modular_binomial(124,   42,  1234567),    395154);
-is(modular_binomial(1e9,   1e4, 1234567),    833120);
-is(modular_binomial(1e10,  1e5, 1234567),    589372);
+is(modular_binomial(12,   5,   100000),  792);
+is(modular_binomial(16,   4,   100000),  1820);
+is(modular_binomial(100,  50,  139),     71);
+is(modular_binomial(1000, 10,  1243),    848);
+is(modular_binomial(124,  42,  1234567), 395154);
+is(modular_binomial(1e9,  1e4, 1234567), 833120);
+is(modular_binomial(1e10, 1e5, 1234567), 589372);
+
+is(modular_binomial(1e10,  1e5, 4233330243), 3403056024);
 is(modular_binomial(-1e10, 1e5, 4233330243), 2865877173);
 
 is(modular_binomial(1e10, 1e4, factorial(13)), 1845043200);
@@ -258,6 +275,7 @@ is(modular_binomial(1e6, 1e3, powint(2, 128) - 1), binomial(1e6, 1e3) % (powint(
 
 is(modular_binomial(1e6, 1e4, (powint(2, 128) + 1)**2), binomial(1e6, 1e4) % ((powint(2, 128) + 1)**2));
 is(modular_binomial(1e6, 1e4, (powint(2, 128) - 1)**2), binomial(1e6, 1e4) % ((powint(2, 128) - 1)**2));
+is(modular_binomial(-10, -9,  -10), binomial(-10, -9) % -10);
 
 say("binomial(10^10, 10^5) mod 13! = ", modular_binomial(1e10, 1e5, factorial(13)));
 
@@ -268,3 +286,15 @@ say modular_binomial(1000, 10,  1243);       #=> 848
 say modular_binomial(124,  42,  1234567);    #=> 395154
 say modular_binomial(1e9,  1e4, 1234567);    #=> 833120
 say modular_binomial(1e10, 1e5, 1234567);    #=> 589372
+
+__END__
+my $upto = 10;
+foreach my $n (-$upto .. $upto) {
+    foreach my $k (-$upto .. $upto) {
+        foreach my $m (-$upto .. $upto) {
+            next if ($m == 0);
+            say "Testing: binomial($n, $k, $m)";
+            is(modular_binomial($n, $k, $m), binomial($n, $k) % $m);
+        }
+    }
+}

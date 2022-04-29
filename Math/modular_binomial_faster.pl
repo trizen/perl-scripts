@@ -70,13 +70,16 @@ sub lucas_theorem ($n, $k, $p) {    # p is prime
 
         if ($kp > $np) { return 0 }
 
-        $r = (
-              mulmod(
-                     $r,
-                     divmod(factorialmod($np, $p), mulmod(factorialmod($kp, $p), factorialmod(subint($np, $kp), $p), $p), $p),
-                     $p
-                    )
-             );
+        my $rp = subint($np, $kp);
+
+        my $x = factorialmod($np, $p);
+        my $y = factorialmod($kp, $p);
+        my $z = factorialmod($rp, $p);
+
+        $y = mulmod($y, $z, $p);
+        $x = divmod($x, $y, $p);
+
+        $r = mulmod($r, $x, $p);
 
         $n = divint($n, $p);
         $k = divint($k, $p);
@@ -87,12 +90,24 @@ sub lucas_theorem ($n, $k, $p) {    # p is prime
 
 sub modular_binomial ($n, $k, $m) {
 
-    if ($k < 0 or $m == 1) {
+    if ($m == 0) {
+        return undef;
+    }
+
+    if ($m == 1) {
+        return 0;
+    }
+
+    if ($k < 0) {
+        $k = subint($n, $k);
+    }
+
+    if ($k < 0) {
         return 0;
     }
 
     if ($n < 0) {
-        return mulint(powint(-1, $k), __SUB__->(subint($k, $n) - 1, $k, $m));
+        return modint(mulint(powint(-1, $k), __SUB__->(subint($k, $n) - 1, $k, $m)), $m);
     }
 
     if ($k > $n) {
@@ -173,7 +188,7 @@ sub modular_binomial ($n, $k, $m) {
         @K = map { $_->[1] } @NKR;
         @R = map { $_->[2] } @NKR;
 
-        my @acc = (1);
+        my @acc  = (1);
         my $nfac = 1;
 
         if ($prq < ~0 and $p < $n) {
@@ -201,9 +216,9 @@ sub modular_binomial ($n, $k, $m) {
                 my @pairs;
                 my ($x, $y, $z);
 
-                $x = $acc[$N[$j]] // push(@pairs, [\$x, $N[$j]]);
-                $y = $acc[$K[$j]] // push(@pairs, [\$y, $K[$j]]);
-                $z = $acc[$R[$j]] // push(@pairs, [\$z, $R[$j]]);
+                ($x = $acc[$N[$j]]) // push(@pairs, [\$x, $N[$j]]);
+                ($y = $acc[$K[$j]]) // push(@pairs, [\$y, $K[$j]]);
+                ($z = $acc[$R[$j]]) // push(@pairs, [\$z, $R[$j]]);
 
                 foreach my $pair (sort { $a->[1] <=> $b->[1] } @pairs) {
                     ${$pair->[0]} = factorial_without_prime($pair->[1], $p, $prq, \$from, \$count, \$res);
@@ -227,7 +242,7 @@ sub modular_binomial ($n, $k, $m) {
 ## Run some tests
 #
 
-use Test::More tests => 42;
+use Test::More tests => 44;
 
 is(modular_binomial(10, 2, 43), 2);
 is(modular_binomial(10, 8, 43), 2);
@@ -237,13 +252,15 @@ is(modular_binomial(10, 8, 24), 21);
 
 is(modular_binomial(100, 42, -127), binomial(100, 42) % -127);
 
-is(modular_binomial(12,    5,   100000),     792);
-is(modular_binomial(16,    4,   100000),     1820);
-is(modular_binomial(100,   50,  139),        71);
-is(modular_binomial(1000,  10,  1243),       848);
-is(modular_binomial(124,   42,  1234567),    395154);
-is(modular_binomial(1e9,   1e4, 1234567),    833120);
-is(modular_binomial(1e10,  1e5, 1234567),    589372);
+is(modular_binomial(12,   5,   100000),  792);
+is(modular_binomial(16,   4,   100000),  1820);
+is(modular_binomial(100,  50,  139),     71);
+is(modular_binomial(1000, 10,  1243),    848);
+is(modular_binomial(124,  42,  1234567), 395154);
+is(modular_binomial(1e9,  1e4, 1234567), 833120);
+is(modular_binomial(1e10, 1e5, 1234567), 589372);
+
+is(modular_binomial(1e10,  1e5, 4233330243), 3403056024);
 is(modular_binomial(-1e10, 1e5, 4233330243), 2865877173);
 
 is(modular_binomial(1e10, 1e4, factorial(13)), 1845043200);
@@ -281,13 +298,16 @@ is(modular_binomial(1e6, 1e3, powint(2, 128) - 1), binomial(1e6, 1e3) % (powint(
 
 is(modular_binomial(1e6, 1e4, (powint(2, 128) + 1)**2), binomial(1e6, 1e4) % ((powint(2, 128) + 1)**2));
 is(modular_binomial(1e6, 1e4, (powint(2, 128) - 1)**2), binomial(1e6, 1e4) % ((powint(2, 128) - 1)**2));
+is(modular_binomial(-10, -9,  -10), binomial(-10, -9) % -10);
 
 say("binomial(10^10, 10^5) mod 13! = ", modular_binomial(1e10, 1e5, factorial(13)));
 
 __END__
-foreach my $n (0 .. 50) {
-    foreach my $k (0 .. $n) {
-        foreach my $m (1 .. 50) {
+my $upto = 10;
+foreach my $n (-$upto .. $upto) {
+    foreach my $k (-$upto .. $upto) {
+        foreach my $m (-$upto .. $upto) {
+            next if ($m == 0);
             say "Testing: binomial($n, $k, $m)";
             is(modular_binomial($n, $k, $m), binomial($n, $k) % $m);
         }

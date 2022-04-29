@@ -16,14 +16,9 @@ use 5.020;
 use strict;
 use warnings;
 
+use ntheory qw(:all);
 use List::Util qw(uniq);
 use experimental qw(signatures);
-
-use ntheory qw(
-    mulmod factor_exp vecsum todigits powint
-    chinese divint forfactored modint valuation
-    is_square_free mulint subint absint
-);
 
 sub factorial_power ($n, $p) {
     divint($n - vecsum(todigits($n, $p)), $p - 1);
@@ -92,12 +87,24 @@ sub lucas_theorem ($n, $k, $p) {
 
 sub modular_binomial ($n, $k, $m) {
 
-    if ($k < 0 or $m == 1) {
+    if ($m == 0) {
+        return undef;
+    }
+
+    if ($m == 1) {
+        return 0;
+    }
+
+    if ($k < 0) {
+        $k = subint($n, $k);
+    }
+
+    if ($k < 0) {
         return 0;
     }
 
     if ($n < 0) {
-        return mulint(powint(-1, $k), __SUB__->(subint($k, $n) - 1, $k, $m));
+        return modint(mulint(powint(-1, $k), __SUB__->(subint($k, $n) - 1, $k, $m)), $m);
     }
 
     if ($k > $n) {
@@ -109,7 +116,7 @@ sub modular_binomial ($n, $k, $m) {
     }
 
     is_square_free(absint($m))
-        || return modular_binomial_small_k($n, $k, absint($m));
+      || return modint(modular_binomial_small_k($n, $k, absint($m)), $m);
 
     my @congruences;
 
@@ -137,3 +144,17 @@ say modular_binomial(124,  42,  1234567);    #=> 395154
 say modular_binomial(1e9,  1e4, 1234567);    #=> 833120
 say modular_binomial(1e10, 1e5, 1234567);    #=> 589372
 say modular_binomial(1e10, 1e6, 1234567);    #=> 456887
+
+__END__
+use Test::More tests => 8820;
+
+my $upto = 10;
+foreach my $n (-$upto .. $upto) {
+    foreach my $k (-$upto .. $upto) {
+        foreach my $m (-$upto .. $upto) {
+            next if ($m == 0);
+            say "Testing: binomial($n, $k, $m)";
+            is(modular_binomial($n, $k, $m), binomial($n, $k) % $m);
+        }
+    }
+}
