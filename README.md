@@ -681,6 +681,7 @@ A nice collection of day-to-day Perl scripts.
     * [Nth root good rational approximations](./Math/nth_root_good_rational_approximations.pl)
     * [Nth root recurrence constant](./Math/nth_root_recurrence_constant.pl)
     * [Nth smooth number](./Math/nth_smooth_number.pl)
+    * [Number2expression](./Math/number2expression.pl)
     * [Number of conditional GCDs](./Math/number_of_conditional_GCDs.pl)
     * [Number of connected permutations](./Math/number_of_connected_permutations.pl)
     * [Number of partitions into 2 distinct positive cubes](./Math/number_of_partitions_into_2_distinct_positive_cubes.pl)
