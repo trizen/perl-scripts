@@ -29,7 +29,7 @@ sub modular_quadratic_equation ($A, $B, $C, $M) {
     my $D = ($B * $B - 4 * $A * $C);
 
     my @S;
-    foreach my $t (allsqrtmod($D, 4 * $M)) {
+    foreach my $t (allsqrtmod($D % (4 * $M), 4 * $M)) {
         for my $uv ([-$B + $t, 2 * $A], [-$B - $t, 2 * $A]) {
             my ($u, $v) = @$uv;
             my $x = ($u % $v == 0) ? (($u / $v) % $M) : divmod($u, $v, $M);
