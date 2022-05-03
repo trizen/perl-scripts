@@ -826,6 +826,7 @@ A nice collection of day-to-day Perl scripts.
     * [Solutions to x squared equals a mod n](./Math/solutions_to_x_squared_equals_a_mod_n.pl)
     * [Solve congruence equation example](./Math/solve_congruence_equation_example.pl)
     * [Solve cubic equation real](./Math/solve_cubic_equation_real.pl)
+    * [Solve modular quadratic equation](./Math/solve_modular_quadratic_equation.pl)
     * [Solve pell equation](./Math/solve_pell_equation.pl)
     * [Solve pell equation fast](./Math/solve_pell_equation_fast.pl)
     * [Solve pell equation generalized](./Math/solve_pell_equation_generalized.pl)
