@@ -947,6 +947,7 @@ A nice collection of day-to-day Perl scripts.
 * Visualisators
     * [Binview](./Visualisators/binview.pl)
     * [Disk-stats](./Visualisators/disk-stats.pl)
+    * [Dnscrypt stats](./Visualisators/dnscrypt_stats.pl)
     * [Greycmd](./Visualisators/greycmd.pl)
     * [Human-finder-visual](./Visualisators/human-finder-visual.pl)
     * [Lz visual](./Visualisators/lz_visual.pl)
