@@ -44,19 +44,23 @@ GetOptions(
 my %domains;
 my %resolvers;
 my %cache_misses;
+my %cache_hits;
 my @durations;
 
 open my $fh, '<:utf8', $log_file
   or die "Can't open <<$log_file>>: $!";
 
 while (<$fh>) {
-    if (m{^\[.*?\]\s+\S+\s+(\S+)\s+\S+\s+\S+\s+(\S+)\s+(\S+)}) {
-        my ($host, $time_ms, $resolver) = ($1, $2, $3);
+    if (m{^\[.*?\]\s+\S+\s+(\S+)\s+\S+\s+(\S+)\s+(\S+)\s+(\S+)}) {
+        my ($host, $status, $time_ms, $resolver) = ($1, $2, $3, $4);
+
+        $status eq 'PASS' or next;
 
         $domains{$host}++;
 
         if ($resolver eq '-') {
             $resolvers{'--cache--'}++;
+            $cache_hits{$host}++;
         }
         else {
             $cache_misses{$host}++;
@@ -68,7 +72,7 @@ while (<$fh>) {
 
 close $fh;
 
-sub display_top ($header, $data) {
+sub make_top ($header, $data) {
 
     my @entries = sort { ($data->{$b} <=> $data->{$a}) || ($a cmp $b) } keys %$data;
     my $total   = sum(values %$data);
@@ -77,18 +81,37 @@ sub display_top ($header, $data) {
         $#entries = $top - 1;
     }
 
-    printf($header, scalar(@entries));
+    my @rows;
+    push @rows, sprintf($header, scalar(@entries));
 
     foreach my $entry (@entries) {
-        printf("%40s  %5d  %.0f%%\n", $entry, $data->{$entry}, $data->{$entry} / $total * 100);
+        push @rows, sprintf("%40s  %5d  %.0f%%", $entry, $data->{$entry}, $data->{$entry} / $total * 100);
     }
+
+    return \@rows;
 }
 
-display_top(":: Top %s resolved domains:\n\n", \%domains);
-display_top("\n:: Top %s cache misses:\n\n",   \%cache_misses);
-display_top("\n:: Top %s resolvers:\n\n",      \%resolvers);
+my @top;
+
+push @top, make_top("Top %s resolved domains", \%domains);
+push @top, make_top("Top %s cache misses",     \%cache_misses);
+push @top, make_top("Top %s cache hits",       \%cache_hits);
+push @top, make_top("Top %s resolvers",        \%resolvers);
+
+while (@top) {
+    my ($x, $y) = splice(@top, 0, 2);
+
+    my ($header1, $header2) = (shift(@$x), shift(@$y));
+    printf("%50s %60s\n\n", "== $header1 == ", " == $header2 == ");
+
+    while (@$x or @$y) {
+        printf("%-60s %s\n", shift(@$x) // '', shift(@$y) // '');
+    }
+
+    print "\n";
+}
 
 if (@durations) {
-    say "\n:: Average resolving time: ", sprintf('%.2f', sum(@durations) / scalar(@durations)), "ms.";
+    say "\n:: Average resolving time: ",                   sprintf('%.2f', sum(@durations) / scalar(@durations)),   "ms.";
     say ":: Overall resolving time (including caching): ", sprintf('%.2f', sum(@durations) / sum(values %domains)), "ms.";
 }
