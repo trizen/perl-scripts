@@ -58,7 +58,7 @@ fermat_overpseudoprimes(
     $prime_limit,    # prime limit
     sub ($n) {
 
-        is_pseudoprime($n, 2) || die "error for n=$n";
+        is_pseudoprime($n, $base) || die "error for n=$n";
 
         if (kronecker($n, 5) == -1) {
             if (is_fibonacci_pseudoprime($n)) {
