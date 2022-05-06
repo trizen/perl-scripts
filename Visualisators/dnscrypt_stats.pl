@@ -11,10 +11,9 @@ use 5.020;
 use strict;
 use warnings;
 
-use experimental qw(signatures);
-
-use Getopt::Long qw(GetOptions);
 use List::Util qw(sum);
+use experimental qw(signatures);
+use Getopt::Long qw(GetOptions);
 
 my $top      = 10;
 my $log_file = '/var/log/dnscrypt-proxy/query.log';

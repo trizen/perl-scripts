@@ -518,6 +518,8 @@ A nice collection of day-to-day Perl scripts.
     * [Fermat factorization method 2](./Math/fermat_factorization_method_2.pl)
     * [Fermat frobenius quadratic primality test](./Math/fermat_frobenius_quadratic_primality_test.pl)
     * [Fermat overpseudoprimes generation](./Math/fermat_overpseudoprimes_generation.pl)
+    * [Fermat pseudoprimes generation](./Math/fermat_pseudoprimes_generation.pl)
+    * [Fermat pseudoprimes generation 2](./Math/fermat_pseudoprimes_generation_2.pl)
     * [Fermat superpseudoprimes generation](./Math/fermat_superpseudoprimes_generation.pl)
     * [Fibonacci closed form](./Math/fibonacci_closed_form.pl)
     * [Fibonacci closed form 2](./Math/fibonacci_closed_form_2.pl)
