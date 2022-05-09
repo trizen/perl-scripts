@@ -31,12 +31,23 @@ sub cyclotomicmod ($n, $x, $m) {
     return (($x - 1) % $m) if (Math::GMPz::Rmpz_cmp_ui($n, 1) == 0);
     return (($x + 1) % $m) if (Math::GMPz::Rmpz_cmp_ui($n, 2) == 0);
 
-    my @factor_exp = factor_exp($n);
-
-    # Special case for x = 1: cyclotomic(n, 1) is the greatest common divisor of the prime factors of n.
+    # Special case for x = 1: cyclotomic(n, 1) is A020500.
     if (Math::GMPz::Rmpz_cmp_ui($x, 1) == 0) {
-        return modint(gcd(map { $_->[0] } @factor_exp), $m);
+        my $k = is_prime_power($n) || return 1;
+        my $p = rootint($n, $k);
+        return modint($p, $m);
     }
+
+    # Special case for x = -1: cyclotomic(n, -1) is A020513.
+    if (Math::GMPz::Rmpz_cmp_si($x, -1) == 0) {
+        Math::GMPz::Rmpz_even_p($n) || return 1;
+        my $o = $n >> 1;
+        my $k = is_prime_power($o) || return 1;
+        my $p = rootint($o, $k);
+        return modint($p, $m);
+    }
+
+    my @factor_exp = factor_exp($n);
 
     # Generate the squarefree divisors of n, along
     # with the number of prime factors of each divisor
