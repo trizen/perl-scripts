@@ -1378,16 +1378,6 @@ sub FLT_find_factor ($n, $base = 2, $reps = 1e4) {
     return undef;
 }
 
-sub _MBE ($a, $b, $c, $n) {
-
-    foreach my $i (0 .. Math::GMPz::Rmpz_sizeinbase($b, 2) - 1) {
-        Math::GMPz::Rmpz_powm($c, $a, $c, $n) if Math::GMPz::Rmpz_tstbit($b, $i);
-        Math::GMPz::Rmpz_powm($a, $a, $a, $n);
-    }
-
-    return $c;
-}
-
 {
     state $state = Math::GMPz::zgmp_randinit_mt_nobless();
     Math::GMPz::zgmp_randseed_ui($state, scalar srand());
@@ -1397,24 +1387,36 @@ sub _MBE ($a, $b, $c, $n) {
         my $t = Math::GMPz::Rmpz_init();
         my $g = Math::GMPz::Rmpz_init();
 
+        my $a = Math::GMPz::Rmpz_init();
+        my $b = Math::GMPz::Rmpz_init();
+        my $c = Math::GMPz::Rmpz_init();
+
         foreach my $k (1 .. $max_k) {
 
             # Deterministic version
-            # Math::GMPz::Rmpz_div_ui($t, $n, $k);
+            # Math::GMPz::Rmpz_div_ui($t, $n, $k+1);
 
             # Randomized version
             Math::GMPz::Rmpz_urandomm($t, $state, $n, 1);
 
-            Math::GMPz::Rmpz_set_ui($g, 1);
+            Math::GMPz::Rmpz_set($a, $t);
+            Math::GMPz::Rmpz_set($b, $t);
+            Math::GMPz::Rmpz_set_ui($c, 1);
 
-            #_MBE($t, $t, $g, $n);
-            _MBE(Math::GMPz::Rmpz_init_set($t), Math::GMPz::Rmpz_init_set($t), $g, $n);
+            foreach my $i (0 .. Math::GMPz::Rmpz_sizeinbase($b, 2) - 1) {
 
-            Math::GMPz::Rmpz_sub_ui($g, $g, 1);
-            Math::GMPz::Rmpz_gcd($g, $g, $n);
+                if (Math::GMPz::Rmpz_tstbit($b, $i)) {
 
-            if (Math::GMPz::Rmpz_cmp_ui($g, 1) > 0 and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
-                return $g;
+                    Math::GMPz::Rmpz_powm($c, $a, $c, $n);
+                    Math::GMPz::Rmpz_sub_ui($g, $c, 1);
+                    Math::GMPz::Rmpz_gcd($g, $g, $n);
+
+                    if (Math::GMPz::Rmpz_cmp_ui($g, 1) > 0 and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
+                        return $g;
+                    }
+                }
+
+                Math::GMPz::Rmpz_powm($a, $a, $a, $n);
             }
         }
 
@@ -2521,7 +2523,7 @@ sub factorize ($n) {
 if (@ARGV) {
     my $n = eval { Math::GMPz->new($ARGV[0]) };
 
-    if ($@) {   # evaluate the expression using PARI/GP
+    if ($@) {    # evaluate the expression using PARI/GP
         chomp(my $str = `echo \Q$ARGV[0]\E | gp -q -f`);
         $n = Math::GMPz->new($str);
     }
