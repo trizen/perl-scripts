@@ -78,13 +78,16 @@ sub chebyshev_factorization ($n, $B, $A = 127) {
         Math::GMPz::Rmpz_mod($x, $x, $n);
     }
 
-    my $g      = Math::GMPz::Rmpz_init();
-    my $lnB    = log($B);
-    my $primes = primes(2, $B);
+    my $g   = Math::GMPz::Rmpz_init();
+    my $lnB = log($B);
 
-    foreach my $p (@$primes) {
+    foreach my $p (@{primes(sqrtint($B))}) {
+        chebyshevTmod($p**int($lnB / log($p)), $x);
+    }
 
-        chebyshevTmod($p**int($lnB / log($p)), $x);    # T_k(x) (mod n)
+    foreach my $p (@{primes(sqrtint($B) + 1, $B)}) {
+
+        chebyshevTmod($p, $x);    # T_k(x) (mod n)
 
         Math::GMPz::Rmpz_sub_ui($g, $x, 1);
         Math::GMPz::Rmpz_gcd($g, $g, $n);
