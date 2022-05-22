@@ -84,7 +84,7 @@ sub make_top ($header, $data) {
     push @rows, sprintf($header, scalar(@entries));
 
     foreach my $entry (@entries) {
-        push @rows, sprintf("%40s  %5d  %.0f%%", $entry, $data->{$entry}, $data->{$entry} / $total * 100);
+        push @rows, sprintf("%40s  %5d  %2.0f%%", $entry, $data->{$entry}, $data->{$entry} / $total * 100);
     }
 
     return \@rows;
