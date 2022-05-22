@@ -806,47 +806,63 @@ sub fast_power_check ($n, $upto) {
     return undef;
 }
 
-sub cyclotomic_polynomial ($n, $x) {
+sub cyclotomic_polynomial ($n, $x, $m) {
 
-    my @d;
-    foreach my $p (map { $_->[0] } factor_exp($n)) {
-        push @d, map { [$_->[0] * $p, $_->[1] + 1] } @d;
-        push @d, [$p, 1];
+    $n = Math::GMPz::Rmpz_init_set_ui($n) if !ref($n);
+    $x = Math::GMPz::Rmpz_init_set_ui($x) if !ref($x);
+
+    # Generate the squarefree divisors of n, along
+    # with the number of prime factors of each divisor
+    my @sd;
+    foreach my $pe (factor_exp($n)) {
+        my ($p) = @$pe;
+
+        $p =
+          ($p < ULONG_MAX)
+          ? Math::GMPz::Rmpz_init_set_ui($p)
+          : Math::GMPz::Rmpz_init_set_str("$p", 10);
+
+        push @sd, map { [$_->[0] * $p, $_->[1] + 1] } @sd;
+        push @sd, [$p, 1];
     }
 
-    push @d, [1, 0];
+    push @sd, [Math::GMPz::Rmpz_init_set_ui(1), 0];
 
-    my $t = Math::GMPz::Rmpz_init();
-    my $u = Math::GMPz::Rmpz_init_set_ui(1);
-    my $v = Math::GMPz::Rmpz_init_set_ui(1);
+    my $prod = Math::GMPz::Rmpz_init_set_ui(1);
 
-    foreach my $pp (@d) {
+    foreach my $pair (@sd) {
+        my ($d, $c) = @$pair;
 
-        Math::GMPz::Rmpz_ui_pow_ui($t, $x, int($n / $pp->[0]));
-        Math::GMPz::Rmpz_sub_ui($t, $t, 1);
+        my $base = Math::GMPz::Rmpz_init();
+        Math::GMPz::Rmpz_divexact($base, $n, $d);
+        Math::GMPz::Rmpz_powm($base, $x, $base, $m);    # x^(n/d) mod m
+        Math::GMPz::Rmpz_sub_ui($base, $base, 1);
 
-        if ($pp->[1] % 2 == 0) {
-            Math::GMPz::Rmpz_mul($u, $u, $t);
+        if ($c % 2 == 1) {
+            Math::GMPz::Rmpz_invert($base, $base, $m) || do {
+                my $g = Math::GMPz::Rmpz_init();
+                Math::GMPz::Rmpz_gcd($g, $base, $m);
+                return $g;
+            };
         }
-        else {
-            Math::GMPz::Rmpz_mul($v, $v, $t);
-        }
+
+        Math::GMPz::Rmpz_mul($prod, $prod, $base);
+        Math::GMPz::Rmpz_mod($prod, $prod, $m);
     }
 
-    Math::GMPz::Rmpz_divexact($u, $u, $v);
-    return $u;
+    return $prod;
 }
 
 sub cyclotomic_factorization ($n) {
 
     my $g          = Math::GMPz::Rmpz_init();
-    my $base_limit = vecmin(1 + logint($n, 2), 500);
+    my $base_limit = vecmin(1 + logint($n, 2), 1000);
 
     for (my $base = $base_limit ; $base >= 2 ; $base -= 1) {
         my $lim = 1 + logint($n, $base);
 
         foreach my $k (1 .. $lim) {
-            my $c = cyclotomic_polynomial($k, $base);
+            my $c = cyclotomic_polynomial($k, $base, $n);
             Math::GMPz::Rmpz_gcd($g, $n, $c);
             if (    Math::GMPz::Rmpz_cmp_ui($g, 1) > 0
                 and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
@@ -1761,8 +1777,10 @@ sub find_small_factors ($rem, $factors) {
         sub {
             my $len_2 = $len * (log(10) / log(2));
             my $iter  = ($len_2 * MBE_ITERATIONS > 1_000) ? int(1_000 / $len_2) : MBE_ITERATIONS;
-            say "=> MBE method ($iter iter)...";
-            MBE_find_factor($rem, $iter);
+            if ($iter > 0) {
+                say "=> MBE method ($iter iter)...";
+                MBE_find_factor($rem, $iter);
+            }
         },
 
         sub {
