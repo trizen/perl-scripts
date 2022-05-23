@@ -481,6 +481,7 @@ A nice collection of day-to-day Perl scripts.
     * [Cube-full numbers](./Math/cube-full_numbers.pl)
     * [Cuboid](./Math/cuboid.pl)
     * [Cyclotomic factorization method](./Math/cyclotomic_factorization_method.pl)
+    * [Cyclotomic factorization method 2](./Math/cyclotomic_factorization_method_2.pl)
     * [Cyclotomic polynomial](./Math/cyclotomic_polynomial.pl)
     * [Definite integral numerical approximation](./Math/definite_integral_numerical_approximation.pl)
     * [Difference of k powers](./Math/difference_of_k_powers.pl)

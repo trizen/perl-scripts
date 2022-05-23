@@ -808,7 +808,6 @@ sub fast_power_check ($n, $upto) {
 
 sub cyclotomic_polynomial ($n, $x, $m) {
 
-    $n = Math::GMPz::Rmpz_init_set_ui($n) if !ref($n);
     $x = Math::GMPz::Rmpz_init_set_ui($x) if !ref($x);
 
     # Generate the squarefree divisors of n, along
@@ -816,12 +815,6 @@ sub cyclotomic_polynomial ($n, $x, $m) {
     my @sd;
     foreach my $pe (factor_exp($n)) {
         my ($p) = @$pe;
-
-        $p =
-          ($p < ULONG_MAX)
-          ? Math::GMPz::Rmpz_init_set_ui($p)
-          : Math::GMPz::Rmpz_init_set_str("$p", 10);
-
         push @sd, map { [$_->[0] * $p, $_->[1] + 1] } @sd;
         push @sd, [$p, 1];
     }
@@ -834,16 +827,13 @@ sub cyclotomic_polynomial ($n, $x, $m) {
         my ($d, $c) = @$pair;
 
         my $base = Math::GMPz::Rmpz_init();
-        Math::GMPz::Rmpz_divexact($base, $n, $d);
-        Math::GMPz::Rmpz_powm($base, $x, $base, $m);    # x^(n/d) mod m
+        my $exp  = CORE::int($n / $d);
+
+        Math::GMPz::Rmpz_powm_ui($base, $x, $exp, $m);    # x^(n/d) mod m
         Math::GMPz::Rmpz_sub_ui($base, $base, 1);
 
         if ($c % 2 == 1) {
-            Math::GMPz::Rmpz_invert($base, $base, $m) || do {
-                my $g = Math::GMPz::Rmpz_init();
-                Math::GMPz::Rmpz_gcd($g, $base, $m);
-                return $g;
-            };
+            Math::GMPz::Rmpz_invert($base, $base, $m) || return $base;
         }
 
         Math::GMPz::Rmpz_mul($prod, $prod, $base);
