@@ -11,7 +11,7 @@ use 5.020;
 use strict;
 use warnings;
 
-use List::Util qw(sum);
+use List::Util qw(sum uniq);
 use experimental qw(signatures);
 use Getopt::Long qw(GetOptions);
 
@@ -45,6 +45,7 @@ my %resolvers;
 my %cache_misses;
 my %cache_hits;
 my @durations;
+my @new_domains;
 
 open my $fh, '<:utf8', $log_file
   or die "Can't open <<$log_file>>: $!";
@@ -64,6 +65,7 @@ while (<$fh>) {
         else {
             $cache_misses{$host}++;
             $resolvers{$resolver}++;
+            push @new_domains, $host;
             push @durations, ($time_ms =~ /^(\d+)/);
         }
     }
@@ -113,4 +115,19 @@ while (@top) {
 if (@durations) {
     say "\n:: Average resolving time: ",                   sprintf('%.2f', sum(@durations) / scalar(@durations)),   "ms.";
     say ":: Overall resolving time (including caching): ", sprintf('%.2f', sum(@durations) / sum(values %domains)), "ms.";
+}
+
+if (@new_domains) {
+
+    @new_domains = reverse @new_domains;
+    @new_domains = uniq(@new_domains);
+
+    if (scalar(@new_domains) > $top) {
+        $#new_domains = $top - 1;
+    }
+
+    if (@new_domains) {
+        my $count = scalar(@new_domains);
+        say ":: Latest $count resolved domains: ", join(' ', @new_domains);
+    }
 }
