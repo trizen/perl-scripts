@@ -44,8 +44,8 @@ use constant {
               PHI_FINDER_ITERATIONS     => 100_000,
               FERMAT_ITERATIONS         => 100_000,
               NEAR_POWER_ITERATIONS     => 1_000,
-              CFRAC_ITERATIONS          => 50_000,
-              ORDER_ITERATIONS          => 200_000,
+              PELL_ITERATIONS           => 50_000,
+              FLT_ITERATIONS            => 200_000,
               HOLF_ITERATIONS           => 100_000,
               MBE_ITERATIONS            => 100,
               MILLER_RABIN_ITERATIONS   => 100,
@@ -1597,7 +1597,7 @@ sub lucas_miller_factor ($n, $j, $tries) {
     return undef;
 }
 
-sub simple_cfrac_find_factor ($n, $max_iter) {
+sub pell_find_factor ($n, $max_iter) {
 
     # Simple version of the continued-fraction factorization method.
     # Efficient for numbers that have factors relatively close to sqrt(n)
@@ -1619,7 +1619,7 @@ sub simple_cfrac_find_factor ($n, $max_iter) {
     my $f2 = Math::GMPz::Rmpz_init_set($x);
     my $f1 = Math::GMPz::Rmpz_init_set_ui(1);
 
-    foreach (1 .. $max_iter) {
+    foreach my $k (1 .. $max_iter) {
 
         # y = r*z - y
         Math::GMPz::Rmpz_mul($t, $r, $z);
@@ -1632,7 +1632,15 @@ sub simple_cfrac_find_factor ($n, $max_iter) {
 
         # r = (x + y) / z
         Math::GMPz::Rmpz_add($t, $x, $y);
-        Math::GMPz::Rmpz_div($r, $t, $z);
+
+        # Floor division: floor((x+y)/z)
+        # Math::GMPz::Rmpz_div($r, $t, $z);
+
+        # Round (x+y)/z to nearest integer
+        Math::GMPz::Rmpz_set($r, $z);
+        Math::GMPz::Rmpz_addmul_ui($r, $t, 2);
+        Math::GMPz::Rmpz_div($r, $r, $z);
+        Math::GMPz::Rmpz_div_2exp($r, $r, 1);
 
         # f1 = (f1 + r*f2) % n
         Math::GMPz::Rmpz_addmul($f1, $f2, $r);
@@ -1755,13 +1763,13 @@ sub find_small_factors ($rem, $factors) {
         },
 
         sub {
-            say "=> CFRAC simple...";
-            simple_cfrac_find_factor($rem, CFRAC_ITERATIONS);
+            say "=> Pell method...";
+            pell_find_factor($rem, PELL_ITERATIONS);
         },
 
         sub {
             say "=> Fermat's little theorem (base 2)...";
-            FLT_find_factor($rem, 2, ($len > 1000) ? 1e4 : ORDER_ITERATIONS);
+            FLT_find_factor($rem, 2, ($len > 1000) ? 1e4 : FLT_ITERATIONS);
         },
 
         sub {
@@ -1775,7 +1783,7 @@ sub find_small_factors ($rem, $factors) {
 
         sub {
             say "=> Fermat's little theorem (base 3)...";
-            FLT_find_factor($rem, 3, ($len > 1000) ? 1e4 : ORDER_ITERATIONS);
+            FLT_find_factor($rem, 3, ($len > 1000) ? 1e4 : FLT_ITERATIONS);
         },
 
         sub {
@@ -2494,7 +2502,10 @@ sub factorize ($n) {
         push @factors, map { factorize($_) } reverse @composite;
         my $rem = $orig / Math::GMPz->new(vecprod(@factors));
 
-        if ($rem > 1) {
+        if (is_prime($rem)) {
+            push @factors, $rem;
+        }
+        elsif ($rem > 1) {
             push @factors, factorize($rem);
         }
 
