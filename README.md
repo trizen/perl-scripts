@@ -444,6 +444,7 @@ A nice collection of day-to-day Perl scripts.
     * [Chernick-carmichael numbers](./Math/chernick-carmichael_numbers.pl)
     * [Chernick-carmichael numbers below limit](./Math/chernick-carmichael_numbers_below_limit.pl)
     * [Chernick-carmichael polynomials](./Math/chernick-carmichael_polynomials.pl)
+    * [Chinese factorization method](./Math/chinese_factorization_method.pl)
     * [Coin change](./Math/coin_change.pl)
     * [Collatz function](./Math/collatz_function.pl)
     * [Complex exponentiation in real numbers](./Math/complex_exponentiation_in_real_numbers.pl)
