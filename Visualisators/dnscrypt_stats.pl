@@ -45,7 +45,9 @@ my %resolvers;
 my %cache_misses;
 my %cache_hits;
 my @durations;
-my @new_domains;
+
+my @recent_domains;
+my @recent_resolvers;
 
 open my $fh, '<:utf8', $log_file
   or die "Can't open <<$log_file>>: $!";
@@ -65,7 +67,8 @@ while (<$fh>) {
         else {
             $cache_misses{$host}++;
             $resolvers{$resolver}++;
-            push @new_domains, $host;
+            push @recent_domains,   $host;
+            push @recent_resolvers, $resolver;
             push @durations, ($time_ms =~ /^(\d+)/);
         }
     }
@@ -92,12 +95,33 @@ sub make_top ($header, $data) {
     return \@rows;
 }
 
+sub make_recent ($msg, $data) {
+
+    my @entries = uniq(reverse @$data);
+
+    if (scalar(@entries) > $top) {
+        $#entries = $top - 1;
+    }
+
+    my @rows;
+    push @rows, sprintf($msg, scalar(@entries));
+
+    foreach my $entry (@entries) {
+        push @rows, sprintf("%50s", $entry);
+    }
+
+    return \@rows;
+}
+
 my @top;
 
 push @top, make_top("Top %s resolved domains", \%domains);
 push @top, make_top("Top %s cache misses",     \%cache_misses);
 push @top, make_top("Top %s cache hits",       \%cache_hits);
 push @top, make_top("Top %s resolvers",        \%resolvers);
+
+push @top, make_recent("Latest %s resolved domains", \@recent_domains);
+push @top, make_recent("Latest %s resolvers",        \@recent_resolvers);
 
 while (@top) {
     my ($x, $y) = splice(@top, 0, 2);
@@ -115,19 +139,4 @@ while (@top) {
 if (@durations) {
     say "\n:: Average resolving time: ",                   sprintf('%.2f', sum(@durations) / scalar(@durations)),   "ms.";
     say ":: Overall resolving time (including caching): ", sprintf('%.2f', sum(@durations) / sum(values %domains)), "ms.";
-}
-
-if (@new_domains) {
-
-    @new_domains = reverse @new_domains;
-    @new_domains = uniq(@new_domains);
-
-    if (scalar(@new_domains) > $top) {
-        $#new_domains = $top - 1;
-    }
-
-    if (@new_domains) {
-        my $count = scalar(@new_domains);
-        say ":: Latest $count resolved domains: ", join(' ', @new_domains);
-    }
 }
