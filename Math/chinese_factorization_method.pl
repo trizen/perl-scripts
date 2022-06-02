@@ -51,10 +51,10 @@ sub CRT_factor ($n) {
 
         my @new_congruences;
 
-        foreach my $d (1 .. $p - 1) {
-            my $t = [$d, $p];
+        foreach my $c (@$congruences) {
+            foreach my $d (1 .. $p - 1) {
+                my $t = [$d, $p];
 
-            foreach my $c (@$congruences) {
                 my $z = chinese([$c, $LCM], $t);
                 my $g = gcd($z, $n);
 
@@ -73,11 +73,11 @@ sub CRT_factor ($n) {
     return 1;
 }
 
-say CRT_factor(43 * 97);                            #=> 97
-say CRT_factor(503 * 863);                          #=> 864
+say CRT_factor(43 * 97);      #=> 97
+say CRT_factor(503 * 863);    #=> 863
 
-say CRT_factor(Math::GMPz->new(2)**32 + 1);         #=> 641
-say CRT_factor(Math::GMPz->new(2)**64 + 1);         #=> 274177
+say CRT_factor(Math::GMPz->new(2)**32 + 1);    #=> 641
+say CRT_factor(Math::GMPz->new(2)**64 + 1);    #=> 274177
 
-say CRT_factor(Math::GMPz->new("273511610089"));    #=> 723907
-say CRT_factor(Math::GMPz->new("24259337155997"));  #=> 4080827
+say CRT_factor(Math::GMPz->new("273511610089"));      #=> 377827
+say CRT_factor(Math::GMPz->new("24259337155997"));    #=> 5944711
