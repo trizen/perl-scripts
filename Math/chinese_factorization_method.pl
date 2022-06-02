@@ -24,10 +24,6 @@
 
 # Then using either the `a` or the `b` values, we can construct a factor of n, using the CRT.
 
-# An optimization would be to consider only values of p that satisfy:
-#   n == q (mod p)
-# where p and q are both prime.
-
 use 5.020;
 use strict;
 use warnings;
@@ -53,11 +49,9 @@ sub CRT_factor ($n) {
             return $p;
         }
 
-        is_prime($r) || next;    # memory optimization
-
         my @new_congruences;
 
-        foreach my $d (divisors($r)) {
+        foreach my $d (1 .. $p - 1) {
             my $t = [$d, $p];
 
             foreach my $c (@$congruences) {
@@ -81,6 +75,9 @@ sub CRT_factor ($n) {
 
 say CRT_factor(43 * 97);                            #=> 97
 say CRT_factor(503 * 863);                          #=> 864
+
 say CRT_factor(Math::GMPz->new(2)**32 + 1);         #=> 641
 say CRT_factor(Math::GMPz->new(2)**64 + 1);         #=> 274177
+
 say CRT_factor(Math::GMPz->new("273511610089"));    #=> 723907
+say CRT_factor(Math::GMPz->new("24259337155997"));  #=> 4080827
