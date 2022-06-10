@@ -1499,6 +1499,12 @@ sub holf_find_factor ($n, $max_iter) {
     return undef;
 }
 
+sub ecm_find_factor ($n, $B1, $ncurves) {
+    my ($p, $q) = Math::Prime::Util::GMP::ecm_factor($n, $B1, $ncurves);
+    return $p if defined($q);
+    return undef;
+}
+
 sub miller_rabin_factor ($n, $tries) {
 
     # Miller-Rabin factorization method.
@@ -1773,6 +1779,11 @@ sub find_small_factors ($rem, $factors) {
         },
 
         sub {
+            say "=> Pollard p-1 (20K)...";
+            pollard_pm1_ntheory_factor($rem, 20_000);
+        },
+
+        sub {
             my $len_2 = $len * (log(10) / log(2));
             my $iter  = ($len_2 * MBE_ITERATIONS > 1_000) ? int(1_000 / $len_2) : MBE_ITERATIONS;
             if ($iter > 0) {
@@ -1813,6 +1824,11 @@ sub find_small_factors ($rem, $factors) {
         },
 
         sub {
+            say "=> ECM (200)...";
+            ecm_find_factor($rem, 200, 4);
+        },
+
+        sub {
             say "=> Williams p±1 (500K)...";
             williams_pp1_ntheory_factor($rem, 500_000);
         },
@@ -1825,6 +1841,11 @@ sub find_small_factors ($rem, $factors) {
         },
 
         sub {
+            say "=> ECM (600)...";
+            ecm_find_factor($rem, 600, 20);
+        },
+
+        sub {
             say "=> Williams p±1 (1M)...";
             williams_pp1_ntheory_factor($rem, 1_000_000);
         },
@@ -1834,6 +1855,11 @@ sub find_small_factors ($rem, $factors) {
                 say "=> Chebyshev p±1 (1M)...";
                 chebyshev_factorization($rem, 1_000_000, int(rand(1e6)) + 2);
             }
+        },
+
+        sub {
+            say "=> ECM (2K)...";
+            ecm_find_factor($rem, 2000, 10);
         },
 
         sub {
@@ -1874,6 +1900,13 @@ sub find_small_factors ($rem, $factors) {
         sub {
             say "=> Williams p±1 (5M)...";
             williams_pp1_ntheory_factor($rem, 5_000_000);
+        },
+
+        sub {
+            if ($len > 40) {
+                say "=> ECM (160K)...";
+                ecm_find_factor($rem, 160_000, 80);
+            }
         },
 
         sub {
