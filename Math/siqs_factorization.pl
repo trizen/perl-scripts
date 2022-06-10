@@ -1774,13 +1774,13 @@ sub find_small_factors ($rem, $factors) {
         },
 
         sub {
-            say "=> Fermat's little theorem (base 2)...";
-            FLT_find_factor($rem, 2, ($len > 1000) ? 1e4 : FLT_ITERATIONS);
+            say "=> Pollard p-1 (20K)...";
+            pollard_pm1_ntheory_factor($rem, 20_000);
         },
 
         sub {
-            say "=> Pollard p-1 (20K)...";
-            pollard_pm1_ntheory_factor($rem, 20_000);
+            say "=> Fermat's little theorem (base 2)...";
+            FLT_find_factor($rem, 2, ($len > 1000) ? 1e4 : FLT_ITERATIONS);
         },
 
         sub {
@@ -1824,8 +1824,8 @@ sub find_small_factors ($rem, $factors) {
         },
 
         sub {
-            say "=> ECM (200)...";
-            ecm_find_factor($rem, 200, 4);
+            say "=> ECM (600)...";
+            ecm_find_factor($rem, 600, 20);
         },
 
         sub {
@@ -1838,11 +1838,6 @@ sub find_small_factors ($rem, $factors) {
                 say "=> Chebyshev p±1 (500K)...";
                 chebyshev_factorization($rem, 500_000, int(rand(1e6)) + 2);
             }
-        },
-
-        sub {
-            say "=> ECM (600)...";
-            ecm_find_factor($rem, 600, 20);
         },
 
         sub {
@@ -2033,7 +2028,9 @@ sub find_small_factors ($rem, $factors) {
             return 1;
         }
 
-        foreach my $i (0 .. $#factorization_methods) {
+        my $end = $#factorization_methods;
+
+        for(my $i = 0; $i <= $end; ++$i) {
 
             my $code = $factorization_methods[$i];
             my $f    = $code->();
@@ -2044,6 +2041,13 @@ sub find_small_factors ($rem, $factors) {
                 unshift(@factorization_methods, splice(@factorization_methods, $i, 1));
 
                 next MAIN_LOOP;
+            }
+            else {
+
+                # Move the unsuccessful factorization method at the bottom
+                push @factorization_methods, splice(@factorization_methods, $i, 1);
+                --$i;
+                --$end;
             }
         }
 
