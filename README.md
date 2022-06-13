@@ -547,6 +547,8 @@ A nice collection of day-to-day Perl scripts.
     * [Function graph](./Math/function_graph.pl)
     * [Function inverse binary search](./Math/function_inverse_binary_search.pl)
     * [Gamma function](./Math/gamma_function.pl)
+    * [Gaussian divisors](./Math/gaussian_divisors.pl)
+    * [Gaussian factors](./Math/gaussian_factors.pl)
     * [Gaussian integers sum](./Math/gaussian_integers_sum.pl)
     * [General binary multiplier](./Math/general_binary_multiplier.pl)
     * [Goldbach conjecture 2n prime](./Math/goldbach_conjecture_2n_prime.pl)
