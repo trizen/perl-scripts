@@ -48,11 +48,11 @@ package SimpleXORCipher {
 
         my $i = my $l = length($str);
 
-        for (1 .. $self->{rounds}) {
+        for my $k (1 .. $self->{rounds}) {
             $str =~ s/(.{$i})(.)/$2$1/sg while (--$i > 0);
-            $str ^= $key;
+            $str ^= Digest::SHA::sha512($k . $key);
             $str =~ s/(.{$i})(.)/$2$1/sg while (++$i < $l);
-            $str ^= $key;
+            $str ^= Digest::SHA::sha512($k . $key);
         }
 
         return $str;
@@ -61,17 +61,17 @@ package SimpleXORCipher {
     sub decrypt ($self, $str) {
 
         my $key = $self->{key};
-        $str ^= $key;
 
         my $i = my $l = length($str);
 
-        for (1 .. $self->{rounds}) {
+        for my $k (reverse(1 .. $self->{rounds})) {
+            $str ^= Digest::SHA::sha512($k . $key);
             $str =~ s/(.)(.{$i})/$2$1/sg while (--$i > 0);
-            $str ^= $key;
+            $str ^= Digest::SHA::sha512($k . $key);
             $str =~ s/(.)(.{$i})/$2$1/sg while (++$i < $l);
-            $str ^= $key;
         }
 
+        $str ^= $key;
         return $str;
     }
 

@@ -17,8 +17,8 @@ use strict;
 use warnings;
 
 use experimental qw(signatures);
-use ntheory qw(random_bytes);
-use Digest::SHA qw(sha512);
+use ntheory      qw(random_bytes);
+use Digest::SHA  qw(sha512);
 
 use constant {
               ROUNDS => 13,    # how many encryption rounds to perform
@@ -39,11 +39,11 @@ sub encrypt ($str, $key) {
 
     my $i = my $l = length($str);
 
-    for (1 .. ROUNDS) {
+    for my $k (1 .. ROUNDS) {
         $str =~ s/(.{$i})(.)/$2$1/sg while (--$i > 0);
-        $str ^= $key;
+        $str ^= sha512($k . $key);
         $str =~ s/(.{$i})(.)/$2$1/sg while (++$i < $l);
-        $str ^= $key;
+        $str ^= sha512($k . $key);
     }
 
     return $str;
@@ -52,17 +52,17 @@ sub encrypt ($str, $key) {
 sub decrypt ($str, $key, $len = 64) {
 
     $key = sha512($key);
-    $str ^= $key;
 
     my $i = my $l = length($str);
 
-    for (1 .. ROUNDS) {
+    for my $k (reverse(1 .. ROUNDS)) {
+        $str ^= sha512($k . $key);
         $str =~ s/(.)(.{$i})/$2$1/sg while (--$i > 0);
-        $str ^= $key;
+        $str ^= sha512($k . $key);
         $str =~ s/(.)(.{$i})/$2$1/sg while (++$i < $l);
-        $str ^= $key;
     }
 
+    $str ^= $key;
     $str = substr($str, 0, $len);
     return $str;
 }
