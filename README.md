@@ -923,6 +923,8 @@ A nice collection of day-to-day Perl scripts.
     * [Binary search](./Search/binary_search.pl)
     * [Binary search ge](./Search/binary_search_ge.pl)
     * [Binary search le](./Search/binary_search_le.pl)
+* Simulation
+    * [100 prisoners riddle](./Simulation/100_prisoners_riddle.pl)
 * Socket
     * [Chat server](./Socket/chat_server.pl)
 * Sort
