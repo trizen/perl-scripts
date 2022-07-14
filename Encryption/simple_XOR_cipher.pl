@@ -41,7 +41,7 @@ sub encrypt ($str, $key) {
 
     for my $k (1 .. ROUNDS) {
         $str =~ s/(.{$i})(.)/$2$1/sg while (--$i > 0);
-        $str ^= sha512($k . $key);
+        $str ^= sha512($key . $k);
         $str =~ s/(.{$i})(.)/$2$1/sg while (++$i < $l);
         $str ^= sha512($k . $key);
     }
@@ -58,7 +58,7 @@ sub decrypt ($str, $key, $len = 64) {
     for my $k (reverse(1 .. ROUNDS)) {
         $str ^= sha512($k . $key);
         $str =~ s/(.)(.{$i})/$2$1/sg while (--$i > 0);
-        $str ^= sha512($k . $key);
+        $str ^= sha512($key . $k);
         $str =~ s/(.)(.{$i})/$2$1/sg while (++$i < $l);
     }
 
