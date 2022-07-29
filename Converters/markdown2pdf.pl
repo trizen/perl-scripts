@@ -4,7 +4,7 @@
 # Date: 29 July 2022
 # https://github.com/trizen
 
-# Markdown to HMTL converter, with syntax highlighting.
+# Markdown to PDF converter, with syntax highlighting.
 
 # Uses the following tools:
 #   md2html     -- for converting markdown to HTML
@@ -44,7 +44,7 @@ EOT
 }
 
 GetOptions(
-           "style=i" => \$style,
+           "style=s" => \$style,
            "title=s" => \$title,
            "h|help"  => sub { usage(0) },
           )
