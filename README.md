@@ -42,6 +42,7 @@ A nice collection of day-to-day Perl scripts.
     * [From hex](./Converters/from_hex.pl)
     * [Html2text](./Converters/html2text.pl)
     * [Json2csv](./Converters/json2csv.pl)
+    * [Markdown2pdf](./Converters/markdown2pdf.pl)
     * [Notepadfree to txt](./Converters/notepadfree_to_txt.pl)
     * [Unicode2ascii](./Converters/unicode2ascii.pl)
     * [Vnt2txt simple](./Converters/vnt2txt_simple.pl)
