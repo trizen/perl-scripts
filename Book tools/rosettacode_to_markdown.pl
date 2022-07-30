@@ -295,7 +295,7 @@ sub to_markdown ($lang_data) {
                 $t =~ s/^(?:\R)+//;
                 $t =~ s/(?:\R)+\z//;
                 $t = join("\n", expand(split(/\R/, $t)));
-                $text .= "\n#### Output:\n";
+                $text .= "\n**Output:**\n";
                 $text .= "```\n$t\n```\n";
             }
         }

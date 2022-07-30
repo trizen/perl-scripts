@@ -43,13 +43,13 @@ my $page = 1;
 my $pdf  = PDF::API2->new;
 
 my $ms_delay     = 3500;                                    # wait some milliseconds for JavaScript to finish
-my $outlines     = $pdf->outlines;
+my $outlines     = $pdf->outline;
 my $cache_dir    = tmpdir();
 my $outline_file = catfile($cache_dir, "outline_$$.txt");
 
 sub end {
     $pdf->preferences(-outlines => 1, -onecolumn => 1);
-    $pdf->saveas('Project Euler.pdf');
+    $pdf->save('Project Euler.pdf');
 }
 
 local $SIG{INT} = \&end;
@@ -76,7 +76,7 @@ for my $i ($p_beg .. $p_end) {
         /dev/stdout`;
 
     if (defined $pdf_data) {
-        my $pdf_obj = PDF::API2->openScalar($pdf_data);
+        my $pdf_obj = PDF::API2->from_string($pdf_data);
 
         my $outline = $outlines->outline;
         if (open my $fh, '<:utf8', $outline_file) {
@@ -91,12 +91,12 @@ for my $i ($p_beg .. $p_end) {
 
         my $start = $page;
 
-        for my $i (1 .. $pdf_obj->pages) {
-            $pdf->importpage($pdf_obj, $i, $page);
+        for my $i (1 .. $pdf_obj->page_count) {
+            $pdf->import_page($pdf_obj, $i, $page);
             ++$page;
         }
 
-        $outline->dest($pdf->openpage($start));
+        $outline->destination($pdf->open_page($start));
     }
 }
 

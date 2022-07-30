@@ -54,7 +54,7 @@ my $input_markdown_file = $ARGV[0] // usage(2);
 my $output_pdf_file     = $ARGV[1] // ($input_markdown_file . ".pdf");
 
 say ":: Converting Markdown to HTML...";
-my $html = `md2html $input_markdown_file`;
+my $html = `md2html --github $input_markdown_file`;
 
 if ($? != 0) {
     die "`md2html` failed with code: $?";
@@ -78,6 +78,8 @@ say ":: Syntax highlighting...";
 
 foreach my $entry (@nodes) {
 
+    ref($entry) || next;
+
     my $code = $entry->as_HTML(undef, undef, {});
 
     if ($entry->tag eq 'pre') {
@@ -94,6 +96,10 @@ foreach my $entry (@nodes) {
                 seek($in_fh, 0, 0);
 
                 run3([@highlight, '--syntax', $lang, '--style', $style], $in_fh, $out_fh);
+
+                if ($? != 0) {
+                    die "`highlight` failed with code: $?";
+                }
 
                 $code = "<pre class=hl>" . do {
                     seek($out_fh, 0, 0);
@@ -186,7 +192,7 @@ if ($? != 0) {
 say ":: Done!"
 
 __DATA__
-/* highlight theme "github.css" from md2pdf */
+/* theme "github.css" from md2pdf */
 
 @font-face {
   font-family: octicons-anchor;
