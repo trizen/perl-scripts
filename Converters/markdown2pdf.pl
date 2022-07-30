@@ -23,8 +23,9 @@ use File::Temp   qw(tempfile);
 use Encode       qw(decode_utf8 encode_utf8);
 use Getopt::Long qw(GetOptions);
 
-my $style = 'github';
-my $title = 'Document';
+my $style     = 'github';
+my $title     = 'Document';
+my $page_size = "A3";
 
 sub usage {
     my ($exit_code) = @_;
@@ -37,6 +38,7 @@ options:
 
     --style=s   : style theme for `highlight` (default: $style)
     --title=s   : title of the PDF file (default: $title)
+    --size=s    : set paper size to: A4, Letter, etc. (default: $page_size)
 
 EOT
 
@@ -46,6 +48,7 @@ EOT
 GetOptions(
            "style=s" => \$style,
            "title=s" => \$title,
+           "size=s"  => \$page_size,
            "h|help"  => sub { usage(0) },
           )
   or die("Error in command line arguments\n");
@@ -179,6 +182,7 @@ system(
       --images
       --enable-external-links
       --load-error-handling ignore),
+    "--page-size", $page_size,
     $tmp_html_file,
     $output_pdf_file,
 );

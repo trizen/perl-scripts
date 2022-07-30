@@ -24,9 +24,10 @@ use Digest::MD5  qw(md5_hex);
 
 my $markdown2pdf = "markdown2pdf.pl";    # path to the `markdown2pdf.pl` script
 
-my $style = 'github';
-my $title = 'Document';
-my $lang  = 'perl';
+my $style     = 'github';
+my $title     = 'Document';
+my $lang      = 'perl';
+my $page_size = "A3";
 
 sub usage {
     my ($exit_code) = @_;
@@ -40,6 +41,7 @@ options:
     --style=s   : style theme for `highlight` (default: $style)
     --title=s   : title of the PDF file (default: $title)
     --lang=s    : language code used for highlighting (default: $lang)
+    --size=s    : set paper size to: A4, Letter, etc. (default: $page_size)
 
 EOT
 
@@ -50,6 +52,7 @@ GetOptions(
            "style=s" => \$style,
            "title=s" => \$title,
            "lang=s"  => \$lang,
+           "size=s"  => \$page_size,
            "h|help"  => sub { usage(0) },
           )
   or die("Error in command line arguments\n");
@@ -135,7 +138,7 @@ print $fh $markdown_content;
 close $fh;
 
 say ":: Converting Markdown to PDF...";
-system($markdown2pdf, "--style", $style, "--title", $title, $markdown_file, $output_pdf_file);
+system($markdown2pdf, "--style", $style, "--title", $title, "--size", $page_size, $markdown_file, $output_pdf_file);
 
 unlink($markdown_file);
 
