@@ -1,10 +1,10 @@
-#~ #!/usr/bin/perl
+#!/usr/bin/perl
 
 # Author: Trizen
 # Date: 30 July 2022
 # https://github.com/trizen
 
-# Gitbook to PDF converter, with syntax highlighting.
+# Code to PDF converter, with syntax highlighting, given a summary file.
 
 # Uses the following tools:
 #   md2html         -- for converting markdown to HTML
@@ -26,6 +26,7 @@ my $markdown2pdf = "markdown2pdf.pl";    # path to the `markdown2pdf.pl` script
 
 my $style = 'github';
 my $title = 'Document';
+my $lang  = 'perl';
 
 sub usage {
     my ($exit_code) = @_;
@@ -38,6 +39,7 @@ options:
 
     --style=s   : style theme for `highlight` (default: $style)
     --title=s   : title of the PDF file (default: $title)
+    --lang=s    : language code used for highlighting (default: $lang)
 
 EOT
 
@@ -47,6 +49,7 @@ EOT
 GetOptions(
            "style=s" => \$style,
            "title=s" => \$title,
+           "lang=s"  => \$lang,
            "h|help"  => sub { usage(0) },
           )
   or die("Error in command line arguments\n");
@@ -79,6 +82,7 @@ sub expand_ul {
             foreach my $x (@{$t->content}) {
 
                 if (!ref($x)) {
+                    $markdown_content .= ("#" x $depth) . ' ' . $x . "\n\n";
                     next;
                 }
 
@@ -98,8 +102,13 @@ sub expand_ul {
 
                         if (open my $fh, '<:utf8', $file) {
                             local $/;
+                            $markdown_content .= ("#" x $depth) . ' ' . $x->content->[0] . "\n\n";
+                            $markdown_content .= "```$lang\n";
                             $markdown_content .= <$fh>;
-                            $markdown_content .= "\n\n";
+                            if (substr($markdown_content, -1) ne "\n") {
+                                $markdown_content .= "\n";
+                            }
+                            $markdown_content .= "```\n\n";
                         }
                         else {
                             warn ":: Cannot open file <<$file>> for reading: $!\n";
@@ -118,17 +127,6 @@ foreach my $entry (@nodes) {
 }
 
 my $markdown_file = "$output_pdf_file.md";
-
-$markdown_content =~ s{^####+ Output:$}{**Output:**}gm;
-
-$markdown_content =~ s{
-    \[(\d+)\]:\s*(https?://.+)
-    \s*\R\s*
-    \#\s*\[(.+?)\]\[\1\]
-}{
-    my $t = 'a'.md5_hex(encode_utf8($2));
-    "[". $t ."]: $2\n\n# [$3][$t]";
-}gex;
 
 open my $fh, '>:utf8', $markdown_file
   or die "Can't open file <<$markdown_file>> for writing: $!";
