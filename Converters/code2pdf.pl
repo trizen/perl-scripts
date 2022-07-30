@@ -172,7 +172,7 @@ my %language_codes = (
     py3tb        => ['.py3tb'],
     pytb         => ['.pytb'],
     python       => ['.py', '.pyw', '.sc', 'SConstruct', 'SConscript', '.tac'],
-    ruby         => ['.rb', '.rbw', 'Rakefile', '.rake', '.gemspec', '.rbx', '.duby', '.sf', '.sm'],
+    ruby         => ['.rb', '.rbw', 'Rakefile', '.rake', '.gemspec', '.rbx', '.duby'],
     rconsole     => ['.Rout'],
     rebol        => ['.r', '.r3'],
     redcode      => ['.cw'],
@@ -262,12 +262,19 @@ sub expand_ul {
                             next;
                         }
 
-                        if (open my $fh, '<:utf8', $file) {
-                            local $/;
+                        if (-d $file) {
+                            $markdown_content .= ("#" x $depth) . ' ' . $x->content->[0] . "\n\n";
+                            next;
+                        }
+
+                        if (-T $file and open(my $fh, '<:utf8', $file)) {
                             my $lang_code = determine_language_code($file);
                             $markdown_content .= ("#" x $depth) . ' ' . $x->content->[0] . "\n\n";
                             $markdown_content .= "```$lang_code\n";
-                            $markdown_content .= <$fh>;
+                            $markdown_content .= do {
+                                local $/;
+                                <$fh>;
+                            };
                             if (substr($markdown_content, -1) ne "\n") {
                                 $markdown_content .= "\n";
                             }
