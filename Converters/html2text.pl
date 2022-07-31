@@ -22,8 +22,8 @@ use warnings;
 use experimental qw(signatures);
 
 use HTML::TreeBuilder 5 qw(-weak);
-use HTML::FormatText qw();
-use Getopt::Long qw(GetOptions);
+use HTML::FormatText    qw();
+use Getopt::Long        qw(GetOptions);
 
 binmode(STDIN,  ':utf8');
 binmode(STDOUT, ':utf8');
@@ -33,6 +33,8 @@ sub extract_html ($source) {
     if ($source =~ m{^https?://}) {
 
         require LWP::UserAgent;
+        require HTTP::Message;
+
         my $lwp = LWP::UserAgent->new(
                                      env_proxy => 1,
                                      timeout   => 15,
@@ -40,6 +42,9 @@ sub extract_html ($source) {
                                      cookie_jar => {},
                                      ssl_opts   => {verify_hostname => 0},
         );
+
+        state $accepted_encodings = HTTP::Message::decodable();
+        $lwp->default_header('Accept-Encoding' => $accepted_encodings);
 
         my $resp = $lwp->get($source);
         $resp->is_success or return;
