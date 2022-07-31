@@ -92,9 +92,16 @@ foreach my $entry (@nodes) {
         if ($t->tag eq 'code') {
             my $class = $t->attr('class');
             if (defined($class) and $class =~ /^language-(.+)/) {
-                my $lang = $1;
-                my $str  = join(' ', @{$t->content});
 
+                my $lang    = $1;
+                my $content = $t->content() // next;
+
+                if (ref($content) ne 'ARRAY') {
+                    warn ":: Unexpected entry: <<$content>>\n";
+                    next;
+                }
+
+                my $str = join(' ', @{$content});
                 print $in_fh encode_utf8($str);
                 seek($in_fh, 0, 0);
 
