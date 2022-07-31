@@ -60,12 +60,13 @@ sub intensity {
 my @matrix;
 my %color_cache;
 my %intensity_cache;
+
 foreach my $image (@ARGV) {
 
-    say "** Processing file `$image'...";
+    say "** Processing file: $image";
 
     my $gd = GD::Image->new($image) // do {
-        warn "** Can't load file `$image'. Skipping...\n";
+        warn "** Can't load file <<$image>>. Skipping...\n";
         next;
     };
 
@@ -95,12 +96,14 @@ foreach my $image (@ARGV) {
 }
 
 @matrix || die "error: No image has been processed!\n";
-say "** Creating the output image `$output_file'...";
+say "** Creating the output image: $output_file";
 
 my $image = GD::Image->new($#matrix + 1, $#{$matrix[0]} + 1);
 foreach my $x (0 .. $#matrix) {
+    my $row = $matrix[$x] // next;
     foreach my $y (0 .. $#{$matrix[0]}) {
-        my $color = $image->colorAllocate(@{$matrix[$x][$y]});
+        my $entry = $row->[$y] // next;
+        my $color = $image->colorAllocate(@{$entry});
         $image->setPixel($x, $y, $color);
     }
 }

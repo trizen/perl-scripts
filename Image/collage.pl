@@ -5,7 +5,7 @@
 # Date: 23 March 2021
 # https://github.com/trizen
 
-# Create a college from a collection of images.
+# Create a collage from a collection of images.
 
 use 5.010;
 use strict;
@@ -31,7 +31,7 @@ my $height = undef;
 sub usage {
     my ($code) = @_;
     print <<"EOT";
-usage: $0 [options] [photos_dir]
+usage: $0 [options] [files / directories]
 
 options:
     --size=i   : the size of a mosaic square (default: $size)

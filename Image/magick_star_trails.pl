@@ -14,7 +14,7 @@ use autodie;
 use warnings;
 
 use Image::Magick;
-use List::Util qw(min max);
+use List::Util   qw(min max);
 use Getopt::Long qw(GetOptions);
 
 my $output_file   = 'output.png';
@@ -75,13 +75,13 @@ my $lightness_function = $brightness{$brightness_f};
 my @matrix;
 foreach my $image (@ARGV) {
 
-    say "** Processing file `$image'...";
+    say "** Processing file: $image";
 
     my $img = Image::Magick->new;
     my $err = $img->Read($image);
 
     if ($err) {
-        warn "** Can't load file `$image' ($err). Skipping...\n";
+        warn "** Can't load file <<$image>> ($err). Skipping...\n";
         next;
     }
 
@@ -121,15 +121,17 @@ foreach my $image (@ARGV) {
 }
 
 @matrix || die "error: No image has been processed!\n";
-say "** Creating the output image `$output_file'...";
+say "** Creating the output image: $output_file";
 
 my $image = Image::Magick->new;
 $image->Set(size => @matrix . 'x' . @{$matrix[0]});
 $image->ReadImage('canvas:white');
 
 foreach my $x (0 .. $#matrix) {
+    my $row = $matrix[$x] // next;
     foreach my $y (0 .. $#{$matrix[0]}) {
-        $image->SetPixel(x => $x, y => $y, color => $matrix[$x][$y]);
+        my $entry = $row->[$y] // next;
+        $image->SetPixel(x => $x, y => $y, color => $entry);
     }
 }
 
