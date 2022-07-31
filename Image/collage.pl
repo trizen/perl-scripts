@@ -12,17 +12,17 @@ use strict;
 use autodie;
 use warnings;
 
-use GD qw();
-use POSIX qw(ceil);
-use List::Util qw(min);
-use File::Find qw(find);
+use GD           qw();
+use POSIX        qw(ceil);
+use List::Util   qw(min);
+use File::Find   qw(find);
 use Getopt::Long qw(GetOptions);
 
 GD::Image->trueColor(1);
 
-my $size        = 100;
+my $size        = 350;
 my $wcrop       = 1 / 2;           # width crop ratio
-my $hcrop       = 1 / 6;           # height crop ratio
+my $hcrop       = 1 / 5;           # height crop ratio
 my $output_file = 'collage.png';
 
 my $width  = undef;
@@ -42,7 +42,7 @@ options:
     --output=s : output filename (default: $output_file)
 
 example:
-    perl $0 --size=20 ~/Pictures
+    $0 --size=20 ~/Pictures
 EOT
     exit($code);
 }
@@ -166,7 +166,7 @@ foreach my $y (0 .. $height / $size - 1) {
 open my $fh, '>:raw', $output_file;
 print $fh (
              $output_file =~ /\.png\z/i
-           ? $collage->png
-           : $collage->jpeg
+           ? $collage->png(9)
+           : $collage->jpeg(90)
           );
 close $fh;
