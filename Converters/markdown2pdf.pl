@@ -130,6 +130,8 @@ foreach my $entry (@nodes) {
     $html_content .= $code;
 }
 
+$title = decode_utf8($title);
+
 my $final_html = <<"HTML";
 <!DOCTYPE html>
 <html>
