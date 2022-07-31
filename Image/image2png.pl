@@ -1,7 +1,8 @@
 #!/usr/bin/perl
 
 # Author: Trizen
-# 19 December 2021
+# Date: 19 December 2021
+# Edit: 31 July 2022
 # https://github.com/trizen
 
 # Convert any images to PNG, using the Gtk3::Gdk::Pixbuf library.
@@ -14,10 +15,10 @@ use warnings;
 
 use experimental qw(signatures);
 
-use Gtk3 qw(-init);
+use Gtk3                  qw(-init);
 use File::Spec::Functions qw(catfile);
-use File::Basename qw(dirname basename);
-use Getopt::Long qw(GetOptions);
+use File::Basename        qw(dirname basename);
+use Getopt::Long          qw(GetOptions);
 
 my %CONFIG = (
               output_dir   => undef,
@@ -26,11 +27,12 @@ my %CONFIG = (
               scale_factor => undef,
               flipx        => undef,
               flipy        => undef,
+              remove       => 0,
              );
 
 sub help ($exit_code = 0) {
     print <<"EOT";
-Usage: $0 [OPTIONS] [<SVG files>]
+Usage: $0 [OPTIONS] [<images>]
 
   -w, --width=WIDTH     Width of output image in pixels
   -h, --height=HEIGHT   Height of output image in pixels
@@ -40,6 +42,7 @@ Usage: $0 [OPTIONS] [<SVG files>]
   --flipx       Flip X coordinates of image
   --flipy       Flip Y coordinates of image
 
+  --remove!     Remove original files
   --help        Give this help list
 EOT
 
@@ -53,13 +56,14 @@ GetOptions(
            "s|scale=f"     => \$CONFIG{scale_factor},
            "flipx"         => \$CONFIG{flipx},
            "flipy"         => \$CONFIG{flipy},
+           "remove!"       => \$CONFIG{remove},
            'help'          => sub { help(0) },
           )
   or help(1);
 
 @ARGV || help(2);
 
-sub svg2png ($input_file, $output_file = undef) {
+sub image2png ($input_file, $output_file = undef) {
 
     my $pixbuf;
 
@@ -120,7 +124,15 @@ sub svg2png ($input_file, $output_file = undef) {
 foreach my $file (@ARGV) {
     say ":: Processing: $file";
     if (-e $file) {
-        svg2png($file) || warn "Cannot convert file <<$file>>! Skipping...\n";
+        if (image2png($file)) {
+            if ($CONFIG{remove}) {
+                say ":: Removing original file...";
+                unlink($file) or warn "Cannot remove file <<$file>>: $!\n";
+            }
+        }
+        else {
+            warn "Cannot convert file <<$file>>! Skipping...\n";
+        }
     }
     else {
         warn "File <<$file>> does not exist! Skipping...\n";
