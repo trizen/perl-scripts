@@ -15,7 +15,7 @@
 #    Then it changes the last bit of each value to one bit from the data to be encoded.
 
 # Q: How does the decoding work?
-# A: The first 32 bits from the encoded PNG image, form the length of the encoded data.
+# A: The first 32 bits from the first 32 pixels of the image, form the length of the encoded data.
 #    Then the remaining bits (3 bits from each pixel) are collected to form the encoded data.
 
 # The script also does transparent Deflate compression and decompression of the encoded data.

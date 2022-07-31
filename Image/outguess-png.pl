@@ -2,21 +2,22 @@
 
 # Author: Trizen
 # Date: 06 February 2022
+# Edit: 31 July 2022
 # https://github.com/trizen
 
-# Hide arbitrary data into the pixels of a PNG image, storing 1 bit in each pixel color.
+# Hide arbitrary data into the pixels of a PNG image, storing 3 bits in each pixel color.
 
 # Concept inspired by outguess:
 #   https://github.com/resurrecting-open-source-projects/outguess
 #   https://uncovering-cicada.fandom.com/wiki/OutGuess
 
 # Q: How does it work?
-# A: The script uses the GD library to read the index color of each pixel, which ranges from 0 to 2^24-1.
-#    Then it changes the last bit of this value to one bit from the data to be encoded.
+# A: The script uses the GD library to read the RGB color values of each pixel.
+#    Then it changes the last bit of each value to one bit from the data to be encoded.
 
 # Q: How does the decoding work?
 # A: The first 32 bits from the first 32 pixels of the image, form the length of the encoded data.
-#    Then the remaining bits (1 bit from each pixel) are collected to form the encoded data.
+#    Then the remaining bits (3 bits from each pixel) are collected to form the encoded data.
 
 # The script also does transparent Deflate compression and decompression of the encoded data.
 
@@ -26,7 +27,7 @@ use warnings;
 
 no warnings 'once';
 
-use GD qw();
+use GD           qw();
 use Getopt::Long qw(GetOptions);
 use experimental qw(signatures);
 
@@ -40,6 +41,8 @@ sub encode_data ($data, $img_file) {
     my $image = GD::Image->new($img_file)
       or die "Can't open image <<$img_file>>: $!";
 
+    $image = $image->newFromJpegData($image->jpeg(100));
+
     require IO::Compress::RawDeflate;
     IO::Compress::RawDeflate::rawdeflate(\$data, \my $compressed_data)
       or die "rawdeflate failed: $IO::Compress::RawDeflate::RawDeflateError\n";
@@ -49,7 +52,7 @@ sub encode_data ($data, $img_file) {
     my $bin = unpack("B*", $data);
     my ($width, $height) = $image->getBounds();
 
-    my $maximum_data_size = ($width * $height - 32) >> 3;
+    my $maximum_data_size = 3 * (($width * $height - 32) >> 3);
     my $data_size         = length($bin) >> 3;
 
     if ($data_size == 0) {
@@ -77,10 +80,13 @@ sub encode_data ($data, $img_file) {
 
   OUTER: foreach my $y (0 .. $height - 1) {
         foreach my $x (0 .. $width - 1) {
+
             my $index = $image->getPixel($x, $y);
 
-            if (--$size >= 0) {
-                $index = (($index >> 1) << 1) | chop($bin);
+            if ($size > 0) {
+                my ($red, $green, $blue) = $image->rgb($index);
+                $index = $image->colorResolve(map { (($_ >> 1) << 1) | (chop($bin) || 0) } ($red, $green, $blue));
+                $size -= 3;
             }
             else {
                 last OUTER;
@@ -105,22 +111,25 @@ sub decode_data ($img_file) {
 
     my $length        = $width * $height;
     my $find_length   = 1;
-    my $max_data_size = $length - 4;
+    my $max_data_size = 3 * ($length - 4);
 
   OUTER: foreach my $y (0 .. $height - 1) {
         foreach my $x (0 .. $width - 1) {
             my $index = $image->getPixel($x, $y);
 
-            if (++$size <= $length) {
+            if ($size < $length) {
 
-                $bin .= $index & 1;
+                my ($red, $green, $blue) = $image->rgb($index);
 
-                if ($find_length and $size == 32) {
+                $bin .= join('', map { $_ & 1 } ($red, $green, $blue));
+                $size += 3;
 
-                    $length      = unpack("N*", pack("B*", $bin));
+                if ($find_length and $size >= 32) {
+
+                    $length      = unpack("N*", pack("B*", substr($bin, 0, 32)));
                     $find_length = 0;
-                    $size        = 0;
-                    $bin         = '';
+                    $size        = length($bin) - 32;
+                    $bin         = substr($bin, 32);
 
                     if ($length > $max_data_size or $length == 0) {
                         die "No hidden data was found in this image!\n";
@@ -136,7 +145,7 @@ sub decode_data ($img_file) {
         }
     }
 
-    my $data = pack("B*", $bin);
+    my $data = pack("B*", substr($bin, 0, $length));
 
     require IO::Uncompress::RawInflate;
     IO::Uncompress::RawInflate::rawinflate(\$data, \my $uncompressed)
