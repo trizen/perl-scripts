@@ -188,6 +188,7 @@ system(
       --enable-smart-shrinking
       --images
       --enable-external-links
+      --enable-local-file-access
       --load-error-handling ignore),
     "--page-size", $page_size,
     $tmp_html_file,
