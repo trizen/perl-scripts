@@ -17,9 +17,9 @@ use 5.010;
 use strict;
 use warnings;
 
-use IPC::Open3 qw(open3);
-use Encode qw(decode_utf8);
-use Getopt::Long qw(GetOptions);
+use IPC::Open2      qw(open2);
+use Encode          qw(encode_utf8 decode_utf8);
+use Getopt::Long    qw(GetOptions);
 use Algorithm::Diff qw(LCS_length);
 use Perl::Tokenizer qw(perl_tokens);
 
@@ -101,22 +101,25 @@ if ($strict_level >= 4) {
 sub deparse {
     my ($code) = @_;
 
-    local (*CHLD_IN, *CHLD_OUT, *CHLD_ERR);
-    my $pid = open3(\*CHLD_IN, \*CHLD_OUT, \*CHLD_ERR, $^X, '-MO=Deparse', '-T');
+    local (*CHLD_IN, *CHLD_OUT);
+    my $pid = open2(\*CHLD_OUT, \*CHLD_IN, $^X, '-MO=Deparse', '-T');
 
-    binmode(CHLD_IN, ':utf8');
-    print CHLD_IN "$code\n\cD";
+    print CHLD_IN encode_utf8($code);
     close(CHLD_IN);
 
-    #waitpid($pid, 0);
+    my $deparsed = do {
+        local $/;
+        decode_utf8(<CHLD_OUT>);
+    };
+
+    waitpid($pid, 0);
+
     my $child_exit_status = $? >> 8;
     if ($child_exit_status != 0) {
         die "B::Deparse failed with code: $child_exit_status\n";
     }
 
-    decode_utf8(
-                do { local $/; <CHLD_OUT> }
-               );
+    return $deparsed;
 }
 
 sub get_tokens {
@@ -153,7 +156,7 @@ foreach my $script (@ARGV) {
         next;
     }
 
-    my $len = LCS_length(\@types, \@d_types) - abs(@types - @d_types);
+    my $len   = LCS_length(\@types, \@d_types) - abs(@types - @d_types);
     my $score = (100 - ($len / @types * 100));
 
     if ($score >= 60) {

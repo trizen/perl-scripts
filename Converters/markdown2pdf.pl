@@ -2,6 +2,7 @@
 
 # Author: Trizen
 # Date: 29 July 2022
+# Edit: 07 August 2022
 # https://github.com/trizen
 
 # Markdown to PDF converter, with syntax highlighting.
@@ -18,14 +19,13 @@ use warnings;
 use open IO => ':utf8', ':std';
 use HTML::TreeBuilder 5 ('-weak');
 
-use IPC::Run3    qw(run3);
-use File::Temp   qw(tempfile);
+use IPC::Open2   qw(open2);
 use Encode       qw(decode_utf8 encode_utf8);
 use Getopt::Long qw(GetOptions);
 
 my $style     = 'github';
 my $title     = 'Document';
-my $page_size = "A3";
+my $page_size = 'A3';
 
 sub usage {
     my ($exit_code) = @_;
@@ -72,9 +72,6 @@ my @nodes = $tree->disembowel();
 
 my @highlight = qw(highlight --fragment -t 4 --no-trailing-nl -O html --encoding utf-8);
 
-my ($in_fh,  $tmp_in_file)  = tempfile();
-my ($out_fh, $tmp_out_file) = tempfile();
-
 my $html_content = '';
 
 say ":: Syntax highlighting...";
@@ -101,28 +98,27 @@ foreach my $entry (@nodes) {
                     next;
                 }
 
-                my $str = join(' ', @{$content});
-                print $in_fh encode_utf8($str);
-                seek($in_fh, 0, 0);
+                my $pid = open2((my $OUT_FH), (my $IN_FH), @highlight, '--syntax', $lang, '--style', $style);
 
-                run3([@highlight, '--syntax', $lang, '--style', $style], $in_fh, $out_fh);
+                if (!defined($pid)) {
+                    die ":: Can't execute the `highlight` command!";
+                }
+
+                print $IN_FH encode_utf8(join(' ', @{$content}));
+                close $IN_FH;
+
+                $code = "<pre class=hl>" . do {
+                    local $/;
+                    decode_utf8(<$OUT_FH>);
+                  }
+                  . "</pre>";
+
+                close $OUT_FH;
+                waitpid($pid, 0);
 
                 if ($? != 0) {
                     die "`highlight` failed with code: $?";
                 }
-
-                $code = "<pre class=hl>" . do {
-                    seek($out_fh, 0, 0);
-                    local $/;
-                    decode_utf8(<$out_fh>);
-                  }
-                  . "</pre>";
-
-                seek($in_fh,  0, 0);
-                seek($out_fh, 0, 0);
-
-                truncate($in_fh,  0);
-                truncate($out_fh, 0);
             }
         }
     }
@@ -197,7 +193,7 @@ system(
     $output_pdf_file,
 );
 
-unlink($tmp_in_file, $tmp_out_file, $tmp_html_file);
+unlink($tmp_html_file);
 
 if ($? != 0) {
     die "`wkhtmltopdf` failed with code: $?";
