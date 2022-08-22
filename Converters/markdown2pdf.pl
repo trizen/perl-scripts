@@ -8,7 +8,7 @@
 # Markdown to PDF converter, with syntax highlighting.
 
 # Uses the following tools:
-#   md2html     -- for converting markdown to HTML
+#   md2html     -- for converting markdown to HTML (provided by md4c)
 #   highlight   -- for syntax highlighting
 #   wkhtmltopdf -- for converting HTML to PDF
 
@@ -57,7 +57,7 @@ my $input_markdown_file = $ARGV[0] // usage(2);
 my $output_pdf_file     = $ARGV[1] // ($input_markdown_file . ".pdf");
 
 say ":: Converting Markdown to HTML...";
-my $html = `md2html --github $input_markdown_file`;
+my $html = `md2html --github \Q$input_markdown_file\E`;
 
 if ($? != 0) {
     die "`md2html` failed with code: $?";
@@ -136,7 +136,7 @@ my $final_html = <<"HTML";
 <title>$title</title>
 HTML
 
-my $css = `highlight --print-style -O html --style $style --stdout`;
+my $css = `highlight --print-style -O html --style \Q$style\E --stdout`;
 
 $final_html .= <<'HTML';
 <style type="text/css">
