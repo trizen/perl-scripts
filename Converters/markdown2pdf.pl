@@ -17,7 +17,9 @@ use strict;
 use warnings;
 
 use open IO => ':utf8', ':std';
+
 use HTML::TreeBuilder 5 ('-weak');
+use HTML::Entities qw(encode_entities);
 
 use IPC::Open2   qw(open2);
 use Encode       qw(decode_utf8 encode_utf8);
@@ -126,7 +128,7 @@ foreach my $entry (@nodes) {
     $html_content .= $code;
 }
 
-$title = decode_utf8($title);
+$title = encode_entities(decode_utf8($title));
 
 my $final_html = <<"HTML";
 <!DOCTYPE html>
