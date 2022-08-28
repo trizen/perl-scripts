@@ -28,7 +28,7 @@ sub carmichael_numbers_in_range ($A, $B, $k, $callback) {
 
             forprimes {
                 my $t = mulint($m, $_);
-                if (modint($t-1, $_-1) == 0 and modint($t-1, $lambda) == 0) {
+                if (modint($t-1, $lambda) == 0 and modint($t-1, $_-1) == 0) {
                     $callback->($t);
                 }
             } $u, $v;
@@ -38,19 +38,13 @@ sub carmichael_numbers_in_range ($A, $B, $k, $callback) {
 
         my $s = rootint(divint($B, $m), $k);
 
-        while ($p <= $s) {
+        for (my $r; $p <= $s; $p = $r) {
 
-            my $r = next_prime($p);
+            $r = next_prime($p);
             my $t = mulint($m, $p);
             my $L = lcm($lambda, $p-1);
 
-            if ($p >= 3 and gcd($L, $t) == 1) {
-                ## ok
-            }
-            else {
-                $p = $r;
-                next;
-            }
+            ($p >= 3 and gcd($L, $t) == 1) or next;
 
             # gcd($t, euler_phi($t)) == 1 or die "$t: not cyclic";
 
@@ -60,10 +54,8 @@ sub carmichael_numbers_in_range ($A, $B, $k, $callback) {
             if ($u <= $v) {
                 __SUB__->($t, $L, $r, $k - 1, (($k==2 && $r>$u) ? $r : $u), $v);
             }
-
-            $p = $r;
         }
-    }->(1, 1, 2, $k);
+    }->(1, 1, 3, $k);
 }
 
 # Generate all the 5-Carmichael numbers in the range [100, 10^8]
