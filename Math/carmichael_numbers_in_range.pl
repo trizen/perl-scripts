@@ -8,6 +8,10 @@
 
 # See also:
 #   https://en.wikipedia.org/wiki/Almost_prime
+#   https://trizenx.blogspot.com/2020/08/pseudoprimes-construction-methods-and.html
+
+# PARI/GP program (in range):
+#   carmichael(A, B, k) = A=max(A, vecprod(primes(k+1))\2); (f(m, l, p, k, u=0, v=0) = my(list=List()); if(k==1, forprime(p=u, v, my(t=m*p); if((t-1)%l == 0 && (t-1)%(p-1) == 0, listput(list, t))), forprime(q = p, sqrtnint(B\m, k), my(t = m*q); my(L=lcm(l, q-1)); if(gcd(L, t) == 1, my(u=ceil(A/t), v=B\t); if(u <= v, my(r=nextprime(q+1)); if(k==2 && r>u, u=r); list=concat(list, f(t, L, r, k-1, u, v)))))); list); vecsort(Vec(f(1, 1, 3, k)));
 
 use 5.020;
 use ntheory qw(:all);
