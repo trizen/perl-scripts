@@ -17,7 +17,7 @@ use experimental qw(signatures);
 
 sub divceil ($x,$y) {   # ceil(x/y)
     my $q = divint($x, $y);
-    (mulint($q, $y) == $x) ? $q : ($q+1);
+    ($q*$y == $x) ? $q : ($q+1);
 }
 
 sub squarefree_fermat_overpseudoprimes_in_range ($A, $B, $k, $base, $callback) {
@@ -29,9 +29,8 @@ sub squarefree_fermat_overpseudoprimes_in_range ($A, $B, $k, $base, $callback) {
         if ($k == 1) {
 
             forprimes {
-                my $t = mulint($m, $_);
-                if (modint($t-1, $lambda) == 0 and znorder($base, $_) == $lambda) {
-                    $callback->($t);
+                if (($m*$_ - 1)%$lambda == 0 and znorder($base, $_) == $lambda) {
+                    $callback->($m*$_);
                 }
             } $u, $v;
 
@@ -48,9 +47,9 @@ sub squarefree_fermat_overpseudoprimes_in_range ($A, $B, $k, $base, $callback) {
             my $L = znorder($base, $p);
             $L == $lambda or $lambda == 1 or next;
 
-            my $t = mulint($m, $p);
-            gcd($L, $t) == 1 or next;
+            gcd($L, $m) == 1 or next;
 
+            my $t = $m*$p;
             my $u = divceil($A, $t);
             my $v = divint($B, $t);
 
