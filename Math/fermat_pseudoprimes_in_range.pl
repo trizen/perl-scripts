@@ -14,8 +14,11 @@
 #   https://en.wikipedia.org/wiki/Prime_omega_function
 #   https://trizenx.blogspot.com/2020/08/pseudoprimes-construction-methods-and.html
 
-# PARI/GP program (in range):
+# PARI/GP program (version 1):
 #   fermat_psp(A, B, k, base=2) = A=max(A, vecprod(primes(k))); (f(m, l, p, j) = my(list=List()); forprime(q=p, sqrtnint(B\m, j), if(base%q != 0, my(z=znorder(Mod(base, q)), L=lcm(l, z)); if(gcd(L, m)==1, my(v=m*q, r=nextprime(q+1)); while(v <= B, if(j==1, if(v>=A && if(k==1, !isprime(v), 1) && (v-1)%l == 0 && (v-1)%z == 0 && Mod(base, v)^(v-1) == 1, listput(list, v)), if(v*r <= B, list=concat(list, f(v, l, r, j-1)))); v *= q)))); list); vecsort(Vec(f(1, 1, 2, k)));
+
+# PARI/GP program (version 2):
+#   fermat_psp(A, B, k, base) = A=max(A, vecprod(primes(k))); (f(m, l, p, j) = my(list=List()); forprime(q=p, sqrtnint(B\m, j), if(base%q != 0, my(v=m*q, t=q, r=nextprime(q+1)); while(v <= B, my(z=znorder(Mod(base, t)), L=lcm(l, z)); if(gcd(L, v) == 1, if(j==1, if(v>=A && if(k==1, !isprime(v), 1) && (v-1)%L == 0, listput(list, v)), if(v*r <= B, list=concat(list, f(v, L, r, j-1)))), break); v *= q; t *= q))); list); vecsort(Vec(f(1, 1, 2, k)));
 
 use 5.020;
 use warnings;
@@ -42,16 +45,19 @@ sub fermat_pseudoprimes ($A, $B, $k, $base, $callback) {
             my $z = znorder($base, $p);
             my $L = lcm($lambda, $z);
 
-            gcd($L, $m) == 1 or next;
+            gcd($L, $m) == '1' or next;
 
-            for (my $v = $m * $p ; $v <= $B ; $v *= $p) {
+            for (my ($q, $v) = ($p + 0, $m * $p) ; $v <= $B ; ($q, $v) = ($q * $p, $v * $p)) {
+
+                my $z = znorder($base, $q);
+                my $L = lcm($lambda, $z);
+
+                gcd($L, $v) == 1 or last;
 
                 if ($j == 1) {
                     $v >= $A or next;
                     $k == 1 and is_prime($v) and next;
-                    ($v - 1) % $lambda == 0        or next;
-                    ($v - 1) % $z == 0             or next;
-                    powmod($base, $v - 1, $v) == 1 or next;
+                    ($v - 1) % $L == 0 or next;
                     $callback->($v);
                     next;
                 }
