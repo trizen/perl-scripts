@@ -28,11 +28,25 @@ sub squarefree_fermat_overpseudoprimes_in_range ($A, $B, $k, $base, $callback) {
 
         if ($k == 1) {
 
-            forprimes {
-                if (($m*$_ - 1)%$lambda == 0 and znorder($base, $_) == $lambda) {
-                    $callback->($m*$_);
+            if (divint($v-$u, $lambda) > prime_count($u, $v)) {
+                forprimes {
+                    if (($m*$_ - 1)%$lambda == 0 and powmod($base, $lambda, $_) == 1 and znorder($base, $_) == $lambda) {
+                        $callback->($m*$_);
+                    }
+                } $u, $v;
+                return;
+            }
+
+            my $w = $lambda * divceil($u-1, $lambda);
+
+            for(; $w <= $v; $w += $lambda) {
+                if (is_prime($w+1) and powmod($base, $lambda, $w+1) == 1) {
+                    my $p = $w+1;
+                    if (($m*$p - 1)%$lambda == 0 and znorder($base, $p) == $lambda) {
+                        $callback->($m*$p);
+                    }
                 }
-            } $u, $v;
+            }
 
             return;
         }
