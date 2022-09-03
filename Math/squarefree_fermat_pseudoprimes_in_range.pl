@@ -14,6 +14,8 @@
 #   squarefree_fermat(A, B, k, base=2) = A=max(A, vecprod(primes(k))); (f(m, l, p, k, u=0, v=0) = my(list=List()); if(k==1, forprime(p=u, v, if(base%p != 0, my(t=m*p); if((t-1)%l == 0 && (t-1)%znorder(Mod(base, p)) == 0, listput(list, t)))), forprime(q = p, sqrtnint(B\m, k), my(t = m*q); if (base%q != 0, my(L=lcm(l, znorder(Mod(base, q)))); if(gcd(L, t) == 1, my(u=ceil(A/t), v=B\t); if(u <= v, my(r=nextprime(q+1)); if(k==2 && r>u, u=r); list=concat(list, f(t, L, r, k-1, u, v))))))); list); vecsort(Vec(f(1, 1, 2, k)));
 
 use 5.020;
+use warnings;
+
 use ntheory qw(:all);
 use experimental qw(signatures);
 
@@ -22,7 +24,7 @@ sub divceil ($x,$y) {   # ceil(x/y)
     ($q*$y == $x) ? $q : ($q+1);
 }
 
-sub fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
+sub squarefree_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
 
     $A = vecmax($A, pn_primorial($k));
 
@@ -70,7 +72,7 @@ my $base = 2;
 my $from = 100;
 my $upto = 1e8;
 
-my @arr; fermat_pseudoprimes_in_range($from, $upto, $k, $base, sub ($n) { push @arr, $n });
+my @arr; squarefree_fermat_pseudoprimes_in_range($from, $upto, $k, $base, sub ($n) { push @arr, $n });
 
 say join(', ', sort { $a <=> $b } @arr);
 

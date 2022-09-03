@@ -2,6 +2,7 @@
 
 # Daniel "Trizen" Șuteu
 # Date: 28 August 2022
+# Edit: 03 September 2022
 # https://github.com/trizen
 
 # Generate all the squarefree Fermat overpseudoprimes to given a base with n prime factors in a given range [a,b]. (not in sorted order)
@@ -12,12 +13,21 @@
 
 use 5.020;
 use warnings;
+
 use ntheory qw(:all);
 use experimental qw(signatures);
+use Memoize qw(memoize);
+
+memoize('inverse_znorder_primes');
 
 sub divceil ($x,$y) {   # ceil(x/y)
     my $q = divint($x, $y);
     ($q*$y == $x) ? $q : ($q+1);
+}
+
+sub inverse_znorder_primes($base, $lambda) {
+    my %seen;
+    grep {!$seen{$_}++} factor(subint(powint($base, $lambda), 1));
 }
 
 sub squarefree_fermat_overpseudoprimes_in_range ($A, $B, $k, $base, $callback) {
@@ -28,7 +38,18 @@ sub squarefree_fermat_overpseudoprimes_in_range ($A, $B, $k, $base, $callback) {
 
         if ($k == 1) {
 
-            if (divint($v-$u, $lambda) > prime_count($u, $v)) {
+            if ($lambda <= 135) {
+                foreach my $p (inverse_znorder_primes($base, $lambda)) {
+                    next if $p < $u;
+                    next if $p > $v;
+                    if (($m*$p - 1)%$lambda == 0 and znorder($base, $p) == $lambda) {
+                        $callback->($m*$p);
+                    }
+                }
+                return;
+            }
+
+            if (prime_count_lower($v)-prime_count_lower($u) < divint($v-$u, $lambda)) {
                 forprimes {
                     if (($m*$_ - 1)%$lambda == 0 and powmod($base, $lambda, $_) == 1 and znorder($base, $_) == $lambda) {
                         $callback->($m*$_);
@@ -74,16 +95,16 @@ sub squarefree_fermat_overpseudoprimes_in_range ($A, $B, $k, $base, $callback) {
     }->(1, 1, 2, $k);
 }
 
-# Generate all the squarefree Fermat overpseudoprimes to base 2 with 3 prime factors in the range [13421773, 4123462001]
+# Generate all the squarefree Fermat overpseudoprimes to base 2 with 3 prime factors in the range [13421773, 41234620010]
 
 my $k    = 3;
 my $base = 2;
 my $from = 13421773;
-my $upto = 4123462001;
+my $upto = 41234620010;
 
 my @arr; squarefree_fermat_overpseudoprimes_in_range($from, $upto, $k, $base, sub ($n) { push @arr, $n });
 
 say join(', ', sort { $a <=> $b } @arr);
 
 __END__
-13421773, 464955857, 536870911, 1220114377, 1541955409, 2454285751, 3435973837
+13421773, 464955857, 536870911, 1220114377, 1541955409, 2454285751, 3435973837, 5256967999, 5726579371, 7030714813, 8493511669, 8538455017, 8788016089, 10545166433, 13893138041, 17112890881, 18723407341, 19089110641, 21335883193, 23652189937, 37408911097

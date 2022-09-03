@@ -26,7 +26,7 @@ use warnings;
 use ntheory      qw(:all);
 use experimental qw(signatures);
 
-sub fermat_pseudoprimes ($A, $B, $k, $base, $callback) {
+sub fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
 
     $A = vecmax($A, pn_primorial($k));
 
@@ -73,7 +73,7 @@ my $base = 3;
 my @arr;
 foreach my $k (1 .. 100) {
     last if pn_primorial($k) > $upto;
-    fermat_pseudoprimes($from, $upto, $k, $base, sub ($n) { push @arr, $n });
+    fermat_pseudoprimes_in_range($from, $upto, $k, $base, sub ($n) { push @arr, $n });
 }
 
 say join(', ', sort { $a <=> $b } @arr);
