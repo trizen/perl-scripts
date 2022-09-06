@@ -868,6 +868,7 @@ A nice collection of day-to-day Perl scripts.
     * [Squarefree divisors](./Math/squarefree_divisors.pl)
     * [Squarefree fermat overpseudoprimes in range](./Math/squarefree_fermat_overpseudoprimes_in_range.pl)
     * [Squarefree fermat pseudoprimes in range](./Math/squarefree_fermat_pseudoprimes_in_range.pl)
+    * [Squarefree lucas U pseudoprimes in range](./Math/squarefree_lucas_U_pseudoprimes_in_range.pl)
     * [Stern brocot encoding](./Math/stern_brocot_encoding.pl)
     * [Stern brocot sequence](./Math/stern_brocot_sequence.pl)
     * [Sum factorial](./Math/sum_factorial.pl)
