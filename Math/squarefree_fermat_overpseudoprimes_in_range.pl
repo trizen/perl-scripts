@@ -36,7 +36,7 @@ sub iterate_over_primes ($x, $y, $base, $lambda, $callback) {
         foreach my $p (inverse_znorder_primes($base, $lambda)) {
 
             next if $p < $x;
-            next if $p > $y;
+            last if $p > $y;
 
             #znorder($base, $p) == $lambda or next;
 

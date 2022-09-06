@@ -525,6 +525,7 @@ A nice collection of day-to-day Perl scripts.
     * [Fermat factorization method 2](./Math/fermat_factorization_method_2.pl)
     * [Fermat frobenius quadratic primality test](./Math/fermat_frobenius_quadratic_primality_test.pl)
     * [Fermat overpseudoprimes generation](./Math/fermat_overpseudoprimes_generation.pl)
+    * [Fermat overpseudoprimes in range](./Math/fermat_overpseudoprimes_in_range.pl)
     * [Fermat pseudoprimes generation](./Math/fermat_pseudoprimes_generation.pl)
     * [Fermat pseudoprimes generation 2](./Math/fermat_pseudoprimes_generation_2.pl)
     * [Fermat pseudoprimes generation 3](./Math/fermat_pseudoprimes_generation_3.pl)
