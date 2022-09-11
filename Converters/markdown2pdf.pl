@@ -21,7 +21,8 @@ use open IO => ':utf8', ':std';
 use HTML::TreeBuilder 5 ('-weak');
 use HTML::Entities qw(encode_entities);
 
-use IPC::Open2   qw(open2);
+use IPC::Run3    qw(run3);
+use File::Temp   qw(tempfile);
 use Encode       qw(decode_utf8 encode_utf8);
 use Getopt::Long qw(GetOptions);
 
@@ -74,6 +75,9 @@ my @nodes = $tree->disembowel();
 
 my @highlight = qw(highlight --fragment -t 4 --no-trailing-nl -O html --encoding utf-8);
 
+my ($in_fh,  $tmp_in_file)  = tempfile();
+my ($out_fh, $tmp_out_file) = tempfile();
+
 my $html_content = '';
 
 say ":: Syntax highlighting...";
@@ -100,27 +104,28 @@ foreach my $entry (@nodes) {
                     next;
                 }
 
-                my $pid = open2((my $OUT_FH), (my $IN_FH), @highlight, '--syntax', $lang, '--style', $style);
+                my $str = join(' ', @{$content});
+                print $in_fh encode_utf8($str);
+                seek($in_fh, 0, 0);
 
-                if (!defined($pid)) {
+                run3([@highlight, '--syntax', $lang, '--style', $style], $in_fh, $out_fh);
+
+                if ($? != 0) {
                     die ":: Can't execute the `highlight` command!";
                 }
 
-                print $IN_FH encode_utf8(join(' ', @{$content}));
-                close $IN_FH;
-
                 $code = "<pre class=hl>" . do {
+                    seek($out_fh, 0, 0);
                     local $/;
-                    decode_utf8(<$OUT_FH>);
+                    decode_utf8(<$out_fh>);
                   }
                   . "</pre>";
 
-                close $OUT_FH;
-                waitpid($pid, 0);
+                seek($in_fh,  0, 0);
+                seek($out_fh, 0, 0);
 
-                if ($? != 0) {
-                    die "`highlight` failed with code: $?";
-                }
+                truncate($in_fh,  0);
+                truncate($out_fh, 0);
             }
         }
     }
@@ -195,7 +200,7 @@ system(
     $output_pdf_file,
 );
 
-unlink($tmp_html_file);
+unlink($tmp_in_file, $tmp_out_file, $tmp_html_file);
 
 if ($? != 0) {
     die "`wkhtmltopdf` failed with code: $?";
