@@ -439,6 +439,7 @@ A nice collection of day-to-day Perl scripts.
     * [Carmichael factorization method generalized](./Math/carmichael_factorization_method_generalized.pl)
     * [Carmichael numbers generation erdos method](./Math/carmichael_numbers_generation_erdos_method.pl)
     * [Carmichael numbers in range](./Math/carmichael_numbers_in_range.pl)
+    * [Carmichael numbers in range from prime factors](./Math/carmichael_numbers_in_range_from_prime_factors.pl)
     * [Carmichael numbers random](./Math/carmichael_numbers_random.pl)
     * [Carmichael strong fermat pseudoprimes in range](./Math/carmichael_strong_fermat_pseudoprimes_in_range.pl)
     * [Cartesian product iter](./Math/cartesian_product_iter.pl)
