@@ -4,7 +4,7 @@
 # Date: 06 September 2022
 # https://github.com/trizen
 
-# Generate all the k-omega Fermat overpseudoprimes to given a base in a given range [a,b]. (not in sorted order)
+# Generate all the k-omega Fermat overpseudoprimes to a given base in a given range [a,b]. (not in sorted order)
 
 # Definition:
 #   k-omega primes are numbers n such that omega(n) = k.

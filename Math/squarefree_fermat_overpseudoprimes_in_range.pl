@@ -5,7 +5,7 @@
 # Edit: 04 September 2022
 # https://github.com/trizen
 
-# Generate all the squarefree Fermat overpseudoprimes to given a base with n prime factors in a given range [a,b]. (not in sorted order)
+# Generate all the squarefree Fermat overpseudoprimes to a given base with n prime factors in a given range [a,b]. (not in sorted order)
 
 # See also:
 #   https://en.wikipedia.org/wiki/Almost_prime

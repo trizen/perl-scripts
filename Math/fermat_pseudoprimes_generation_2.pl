@@ -2,9 +2,10 @@
 
 # Author: Daniel "Trizen" Șuteu
 # Date: 06 May 2022
+# Edit: 12 November 2022
 # https://github.com/trizen
 
-# A new algorithm for generating Fermat pseudoprimes to any given base.
+# A new algorithm for generating Fermat pseudoprimes to multiple bases.
 
 # See also:
 #   https://oeis.org/A001567 -- Fermat pseudoprimes to base 2, also called Sarrus numbers or Poulet numbers.
@@ -18,17 +19,20 @@ use 5.020;
 use warnings;
 use experimental qw(signatures);
 
-use Math::AnyNum qw(prod);
 use ntheory qw(:all);
 
-sub fermat_pseudoprimes ($base, $k_limit, $prime_limit, $callback) {
+sub fermat_pseudoprimes ($bases, $k_limit, $prime_limit, $callback) {
 
     my %common_divisors;
+    my $bases_lcm = lcm(@$bases);
 
-    for (my $p = 2; $p <= $prime_limit; $p = next_prime($p)) {
-        my $z = znorder($base, $p) // next;
+    for (my $p = 2 ; $p <= $prime_limit ; $p = next_prime($p)) {
+        next if ($bases_lcm % $p == 0);
+        my @orders = map { znorder($_, $p) } @$bases;
         for my $k (1 .. $k_limit) {
-            push @{$common_divisors{$k * $z}}, $p;
+            foreach my $o (@orders) {
+                push @{$common_divisors{$k * $o}}, $p;
+            }
         }
     }
 
@@ -40,7 +44,7 @@ sub fermat_pseudoprimes ($base, $k_limit, $prime_limit, $callback) {
 
         foreach my $k (2 .. $l) {
             forcomb {
-                my $n = prod(@{$arr}[@_]);
+                my $n = vecprod(@{$arr}[@_]);
                 $callback->($n) if !$seen{$n}++;
             } $l, $k;
         }
@@ -49,16 +53,16 @@ sub fermat_pseudoprimes ($base, $k_limit, $prime_limit, $callback) {
 
 my @pseudoprimes;
 
-my $base        = 2;        # generate Fermat pseudoprimes to this base
-my $k_limit     = 10;       # largest k multiple of the znorder(base, p)
-my $prime_limit = 1000;     # sieve primes up to this limit
+my @bases       = (2, 3);    # generate Fermat pseudoprimes to these bases
+my $k_limit     = 10;        # largest k multiple of the znorder(base, p)
+my $prime_limit = 500;       # sieve primes up to this limit
 
 fermat_pseudoprimes(
-    $base,           # base
-    $k_limit,        # k limit
-    $prime_limit,    # prime limit
+    \@bases,                 # bases
+    $k_limit,                # k limit
+    $prime_limit,            # prime limit
     sub ($n) {
-        if (is_pseudoprime($n, $base)) {
+        if (is_pseudoprime($n, @bases)) {
             push @pseudoprimes, $n;
         }
     }

@@ -10,6 +10,13 @@
 #   https://en.wikipedia.org/wiki/Almost_prime
 #   https://trizenx.blogspot.com/2020/08/pseudoprimes-construction-methods-and.html
 
+=for comment
+
+# PARI/GP program:
+carmichael_strong_psp(A, B, k, base) = A=max(A, vecprod(primes(k+1))\2); (f(m, l, p, k, k_exp, congr, u=0, v=0) = my(list=List()); if(k==1, forprime(q=u, v, my(t=m*q); if((t-1)%l == 0 && (t-1)%(q-1) == 0, my(tv=valuation(q-1, 2)); if(tv > k_exp && Mod(base, q)^(((q-1)>>tv)<<k_exp) == congr, listput(list, t)))), forprime(q = p, sqrtnint(B\m, k), if(base%q != 0, my(tv=valuation(q-1, 2)); if(tv > k_exp && Mod(base, q)^(((q-1)>>tv)<<k_exp) == congr, my(L=lcm(l, q-1)); if(gcd(L, m) == 1, my(t = m*q, u=ceil(A/t), v=B\t); if(u <= v, my(r=nextprime(q+1)); if(k==2 && r>u, u=r); list=concat(list, f(t, L, r, k-1, k_exp, congr, u, v)))))))); list); my(res=f(1, 1, 3, k, 0, 1)); for(v=0, logint(B, 2), res=concat(res, f(1, 1, 3, k, v, -1))); vecsort(Vec(res));
+
+=cut
+
 use 5.020;
 use warnings;
 
@@ -21,7 +28,7 @@ sub divceil ($x,$y) {   # ceil(x/y)
     ($q*$y == $x) ? $q : ($q+1);
 }
 
-sub carmichael_numbers_in_range ($A, $B, $k, $base, $callback) {
+sub carmichael_strong_fermat_in_range ($A, $B, $k, $base, $callback) {
 
     $A = vecmax($A, pn_primorial($k+1)>>1);
 
@@ -87,7 +94,7 @@ my $base = 2;
 my $from = 1;
 my $upto = 1e8;
 
-my @arr; carmichael_numbers_in_range($from, $upto, $k, $base, sub ($n) { push @arr, $n });
+my @arr; carmichael_strong_fermat_in_range($from, $upto, $k, $base, sub ($n) { push @arr, $n });
 
 say join(', ', sort { $a <=> $b } @arr);
 
