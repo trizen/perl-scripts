@@ -44,18 +44,14 @@ sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
             }
 
             my $valuation = valuation($p - 1, 2);
-            $valuation > $k_exp                                                    or next;
-            powmod($base, (($p - 1) >> $valuation) << $k_exp, $p) == ($congr % $p) or next;
+            $valuation > $k_exp                                                   or next;
+            powmod($base, ($p - 1) >> ($valuation - $k_exp), $p) == ($congr % $p) or next;
 
             for (my ($q, $v) = ($p + 0, $m * $p) ; $v <= $B ; ($q, $v) = ($q * $p, $v * $p)) {
 
                 my $L = lcm($lambda, znorder($base, $q));
 
                 gcd($L, $v) == 1 or last;
-
-                my $valuation = valuation($q - 1, 2);
-                $valuation > $k_exp                                                    or next;
-                powmod($base, (($q - 1) >> $valuation) << $k_exp, $q) == ($congr % $q) or next;
 
                 if ($j == 1) {
                     $v >= $A or next;

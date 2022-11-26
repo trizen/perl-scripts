@@ -37,7 +37,7 @@ sub squarefree_strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback
                 my $t = $m * $_;
                 if (($t - 1) % $lambda == 0 and ($t - 1) % znorder($base, $_) == 0) {
                     my $valuation = valuation($_ - 1, 2);
-                    if ($valuation > $k_exp and powmod($base, (($_ - 1) >> $valuation) << $k_exp, $_) == ($congr % $_)) {
+                    if ($valuation > $k_exp and powmod($base, ($_ - 1) >> ($valuation - $k_exp), $_) == ($congr % $_)) {
                         $callback->($t);
                     }
                 }
@@ -54,8 +54,8 @@ sub squarefree_strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback
             $base % $p == 0 and next;
 
             my $valuation = valuation($p - 1, 2);
-            $valuation > $k_exp                                                    or next;
-            powmod($base, (($p - 1) >> $valuation) << $k_exp, $p) == ($congr % $p) or next;
+            $valuation > $k_exp                                                   or next;
+            powmod($base, ($p - 1) >> ($valuation - $k_exp), $p) == ($congr % $p) or next;
 
             my $z = znorder($base, $p);
             my $L = lcm($lambda, $z);

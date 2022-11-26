@@ -333,6 +333,7 @@ A nice collection of day-to-day Perl scripts.
     * [Outguess-png](./Image/outguess-png.pl)
     * [Outguess-png-imager](./Image/outguess-png-imager.pl)
     * [Photo mosaic from images](./Image/photo_mosaic_from_images.pl)
+    * [Qoi decoder](./Image/qoi_decoder.pl)
     * [Remove sensitive exif tags](./Image/remove_sensitive_exif_tags.pl)
     * [Sharp 2x zoom](./Image/sharp_2x_zoom.pl)
     * [Visualize binary](./Image/visualize_binary.pl)

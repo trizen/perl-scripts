@@ -1322,11 +1322,11 @@ sub phi_finder_factor ($n, $max_iter) {
     my $L = logint($n, 2);
     my $i = 0;
 
-    while (Math::GMPz::Rmpz_scan1($E0, 0) < Math::GMPz::Rmpz_sizeinbase($E0, 2) - 1) {
+    # Repeat until E0 is a power of 2
+    while (Math::GMPz::Rmpz_popcount($E0) != 1) {
         Math::GMPz::Rmpz_mul_2exp($E0, $E0, $L);
         Math::GMPz::Rmpz_mod($E0, $E0, $n);
-        ++$i;
-        return undef if ($i > $max_iter);
+        return undef if (++$i > $max_iter);
     }
 
     my $t = 0;
