@@ -31,15 +31,12 @@ sub qoi_encoder ($img) {
     say "[$width, $height, $channels, $colorspace]";
 
     my @bytes = unpack('C*', 'qoif');
-    my $index = 4;
 
     push @bytes, unpack('C4', pack('N', $width));
     push @bytes, unpack('C4', pack('N', $height));
 
-    $index += 8;
-
-    $bytes[$index++] = $channels;
-    $bytes[$index++] = $colorspace;
+    push @bytes, $channels;
+    push @bytes, $colorspace;
 
     my $run     = 0;
     my @px      = (0, 0, 0, 255);
@@ -61,25 +58,25 @@ sub qoi_encoder ($img) {
                 and $px[3] == $prev_px[3]) {
 
                 if (++$run == 62) {
-                    $bytes[$index++] = QOI_OP_RUN | ($run - 1);
+                    push @bytes, QOI_OP_RUN | ($run - 1);
                     $run = 0;
                 }
             }
             else {
 
                 if ($run > 0) {
-                    $bytes[$index++] = (QOI_OP_RUN | ($run - 1));
+                    push @bytes, (QOI_OP_RUN | ($run - 1));
                     $run = 0;
                 }
 
                 my $hash     = ($px[0] * 3 + $px[1] * 5 + $px[2] * 7 + $px[3] * 11) % 64;
-                my @index_px = @{$colors[$hash]};
+                my $index_px = $colors[$hash];
 
-                if (    $px[0] == $index_px[0]
-                    and $px[1] == $index_px[1]
-                    and $px[2] == $index_px[2]
-                    and $px[3] == $index_px[3]) {    # OP INDEX
-                    $bytes[$index++] = $hash;
+                if (    $px[0] == $index_px->[0]
+                    and $px[1] == $index_px->[1]
+                    and $px[2] == $index_px->[2]
+                    and $px[3] == $index_px->[3]) {    # OP INDEX
+                    push @bytes, $hash;
                 }
                 else {
 
@@ -100,7 +97,7 @@ sub qoi_encoder ($img) {
                             and $vg < 2
                             and $vb > -3
                             and $vb < 2) {
-                            $bytes[$index++] = QOI_OP_DIFF | (($vr + 2) << 4) | (($vg + 2) << 2) | ($vb + 2);
+                            push(@bytes, QOI_OP_DIFF | (($vr + 2) << 4) | (($vg + 2) << 2) | ($vb + 2));
                         }
                         elsif (    $vg_r > -9
                                and $vg_r < 8
@@ -108,22 +105,15 @@ sub qoi_encoder ($img) {
                                and $vg < 32
                                and $vg_b > -9
                                and $vg_b < 8) {
-                            $bytes[$index++] = QOI_OP_LUMA | ($vg + 32);
-                            $bytes[$index++] = (($vg_r + 8) << 4) | ($vg_b + 8);
+                            push(@bytes, QOI_OP_LUMA | ($vg + 32));
+                            push(@bytes, (($vg_r + 8) << 4) | ($vg_b + 8));
                         }
                         else {
-                            $bytes[$index++] = QOI_OP_RGB;
-                            $bytes[$index++] = $px[0];
-                            $bytes[$index++] = $px[1];
-                            $bytes[$index++] = $px[2];
+                            push(@bytes, QOI_OP_RGB, $px[0], $px[1], $px[2]);
                         }
                     }
                     else {
-                        $bytes[$index++] = QOI_OP_RGBA;
-                        $bytes[$index++] = $px[0];
-                        $bytes[$index++] = $px[1];
-                        $bytes[$index++] = $px[2];
-                        $bytes[$index++] = $px[3];
+                        push(@bytes, QOI_OP_RGBA, $px[0], $px[1], $px[2], $px[3]);
                     }
                 }
             }

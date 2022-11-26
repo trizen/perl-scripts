@@ -339,6 +339,8 @@ A nice collection of day-to-day Perl scripts.
     * [Sharp 2x zoom](./Image/sharp_2x_zoom.pl)
     * [Visualize binary](./Image/visualize_binary.pl)
     * [Webp2png](./Image/webp2png.pl)
+    * [Zuper image decoder](./Image/zuper_image_decoder.pl)
+    * [Zuper image encoder](./Image/zuper_image_encoder.pl)
 * JAPH
     * [Alien japh](./JAPH/alien_japh.pl)
     * [Alpha ascii japh](./JAPH/alpha_ascii_japh.pl)
