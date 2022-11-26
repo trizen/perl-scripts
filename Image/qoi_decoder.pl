@@ -116,7 +116,7 @@ sub qoi_decoder ($bytes) {
 
     foreach my $row (0 .. $height - 1) {
         my @line = splice(@pixels, 0, 4 * $width);
-        $img->setscanline(y => $row++, pixels => pack("C*", @line));
+        $img->setscanline(y => $row, pixels => pack("C*", @line));
     }
 
     return $img;
