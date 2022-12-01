@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Implementation of the QOI decoder (generating a PNG file).
+# Implementation of the QHI decoder (QOI+Huffman coding), generating a PNG file.
 
 # See also:
 #   https://qoiformat.org/
@@ -12,30 +12,35 @@ use warnings;
 use Imager;
 use experimental qw(signatures);
 
-sub qoi_decoder ($bytes) {
+sub huffman_decode ($bits, $hash) {
+    local $" = '|';
+    $bits =~ s/(@{[sort { length($a) <=> length($b) } keys %{$hash}]})/$hash->{$1}/gr;    # very fast
+}
+
+sub qhi_decoder ($bytes) {
 
     my sub invalid() {
-        die "Not a QOIF image";
+        die "Not a QHIF image";
     }
 
     my $index = 0;
 
-    pack('C4', map { $bytes->[$index++] } 1 .. 4) eq 'qoif' or invalid();
+    join('', map { $bytes->[$index++] } 1 .. 4) eq 'qhif' or invalid();
 
-    my $width  = unpack('N', pack('C4', map { $bytes->[$index++] } 1 .. 4));
-    my $height = unpack('N', pack('C4', map { $bytes->[$index++] } 1 .. 4));
+    my $width  = unpack('N', join('', map { $bytes->[$index++] } 1 .. 4));
+    my $height = unpack('N', join('', map { $bytes->[$index++] } 1 .. 4));
 
-    my $channels   = $bytes->[$index++];
-    my $colorspace = $bytes->[$index++];
+    my $channels   = ord $bytes->[$index++];
+    my $colorspace = ord $bytes->[$index++];
 
     ($width > 0 and $height > 0) or invalid();
     ($channels == 3   or $channels == 4)   or invalid();
     ($colorspace == 0 or $colorspace == 1) or invalid();
 
-    pop(@$bytes) == 0x01 or invalid();
+    ord(pop(@$bytes)) == 0x01 or invalid();
 
     for (1 .. 7) {
-        pop(@$bytes) == 0x00 or invalid();
+        ord(pop(@$bytes)) == 0x00 or invalid();
     }
 
     say "[$width, $height, $channels, $colorspace]";
@@ -51,6 +56,33 @@ sub qoi_decoder ($bytes) {
 
     my @pixels;
     my @colors = (map { [0, 0, 0, 0] } 1 .. 64);
+
+    my $dict_len = ord($bytes->[$index++]) + 1;
+
+    my %code_lens;
+    for (1 .. $dict_len) {
+        my $c = ord($bytes->[$index++]);
+        my $l = ord($bytes->[$index++]) + 1;
+        $code_lens{$c} = $l;
+    }
+
+    my $codes     = '';
+    my $codes_len = unpack('N', join('', map { $bytes->[$index++] } 1 .. 4));
+
+    while (length($codes) < $codes_len) {
+        $codes .= unpack('B*', $bytes->[$index++]);
+    }
+
+    my %rev_hash;
+    foreach my $i (sort { $a <=> $b } keys %code_lens) {
+        my $code = substr($codes, 0, $code_lens{$i}, '');
+        $rev_hash{$code} = chr($i);
+    }
+
+    my $enc_len = unpack('N', join('', map { $bytes->[$index++] } 1 .. 4));
+    splice(@$bytes, 0, $index);
+    @$bytes = unpack("C*", huffman_decode(unpack("B" . $enc_len, join('', @$bytes)), \%rev_hash));
+    $index  = 0;
 
     while (1) {
 
@@ -116,19 +148,19 @@ sub qoi_decoder ($bytes) {
 }
 
 @ARGV || do {
-    say STDERR "usage: $0 [input.qoi] [output.png]";
+    say STDERR "usage: $0 [input.qhi] [output.png]";
     exit(2);
 };
 
 my $in_file  = $ARGV[0];
 my $out_file = $ARGV[1] // "$in_file.png";
 
-my @bytes = do {
+my @chars = do {
     open(my $fh, '<:raw', $in_file)
       or die "Can't open file <<$in_file>> for reading: $!";
     local $/;
-    unpack("C*", scalar <$fh>);
+    split(//, scalar <$fh>);
 };
 
-my $img = qoi_decoder(\@bytes);
+my $img = qhi_decoder(\@chars);
 $img->write(file => $out_file, type => 'png');

@@ -1,6 +1,8 @@
 #!/usr/bin/perl
 
-# Implementation of the QOI encoder.
+# Variation of the QOI encoder, combined with Huffman coding.
+
+# QHIf = Quite Huffman Image format. :)
 
 # See also:
 #   https://qoiformat.org/
@@ -12,7 +14,41 @@ use warnings;
 use Imager;
 use experimental qw(signatures);
 
-sub qoi_encoder ($img) {
+# produce encode and decode dictionary from a tree
+sub walk ($node, $code, $h, $rev_h) {
+
+    my $c = $node->[0];
+    if (ref $c) { walk($c->[$_], $code . $_, $h, $rev_h) for (0, 1) }
+    else        { $h->{$c} = $code; $rev_h->{$code} = $c }
+
+    return ($h, $rev_h);
+}
+
+# make a tree, and return resulting dictionaries
+sub mktree ($bytes) {
+    my (%freq, @nodes);
+
+    $freq{$_}++ for @$bytes;
+    @nodes = map { [$_, $freq{$_}] } keys %freq;
+
+    do {    # poor man's priority queue
+        @nodes = sort { $a->[1] <=> $b->[1] } @nodes;
+        my ($x, $y) = splice(@nodes, 0, 2);
+        push @nodes, [[$x, $y], $x->[1] + $y->[1]];
+    } while (@nodes > 1);
+
+    walk($nodes[0], '', {}, {});
+}
+
+sub huffman_encode ($bytes, $dict) {
+    my $enc = '';
+    for (@$bytes) {
+        $enc .= $dict->{$_} // die "bad char: $_";
+    }
+    return $enc;
+}
+
+sub qhi_encoder ($img, $out_fh) {
 
     use constant {
                   QOI_OP_RGB  => 0b1111_1110,
@@ -29,13 +65,15 @@ sub qoi_encoder ($img) {
 
     say "[$width, $height, $channels, $colorspace]";
 
-    my @bytes = unpack('C*', 'qoif');
+    my @header = unpack('C*', 'qhif');
 
-    push @bytes, unpack('C4', pack('N', $width));
-    push @bytes, unpack('C4', pack('N', $height));
+    push @header, unpack('C4', pack('N', $width));
+    push @header, unpack('C4', pack('N', $height));
 
-    push @bytes, $channels;
-    push @bytes, $colorspace;
+    push @header, $channels;
+    push @header, $colorspace;
+
+    my @bytes;
 
     my $run     = 0;
     my @px      = (0, 0, 0, 255);
@@ -125,26 +163,48 @@ sub qoi_encoder ($img) {
         push(@bytes, 0b11_00_00_00 | ($run - 1));
     }
 
-    push(@bytes, (0x00) x 7);
-    push(@bytes, 0x01);
+    my @footer;
+    push(@footer, (0x00) x 7);
+    push(@footer, 0x01);
 
-    return \@bytes;
+    my ($h, $rev_h) = mktree(\@bytes);
+
+    my $enc   = huffman_encode(\@bytes, $h);
+    my $codes = join('', map { $h->{$_} // '' } 0 .. 255);
+
+    my $dict = '';
+
+    foreach my $i (0 .. 255) {
+        exists($h->{$i}) or next;
+        $dict .= chr($i);
+        $dict .= chr(length($h->{$i}) - 1);
+    }
+
+    print $out_fh pack('C*', @header);
+
+    print $out_fh chr((length($dict) >> 1) - 1);
+    print $out_fh $dict;
+
+    print $out_fh pack("N",  length($codes));
+    print $out_fh pack("B*", $codes);
+
+    print $out_fh pack("N",  length($enc));
+    print $out_fh pack("B*", $enc);
+
+    print $out_fh pack('C*', @footer);
 }
 
 @ARGV || do {
-    say STDERR "usage: $0 [input.png] [output.qoi]";
+    say STDERR "usage: $0 [input.png] [output.qhi]";
     exit(2);
 };
 
 my $in_file  = $ARGV[0];
-my $out_file = $ARGV[1] // "$in_file.qoi";
+my $out_file = $ARGV[1] // "$in_file.qhi";
 
 my $img = 'Imager'->new(file => $in_file);
 
-my $bytes = qoi_encoder($img);
-
-open(my $fh, '>:raw', $out_file)
+open(my $out_fh, '>:raw', $out_file)
   or die "Can't open file <<$out_file>> for writing: $!";
 
-print $fh pack('C*', @$bytes);
-close $fh;
+qhi_encoder($img, $out_fh);

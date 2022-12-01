@@ -218,13 +218,7 @@ sub decompress ($input, $output) {
     }
 
     my $enc_len = unpack('N', join('', map { getc($fh) } 1 .. 4));
-    my $enc     = do {
-        local $/;
-        <$fh>;
-    };
-
-    my $data = huffman_decode(unpack("B" . $enc_len, $enc), \%rev_hash);
-    print $out_fh $data;
+    print $out_fh huffman_decode(unpack("B" . $enc_len, do { local $/; <$fh> }), \%rev_hash);
     return 1;
 }
 
