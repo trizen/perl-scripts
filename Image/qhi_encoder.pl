@@ -17,8 +17,8 @@ use experimental qw(signatures);
 # produce encode and decode dictionary from a tree
 sub walk ($node, $code, $h, $rev_h) {
 
-    my $c = $node->[0];
-    if (ref $c) { walk($c->[$_], $code . $_, $h, $rev_h) for (0, 1) }
+    my $c = $node->[0] // return ($h, $rev_h);
+    if (ref $c) { walk($c->[$_], $code . $_, $h, $rev_h) for ('0', '1') }
     else        { $h->{$c} = $code; $rev_h->{$code} = $c }
 
     return ($h, $rev_h);
@@ -28,13 +28,15 @@ sub walk ($node, $code, $h, $rev_h) {
 sub mktree ($bytes) {
     my (%freq, @nodes);
 
-    $freq{$_}++ for @$bytes;
-    @nodes = map { [$_, $freq{$_}] } keys %freq;
+    ++$freq{$_} for @$bytes;
+    @nodes = map { [$_, $freq{$_}] } sort { $a <=> $b } keys %freq;
 
     do {    # poor man's priority queue
         @nodes = sort { $a->[1] <=> $b->[1] } @nodes;
         my ($x, $y) = splice(@nodes, 0, 2);
-        push @nodes, [[$x, $y], $x->[1] + $y->[1]];
+        if (defined($x) and defined($y)) {
+            push @nodes, [[$x, $y], $x->[1] + $y->[1]];
+        }
     } while (@nodes > 1);
 
     walk($nodes[0], '', {}, {});
@@ -168,29 +170,27 @@ sub qhi_encoder ($img, $out_fh) {
     push(@footer, 0x01);
 
     my ($h, $rev_h) = mktree(\@bytes);
-
     my $enc   = huffman_encode(\@bytes, $h);
-    my $codes = join('', map { $h->{$_} // '' } 0 .. 255);
 
-    my $dict = '';
+    my $dict  = '';
+    my $codes = '';
 
     foreach my $i (0 .. 255) {
-        exists($h->{$i}) or next;
-        $dict .= chr($i);
-        $dict .= chr(length($h->{$i}) - 1);
+        my $c = $h->{$i} // '';
+        $codes .= $c;
+        $dict  .= chr(length($c));
     }
 
+    # Header
     print $out_fh pack('C*', @header);
 
-    print $out_fh chr((length($dict) >> 1) - 1);
+    # Huffman dictionary + data
     print $out_fh $dict;
-
-    print $out_fh pack("N",  length($codes));
     print $out_fh pack("B*", $codes);
-
     print $out_fh pack("N",  length($enc));
     print $out_fh pack("B*", $enc);
 
+    # Footer
     print $out_fh pack('C*', @footer);
 }
 

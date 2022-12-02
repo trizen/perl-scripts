@@ -57,31 +57,39 @@ sub qhi_decoder ($bytes) {
     my @pixels;
     my @colors = (map { [0, 0, 0, 0] } 1 .. 64);
 
-    my $dict_len = ord($bytes->[$index++]) + 1;
+    my @codes;
+    my $codes_len = 0;
 
-    my %code_lens;
-    for (1 .. $dict_len) {
-        my $c = ord($bytes->[$index++]);
-        my $l = ord($bytes->[$index++]) + 1;
-        $code_lens{$c} = $l;
+    foreach my $c (0 .. 255) {
+        my $l = ord($bytes->[$index++]);
+        if ($l > 0) {
+            $codes_len += $l;
+            push @codes, [$c, $l];
+        }
     }
 
-    my $codes     = '';
-    my $codes_len = unpack('N', join('', map { $bytes->[$index++] } 1 .. 4));
-
-    while (length($codes) < $codes_len) {
-        $codes .= unpack('B*', $bytes->[$index++]);
+    my $codes_bin = '';
+    while (length($codes_bin) < $codes_len) {
+        $codes_bin .= unpack('B*', $bytes->[$index++] // last);
     }
 
-    my %rev_hash;
-    foreach my $i (sort { $a <=> $b } keys %code_lens) {
-        my $code = substr($codes, 0, $code_lens{$i}, '');
-        $rev_hash{$code} = chr($i);
+    my %rev_dict;
+    foreach my $pair (@codes) {
+        my $code = substr($codes_bin, 0, $pair->[1], '');
+        $rev_dict{$code} = chr($pair->[0]);
     }
 
     my $enc_len = unpack('N', join('', map { $bytes->[$index++] } 1 .. 4));
+
     splice(@$bytes, 0, $index);
-    @$bytes = unpack("C*", huffman_decode(unpack("B" . $enc_len, join('', @$bytes)), \%rev_hash));
+
+    if ($enc_len > 0) {
+        @$bytes = unpack("C*", huffman_decode(unpack("B" . $enc_len, join('', @$bytes)), \%rev_dict));
+    }
+    else {
+        @$bytes = ();
+    }
+
     $index  = 0;
 
     while (1) {

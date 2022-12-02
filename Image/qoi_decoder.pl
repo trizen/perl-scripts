@@ -5,6 +5,7 @@
 # See also:
 #   https://qoiformat.org/
 #   https://github.com/phoboslab/qoi
+#   https://yewtu.be/watch?v=EFUYNoFRHQI
 
 use 5.020;
 use warnings;
