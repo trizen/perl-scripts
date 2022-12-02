@@ -140,7 +140,8 @@ sub qoi_encoder ($img) {
 my $in_file  = $ARGV[0];
 my $out_file = $ARGV[1] // "$in_file.qoi";
 
-my $img = 'Imager'->new(file => $in_file);
+my $img = 'Imager'->new(file => $in_file)
+    or die "Can't read image: $in_file";
 
 my $bytes = qoi_encoder($img);
 

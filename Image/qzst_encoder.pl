@@ -1,8 +1,6 @@
 #!/usr/bin/perl
 
-# Variation of the QOI encoder, combined with Huffman coding.
-
-# QHIf = Quite Huffman Image format. :)
+# Variation of the QOI encoder, combined with Zstandard compression.
 
 # See also:
 #   https://qoiformat.org/
@@ -12,45 +10,10 @@ use 5.020;
 use warnings;
 
 use Imager;
-use experimental qw(signatures);
+use experimental       qw(signatures);
+use IO::Compress::Zstd qw(zstd $ZstdError);
 
-# produce encode and decode dictionary from a tree
-sub walk ($node, $code, $h, $rev_h) {
-
-    my $c = $node->[0] // return ($h, $rev_h);
-    if (ref $c) { walk($c->[$_], $code . $_, $h, $rev_h) for ('0', '1') }
-    else        { $h->{$c} = $code; $rev_h->{$code} = $c }
-
-    return ($h, $rev_h);
-}
-
-# make a tree, and return resulting dictionaries
-sub mktree ($bytes) {
-    my (%freq, @nodes);
-
-    ++$freq{$_} for @$bytes;
-    @nodes = map { [$_, $freq{$_}] } sort { $a <=> $b } keys %freq;
-
-    do {    # poor man's priority queue
-        @nodes = sort { $a->[1] <=> $b->[1] } @nodes;
-        my ($x, $y) = splice(@nodes, 0, 2);
-        if (defined($x) and defined($y)) {
-            push @nodes, [[$x, $y], $x->[1] + $y->[1]];
-        }
-    } while (@nodes > 1);
-
-    walk($nodes[0], '', {}, {});
-}
-
-sub huffman_encode ($bytes, $dict) {
-    my $enc = '';
-    for (@$bytes) {
-        $enc .= $dict->{$_} // die "bad char: $_";
-    }
-    return $enc;
-}
-
-sub qhi_encoder ($img, $out_fh) {
+sub qzst_encoder ($img, $out_fh) {
 
     use constant {
                   QOI_OP_RGB  => 0b1111_1110,
@@ -67,7 +30,7 @@ sub qhi_encoder ($img, $out_fh) {
 
     say "[$width, $height, $channels, $colorspace]";
 
-    my @header = unpack('C*', 'qhif');
+    my @header = unpack('C*', 'qzst');
 
     push @header, unpack('C4', pack('N', $width));
     push @header, unpack('C4', pack('N', $height));
@@ -75,7 +38,7 @@ sub qhi_encoder ($img, $out_fh) {
     push @header, $channels;
     push @header, $colorspace;
 
-    my @bytes;
+    my $qoi_data = '';
 
     my $run     = 0;
     my @px      = (0, 0, 0, 255);
@@ -97,14 +60,14 @@ sub qhi_encoder ($img, $out_fh) {
                 and $px[3] == $prev_px[3]) {
 
                 if (++$run == 62) {
-                    push @bytes, QOI_OP_RUN | ($run - 1);
+                    $qoi_data .= chr(QOI_OP_RUN | ($run - 1));
                     $run = 0;
                 }
             }
             else {
 
                 if ($run > 0) {
-                    push @bytes, (QOI_OP_RUN | ($run - 1));
+                    $qoi_data .= chr(QOI_OP_RUN | ($run - 1));
                     $run = 0;
                 }
 
@@ -115,7 +78,7 @@ sub qhi_encoder ($img, $out_fh) {
                     and $px[1] == $index_px->[1]
                     and $px[2] == $index_px->[2]
                     and $px[3] == $index_px->[3]) {    # OP INDEX
-                    push @bytes, $hash;
+                    $qoi_data .= chr($hash);
                 }
                 else {
 
@@ -136,7 +99,7 @@ sub qhi_encoder ($img, $out_fh) {
                             and $vg < 2
                             and $vb > -3
                             and $vb < 2) {
-                            push(@bytes, QOI_OP_DIFF | (($vr + 2) << 4) | (($vg + 2) << 2) | ($vb + 2));
+                            $qoi_data .= chr(QOI_OP_DIFF | (($vr + 2) << 4) | (($vg + 2) << 2) | ($vb + 2));
                         }
                         elsif (    $vg_r > -9
                                and $vg_r < 8
@@ -144,15 +107,14 @@ sub qhi_encoder ($img, $out_fh) {
                                and $vg < 32
                                and $vg_b > -9
                                and $vg_b < 8) {
-                            push(@bytes, QOI_OP_LUMA | ($vg + 32));
-                            push(@bytes, (($vg_r + 8) << 4) | ($vg_b + 8));
+                            $qoi_data .= join('', chr(QOI_OP_LUMA | ($vg + 32)), chr((($vg_r + 8) << 4) | ($vg_b + 8)));
                         }
                         else {
-                            push(@bytes, QOI_OP_RGB, $px[0], $px[1], $px[2]);
+                            $qoi_data .= join('', chr(QOI_OP_RGB), chr($px[0]), chr($px[1]), chr($px[2]));
                         }
                     }
                     else {
-                        push(@bytes, QOI_OP_RGBA, $px[0], $px[1], $px[2], $px[3]);
+                        $qoi_data .= join('', chr(QOI_OP_RGBA), chr($px[0]), chr($px[1]), chr($px[2]), chr($px[3]));
                     }
                 }
             }
@@ -162,50 +124,37 @@ sub qhi_encoder ($img, $out_fh) {
     }
 
     if ($run > 0) {
-        push(@bytes, 0b11_00_00_00 | ($run - 1));
+        $qoi_data .= chr(0b11_00_00_00 | ($run - 1));
     }
 
     my @footer;
     push(@footer, (0x00) x 7);
     push(@footer, 0x01);
 
-    my ($h, $rev_h) = mktree(\@bytes);
-    my $enc   = huffman_encode(\@bytes, $h);
-
-    my $dict  = '';
-    my $codes = '';
-
-    foreach my $i (0 .. 255) {
-        my $c = $h->{$i} // '';
-        $codes .= $c;
-        $dict  .= chr(length($c));
-    }
-
     # Header
     print $out_fh pack('C*', @header);
 
-    # Huffman dictionary + data
-    print $out_fh $dict;
-    print $out_fh pack("B*", $codes);
-    print $out_fh pack("N",  length($enc));
-    print $out_fh pack("B*", $enc);
+    # Compressed data
+    zstd(\$qoi_data, \my $zstd_data) or die "zstd failed: $ZstdError\n";
+    print $out_fh pack("N", length($zstd_data));
+    print $out_fh $zstd_data;
 
     # Footer
     print $out_fh pack('C*', @footer);
 }
 
 @ARGV || do {
-    say STDERR "usage: $0 [input.png] [output.qhi]";
+    say STDERR "usage: $0 [input.png] [output.qzst]";
     exit(2);
 };
 
 my $in_file  = $ARGV[0];
-my $out_file = $ARGV[1] // "$in_file.qhi";
+my $out_file = $ARGV[1] // "$in_file.qzst";
 
 my $img = 'Imager'->new(file => $in_file)
-    or die "Can't read image: $in_file";
+  or die "Can't read image: $in_file";
 
 open(my $out_fh, '>:raw', $out_file)
   or die "Can't open file <<$out_file>> for writing: $!";
 
-qhi_encoder($img, $out_fh);
+qzst_encoder($img, $out_fh);

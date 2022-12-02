@@ -339,6 +339,8 @@ A nice collection of day-to-day Perl scripts.
     * [Qhi encoder](./Image/qhi_encoder.pl)
     * [Qoi decoder](./Image/qoi_decoder.pl)
     * [Qoi encoder](./Image/qoi_encoder.pl)
+    * [Qzst decoder](./Image/qzst_decoder.pl)
+    * [Qzst encoder](./Image/qzst_encoder.pl)
     * [Remove sensitive exif tags](./Image/remove_sensitive_exif_tags.pl)
     * [Sharp 2x zoom](./Image/sharp_2x_zoom.pl)
     * [Visualize binary](./Image/visualize_binary.pl)

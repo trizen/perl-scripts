@@ -15,7 +15,7 @@ use Imager;
 use experimental       qw(signatures);
 use IO::Compress::Zstd qw(zstd $ZstdError);
 
-sub zuper_encoder ($img) {
+sub zuper_encoder ($img, $out_fh) {
 
     my $width      = $img->getwidth;
     my $height     = $img->getheight;
@@ -24,13 +24,13 @@ sub zuper_encoder ($img) {
 
     say "[$width, $height, $channels, $colorspace]";
 
-    my $compressed = 'zprf';
+    my @header = unpack('C*', 'zprf');
 
-    $compressed .= pack('N', $width);
-    $compressed .= pack('N', $height);
+    push @header, unpack('C4', pack('N', $width));
+    push @header, unpack('C4', pack('N', $height));
 
-    $compressed .= chr($channels);
-    $compressed .= chr($colorspace);
+    push @header, $channels;
+    push @header, $colorspace;
 
     my $index    = 0;
     my @channels = map { "" } (1 .. $channels);
@@ -49,6 +49,10 @@ sub zuper_encoder ($img) {
         }
     }
 
+    my @footer;
+    push(@footer, (0x00) x 7);
+    push(@footer, 0x01);
+
     my $all_channels = '';
 
     foreach my $channel (@channels) {
@@ -63,16 +67,15 @@ sub zuper_encoder ($img) {
 
     say "Compression: $before -> $after (saved ", sprintf("%.2f%%", 100 - $after / $before * 100), ")";
 
-    $compressed .= pack('N', $after);
-    $compressed .= $z;
+    # Header
+    print $out_fh pack('C*', @header);
 
-    for (1 .. 7) {
-        $compressed .= chr(0x00);
-    }
+    # Compressed data
+    print $out_fh pack('N', $after);
+    print $out_fh $z;
 
-    $compressed .= chr(0x01);
-
-    return \$compressed;
+    # Footer
+    print $out_fh pack('C*', @footer);
 }
 
 @ARGV || do {
@@ -83,12 +86,10 @@ sub zuper_encoder ($img) {
 my $in_file  = $ARGV[0];
 my $out_file = $ARGV[1] // "$in_file.zpr";
 
-my $img = 'Imager'->new(file => $in_file);
+my $img = 'Imager'->new(file => $in_file)
+    or die "Can't read image: $in_file";
 
-my $ref = zuper_encoder($img);
-
-open(my $fh, '>:raw', $out_file)
+open(my $out_fh, '>:raw', $out_file)
   or die "Can't open file <<$out_file>> for writing: $!";
 
-print $fh $$ref;
-close $fh;
+zuper_encoder($img, $out_fh);
