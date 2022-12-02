@@ -2,12 +2,16 @@
 
 # Author: Trizen
 # Date: 01 December 2022
+# Edit: 02 December 2022
 # https://github.com/trizen
 
 # Compress/decompress files using Huffman coding.
 
 # Huffman coding algorithm from:
 #   https://rosettacode.org/wiki/Huffman_coding#Perl
+
+# See also:
+#   https://en.wikipedia.org/wiki/Huffman_coding
 
 use 5.020;
 use strict;
@@ -21,11 +25,11 @@ use File::Basename qw(basename);
 
 use constant {
               PKGNAME => 'huffman-simple',
-              VERSION => '0.01',
+              VERSION => '0.02',
               FORMAT  => 'hfm',
              };
 
-use constant {SIGNATURE => uc(FORMAT) . chr(1)};
+use constant {SIGNATURE => uc(FORMAT) . chr(2)};
 
 sub usage {
     my ($code) = @_;
@@ -98,8 +102,8 @@ sub main {
 # produce encode and decode dictionary from a tree
 sub walk ($node, $code, $h, $rev_h) {
 
-    my $c = $node->[0];
-    if (ref $c) { walk($c->[$_], $code . $_, $h, $rev_h) for (0, 1) }
+    my $c = $node->[0] // return ($h, $rev_h);
+    if (ref $c) { walk($c->[$_], $code . $_, $h, $rev_h) for ('0', '1') }
     else        { $h->{$c} = $code; $rev_h->{$code} = $c }
 
     return ($h, $rev_h);
@@ -109,13 +113,15 @@ sub walk ($node, $code, $h, $rev_h) {
 sub mktree ($bytes) {
     my (%freq, @nodes);
 
-    $freq{$_}++ for @$bytes;
-    @nodes = map { [$_, $freq{$_}] } keys %freq;
+    ++$freq{$_} for @$bytes;
+    @nodes = map { [$_, $freq{$_}] } sort { $a <=> $b } keys %freq;
 
     do {    # poor man's priority queue
         @nodes = sort { $a->[1] <=> $b->[1] } @nodes;
         my ($x, $y) = splice(@nodes, 0, 2);
-        push @nodes, [[$x, $y], $x->[1] + $y->[1]];
+        if (defined($x) and defined($y)) {
+            push @nodes, [[$x, $y], $x->[1] + $y->[1]];
+        }
     } while (@nodes > 1);
 
     walk($nodes[0], '', {}, {});
@@ -131,7 +137,7 @@ sub huffman_encode ($bytes, $dict) {
 
 sub huffman_decode ($bits, $hash) {
     local $" = '|';
-    $bits =~ s/(@{[sort { length($a) <=> length($b) } keys %{$hash}]})/$hash->{$1}/gr;  # very fast
+    $bits =~ s/(@{[sort { length($a) <=> length($b) } keys %{$hash}]})/$hash->{$1}/gr;    # very fast
 }
 
 sub valid_archive {
@@ -161,25 +167,21 @@ sub compress ($input, $output) {
     close $fh;
 
     my @bytes = unpack('C*', $chars);
+
     my ($h, $rev_h) = mktree(\@bytes);
+    my $enc = huffman_encode(\@bytes, $h);
 
-    my $enc   = huffman_encode(\@bytes, $h);
-    my $codes = join('', map { $h->{$_} // '' } 0 .. 255);
-
-    my $dict = '';
+    my $dict  = '';
+    my $codes = '';
 
     foreach my $i (0 .. 255) {
-        exists($h->{$i}) or next;
-        $dict .= chr($i);
-        $dict .= chr(length($h->{$i}) - 1);
+        my $c = $h->{$i} // '';
+        $codes .= $c;
+        $dict  .= chr(length($c));
     }
 
-    print $out_fh chr((length($dict) >> 1) - 1);
     print $out_fh $dict;
-
-    print $out_fh pack("N",  length($codes));
     print $out_fh pack("B*", $codes);
-
     print $out_fh pack("N",  length($enc));
     print $out_fh pack("B*", $enc);
 
@@ -190,35 +192,39 @@ sub decompress ($input, $output) {
 
     # Open and validate the input file
     open my $fh, '<:raw', $input;
-    valid_archive($fh) || die "$0: file `$input' is not a \U${\FORMAT}\E archive!\n";
+    valid_archive($fh) || die "$0: file `$input' is not a \U${\FORMAT}\E v${\VERSION} archive!\n";
 
     # Open the output file
     open my $out_fh, '>:raw', $output;
 
-    my $dict_len = ord(getc($fh)) + 1;
+    my @codes;
+    my $codes_len = 0;
 
-    my %code_lens;
-    for (1 .. $dict_len) {
-        my $c = ord(getc($fh));
-        my $l = ord(getc($fh)) + 1;
-        $code_lens{$c} = $l;
+    foreach my $c (0 .. 255) {
+        my $l = ord(getc($fh));
+        if ($l > 0) {
+            $codes_len += $l;
+            push @codes, [$c, $l];
+        }
     }
 
-    my $codes     = '';
-    my $codes_len = unpack('N', join('', map { getc($fh) } 1 .. 4));
-
-    while (length($codes) < $codes_len) {
-        $codes .= unpack('B*', getc($fh));
+    my $codes_bin = '';
+    while (length($codes_bin) < $codes_len) {
+        $codes_bin .= unpack('B*', getc($fh) // last);
     }
 
-    my %rev_hash;
-    foreach my $i (sort { $a <=> $b } keys %code_lens) {
-        my $code = substr($codes, 0, $code_lens{$i}, '');
-        $rev_hash{$code} = chr($i);
+    my %rev_dict;
+    foreach my $pair (@codes) {
+        my $code = substr($codes_bin, 0, $pair->[1], '');
+        $rev_dict{$code} = chr($pair->[0]);
     }
 
     my $enc_len = unpack('N', join('', map { getc($fh) } 1 .. 4));
-    print $out_fh huffman_decode(unpack("B" . $enc_len, do { local $/; <$fh> }), \%rev_hash);
+
+    if ($enc_len > 0) {
+        print $out_fh huffman_decode(unpack("B" . $enc_len, do { local $/; <$fh> }), \%rev_dict);
+    }
+
     return 1;
 }
 

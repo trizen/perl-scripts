@@ -15,22 +15,16 @@ use IO::Uncompress::UnZstd qw(unzstd $UnZstdError);
 
 sub zpr_decoder ($bytes) {
 
-    my sub decode32 ($a, $b, $c, $d) {
-        ($a << 8 * 3) | ($b << 8 * 2) | ($c << 8 * 1) | ($d << 8 * 0);
-    }
-
     my sub invalid() {
         die "Not a ZPR image";
     }
 
     my $index = 0;
-    pack('C4', @{$bytes}[$index .. $index + 3]) eq 'zprf' or invalid();
-    $index += 4;
 
-    my $width = decode32(@{$bytes}[$index .. $index + 3]);
-    $index += 4;
-    my $height = decode32(@{$bytes}[$index .. $index + 3]);
-    $index += 4;
+    pack('C4', map { $bytes->[$index++] } 1 .. 4) eq 'zprf' or invalid();
+
+    my $width  = unpack('N', pack('C4', map { $bytes->[$index++] } 1 .. 4));
+    my $height = unpack('N', pack('C4', map { $bytes->[$index++] } 1 .. 4));
 
     my $channels   = $bytes->[$index++];
     my $colorspace = $bytes->[$index++];
@@ -47,8 +41,7 @@ sub zpr_decoder ($bytes) {
 
     say "[$width, $height, $channels, $colorspace]";
 
-    my $len = decode32(@{$bytes}[$index .. $index + 3]);
-    $index += 4;
+    my $len = unpack('N', pack('C4', map { $bytes->[$index++] } 1 .. 4));
 
     scalar(@$bytes) - $index == $len or invalid();
 
