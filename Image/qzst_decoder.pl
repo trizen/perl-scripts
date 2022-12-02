@@ -30,7 +30,7 @@ sub qzst_decoder ($bytes) {
     my $colorspace = ord $bytes->[$index++];
 
     ($width > 0 and $height > 0) or invalid();
-    ($channels == 3   or $channels == 4)   or invalid();
+    ($channels > 0 and $channels <= 4) or invalid();
     ($colorspace == 0 or $colorspace == 1) or invalid();
 
     ord(pop(@$bytes)) == 0x01 or invalid();

@@ -30,7 +30,7 @@ sub zpr_decoder ($bytes) {
     my $colorspace = $bytes->[$index++];
 
     ($width > 0 and $height > 0) or invalid();
-    ($channels == 3   or $channels == 4)   or invalid();
+    ($channels > 0 and $channels <= 4) or invalid();
     ($colorspace == 0 or $colorspace == 1) or invalid();
 
     pop(@$bytes) == 0x01 or invalid();
@@ -58,12 +58,13 @@ sub zpr_decoder ($bytes) {
                            );
 
     my @channels = unpack(sprintf("(a%d)%d", $width * $height, $channels), $all_channels);
+    my $diff = 4 - $channels;
 
     foreach my $y (0 .. $height - 1) {
         my $row = '';
         foreach my $x (1 .. $width) {
             $row .= substr($_, 0, 1, '') for @channels;
-            $row .= chr(0) if ($channels == 3);
+            $row .= chr(0) x $diff if $diff;
         }
         $img->setscanline(y => $y, pixels => $row);
     }
