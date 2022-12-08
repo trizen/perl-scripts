@@ -12,10 +12,24 @@ use strict;
 use autodie;
 use warnings;
 
-use Cwd qw(getcwd);
-use File::Spec qw();
-use File::Basename qw(basename dirname);
-use URI::Escape qw(uri_escape);
+use Cwd                   qw(getcwd);
+use File::Spec::Functions qw(rel2abs curdir);
+use File::Basename        qw(basename dirname);
+use URI::Escape           qw(uri_escape);
+
+my %ignore;
+if (open my $fh, '<:utf8', '.gitignore') {
+
+    while (<$fh>) {
+        next if /^#/;
+        chomp;
+        if (-e $_) {
+            $ignore{rel2abs($_)} = 1;
+        }
+    }
+
+    close $fh;
+}
 
 sub add_section {
     my ($section, $file) = @_;
@@ -39,7 +53,7 @@ sub add_section {
 }
 
 my $summary_file = 'README.md';
-my $main_dir     = File::Spec->curdir;
+my $main_dir     = curdir();
 
 {
     my @root;
@@ -66,6 +80,8 @@ my $main_dir     = File::Spec->curdir;
             if ($file->{name} =~ /\.(\w{2,3})\z/) {
                 next if $1 !~ /^(?:p[lm])\z/i;
             }
+
+            next if exists $ignore{$file->{path}};
 
             if (-d $file->{path}) {
                 $section .= (' ' x $spaces) . "* $title\n";

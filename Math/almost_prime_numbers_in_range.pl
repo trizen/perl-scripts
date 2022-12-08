@@ -39,13 +39,10 @@ sub almost_prime_numbers ($A, $B, $k, $callback) {
 
             my $t = mulint($m, $p);
 
-            # Optional optimization for tight ranges
-            if (divceil($A, $t) > divint($B, $t)) {
-                $p = next_prime($p);
-                next;
+            if (divceil($A, $t) <= divint($B, $t)) {
+                __SUB__->($t, $p, $k - 1);
             }
 
-            __SUB__->($t, $p, $k - 1);
             $p = next_prime($p);
         }
     }->(1, 2, $k);
