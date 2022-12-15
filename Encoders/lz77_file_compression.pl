@@ -16,12 +16,13 @@ use Getopt::Std    qw(getopts);
 use File::Basename qw(basename);
 
 use constant {
-              PKGNAME => 'LZ77',
-              VERSION => '0.01',
-              FORMAT  => 'lz77',
+              PKGNAME    => 'LZ77',
+              VERSION    => '0.02',
+              FORMAT     => 'lz77',
+              CHUNK_SIZE => 1 << 16,
              };
 
-use constant {SIGNATURE => "LZ77" . chr(1)};
+use constant {SIGNATURE => "LZ77" . chr(2)};
 
 sub usage {
     my ($code) = @_;
@@ -87,12 +88,12 @@ sub main {
             <STDIN> =~ /^y/i || exit 17;
         }
 
-        lzw_decompress_file($input, $output)
+        lz77_decompress_file($input, $output)
           || die "$0: error: decompression failed!\n";
     }
     elsif ($input !~ $ext || (defined($output) && $output =~ $ext)) {
         $output //= basename($input) . '.' . FORMAT;
-        lzw_compress_file($input, $output)
+        lz77_compress_file($input, $output)
           || die "$0: error: compression failed!\n";
     }
     else {
@@ -106,49 +107,64 @@ sub compression ($str) {
     my @rep;
     my $la = 0;
 
-    while ($la < length($str)) {
+    my $prefix = '';
+    my @bytes  = split(//, $str);
+    my $end    = $#bytes;
+
+    while ($la <= $end) {
 
         my $n = 1;
         my $p = 0;
         my $tmp;
 
-        while (
-               $n < 255
-               and $la + $n < length($str)
-               and ($tmp = index(substr($str, 0, $la), substr($str, $la, $n), $p)) >= 0) {
+        my $token = $bytes[$la];
+
+        while (    $n < 255
+               and $la + $n <= $end
+               and ($tmp = index($prefix, $token, $p)) >= 0) {
             $p = $tmp;
-            $n++;
+            $token .= $bytes[$la + $n];
+            ++$n;
         }
 
         --$n;
-        my $c = substr($str, $la + $n, 1);
+        my $c = $bytes[$la + $n];
         push @rep, [$p, $n, ord($c)];
         $la += $n + 1;
+        $prefix .= $token;
     }
 
-    join('', map { pack 'NCC', @$_ } @rep);
+    join('', map { pack('SCC', @$_) } @rep);
 }
 
 sub decompression ($str) {
 
-    my $ret = '';
+    my $ret   = '';
+    my $chunk = '';
+
     while (length($str)) {
-        my ($s, $l, $c) = unpack('NCC', substr($str, 0, 6, ''));
-        $ret .= substr($ret, $s, $l) . chr($c);
+        my ($s, $l, $c) = unpack('SCC', substr($str, 0, 4, ''));
+
+        $chunk .= substr($chunk, $s, $l) . chr($c);
+
+        if (length($chunk) >= CHUNK_SIZE) {
+            $ret .= $chunk;
+            $chunk = '';
+        }
+    }
+
+    if ($chunk ne '') {
+        $ret .= $chunk;
     }
 
     $ret;
 }
 
 # Compress file
-sub lzw_compress_file ($input, $output) {
+sub lz77_compress_file ($input, $output) {
 
-    my $compressed = do {
-        open my $fh, '<:raw', $input
-          or die "Can't open file <<$input>> for reading: $!";
-        local $/;
-        compression(scalar <$fh>);
-    };
+    open my $fh, '<:raw', $input
+      or die "Can't open file <<$input>> for reading: $!";
 
     my $header = SIGNATURE;
 
@@ -159,15 +175,17 @@ sub lzw_compress_file ($input, $output) {
     # Print the header
     print $out_fh $header;
 
-    # Print the compressed data
-    print $out_fh $compressed;
+    # Compress data
+    while (read($fh, (my $chunk), CHUNK_SIZE)) {
+        print $out_fh compression($chunk);
+    }
 
     # Close the file
     close $out_fh;
 }
 
 # Decompress file
-sub lzw_decompress_file ($input, $output) {
+sub lz77_decompress_file ($input, $output) {
 
     # Open and validate the input file
     open my $fh, '<:raw', $input;
