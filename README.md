@@ -57,7 +57,6 @@ A nice collection of day-to-day Perl scripts.
 * Digest
     * [Brute-force resistant hashing](./Digest/brute-force_resistant_hashing.pl)
 * Encoders
-    * [77](./Encoders/77.pl)
     * [Arithmetic coding](./Encoders/arithmetic_coding.pl)
     * [Arithmetic coding anynum](./Encoders/arithmetic_coding_anynum.pl)
     * [Ascii encode decode](./Encoders/ascii_encode_decode.pl)
@@ -70,6 +69,7 @@ A nice collection of day-to-day Perl scripts.
     * [Huffman file compression](./Encoders/huffman_file_compression.pl)
     * [Int2bytes](./Encoders/int2bytes.pl)
     * [Length encoder](./Encoders/length_encoder.pl)
+    * [Lz77 file compression](./Encoders/lz77_file_compression.pl)
     * [Lzt-fast](./Encoders/lzt-fast.pl)
     * [Lzt-hc](./Encoders/lzt-hc.pl)
     * [Lzt-hc2](./Encoders/lzt-hc2.pl)

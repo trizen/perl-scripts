@@ -15,7 +15,6 @@ use warnings;
 
 use experimental qw(signatures);
 
-use List::Util     qw(min);
 use Getopt::Std    qw(getopts);
 use File::Basename qw(basename);
 
