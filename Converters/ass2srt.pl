@@ -94,6 +94,9 @@ sub reformat_text ($text) {
     $text =~ s{\\N}{\n}g;
     $text =~ s{\\n}{\n}g;
 
+    # Replace \h with a horizontal space
+    $text =~ s{\\h}{ }g;
+
     $text;
 }
 

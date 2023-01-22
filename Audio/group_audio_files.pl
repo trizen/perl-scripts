@@ -61,10 +61,10 @@ foreach my $filename (@audio_files) {
     my $basename = decode_utf8(basename($filename));
 
     my $artist;
-    if ($basename =~ /^[\d\s.-]*(.+?) -/) {
+    if ($basename =~ /^[\d\s.\-–]*(.+?) -/) {
         $artist = $1;
     }
-    elsif ($basename =~ /^[\d\s.-]*(.+?)-/) {
+    elsif ($basename =~ /^[\d\s.\-–]*(.+?)-/) {
         $artist = $1;
     }
     else {

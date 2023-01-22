@@ -14,7 +14,7 @@ use Math::Sidef qw(Polynomial Number sum);
 use Math::AnyNum qw(:overload digits);
 use Getopt::Long qw(GetOptions);
 
-use ntheory qw(vecsum);
+use ntheory qw(vecsum todigits);
 use experimental qw(signatures);
 
 sub run_length ($arr, $max_len = 1e9) {
@@ -47,7 +47,7 @@ sub run_length ($arr, $max_len = 1e9) {
 }
 
 sub number2runLength ($n, $base = 10, $max_len = 1e9) {
-    my @D = ($base < 2147483647) ? ntheory::todigits($n, $base) : reverse(digits($n, $base));
+    my @D = ($base < 2147483647) ? todigits($n, $base) : reverse(digits($n, $base));
     my $t = scalar(@D);
     my @R = run_length(\@D, $max_len);
     return \@R;
@@ -66,7 +66,7 @@ sub number2expr ($R, $base = 10) {
           (
             ($l == 1)
             ? Polynomial($t => $d)
-            : Polynomial($l)->sub(1)->div($base - 1)->mul(Polynomial($t => $d))
+            : Polynomial($l)->sub(Number(1))->div(Number($base - 1))->mul(Polynomial($t => $d))
           );
     }
 
@@ -84,7 +84,7 @@ sub number2expr_alt ($R, $base = 10) {
     foreach my $pair (@$R) {
         my ($d, $l) = @$pair;
         $t -= $l;
-        push @terms, Polynomial($l)->sub(1)->mul(Polynomial($t => $d));
+        push @terms, Polynomial($l)->sub(Number(1))->mul(Polynomial($t => $d));
     }
 
     my $sum = sum(@terms);
