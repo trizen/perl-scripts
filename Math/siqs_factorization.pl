@@ -19,7 +19,7 @@ use strict;
 use warnings;
 
 use Math::GMPz;
-use POSIX qw(ULONG_MAX);
+use POSIX        qw(ULONG_MAX);
 use experimental qw(signatures);
 
 use ntheory qw(
@@ -748,14 +748,33 @@ sub fast_fibonacci_factor ($n, $upto) {
 
     my $g = Math::GMPz::Rmpz_init();
 
+    my ($P, $Q) = (3, 1);
+
+    my $U0 = Math::GMPz::Rmpz_init_set_ui(0);
+    my $U1 = Math::GMPz::Rmpz_init_set_ui(1);
+
+    my $V0 = Math::GMPz::Rmpz_init_set_ui(2);
+    my $V1 = Math::GMPz::Rmpz_init_set_ui($P);
+
     foreach my $k (2 .. $upto) {
 
-        my ($U, $V) = lucas_sequence($n, 3, 1, $k);
+        # my ($U, $V) = lucas_sequence($n, $P, $Q, $k);
 
-        foreach my $t ($U, $V, Math::Prime::Util::GMP::subint($V, 1), Math::Prime::Util::GMP::addint($V, 1)) {
+        Math::GMPz::Rmpz_set($g, $U1);
+        Math::GMPz::Rmpz_mul_ui($U1, $U1, $P);
+        Math::GMPz::Rmpz_submul_ui($U1, $U0, $Q);
+        Math::GMPz::Rmpz_mod($U1, $U1, $n);
+        Math::GMPz::Rmpz_set($U0, $g);
 
-            Math::GMPz::Rmpz_set_str($g, $t, 10);
-            Math::GMPz::Rmpz_gcd($g, $g, $n);
+        Math::GMPz::Rmpz_set($g, $V1);
+        Math::GMPz::Rmpz_mul_ui($V1, $V1, $P);
+        Math::GMPz::Rmpz_submul_ui($V1, $V0, $Q);
+        Math::GMPz::Rmpz_mod($V1, $V1, $n);
+        Math::GMPz::Rmpz_set($V0, $g);
+
+        foreach my $t ($U1, $V1 - $P, $V1, $V1 - 1, $V1 + 1) {
+
+            Math::GMPz::Rmpz_gcd($g, $t, $n);
 
             if (    Math::GMPz::Rmpz_cmp_ui($g, 1) > 0
                 and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
@@ -1574,7 +1593,7 @@ sub lucas_miller_factor ($n, $j, $tries) {
         next if ntheory::is_square($P * $P - 4 * $Q);
 
         my ($U1, $V1, $Q1) =
-          map { Math::GMPz::Rmpz_init_set_str($_, 10) } Math::Prime::Util::GMP::lucas_sequence($n, $P, $Q, $d);
+          map { Math::GMPz::Rmpz_init_set_str($_, 10) } lucas_sequence($n, $P, $Q, $d);
 
         foreach my $k (1 .. $r) {
 
@@ -1800,7 +1819,7 @@ sub find_small_factors ($rem, $factors) {
         sub {
             $state{fast_fibonacci_check} || return undef;
             say "=> Fast Fibonacci check...";
-            my $f = fast_fibonacci_factor($rem, 5000);
+            my $f = fast_fibonacci_factor($rem, 2 * logint($rem, 2));
             $f // do { $state{fast_fibonacci_check} = 0 };
             $f;
         },
@@ -2030,7 +2049,7 @@ sub find_small_factors ($rem, $factors) {
 
         my $end = $#factorization_methods;
 
-        for(my $i = 0; $i <= $end; ++$i) {
+        for (my $i = 0 ; $i <= $end ; ++$i) {
 
             my $code = $factorization_methods[$i];
             my $f    = $code->();
