@@ -979,6 +979,7 @@ Encryption and signing:
     -d --decrypt        : Decrypt data encrypted for you
     -s --sign!          : Sign the message with your private key (default: $CONFIG{sign})
        --clear-sign     : Create a signed message, without encryption
+       --verify-message : Verify a clear signed message
        --cipher=s       : Change the symmetric cipher (default: $CONFIG{cipher})
                           valid: @valid_ciphers
        --chain-mode=s   : Change the chaining mode (default: $CONFIG{chain_mode})

@@ -10,7 +10,7 @@ use 5.020;
 use ntheory qw(:all);
 use experimental qw(signatures);
 
-sub almost_primes ($n, $k, $factors) {
+sub almost_primes ($n, $k, $factors, $squarefree = 0) {
 
     my $factors_end = $#{$factors};
 
@@ -44,7 +44,7 @@ sub almost_primes ($n, $k, $factors) {
         foreach my $j ($i .. $factors_end) {
             my $q = $factors->[$j];
             last if ($q > $L);
-            __SUB__->(mulint($m, $q), $k - 1, $j);
+            __SUB__->(mulint($m, $q), $k - 1, $j + $squarefree);
         }
     }->(1, $k);
 
