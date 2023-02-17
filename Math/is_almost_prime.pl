@@ -4,7 +4,7 @@
 # Date: 17 February 2023
 # https://github.com/trizen
 
-# A simple and fast method for checking if a given integer n has exactly k distinct prime factors (i.e.: omega(n) = k).
+# A simple and fast method for checking if a given integer n has exactly k prime factors (i.e.: bigomega(n) = k).
 
 use 5.020;
 use warnings;
@@ -16,10 +16,10 @@ use Math::GMPz;
 use Math::Prime::Util::GMP;
 
 use constant {
-    HAS_NEW_PRIME_UTIL => defined(&Math::Prime::Util::is_omega_prime),
+    HAS_NEW_PRIME_UTIL => defined(&Math::Prime::Util::is_almost_prime),
 };
 
-sub mpz_is_omega_prime ($n, $k) {
+sub mpz_is_almost_prime ($n, $k) {
 
     state $z = Math::GMPz::Rmpz_init();
     state $t = Math::GMPz::Rmpz_init();
@@ -40,16 +40,19 @@ sub mpz_is_omega_prime ($n, $k) {
     for (my $p = 2 ; $p <= $trial_limit ; $p = next_prime($p)) {
 
         if (Math::GMPz::Rmpz_divisible_ui_p($z, $p)) {
-            --$k;
             Math::GMPz::Rmpz_set_ui($t, $p);
-            Math::GMPz::Rmpz_remove($z, $z, $t);
+            $k -= Math::GMPz::Rmpz_remove($z, $z, $t);
         }
 
         ($k > 0) or last;
 
         if (HAS_NEW_PRIME_UTIL and Math::GMPz::Rmpz_fits_ulong_p($z)) {
-            return Math::Prime::Util::is_omega_prime($k, Math::GMPz::Rmpz_get_ui($z));
+            return Math::Prime::Util::is_almost_prime($k, Math::GMPz::Rmpz_get_ui($z));
         }
+    }
+
+    if ($k < 0) {
+        return 0;
     }
 
     if (Math::GMPz::Rmpz_cmp_ui($z, 1) == 0) {
@@ -63,10 +66,10 @@ sub mpz_is_omega_prime ($n, $k) {
     if ($k == 1) {
 
         if (Math::GMPz::Rmpz_fits_ulong_p($z)) {
-            return is_prime_power(Math::GMPz::Rmpz_get_ui($z));
+            return is_prime(Math::GMPz::Rmpz_get_ui($z));
         }
 
-        return Math::Prime::Util::GMP::is_prime_power(Math::GMPz::Rmpz_get_str($z, 10));
+        return Math::Prime::Util::GMP::is_prime(Math::GMPz::Rmpz_get_str($z, 10));
     }
 
     Math::GMPz::Rmpz_ui_pow_ui($t, next_prime($trial_limit), $k);
@@ -76,8 +79,8 @@ sub mpz_is_omega_prime ($n, $k) {
     }
 
     (HAS_NEW_PRIME_UTIL and Math::GMPz::Rmpz_fits_ulong_p($z))
-      ? Math::Prime::Util::is_omega_prime($k, Math::GMPz::Rmpz_get_ui($z))
-      : (factor_exp(Math::GMPz::Rmpz_get_str($z, 10)) == $k);
+      ? Math::Prime::Util::is_almost_prime($k, Math::GMPz::Rmpz_get_ui($z))
+      : (factor(Math::GMPz::Rmpz_get_str($z, 10)) == $k);
 }
 
 foreach my $n (1 .. 100) {
@@ -86,10 +89,10 @@ foreach my $n (1 .. 100) {
     say "Testing: $t";
 
     foreach my $k (1 .. 20) {
-        if (HAS_NEW_PRIME_UTIL ? Math::Prime::Util::is_omega_prime($k, $t) : (factor_exp($t) == $k)) {
-            mpz_is_omega_prime($t, $k) || die "error for: ($t, $k)";
+        if (HAS_NEW_PRIME_UTIL ? Math::Prime::Util::is_almost_prime($k, $t) : (factor($t) == $k)) {
+            mpz_is_almost_prime($t, $k) || die "error for: ($t, $k)";
         }
-        elsif (mpz_is_omega_prime($t, $k)) {
+        elsif (mpz_is_almost_prime($t, $k)) {
             die "counter-example: ($t, $k)";
         }
     }

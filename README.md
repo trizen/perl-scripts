@@ -600,6 +600,7 @@ A nice collection of day-to-day Perl scripts.
     * [Inverse of usigma function](./Math/inverse_of_usigma_function.pl)
     * [Invert transform of factorials](./Math/invert_transform_of_factorials.pl)
     * [Is absolute euler pseudoprime](./Math/is_absolute_euler_pseudoprime.pl)
+    * [Is almost prime](./Math/is_almost_prime.pl)
     * [Is chernick carmichael number](./Math/is_chernick_carmichael_number.pl)
     * [Is even perfect](./Math/is_even_perfect.pl)
     * [Is even perfect 2](./Math/is_even_perfect_2.pl)
