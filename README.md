@@ -604,6 +604,7 @@ A nice collection of day-to-day Perl scripts.
     * [Is even perfect](./Math/is_even_perfect.pl)
     * [Is even perfect 2](./Math/is_even_perfect_2.pl)
     * [Is even perfect 3](./Math/is_even_perfect_3.pl)
+    * [Is omega prime](./Math/is_omega_prime.pl)
     * [Is perfect power](./Math/is_perfect_power.pl)
     * [Is smooth over product](./Math/is_smooth_over_product.pl)
     * [Is squarefree over product](./Math/is_squarefree_over_product.pl)

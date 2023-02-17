@@ -1,0 +1,96 @@
+#!/usr/bin/perl
+
+# Author: Trizen
+# Date: 17 February 2023
+# https://github.com/trizen
+
+# A simple and fast method for checking if a given integer n has exactly k distinct prime factors (i.e.: omega(n) = k).
+
+use 5.020;
+use warnings;
+
+use ntheory      qw(:all);
+use experimental qw(signatures);
+
+use Math::GMPz;
+use Math::Prime::Util::GMP;
+
+use constant {
+    HAS_NEW_PRIME_UTIL => defined(&Math::Prime::Util::is_omega_prime),
+};
+
+sub mpz_is_omega_prime ($n, $k) {
+
+    state $z = Math::GMPz::Rmpz_init();
+    state $t = Math::GMPz::Rmpz_init();
+
+    if ($n == 0) {
+        return 0;
+    }
+
+    Math::GMPz::Rmpz_set_str($z, $n, 10);
+    Math::GMPz::Rmpz_root($t, $z, $k);
+
+    my $trial_limit = Math::GMPz::Rmpz_get_ui($t);
+
+    if ($trial_limit > 1e3) {
+        $trial_limit = 1e3;
+    }
+
+    for (my $p = 2 ; $p <= $trial_limit ; $p = next_prime($p)) {
+
+        if (Math::GMPz::Rmpz_divisible_ui_p($z, $p)) {
+            --$k;
+            Math::GMPz::Rmpz_set_ui($t, $p);
+            Math::GMPz::Rmpz_remove($z, $z, $t);
+        }
+
+        ($k > 0) or last;
+
+        if (HAS_NEW_PRIME_UTIL and Math::GMPz::Rmpz_fits_ulong_p($z)) {
+            return Math::Prime::Util::is_omega_prime($k, Math::GMPz::Rmpz_get_ui($z));
+        }
+    }
+
+    if (Math::GMPz::Rmpz_cmp_ui($z, 1) == 0) {
+        return ($k == 0);
+    }
+
+    if ($k == 0) {
+        return (Math::GMPz::Rmpz_cmp_ui($z, 1) == 0);
+    }
+
+    if ($k == 1) {
+
+        if (Math::GMPz::Rmpz_fits_ulong_p($z)) {
+            return is_prime_power(Math::GMPz::Rmpz_get_ui($z));
+        }
+
+        return Math::Prime::Util::GMP::is_prime_power(Math::GMPz::Rmpz_get_str($z, 10));
+    }
+
+    Math::GMPz::Rmpz_ui_pow_ui($t, next_prime($trial_limit), $k);
+
+    if (Math::GMPz::Rmpz_cmp($z, $t) < 0) {
+        return 0;
+    }
+
+    (HAS_NEW_PRIME_UTIL and Math::GMPz::Rmpz_fits_ulong_p($z))
+      ? Math::Prime::Util::is_omega_prime($k, Math::GMPz::Rmpz_get_ui($z))
+      : (factor_exp(Math::GMPz::Rmpz_get_str($z, 10)) == $k);
+}
+
+foreach my $n (1 .. 100) {
+    my $t = urandomb($n) + 1;
+
+    say "Testing: $t";
+
+    foreach my $k (1 .. 20) {
+        if (HAS_NEW_PRIME_UTIL ? Math::Prime::Util::is_omega_prime($k, $t) : (factor_exp($t) == $k)) {
+            mpz_is_omega_prime($t, $k) || die "error for: ($t, $k)";
+        }
+        elsif (mpz_is_omega_prime($t, $k)) {
+            die "counter-example: ($t, $k)";
+        }
+    }
+}
