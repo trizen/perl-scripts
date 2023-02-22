@@ -30,23 +30,26 @@ sub fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
 
     $A = vecmax($A, pn_primorial($k));
 
-    sub ($m, $lambda, $p, $j) {
+    sub ($m, $lambda, $lo, $j) {
 
-        my $s = rootint(divint($B, $m), $j);
+        my $hi = rootint(divint($B, $m), $j);
 
-        for (my $r ; $p <= $s ; $p = $r) {
+        if ($lo > $hi) {
+            return;
+        }
 
-            $r = next_prime($p);
+        foreach my $p (@{primes($lo, $hi)}) {
 
             if ($base % $p == 0) {
                 next;
             }
 
-            for (my ($q, $v) = ($p + 0, $m * $p) ; $v <= $B ; ($q, $v) = ($q * $p, $v * $p)) {
+            for (my ($q, $v) = ($p, $m * $p) ; $v <= $B ; ($q, $v) = ($q * $p, $v * $p)) {
 
-                my $L = lcm($lambda, znorder($base, $q));
+                my $z = znorder($base, $q);
+                gcd($m, $z) == 1 or last;
 
-                gcd($L, $v) == 1 or last;
+                my $L = lcm($lambda, $z);
 
                 if ($j == 1) {
                     $v >= $A or next;
@@ -56,8 +59,7 @@ sub fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
                     next;
                 }
 
-                $v * $r <= $B or next;
-                __SUB__->($v, $L, $r, $j - 1);
+                __SUB__->($v, $L, $p + 1, $j - 1);
             }
         }
       }

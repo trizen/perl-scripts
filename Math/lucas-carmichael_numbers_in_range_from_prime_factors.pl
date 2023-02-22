@@ -59,18 +59,11 @@ sub lucas_carmichael_numbers_in_range ($A, $B, $k, $primes, $callback) {
             my $p = $primes->[$i];
             last if ($p > $y);
 
-            my $L = lcm($lambda, $p + 1);
-            gcd($L, $m) == 1 or next;
+            gcd($m, $p + 1) == 1 or next;
 
             # gcd($m*$p, divisor_sum($m*$p)) == 1 or die "$m*$p: not Lucas-cyclic";
 
-            my $t = $m * $p;
-            my $u = divceil($A, $t);
-            my $v = divint($B, $t);
-
-            if ($u <= $v) {
-                __SUB__->($t, $L, $i + 1, $k - 1);
-            }
+            __SUB__->($m * $p, lcm($lambda, $p + 1), $i + 1, $k - 1);
         }
       }
       ->(1, 1, 0, $k);

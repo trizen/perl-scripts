@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 # Daniel "Trizen" Șuteu
-# Date: 27 August 2022
+# Date: 23 February 2023
 # https://github.com/trizen
 
 # Generate all the Lucas-Carmichael numbers with n prime factors in a given range [a,b]. (not in sorted order)
@@ -16,24 +16,26 @@
 # PARI/GP program (in range [A,B]):
 #   lucas_carmichael(A, B, k) = A=max(A, vecprod(primes(k+1))\2); (f(m, l, p, k, u=0, v=0) = my(list=List()); if(k==1, forprime(p=u, v, my(t=m*p); if((t+1)%l == 0 && (t+1)%(p+1) == 0, listput(list, t))), forprime(q = p, sqrtnint(B\m, k), my(t = m*q); my(L=lcm(l, q+1)); if(gcd(L, t) == 1, my(u=ceil(A/t), v=B\t); if(u <= v, my(r=nextprime(q+1)); if(k==2 && r>u, u=r); list=concat(list, f(t, L, r, k-1, u, v)))))); list); vecsort(Vec(f(1, 1, 3, k)));
 
-use 5.020;
-use warnings;
-
-use ntheory      qw(:all);
-use experimental qw(signatures);
-
-sub divceil ($x, $y) {    # ceil(x/y)
-    my $q = divint($x, $y);
-    ($q * $y == $x) ? $q : ($q + 1);
-}
+use 5.036;
+use Math::GMPz;
+use ntheory qw(:all);
 
 sub lucas_carmichael_numbers_in_range ($A, $B, $k, $callback) {
 
-    $A = vecmax($A, pn_primorial($k));
+    $A = vecmax($A, pn_primorial($k + 1) >> 1);
+
+    $A = Math::GMPz->new("$A");
+    $B = Math::GMPz->new("$B");
+
+    my $u = Math::GMPz::Rmpz_init();
+    my $v = Math::GMPz::Rmpz_init();
 
     sub ($m, $L, $lo, $k) {
 
-        my $hi = rootint(divint($B, $m), $k);
+        Math::GMPz::Rmpz_tdiv_q($u, $B, $m);
+        Math::GMPz::Rmpz_root($u, $u, $k);
+
+        my $hi = Math::GMPz::Rmpz_get_ui($u);
 
         if ($lo > $hi) {
             return;
@@ -41,18 +43,45 @@ sub lucas_carmichael_numbers_in_range ($A, $B, $k, $callback) {
 
         if ($k == 1) {
 
-            $lo = vecmax($lo, divceil($A, $m));
-            $lo > $hi && return;
+            Math::GMPz::Rmpz_cdiv_q($u, $A, $m);
 
-            my $t = mulmod(invmod($m, $L), -1, $L);
+            if (Math::GMPz::Rmpz_fits_ulong_p($u)) {
+                $lo = vecmax($lo, Math::GMPz::Rmpz_get_ui($u));
+            }
+            elsif (Math::GMPz::Rmpz_cmp_ui($u, $lo) > 0) {
+                if (Math::GMPz::Rmpz_cmp_ui($u, $hi) > 0) {
+                    return;
+                }
+                $lo = Math::GMPz::Rmpz_get_ui($u);
+            }
+
+            if ($lo > $hi) {
+                return;
+            }
+
+            Math::GMPz::Rmpz_set_ui($v, $L);
+            Math::GMPz::Rmpz_invert($v, $m, $v);
+            Math::GMPz::Rmpz_mul_si($v, $v, -1);
+            Math::GMPz::Rmpz_mod_ui($v, $v, $L);
+
+            if (Math::GMPz::Rmpz_cmp_ui($v, $hi) > 0) {
+                return;
+            }
+
+            if (Math::GMPz::Rmpz_fits_ulong_p($L)) {
+                $L = Math::GMPz::Rmpz_get_ui($L);
+            }
+
+            my $t = Math::GMPz::Rmpz_get_ui($v);
             $t > $hi && return;
             $t += $L while ($t < $lo);
 
             for (my $p = $t ; $p <= $hi ; $p += $L) {
                 if (is_prime($p)) {
-                    my $n = $m * $p;
-                    if (($n + 1) % ($p + 1) == 0) {
-                        $callback->($n);
+                    Math::GMPz::Rmpz_mul_ui($v, $m, $p);
+                    Math::GMPz::Rmpz_add_ui($u, $v, 1);
+                    if (Math::GMPz::Rmpz_divisible_ui_p($u, $p + 1)) {
+                        $callback->(Math::GMPz::Rmpz_init_set($v));
                     }
                 }
             }
@@ -60,16 +89,19 @@ sub lucas_carmichael_numbers_in_range ($A, $B, $k, $callback) {
             return;
         }
 
+        my $z   = Math::GMPz::Rmpz_init();
+        my $lcm = Math::GMPz::Rmpz_init();
+
         foreach my $p (@{primes($lo, $hi)}) {
 
-            gcd($m, $p + 1) == 1 or next;
+            Math::GMPz::Rmpz_gcd_ui($Math::GMPz::NULL, $m, $p + 1) == 1 or next;
+            Math::GMPz::Rmpz_lcm_ui($lcm, $L, $p + 1);
+            Math::GMPz::Rmpz_mul_ui($z, $m, $p);
 
-            # gcd($m*$p, divisor_sum($m*$p)) == 1 or die "$m*$p: not Lucas-cyclic";
-
-            __SUB__->($m * $p, lcm($L, $p + 1), $p + 1, $k - 1);
+            __SUB__->($z, $lcm, $p + 1, $k - 1);
         }
       }
-      ->(1, 1, 3, $k);
+      ->(Math::GMPz->new(1), Math::GMPz->new(1), 3, $k);
 }
 
 # Generate all the Lucas-Carmichael numbers with 5 prime factors in the range [100, 10^8]

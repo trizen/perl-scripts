@@ -28,7 +28,7 @@ sub mpz_is_almost_prime ($n, $k) {
         return 0;
     }
 
-    Math::GMPz::Rmpz_set_str($z, $n, 10);
+    Math::GMPz::Rmpz_set_str($z, "$n", 10);
     Math::GMPz::Rmpz_root($t, $z, $k);
 
     my $trial_limit = Math::GMPz::Rmpz_get_ui($t);

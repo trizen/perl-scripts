@@ -22,31 +22,31 @@ sub squarefree_almost_primes ($A, $B, $k, $callback) {
 
     $A = vecmax($A, pn_primorial($k));
 
-    sub ($m, $p, $k, $u = undef, $v = undef) {
+    sub ($m, $lo, $k) {
+
+        my $hi = rootint(divint($B, $m), $k);
+
+        if ($lo > $hi) {
+            return;
+        }
 
         if ($k == 1) {
 
+            $lo = vecmax($lo, divceil($A, $m));
+
+            if ($lo > $hi) {
+                return;
+            }
+
             forprimes {
                 $callback->(mulint($m, $_));
-            } $u, $v;
+            } $lo, $hi;
 
             return;
         }
 
-        my $s = rootint(divint($B, $m), $k);
-
-        while ($p <= $s) {
-
-            my $r = next_prime($p);
-            my $t = mulint($m, $p);
-            my $u = divceil($A, $t);
-            my $v = divint($B, $t);
-
-            if ($u <= $v) {
-                __SUB__->($t, $r, $k - 1, (($k==2 && $r>$u) ? $r : $u), $v);
-            }
-
-            $p = $r;
+        foreach my $p (@{primes($lo, $hi)}) {
+            __SUB__->(mulint($m, $p), $p+1, $k-1);
         }
     }->(1, 2, $k);
 }

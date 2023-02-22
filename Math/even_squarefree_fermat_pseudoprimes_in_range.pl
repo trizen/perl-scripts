@@ -1,10 +1,10 @@
 #!/usr/bin/perl
 
 # Daniel "Trizen" Șuteu
-# Date: 28 August 2022
+# Date: 22 February 2023
 # https://github.com/trizen
 
-# Generate all the squarefree Fermat pseudoprimes to a given base with n prime factors in a given range [A,B]. (not in sorted order)
+# Generate all the even squarefree Fermat pseudoprimes to a given base with n prime factors in a given range [A,B]. (not in sorted order)
 
 # See also:
 #   https://en.wikipedia.org/wiki/Almost_prime
@@ -24,9 +24,13 @@ sub divceil ($x,$y) {   # ceil(x/y)
     ($q*$y == $x) ? $q : ($q+1);
 }
 
-sub squarefree_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
+sub even_squarefree_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
 
     $A = vecmax($A, pn_primorial($k));
+
+    if ($k <= 1) {
+        return;
+    }
 
     sub ($m, $L, $lo, $k) {
 
@@ -59,25 +63,26 @@ sub squarefree_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
         foreach my $p (@{primes($lo, $hi)}) {
 
             $base % $p == 0 and next;
+
             my $z = znorder($base, $p);
             gcd($m, $z) == 1 or next;
 
             __SUB__->($m * $p, lcm($L, $z), $p + 1, $k - 1);
         }
       }
-      ->(1, 1, 2, $k);
+      ->(2, 1, 3, $k-1);
 }
 
-# Generate all the squarefree Fermat pseudoprimes to base 2 with 5 prime factors in the range [100, 10^8]
+# Generate all the even squarefree Fermat pseudoprimes to base 2 with 5 prime factors in the range [100, 10^10]
 
 my $k    = 5;
 my $base = 2;
 my $from = 100;
-my $upto = 1e8;
+my $upto = 1e11;
 
-my @arr; squarefree_fermat_pseudoprimes_in_range($from, $upto, $k, $base, sub ($n) { push @arr, $n });
+my @arr; even_squarefree_fermat_pseudoprimes_in_range($from, $upto, $k, $base, sub ($n) { push @arr, $n });
 
 say join(', ', sort { $a <=> $b } @arr);
 
 __END__
-825265, 1050985, 1275681, 2113665, 2503501, 2615977, 2882265, 3370641, 3755521, 4670029, 4698001, 4895065, 5034601, 6242685, 6973057, 7428421, 8322945, 9223401, 9224391, 9890881, 10877581, 12067705, 12945745, 13757653, 13823601, 13992265, 16778881, 17698241, 18007345, 18162001, 18779761, 19092921, 22203181, 22269745, 23386441, 25266745, 25831585, 26553241, 27218269, 27336673, 27736345, 28175001, 28787185, 31146661, 32368609, 32428045, 32756581, 34111441, 34386121, 35428141, 36121345, 36168265, 36507801, 37167361, 37695505, 37938901, 38790753, 40280065, 40886241, 41298985, 41341321, 41424801, 41471521, 42689305, 43136821, 46282405, 47006785, 49084321, 49430305, 51396865, 52018341, 52452905, 53661945, 54177949, 54215161, 54651961, 55035001, 55329985, 58708761, 59586241, 60761701, 61679905, 63337393, 63560685, 64567405, 64685545, 67371265, 67994641, 68830021, 69331969, 71804161, 72135505, 72192021, 72348409, 73346365, 73988641, 74165065, 75151441, 76595761, 77442905, 78397705, 80787421, 83058481, 84028407, 84234745, 85875361, 86968981, 88407361, 88466521, 88689601, 89816545, 89915365, 92027001, 92343745, 92974921, 93614521, 93839201, 93869665, 96259681, 96386865, 96653985, 98124481, 98756281, 99551881
+209665666, 213388066, 377994926, 1066079026, 1105826338, 1423998226, 1451887438, 2952654706, 3220041826, 6182224786, 6381449614, 9548385826, 14184805006, 14965276226, 14973142786, 15369282226, 16732427362, 18411253246, 18661908574, 30789370162, 30910262626, 37130195614, 43487454286, 44849716066, 74562118786, 79204064626, 82284719986, 83720640862, 85898088046, 98730252226

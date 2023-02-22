@@ -29,28 +29,39 @@ sub squarefree_strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback
         return;
     }
 
-    my $generator = sub ($m, $lambda, $p, $k, $k_exp, $congr, $u = undef, $v = undef) {
+    my $generator = sub ($m, $L, $lo, $k, $k_exp, $congr) {
+
+        my $hi = rootint(divint($B, $m), $k);
+
+        if ($lo > $hi) {
+            return;
+        }
 
         if ($k == 1) {
 
-            forprimes {
-                my $t = $m * $_;
-                if (($t - 1) % $lambda == 0 and ($t - 1) % znorder($base, $_) == 0) {
-                    my $valuation = valuation($_ - 1, 2);
-                    if ($valuation > $k_exp and powmod($base, ($_ - 1) >> ($valuation - $k_exp), $_) == ($congr % $_)) {
-                        $callback->($t);
+            $lo = vecmax($lo, divceil($A, $m));
+            $lo > $hi && return;
+
+            my $t = invmod($m, $L);
+            $t > $hi && return;
+            $t += $L while ($t < $lo);
+
+            for (my $p = $t ; $p <= $hi ; $p += $L) {
+                is_prime($p) || next;
+                my $valuation = valuation($p - 1, 2);
+                if ($valuation > $k_exp and powmod($base, ($p - 1) >> ($valuation - $k_exp), $p) == ($congr % $p)) {
+                    my $n = $m * $p;
+                    if (($n - 1) % znorder($base, $p) == 0) {
+                        $callback->($n);
                     }
                 }
-            } $u, $v;
+            }
 
             return;
         }
 
-        my $s = rootint(divint($B, $m), $k);
+        foreach my $p (@{primes($lo, $hi)}) {
 
-        for (my $r ; $p <= $s ; $p = $r) {
-
-            $r = next_prime($p);
             $base % $p == 0 and next;
 
             my $valuation = valuation($p - 1, 2);
@@ -58,17 +69,9 @@ sub squarefree_strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback
             powmod($base, ($p - 1) >> ($valuation - $k_exp), $p) == ($congr % $p) or next;
 
             my $z = znorder($base, $p);
-            my $L = lcm($lambda, $z);
+            gcd($m, $z) == 1 or next;
 
-            gcd($L, $m) == 1 or next;
-
-            my $t = $m * $p;
-            my $u = divceil($A, $t);
-            my $v = divint($B, $t);
-
-            if ($u <= $v) {
-                __SUB__->($t, $L, $r, $k - 1, $k_exp, $congr, (($k == 2 && $r > $u) ? $r : $u), $v);
-            }
+            __SUB__->($m * $p, lcm($L, $z), $p + 1, $k - 1, $k_exp, $congr);
         }
     };
 

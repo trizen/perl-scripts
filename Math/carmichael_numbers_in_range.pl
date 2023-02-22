@@ -11,56 +11,62 @@
 #   https://trizenx.blogspot.com/2020/08/pseudoprimes-construction-methods-and.html
 
 # PARI/GP program (in range):
-#   carmichael(A, B, k) = A=max(A, vecprod(primes(k+1))\2); (f(m, l, p, k, u=0, v=0) = my(list=List()); if(k==1, forprime(p=u, v, my(t=m*p); if((t-1)%l == 0 && (t-1)%(p-1) == 0, listput(list, t))), forprime(q = p, sqrtnint(B\m, k), my(t = m*q); my(L=lcm(l, q-1)); if(gcd(L, t) == 1, my(u=ceil(A/t), v=B\t); if(u <= v, my(r=nextprime(q+1)); if(k==2 && r>u, u=r); list=concat(list, f(t, L, r, k-1, u, v)))))); list); vecsort(Vec(f(1, 1, 3, k)));
+#   carmichael(A, B, k) = A=max(A, vecprod(primes(k+1))\2); (f(m, l, lo, k) = my(list=List()); my(hi=sqrtnint(B\m, k)); if(k==1, forprime(p=max(lo, ceil(A/m)), hi, my(t=m*p); if((t-1)%l == 0 && (t-1)%(p-1) == 0, listput(list, t))), forprime(p = lo, hi, my(t = m*p); my(L=lcm(l, p-1)); if(gcd(L, t) == 1, list=concat(list, f(t, L, p+1, k-1))))); list); vecsort(Vec(f(1, 1, 3, k)));
 
 use 5.020;
 use warnings;
 
-use ntheory qw(:all);
+use ntheory      qw(:all);
 use experimental qw(signatures);
 
-sub divceil ($x,$y) {   # ceil(x/y)
+sub divceil ($x, $y) {    # ceil(x/y)
     my $q = divint($x, $y);
-    ($q*$y == $x) ? $q : ($q+1);
+    ($q * $y == $x) ? $q : ($q + 1);
 }
 
 sub carmichael_numbers_in_range ($A, $B, $k, $callback) {
 
-    $A = vecmax($A, pn_primorial($k+1)>>1);
+    $A = vecmax($A, pn_primorial($k + 1) >> 1);
 
-    sub ($m, $lambda, $p, $k, $u = undef, $v = undef) {
+    sub ($m, $L, $lo, $k) {
+
+        my $hi = rootint(divint($B, $m), $k);
+
+        if ($lo > $hi) {
+            return;
+        }
 
         if ($k == 1) {
 
-            forprimes {
-                my $t = $m*$_;
-                if (($t-1)%$lambda == 0 and ($t-1)%($_-1) == 0) {
-                    $callback->($t);
+            $lo = vecmax($lo, divceil($A, $m));
+            $lo > $hi && return;
+
+            my $t = invmod($m, $L);
+            $t > $hi && return;
+            $t += $L while ($t < $lo);
+
+            for (my $p = $t ; $p <= $hi ; $p += $L) {
+                if (is_prime($p)) {
+                    my $n = $m * $p;
+                    if (($n - 1) % ($p - 1) == 0) {
+                        $callback->($n);
+                    }
                 }
-            } $u, $v;
+            }
 
             return;
         }
 
-        my $s = rootint(divint($B, $m), $k);
+        foreach my $p (@{primes($lo, $hi)}) {
 
-        for (my $r; $p <= $s; $p = $r) {
-
-            $r = next_prime($p);
-            my $L = lcm($lambda, $p-1);
-            gcd($L, $m) == 1 or next;
+            gcd($m, $p - 1) == 1 or next;
 
             # gcd($m*$p, euler_phi($m*$p)) == 1 or die "$m*$p: not cyclic";
 
-            my $t = $m*$p;
-            my $u = divceil($A, $t);
-            my $v = divint($B, $t);
-
-            if ($u <= $v) {
-                __SUB__->($t, $L, $r, $k - 1, (($k==2 && $r>$u) ? $r : $u), $v);
-            }
+            __SUB__->($m * $p, lcm($L, $p - 1), $p + 1, $k - 1);
         }
-    }->(1, 1, 3, $k);
+      }
+      ->(1, 1, 3, $k);
 }
 
 # Generate all the 5-Carmichael numbers in the range [100, 10^8]
@@ -69,7 +75,8 @@ my $k    = 5;
 my $from = 100;
 my $upto = 1e8;
 
-my @arr; carmichael_numbers_in_range($from, $upto, $k, sub ($n) { push @arr, $n });
+my @arr;
+carmichael_numbers_in_range($from, $upto, $k, sub ($n) { push @arr, $n });
 
 say join(', ', sort { $a <=> $b } @arr);
 

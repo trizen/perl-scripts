@@ -67,16 +67,16 @@ sub fermat_overpseudoprimes_in_range ($A, $B, $k, $base, $callback) {
     $A = vecmax($A, pn_primorial($k));
 
     my $F;
-    $F = sub ($m, $lambda, $x, $j, $u = undef, $v = undef) {
+    $F = sub ($m, $lambda, $lo, $j) {
 
-        my $y = rootint(divint($B, $m), $j);
+        my $hi = rootint(divint($B, $m), $j);
 
-        $x > $y and return;
+        $lo > $hi and return;
 
-        iterate_over_primes($x, $y, $base, $lambda, sub ($p) {
+        iterate_over_primes($lo, $hi, $base, $lambda, sub ($p) {
             if ($base % $p != 0) {
 
-                for (my ($q, $v) = ($p + 0, $m * $p) ; $v <= $B ; ($q, $v) = ($q * $p, $v * $p)) {
+                for (my ($q, $v) = ($p, $m * $p) ; $v <= $B ; ($q, $v) = ($q * $p, $v * $p)) {
 
                     my $L = znorder($base, $q);
                     if ($lambda > 1) {
@@ -92,9 +92,7 @@ sub fermat_overpseudoprimes_in_range ($A, $B, $k, $base, $callback) {
                         next;
                     }
 
-                    my $r = next_prime($p);
-                    $v * $r <= $B or last;
-                    $F->($v, $L, $r, $j - 1);
+                    $F->($v, $L, $p + 1, $j - 1);
                 }
             }
         });
@@ -117,3 +115,6 @@ foreach my $k (1 .. 100) {
 }
 
 say join(', ', sort { $a <=> $b } @arr);
+
+__END__
+2047, 3277, 4033, 8321, 65281, 80581, 85489, 88357, 104653, 130561, 220729, 253241, 256999, 280601, 390937, 458989, 486737, 514447, 580337, 818201, 838861, 877099, 916327, 976873, 1016801, 1082401, 1145257, 1194649, 1207361, 1251949, 1252697, 1325843

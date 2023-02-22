@@ -39,42 +39,50 @@ sub squarefree_lucas_U_pseudoprimes_in_range ($A, $B, $k, $P, $Q, $callback) {
     $A = vecmax($A, pn_primorial($k));
     my $D = $P * $P - 4 * $Q;
 
-    sub ($m, $lambda, $p, $k, $u = undef, $v = undef) {
+    sub ($m, $L, $lo, $k) {
+
+        my $hi = rootint(divint($B, $m), $k);
+
+        if ($lo > $hi) {
+            return;
+        }
 
         if ($k == 1) {
 
-            forprimes {
-                my $t = $m * $_;
-                my $w = $t - kronecker($D, $t);
-                if ($w % $lambda == 0 and $w % lucas_znorder($P, $Q, $D, $_) == 0) {
-                    $callback->($t);
+            $lo = vecmax($lo, divceil($A, $m));
+            $lo > $hi && return;
+
+            foreach my $j (1, -1) {
+
+                my $t = mulmod(invmod($m, $L), $j, $L);
+                $t > $hi && next;
+                $t += $L while ($t < $lo);
+
+                for (my $p = $t ; $p <= $hi ; $p += $L) {
+                    if (is_prime($p)) {
+                        my $n = $m * $p;
+                        my $w = $n - kronecker($D, $n);
+                        if ($w % $L == 0 and $w % lucas_znorder($P, $Q, $D, $p) == 0) {
+                            $callback->($n);
+                        }
+                    }
                 }
-            } $u, $v;
+            }
 
             return;
         }
 
-        my $s = rootint(divint($B, $m), $k);
+        foreach my $p (@{primes($lo, $hi)}) {
 
-        for (my $r ; $p <= $s ; $p = $r) {
-
-            $r = next_prime($p);
             $D % $p == 0 and next;
 
             my $z = lucas_znorder($P, $Q, $D, $p) // next;
-            my $L = lcm($lambda, $z);
+            gcd($m, $z) == 1 or next;
 
-            gcd($L, $m) == 1 or next;
-
-            my $t = $m * $p;
-            my $u = divceil($A, $t);
-            my $v = divint($B, $t);
-
-            if ($u <= $v) {
-                __SUB__->($t, $L, $r, $k - 1, (($k == 2 && $r > $u) ? $r : $u), $v);
-            }
+            __SUB__->($m * $p, lcm($L, $z), $p + 1, $k - 1);
         }
-    }->(1, 1, 2, $k);
+      }
+      ->(1, 1, 2, $k);
 }
 
 # Generate all the squarefree Fibonacci pseudoprimes in the range [1, 64681]

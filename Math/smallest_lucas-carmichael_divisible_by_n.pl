@@ -17,41 +17,41 @@ sub divceil ($x, $y) {    # ceil(x/y)
     ($q * $y == $x) ? $q : ($q + 1);
 }
 
-sub lucas_carmichael_from_multiple ($A, $B, $m, $lambda, $p, $k, $callback) {
+sub lucas_carmichael_from_multiple ($A, $B, $m, $L, $lo, $k, $callback) {
 
-    my $y = rootint(divint($B, $m), $k);
+    my $hi = rootint(divint($B, $m), $k);
+
+    if ($lo > $hi) {
+        return;
+    }
 
     if ($k == 1) {
 
-        my $x = vecmax($p, divceil($A, $m));
+        $lo = vecmax($lo, divceil($A, $m));
+        $lo > $hi && return;
 
-        forprimes {
-            if ($m % $_ != 0) {
-                my $t = $m * $_;
-                if (($t + 1) % $lambda == 0 and ($t + 1) % ($_ + 1) == 0) {
-                    $callback->($t);
+        my $t = mulmod(invmod($m, $L) // (return), -1, $L);
+        $t > $hi && return;
+        $t += $L while ($t < $lo);
+
+        for (my $p = $t ; $p <= $hi ; $p += $L) {
+            if ($m % $p != 0 and is_prime($p)) {
+                my $n = $m * $p;
+                if (($n + 1) % ($p + 1) == 0) {
+                    $callback->($n);
                 }
             }
-        } $x, $y;
+        }
 
         return;
     }
 
-    for (my $r ; $p <= $y ; $p = $r) {
+    foreach my $p (@{primes($lo, $hi)}) {
 
-        $r = next_prime($p);
         $m % $p == 0 and next;
+        gcd($m, $p + 1) == 1 or next;
 
-        my $L = lcm($lambda, $p + 1);
-        gcd($L, $m) == 1 or next;
-
-        my $t = $m * $p;
-        my $u = divceil($A, $t);
-        my $v = divint($B, $t);
-
-        if ($u <= $v) {
-            __SUB__->($A, $B, $t, $L, $r, $k - 1, $callback);
-        }
+        __SUB__->($A, $B, $m * $p, lcm($L, $p + 1), $p + 1, $k - 1, $callback);
     }
 }
 
@@ -98,13 +98,13 @@ sub lucas_carmichael_divisible_by ($m) {
     vecmin(@found);
 }
 
-lucas_carmichael_divisible_by(1) == 399 or die;
-lucas_carmichael_divisible_by(3) == 399 or die;
-lucas_carmichael_divisible_by(3 * 7) == 399 or die;
+lucas_carmichael_divisible_by(1) == 399      or die;
+lucas_carmichael_divisible_by(3) == 399      or die;
+lucas_carmichael_divisible_by(3 * 7) == 399  or die;
 lucas_carmichael_divisible_by(7 * 19) == 399 or die;
 
 say join(', ', map { lucas_carmichael_divisible_by($_) } @{primes(3, 50)});
-say join(', ', map { lucas_carmichael_divisible_by($_) } 1..100);
+say join(', ', map { lucas_carmichael_divisible_by($_) } 1 .. 100);
 
 __END__
 399, 935, 399, 935, 2015, 935, 399, 4991, 51359, 2015, 1584599, 20705, 5719, 18095

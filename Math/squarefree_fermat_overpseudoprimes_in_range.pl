@@ -64,42 +64,47 @@ sub squarefree_fermat_overpseudoprimes_in_range ($A, $B, $k, $base, $callback) {
     $A = vecmax($A, pn_primorial($k));
 
     my $F;
-    $F = sub ($m, $lambda, $x, $k, $u = undef, $v = undef) {
+    $F = sub ($m, $lambda, $lo, $k) {
+
+        my $hi = rootint(divint($B, $m), $k);
+
+        if ($lo > $hi) {
+            return;
+        }
 
         if ($k == 1) {
 
-            iterate_over_primes($u, $v, $base, $lambda, sub ($p) {
-                if (powmod($base, $lambda, $p) == 1) {
-                    if (($m * $p - 1) % $lambda == 0 and znorder($base, $p) == $lambda) {
-                        $callback->($m * $p);
+            $lo = vecmax($lo, divceil($A, $m));
+
+            if ($lo > $hi) {
+                return;
+            }
+
+            iterate_over_primes(
+                $lo, $hi, $base, $lambda,
+                sub ($p) {
+                    if (powmod($base, $lambda, $p) == 1) {
+                        if (($m * $p - 1) % $lambda == 0 and znorder($base, $p) == $lambda) {
+                            $callback->($m * $p);
+                        }
                     }
                 }
-            });
+            );
 
             return;
         }
 
-        my $y = rootint(divint($B, $m), $k);
-
-        $x > $y and return;
-
-        iterate_over_primes($x, $y, $base, $lambda, sub ($p) {
-            if ($base % $p != 0) {
-
-                my $L = znorder($base, $p);
-                if (($L == $lambda or $lambda == 1) and gcd($L, $m) == 1) {
-
-                    my $t = $m * $p;
-                    my $u = divceil($A, $t);
-                    my $v = divint($B, $t);
-
-                    if ($u <= $v) {
-                        my $r = next_prime($p);
-                        $F->($t, $L, $r, $k - 1, (($k == 2 && $r > $u) ? $r : $u), $v);
+        iterate_over_primes(
+            $lo, $hi, $base, $lambda,
+            sub ($p) {
+                if ($base % $p != 0) {
+                    my $z = znorder($base, $p);
+                    if (($z == $lambda or $lambda == 1) and gcd($z, $m) == 1) {
+                        $F->($m * $p, $z, $p + 1, $k - 1);
                     }
                 }
             }
-        });
+        );
     };
 
     $F->(1, 1, 2, $k);
