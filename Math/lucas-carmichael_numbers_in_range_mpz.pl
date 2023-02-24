@@ -59,10 +59,8 @@ sub lucas_carmichael_numbers_in_range ($A, $B, $k, $callback) {
                 return;
             }
 
-            Math::GMPz::Rmpz_set_ui($v, $L);
-            Math::GMPz::Rmpz_invert($v, $m, $v);
-            Math::GMPz::Rmpz_mul_si($v, $v, -1);
-            Math::GMPz::Rmpz_mod_ui($v, $v, $L);
+            Math::GMPz::Rmpz_invert($v, $m, $L);
+            Math::GMPz::Rmpz_sub($v, $L, $v);
 
             if (Math::GMPz::Rmpz_cmp_ui($v, $hi) > 0) {
                 return;

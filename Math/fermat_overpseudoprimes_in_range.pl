@@ -78,21 +78,21 @@ sub fermat_overpseudoprimes_in_range ($A, $B, $k, $base, $callback) {
 
                 for (my ($q, $v) = ($p, $m * $p) ; $v <= $B ; ($q, $v) = ($q * $p, $v * $p)) {
 
-                    my $L = znorder($base, $q);
+                    my $z = znorder($base, $q);
                     if ($lambda > 1) {
-                        $lambda == $L or last;
+                        $lambda == $z or last;
                     }
-                    gcd($v, $L) == 1 or last;
+                    gcd($v, $z) == 1 or last;
 
                     if ($j == 1) {
                         $v >= $A or next;
                         $k == 1 and is_prime($v) and next;
-                        ($v - 1) % $L == 0 or next;
+                        ($v - 1) % $z == 0 or next;
                         $callback->($v);
                         next;
                     }
 
-                    $F->($v, $L, $p + 1, $j - 1);
+                    $F->($v, $z, $p + 1, $j - 1);
                 }
             }
         });

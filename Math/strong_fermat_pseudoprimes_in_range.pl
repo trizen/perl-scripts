@@ -26,12 +26,17 @@ use warnings;
 use ntheory      qw(:all);
 use experimental qw(signatures);
 
+sub divceil ($x, $y) {    # ceil(x/y)
+    my $q = divint($x, $y);
+    ($q * $y == $x) ? $q : ($q + 1);
+}
+
 sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
 
     $A = vecmax($A, pn_primorial($k));
     $A > $B and return;
 
-    my $generator = sub ($m, $lambda, $lo, $j, $k_exp, $congr) {
+    my $generator = sub ($m, $L, $lo, $j, $k_exp, $congr) {
 
         my $hi = rootint(divint($B, $m), $j);
 
@@ -39,32 +44,65 @@ sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
             return;
         }
 
-        foreach my $p (@{primes($lo, $hi)}) {
+        if ($j == 1) {
 
-            if ($base % $p == 0) {
-                next;
+            $lo = vecmax($lo, divceil($A, $m));
+            $lo > $hi && return;
+
+            if ($L == 1) {    # optimization
+                foreach my $p (@{primes($lo, $hi)}) {
+
+                    $base % $p == 0 and next;
+
+                    my $val = valuation($p - 1, 2);
+                    $val > $k_exp                                                   or next;
+                    powmod($base, ($p - 1) >> ($val - $k_exp), $p) == ($congr % $p) or next;
+
+                    for (my ($q, $v) = ($p, $m * $p) ; $v <= $B ; ($q, $v) = ($q * $p, $v * $p)) {
+                        $v >= $A or next;
+                        $k == 1 and is_prime($v) and next;
+                        ($v - 1) % znorder($base, $q) == 0 or next;
+                        $callback->($v);
+                    }
+                }
+                return;
             }
 
-            my $valuation = valuation($p - 1, 2);
-            $valuation > $k_exp                                                   or next;
-            powmod($base, ($p - 1) >> ($valuation - $k_exp), $p) == ($congr % $p) or next;
+            my $t = invmod($m, $L);
+            $t > $hi && return;
+            $t += $L while ($t < $lo);
+
+            for (my $p = $t ; $p <= $hi ; $p += $L) {
+                if (is_prime($p) and $base % $p != 0) {
+
+                    my $val = valuation($p - 1, 2);
+                    $val > $k_exp                                                   or next;
+                    powmod($base, ($p - 1) >> ($val - $k_exp), $p) == ($congr % $p) or next;
+
+                    for (my ($q, $v) = ($p, $m * $p) ; $v <= $B ; ($q, $v) = ($q * $p, $v * $p)) {
+                        $v >= $A or next;
+                        $k == 1 and is_prime($v) and next;
+                        ($v - 1) % znorder($base, $q) == 0 or next;
+                        $callback->($v);
+                    }
+                }
+            }
+
+            return;
+        }
+
+        foreach my $p (@{primes($lo, $hi)}) {
+
+            $base % $p == 0 and next;
+
+            my $val = valuation($p - 1, 2);
+            $val > $k_exp                                                   or next;
+            powmod($base, ($p - 1) >> ($val - $k_exp), $p) == ($congr % $p) or next;
 
             for (my ($q, $v) = ($p, $m * $p) ; $v <= $B ; ($q, $v) = ($q * $p, $v * $p)) {
-
                 my $z = znorder($base, $q);
-                gcd($m, $z) == 1 or last;
-
-                my $L = lcm($lambda, $z);
-
-                if ($j == 1) {
-                    $v >= $A or next;
-                    $k == 1 and is_prime($v) and next;
-                    ($v - 1) % $L == 0 or next;
-                    $callback->($v);
-                    next;
-                }
-
-                __SUB__->($v, $L, $p + 1, $j - 1, $k_exp, $congr);
+                gcd($v, $z) == 1 or last;
+                __SUB__->($v, lcm($L, $z), $p + 1, $j - 1, $k_exp, $congr);
             }
         }
     };
