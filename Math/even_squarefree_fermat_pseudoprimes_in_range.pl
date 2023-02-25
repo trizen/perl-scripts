@@ -53,7 +53,7 @@ sub even_squarefree_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) 
             $t += $L while ($t < $lo);
 
             for (my $p = $t ; $p <= $hi ; $p += $L) {
-                if (is_prime($p)) {
+                if (is_prime($p) and $base % $p != 0) {
                     if (($m*$p - 1) % znorder($base, $p) == 0) {
                         $callback->($m*$p);
                     }

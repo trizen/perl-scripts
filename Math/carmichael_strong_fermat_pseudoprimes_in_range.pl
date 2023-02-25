@@ -54,11 +54,11 @@ sub carmichael_strong_fermat_in_range ($A, $B, $k, $base, $callback) {
             $t += $L while ($t < $lo);
 
             for (my $p = $t ; $p <= $hi ; $p += $L) {
-                if (is_prime($p)) {
+                if (is_prime($p) and $base % $p != 0) {
                     my $n = $m * $p;
                     if (($n - 1) % ($p - 1) == 0) {
-                        my $valuation = valuation($p - 1, 2);
-                        if ($valuation > $k_exp and powmod($base, ($p - 1) >> ($valuation - $k_exp), $p) == ($congr % $p)) {
+                        my $val = valuation($p - 1, 2);
+                        if ($val > $k_exp and powmod($base, ($p - 1) >> ($val - $k_exp), $p) == ($congr % $p)) {
                             $callback->($n);
                         }
                     }
@@ -71,10 +71,11 @@ sub carmichael_strong_fermat_in_range ($A, $B, $k, $base, $callback) {
         foreach my $p (@{primes($lo, $hi)}) {
 
             gcd($m, $p - 1) == 1 or next;
+            $base % $p == 0 and next;
 
-            my $valuation = valuation($p - 1, 2);
-            $valuation > $k_exp                                                   or next;
-            powmod($base, ($p - 1) >> ($valuation - $k_exp), $p) == ($congr % $p) or next;
+            my $val = valuation($p - 1, 2);
+            $val > $k_exp                                                   or next;
+            powmod($base, ($p - 1) >> ($val - $k_exp), $p) == ($congr % $p) or next;
 
             # gcd($m*$p, euler_phi($m*$p)) == 1 or die "$m*$p: not cyclic";
 

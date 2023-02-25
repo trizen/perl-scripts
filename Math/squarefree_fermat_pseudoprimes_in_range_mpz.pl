@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 # Daniel "Trizen" Șuteu
-# Date: 28 August 2022
+# Date: 25 February 2023
 # https://github.com/trizen
 
 # Generate all the squarefree Fermat pseudoprimes to a given base with n prime factors in a given range [A,B]. (not in sorted order)
@@ -10,30 +10,32 @@
 #   https://en.wikipedia.org/wiki/Almost_prime
 #   https://trizenx.blogspot.com/2020/08/pseudoprimes-construction-methods-and.html
 
-# PARI/GP program (in range) (simple):
+# PARI/GP program (in range):
 #   squarefree_fermat(A, B, k, base=2) = A=max(A, vecprod(primes(k))); (f(m, l, lo, k) = my(list=List()); my(hi=sqrtnint(B\m, k)); if(lo > hi, return(list)); if(k==1, forprime(p=max(lo, ceil(A/m)), hi, if(base%p != 0, my(t=m*p); if((t-1)%l == 0 && (t-1)%znorder(Mod(base, p)) == 0, listput(list, t)))), forprime(p=lo, hi, if (base%p != 0, my(z=znorder(Mod(base, p))); if(gcd(m, z) == 1, list=concat(list, f(m*p, lcm(l,z), p+1, k-1)))))); list); vecsort(Vec(f(1, 1, 2, k)));
 
 # PARI/GP program (in range) (faster):
 #   squarefree_fermat(A, B, k, base=2) = A=max(A, vecprod(primes(k))); (f(m, l, lo, k) = my(list=List()); my(hi=sqrtnint(B\m, k)); if(lo > hi, return(list)); if(k==1, lo=max(lo, ceil(A/m)); my(t=lift(1/Mod(m,l))); while(t < lo, t += l); forstep(p=t, hi, l, if(isprime(p), my(n=m*p); if((n-1)%znorder(Mod(base, p)) == 0, listput(list, n)))), forprime(p=lo, hi, if (base%p != 0, my(z=znorder(Mod(base, p))); if(gcd(m, z) == 1, list=concat(list, f(m*p, lcm(l,z), p+1, k-1)))))); list); vecsort(Vec(f(1, 1, 2, k)));
 
-use 5.020;
-use warnings;
-
+use 5.036;
+use Math::GMPz;
 use ntheory qw(:all);
-use experimental qw(signatures);
-
-sub divceil ($x,$y) {   # ceil(x/y)
-    my $q = divint($x, $y);
-    ($q*$y == $x) ? $q : ($q+1);
-}
 
 sub squarefree_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
 
     $A = vecmax($A, pn_primorial($k));
 
+    $A = Math::GMPz->new("$A");
+    $B = Math::GMPz->new("$B");
+
+    my $u = Math::GMPz::Rmpz_init();
+    my $v = Math::GMPz::Rmpz_init();
+
     sub ($m, $L, $lo, $k) {
 
-        my $hi = rootint(divint($B, $m), $k);
+        Math::GMPz::Rmpz_tdiv_q($u, $B, $m);
+        Math::GMPz::Rmpz_root($u, $u, $k);
+
+        my $hi = Math::GMPz::Rmpz_get_ui($u);
 
         if ($lo > $hi) {
             return;
@@ -41,18 +43,42 @@ sub squarefree_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
 
         if ($k == 1) {
 
-            $lo = vecmax($lo, divceil($A, $m));
-            $lo > $hi && return;
+            Math::GMPz::Rmpz_cdiv_q($u, $A, $m);
 
-            my $t = invmod($m, $L);
+            if (Math::GMPz::Rmpz_fits_ulong_p($u)) {
+                $lo = vecmax($lo, Math::GMPz::Rmpz_get_ui($u));
+            }
+            elsif (Math::GMPz::Rmpz_cmp_ui($u, $lo) > 0) {
+                if (Math::GMPz::Rmpz_cmp_ui($u, $hi) > 0) {
+                    return;
+                }
+                $lo = Math::GMPz::Rmpz_get_ui($u);
+            }
+
+            if ($lo > $hi) {
+                return;
+            }
+
+            Math::GMPz::Rmpz_invert($v, $m, $L);
+
+            if (Math::GMPz::Rmpz_cmp_ui($v, $hi) > 0) {
+                return;
+            }
+
+            if (Math::GMPz::Rmpz_fits_ulong_p($L)) {
+                $L = Math::GMPz::Rmpz_get_ui($L);
+            }
+
+            my $t = Math::GMPz::Rmpz_get_ui($v);
             $t > $hi && return;
             $t += $L while ($t < $lo);
 
             for (my $p = $t ; $p <= $hi ; $p += $L) {
                 if (is_prime($p) and $base % $p != 0) {
-                    my $n = $m * $p;
-                    if (($n - 1) % znorder($base, $p) == 0) {
-                        $callback->($n);
+                    Math::GMPz::Rmpz_mul_ui($v, $m, $p);
+                    Math::GMPz::Rmpz_sub_ui($u, $v, 1);
+                    if (Math::GMPz::Rmpz_divisible_ui_p($u, znorder($base, $p))) {
+                        $callback->(Math::GMPz::Rmpz_init_set($v));
                     }
                 }
             }
@@ -60,26 +86,32 @@ sub squarefree_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
             return;
         }
 
+        my $t   = Math::GMPz::Rmpz_init();
+        my $lcm = Math::GMPz::Rmpz_init();
+
         foreach my $p (@{primes($lo, $hi)}) {
 
             $base % $p == 0 and next;
             my $z = znorder($base, $p);
-            gcd($m, $z) == 1 or next;
+            Math::GMPz::Rmpz_gcd_ui($Math::GMPz::NULL, $m, $z) == 1 or next;
+            Math::GMPz::Rmpz_lcm_ui($lcm, $L, $z);
+            Math::GMPz::Rmpz_mul_ui($t, $m, $p);
 
-            __SUB__->($m * $p, lcm($L, $z), $p + 1, $k - 1);
+            __SUB__->($t, $lcm, $p + 1, $k - 1);
         }
       }
-      ->(1, 1, 2, $k);
+      ->(Math::GMPz->new(1), Math::GMPz->new(1), 2, $k);
 }
 
 # Generate all the squarefree Fermat pseudoprimes to base 2 with 5 prime factors in the range [100, 10^8]
 
 my $k    = 5;
-my $base = 2;
+my $base = 3;
 my $from = 100;
 my $upto = 1e8;
 
-my @arr; squarefree_fermat_pseudoprimes_in_range($from, $upto, $k, $base, sub ($n) { push @arr, $n });
+my @arr;
+squarefree_fermat_pseudoprimes_in_range($from, $upto, $k, $base, sub ($n) { push @arr, $n });
 
 say join(', ', sort { $a <=> $b } @arr);
 

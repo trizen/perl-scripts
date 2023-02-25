@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 # Daniel "Trizen" Șuteu
-# Date: 24 September 2022
+# Date: 25 February 2023
 # https://github.com/trizen
 
 # Generate all the squarefree strong Fermat pseudoprimes to a given base with n prime factors in a given range [A,B]. (not in sorted order)
@@ -10,28 +10,26 @@
 #   https://en.wikipedia.org/wiki/Almost_prime
 #   https://trizenx.blogspot.com/2020/08/pseudoprimes-construction-methods-and.html
 
-use 5.020;
-use warnings;
-
-use ntheory      qw(:all);
-use experimental qw(signatures);
-
-sub divceil ($x, $y) {    # ceil(x/y)
-    my $q = divint($x, $y);
-    ($q * $y == $x) ? $q : ($q + 1);
-}
+use 5.036;
+use Math::GMPz;
+use ntheory qw(:all);
 
 sub squarefree_strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
 
     $A = vecmax($A, pn_primorial($k));
 
-    if ($A > $B) {
-        return;
-    }
+    $A = Math::GMPz->new("$A");
+    $B = Math::GMPz->new("$B");
+
+    my $u = Math::GMPz::Rmpz_init();
+    my $v = Math::GMPz::Rmpz_init();
 
     my $generator = sub ($m, $L, $lo, $k, $k_exp, $congr) {
 
-        my $hi = rootint(divint($B, $m), $k);
+        Math::GMPz::Rmpz_tdiv_q($u, $B, $m);
+        Math::GMPz::Rmpz_root($u, $u, $k);
+
+        my $hi = Math::GMPz::Rmpz_get_ui($u);
 
         if ($lo > $hi) {
             return;
@@ -39,10 +37,33 @@ sub squarefree_strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback
 
         if ($k == 1) {
 
-            $lo = vecmax($lo, divceil($A, $m));
-            $lo > $hi && return;
+            Math::GMPz::Rmpz_cdiv_q($u, $A, $m);
 
-            my $t = invmod($m, $L);
+            if (Math::GMPz::Rmpz_fits_ulong_p($u)) {
+                $lo = vecmax($lo, Math::GMPz::Rmpz_get_ui($u));
+            }
+            elsif (Math::GMPz::Rmpz_cmp_ui($u, $lo) > 0) {
+                if (Math::GMPz::Rmpz_cmp_ui($u, $hi) > 0) {
+                    return;
+                }
+                $lo = Math::GMPz::Rmpz_get_ui($u);
+            }
+
+            if ($lo > $hi) {
+                return;
+            }
+
+            Math::GMPz::Rmpz_invert($v, $m, $L);
+
+            if (Math::GMPz::Rmpz_cmp_ui($v, $hi) > 0) {
+                return;
+            }
+
+            if (Math::GMPz::Rmpz_fits_ulong_p($L)) {
+                $L = Math::GMPz::Rmpz_get_ui($L);
+            }
+
+            my $t = Math::GMPz::Rmpz_get_ui($v);
             $t > $hi && return;
             $t += $L while ($t < $lo);
 
@@ -53,15 +74,19 @@ sub squarefree_strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback
 
                 my $val = valuation($p - 1, 2);
                 if ($val > $k_exp and powmod($base, ($p - 1) >> ($val - $k_exp), $p) == ($congr % $p)) {
-                    my $n = $m * $p;
-                    if (($n - 1) % znorder($base, $p) == 0) {
-                        $callback->($n);
+                    Math::GMPz::Rmpz_mul_ui($v, $m, $p);
+                    Math::GMPz::Rmpz_sub_ui($u, $v, 1);
+                    if (Math::GMPz::Rmpz_divisible_ui_p($u, znorder($base, $p))) {
+                        $callback->(Math::GMPz::Rmpz_init_set($v));
                     }
                 }
             }
 
             return;
         }
+
+        my $t   = Math::GMPz::Rmpz_init();
+        my $lcm = Math::GMPz::Rmpz_init();
 
         foreach my $p (@{primes($lo, $hi)}) {
 
@@ -72,18 +97,20 @@ sub squarefree_strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback
             powmod($base, ($p - 1) >> ($val - $k_exp), $p) == ($congr % $p) or next;
 
             my $z = znorder($base, $p);
-            gcd($m, $z) == 1 or next;
+            Math::GMPz::Rmpz_gcd_ui($Math::GMPz::NULL, $m, $z) == 1 or next;
+            Math::GMPz::Rmpz_lcm_ui($lcm, $L, $z);
+            Math::GMPz::Rmpz_mul_ui($t, $m, $p);
 
-            __SUB__->($m * $p, lcm($L, $z), $p + 1, $k - 1, $k_exp, $congr);
+            __SUB__->($t, $lcm, $p + 1, $k - 1, $k_exp, $congr);
         }
     };
 
     # Case where 2^d == 1 (mod p), where d is the odd part of p-1.
-    $generator->(1, 1, 2, $k, 0, 1);
+    $generator->(Math::GMPz->new(1), Math::GMPz->new(1), 2, $k, 0, 1);
 
     # Cases where 2^(d * 2^v) == -1 (mod p), for some v >= 0.
     foreach my $v (0 .. logint($B, 2)) {
-        $generator->(1, 1, 2, $k, $v, -1);
+        $generator->(Math::GMPz->new(1), Math::GMPz->new(1), 2, $k, $v, -1);
     }
 }
 
