@@ -127,7 +127,9 @@ say join(', ', sort { $a <=> $b } @arr);
 if (0) {    # true to run some tests
     foreach my $k (1 .. 5) {
 
-        my $lo           = pn_primorial($k);
+        say "Testing k = $k";
+
+        my $lo           = pn_primorial($k)*4;
         my $hi           = mulint($lo, 1000);
         my $omega_primes = omega_primes($k, $lo, $hi);
 

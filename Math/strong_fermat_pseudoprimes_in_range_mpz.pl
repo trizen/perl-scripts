@@ -71,11 +71,12 @@ sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
                     $val > $k_exp                                                   or next;
                     powmod($base, ($p - 1) >> ($val - $k_exp), $p) == ($congr % $p) or next;
 
+                    Math::GMPz::Rmpz_mul_ui($v, $m, $p);
+
                     if ($k == 1 and is_prime($p) and Math::GMPz::Rmpz_cmp_ui($m, 1) == 0) {
                         ## ok
                     }
-                    else {
-                        Math::GMPz::Rmpz_mul_ui($v, $m, $p);
+                    elsif (Math::GMPz::Rmpz_cmp($v, $A) >= 0) {
                         Math::GMPz::Rmpz_sub_ui($u, $v, 1);
                         if (Math::GMPz::Rmpz_divisible_ui_p($u, znorder($base, $p))) {
                             $callback->(Math::GMPz::Rmpz_init_set($v)) if !$seen{Math::GMPz::Rmpz_get_str($v, 10)}++;
@@ -141,8 +142,10 @@ say join(', ', sort { $a <=> $b } @arr);
 if (0) {    # true to run some tests
     foreach my $k (1 .. 5) {
 
-        my $lo           = pn_primorial($k);
-        my $hi           = mulint($lo, 10000);
+        say "Testing k = $k";
+
+        my $lo           = pn_primorial($k)*4;
+        my $hi           = mulint($lo, 1000);
         my $omega_primes = omega_primes($k, $lo, $hi);
 
         foreach my $base (2 .. 100) {
