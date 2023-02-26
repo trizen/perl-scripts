@@ -13,11 +13,11 @@ use 5.010;
 use strict;
 use warnings;
 
-use open OUT => ':encoding(UTF-8)';
-
 use Term::ReadLine;
 use Text::ASCIITable;
 use List::Util qw(shuffle);
+
+binmode(STDOUT, ':utf8');
 
 my $DEBUG = 0;
 
