@@ -21,6 +21,8 @@
 # PARI/GP program:
 #   even_fermat_psp(A, B, k, base) = A=max(A, vecprod(primes(k))); (f(m, l, p, j) = my(list=List()); forprime(q=p, sqrtnint(B\m, j), if(base%q != 0, my(v=m*q, t=q); while(v <= B, my(L=lcm(l, znorder(Mod(base, t)))); if(gcd(L, v) == 1, if(j==1, if(v>=A && if(k==1, !isprime(v), 1) && (v-1)%L == 0, listput(list, v)), list=concat(list, f(v, L, q+1, j-1))), break); v *= q; t *= q))); list); vecsort(Vec(f(2, 1, 3, k-1)));
 
+# FIXME: it doesn't generate all the terms for bases > 2.
+
 use 5.020;
 use warnings;
 
@@ -34,6 +36,8 @@ sub even_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
     }
 
     $A = vecmax($A, pn_primorial($k));
+
+    my %seen;
 
     sub ($m, $L, $lo, $j) {
 
@@ -53,8 +57,9 @@ sub even_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
                     for (my ($q, $v) = ($p, $m * $p) ; $v <= $B ; ($q, $v) = ($q * $p, $v * $p)) {
                         $v >= $A or next;
                         $k == 1 and is_prime($v) and next;
-                        ($v - 1) % znorder($base, $q) == 0 or next;
-                        $callback->($v);
+                        #($v - 1) % znorder($base, $q) == 0 or next;
+                        powmod($base, $v, $v) == $base or next;
+                        $callback->($v) if !$seen{$v}++;
                     }
                 }
                 return;
@@ -65,14 +70,13 @@ sub even_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
             $t += $L while ($t < $lo);
 
             for (my $p = $t ; $p <= $hi ; $p += $L) {
-                if (is_prime($p) and $base % $p != 0) {
-                    for (my ($q, $v) = ($p, $m * $p) ; $v <= $B ; ($q, $v) = ($q * $p, $v * $p)) {
-                        $v >= $A or next;
-                        $k == 1 and is_prime($v) and next;
-                        ($v - 1) % $L == 0                 or next;
-                        ($v - 1) % znorder($base, $q) == 0 or next;
-                        $callback->($v);
-                    }
+                if (is_prime_power($p) and gcd($m, $p) == 1 and gcd($base, $p) == 1) {
+                    my $v = $m * $p;
+                    $v >= $A or next;
+                    $k == 1 and is_prime($v) and next;
+                    #($v - 1) % znorder($base, $p) == 0 or next;
+                    powmod($base, $v, $v) == $base or next;
+                    $callback->($v) if !$seen{$v}++;
                 }
             }
 

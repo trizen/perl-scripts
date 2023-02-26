@@ -31,6 +31,8 @@ sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
     $A = vecmax($A, pn_primorial($k));
     $A > $B and return;
 
+    my %seen;
+
     my $generator = sub ($m, $L, $lo, $j, $k_exp, $congr) {
 
         my $hi = rootint(divint($B, $m), $j);
@@ -54,7 +56,7 @@ sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
                         $v >= $A or next;
                         $k == 1 and is_prime($v) and next;
                         ($v - 1) % znorder($base, $q) == 0 or next;
-                        $callback->($v);
+                        $callback->($v) if !$seen{$v}++;
                     }
                 }
                 return;
@@ -65,19 +67,17 @@ sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
             $t += $L while ($t < $lo);
 
             for (my $p = $t ; $p <= $hi ; $p += $L) {
-                if (is_prime($p) and $base % $p != 0) {
 
-                    my $val = valuation($p - 1, 2);
-                    $val > $k_exp                                                   or next;
-                    powmod($base, ($p - 1) >> ($val - $k_exp), $p) == ($congr % $p) or next;
+                my $val = valuation($p - 1, 2);
+                $val > $k_exp                                                   or next;
+                powmod($base, ($p - 1) >> ($val - $k_exp), $p) == ($congr % $p) or next;
 
-                    for (my ($q, $v) = ($p, $m * $p) ; $v <= $B ; ($q, $v) = ($q * $p, $v * $p)) {
-                        $v >= $A or next;
-                        $k == 1 and is_prime($v) and next;
-                        ($v - 1) % $L == 0                 or next;
-                        ($v - 1) % znorder($base, $q) == 0 or next;
-                        $callback->($v);
-                    }
+                if (is_prime_power($p) and gcd($m, $p) == 1 and gcd($base, $p) == 1) {
+                    my $v = $m * $p;
+                    $v >= $A or next;
+                    $k == 1 and is_prime($v) and next;
+                    ($v - 1) % znorder($base, $p) == 0 or next;
+                    $callback->($v) if !$seen{$v}++;
                 }
             }
 
@@ -122,6 +122,26 @@ foreach my $k (1 .. 100) {
 }
 
 say join(', ', sort { $a <=> $b } @arr);
+
+# Run some tests
+
+if (0) {    # true to run some tests
+    foreach my $k (1 .. 5) {
+
+        my $lo           = pn_primorial($k);
+        my $hi           = mulint($lo, 10000);
+        my $omega_primes = omega_primes($k, $lo, $hi);
+
+        foreach my $base (2 .. 100) {
+            my @this = grep { is_strong_pseudoprime($_, $base) and !is_prime($_) } @$omega_primes;
+            my @that;
+            strong_fermat_pseudoprimes_in_range($lo, $hi, $k, $base, sub ($n) { push @that, $n });
+            @that = sort { $a <=> $b } @that;
+            join(' ', @this) eq join(' ', @that)
+              or die "Error for k = $k and base = $base with hi = $hi\n(@this) != (@that)";
+        }
+    }
+}
 
 __END__
 121, 703, 1891, 3281, 8401, 8911, 10585, 12403, 16531, 18721, 19345, 23521, 31621, 44287, 47197, 55969, 63139, 74593, 79003, 82513, 87913, 88573, 97567

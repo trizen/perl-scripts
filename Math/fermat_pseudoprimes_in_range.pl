@@ -30,6 +30,8 @@ sub fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
 
     $A = vecmax($A, pn_primorial($k));
 
+    my %seen;
+
     sub ($m, $L, $lo, $j) {
 
         my $hi = rootint(divint($B, $m), $j);
@@ -49,7 +51,8 @@ sub fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
                         $v >= $A or next;
                         $k == 1 and is_prime($v) and next;
                         ($v - 1) % znorder($base, $q) == 0 or next;
-                        $callback->($v);
+                        #powmod($base, $v-1, $v) == 1 or next;
+                        $callback->($v) if !$seen{$v}++;
                     }
                 }
                 return;
@@ -60,14 +63,14 @@ sub fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
             $t += $L while ($t < $lo);
 
             for (my $p = $t ; $p <= $hi ; $p += $L) {
-                if (is_prime($p) and $base % $p != 0) {
-                    for (my ($q, $v) = ($p, $m * $p) ; $v <= $B ; ($q, $v) = ($q * $p, $v * $p)) {
-                        $v >= $A or next;
-                        $k == 1 and is_prime($v) and next;
-                        ($v - 1) % $L == 0                 or next;
-                        ($v - 1) % znorder($base, $q) == 0 or next;
-                        $callback->($v);
-                    }
+                if (is_prime_power($p) and gcd($m, $p) == 1 and gcd($base, $p) == 1) {
+
+                    my $v = $m * $p;
+                    $v >= $A or next;
+                    $k == 1 and is_prime($v) and next;
+                    ($v - 1) % znorder($base, $p) == 0 or next;
+                    #powmod($base, $v-1, $v) == 1 or next;
+                    $callback->($v) if !$seen{$v}++;
                 }
             }
 
@@ -101,6 +104,26 @@ foreach my $k (1 .. 100) {
 }
 
 say join(', ', sort { $a <=> $b } @arr);
+
+# Run some tests
+
+if (0) {    # true to run some tests
+    foreach my $k (1 .. 5) {
+
+        my $lo           = pn_primorial($k);
+        my $hi           = mulint($lo, 1000);
+        my $omega_primes = omega_primes($k, $lo, $hi);
+
+        foreach my $base (2 .. 100) {
+            my @this = grep { is_pseudoprime($_, $base) and !is_prime($_) } @$omega_primes;
+            my @that;
+            fermat_pseudoprimes_in_range($lo, $hi, $k, $base, sub ($n) { push @that, $n });
+            @that = sort { $a <=> $b } @that;
+            join(' ', @this) eq join(' ', @that)
+              or die "Error for k = $k and base = $base with hi = $hi\n(@this) != (@that)";
+        }
+    }
+}
 
 __END__
 91, 121, 286, 671, 703, 949, 1105, 1541, 1729, 1891, 2465, 2665, 2701, 2821, 3281, 3367, 3751, 4961, 5551, 6601, 7381, 8401, 8911, 10585, 11011, 12403, 14383, 15203, 15457, 15841, 16471, 16531, 18721, 19345, 23521, 24046, 24661, 24727, 28009, 29161, 29341, 30857, 31621, 31697, 32791, 38503, 41041, 44287, 46657, 46999, 47197, 49051, 49141, 50881, 52633, 53131, 55261, 55969, 63139, 63973, 65485, 68887, 72041, 74593, 75361, 76627, 79003, 82513, 83333, 83665, 87913, 88561, 88573, 88831, 90751, 93961, 96139, 97567

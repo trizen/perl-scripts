@@ -16,6 +16,8 @@
 # PARI/GP program (in range) (version 2):
 #   even_squarefree_fermat(A, B, k, base=2) = A=max(A, vecprod(primes(k))); (f(m, l, lo, k) = my(list=List()); my(hi=sqrtnint(B\m, k)); if(k==1, forprime(p=max(lo, ceil(A/m)), hi, if(base%p != 0, my(t=m*p); if((t-1)%l == 0 && (t-1)%znorder(Mod(base, p)) == 0, listput(list, t)))), forprime(p=lo, hi, if(base%p != 0, my(z=znorder(Mod(base, p))); if(gcd(m, z) == 1, list=concat(list, f(m*p, lcm(l,z), p+1, k-1)))))); list); vecsort(Vec(f(2, 1, 2, k-1)));
 
+# FIXME: it may not generate all the terms for bases > 2.
+
 use 5.020;
 use warnings;
 

@@ -35,6 +35,8 @@ sub fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
     my $v = Math::GMPz::Rmpz_init();
     my $w = Math::GMPz::Rmpz_init();
 
+    my %seen;
+
     sub ($m, $L, $lo, $j) {
 
         Math::GMPz::Rmpz_tdiv_q($u, $B, $m);
@@ -63,24 +65,18 @@ sub fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
             $t += $L while ($t < $lo);
 
             for (my $p = $t ; $p <= $hi ; $p += $L) {
-                if (is_prime($p) and $base % $p != 0) {
+                if (is_prime_power($p) and Math::GMPz::Rmpz_gcd_ui($Math::GMPz::NULL, $m, $p) == 1 and gcd($base, $p) == 1) {
 
-                    Math::GMPz::Rmpz_set_ui($u, $p);
                     Math::GMPz::Rmpz_mul_ui($v, $m, $p);
 
-                    while (Math::GMPz::Rmpz_cmp($v, $B) <= 0) {
-                        if ($k == 1 and is_prime($v)) {
-                            ## ok
+                    if ($k == 1 and is_prime($p) and Math::GMPz::Rmpz_cmp_ui($m, 1) == 0) {
+                        ## ok
+                    }
+                    elsif (Math::GMPz::Rmpz_cmp($v, $A) >= 0) {
+                        Math::GMPz::Rmpz_sub_ui($w, $v, 1);
+                        if (Math::GMPz::Rmpz_divisible_ui_p($w, znorder($base, $p))) {
+                            $callback->(Math::GMPz::Rmpz_init_set($v)) if !$seen{Math::GMPz::Rmpz_get_str($v, 10)}++;
                         }
-                        elsif (Math::GMPz::Rmpz_cmp($v, $A) >= 0) {
-                            Math::GMPz::Rmpz_sub_ui($w, $v, 1);
-                            if ((ref($L) ? Math::GMPz::Rmpz_divisible_p($w, $L) : Math::GMPz::Rmpz_divisible_ui_p($w, $L))
-                                and Math::GMPz::Rmpz_divisible_ui_p($w, znorder($base, $u))) {
-                                $callback->(Math::GMPz::Rmpz_init_set($v));
-                            }
-                        }
-                        Math::GMPz::Rmpz_mul_ui($u, $u, $p);
-                        Math::GMPz::Rmpz_mul_ui($v, $v, $p);
                     }
                 }
             }
@@ -125,6 +121,26 @@ foreach my $k (1 .. 100) {
 }
 
 say join(', ', sort { $a <=> $b } @arr);
+
+# Run some tests
+
+if (0) {    # true to run some tests
+    foreach my $k (1 .. 5) {
+
+        my $lo           = pn_primorial($k);
+        my $hi           = mulint($lo, 1000);
+        my $omega_primes = omega_primes($k, $lo, $hi);
+
+        foreach my $base (2 .. 100) {
+            my @this = grep { is_pseudoprime($_, $base) and !is_prime($_) } @$omega_primes;
+            my @that;
+            fermat_pseudoprimes_in_range($lo, $hi, $k, $base, sub ($n) { push @that, $n });
+            @that = sort { $a <=> $b } @that;
+            join(' ', @this) eq join(' ', @that)
+              or die "Error for k = $k and base = $base with hi = $hi\n(@this) != (@that)";
+        }
+    }
+}
 
 __END__
 91, 121, 286, 671, 703, 949, 1105, 1541, 1729, 1891, 2465, 2665, 2701, 2821, 3281, 3367, 3751, 4961, 5551, 6601, 7381, 8401, 8911, 10585, 11011, 12403, 14383, 15203, 15457, 15841, 16471, 16531, 18721, 19345, 23521, 24046, 24661, 24727, 28009, 29161, 29341, 30857, 31621, 31697, 32791, 38503, 41041, 44287, 46657, 46999, 47197, 49051, 49141, 50881, 52633, 53131, 55261, 55969, 63139, 63973, 65485, 68887, 72041, 74593, 75361, 76627, 79003, 82513, 83333, 83665, 87913, 88561, 88573, 88831, 90751, 93961, 96139, 97567

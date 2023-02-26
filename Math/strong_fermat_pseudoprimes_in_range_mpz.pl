@@ -33,7 +33,8 @@ sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
 
     my $u = Math::GMPz::Rmpz_init();
     my $v = Math::GMPz::Rmpz_init();
-    my $w = Math::GMPz::Rmpz_init();
+
+    my %seen;
 
     my $generator = sub ($m, $L, $lo, $j, $k_exp, $congr) {
 
@@ -47,22 +48,6 @@ sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
         }
 
         if ($j == 1) {
-
-            Math::GMPz::Rmpz_cdiv_q($u, $A, $m);
-
-            if (Math::GMPz::Rmpz_fits_ulong_p($u)) {
-                $lo = vecmax($lo, Math::GMPz::Rmpz_get_ui($u));
-            }
-            elsif (Math::GMPz::Rmpz_cmp_ui($u, $lo) > 0) {
-                if (Math::GMPz::Rmpz_cmp_ui($u, $hi) > 0) {
-                    return;
-                }
-                $lo = Math::GMPz::Rmpz_get_ui($u);
-            }
-
-            if ($lo > $hi) {
-                return;
-            }
 
             Math::GMPz::Rmpz_invert($v, $m, $L);
 
@@ -79,28 +64,22 @@ sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
             $t += $L while ($t < $lo);
 
             for (my $p = $t ; $p <= $hi ; $p += $L) {
-                if (is_prime($p) and $base % $p != 0) {
+
+                if (is_prime_power($p) and Math::GMPz::Rmpz_gcd_ui($Math::GMPz::NULL, $m, $p) == 1 and gcd($base, $p) == 1) {
 
                     my $val = valuation($p - 1, 2);
                     $val > $k_exp                                                   or next;
                     powmod($base, ($p - 1) >> ($val - $k_exp), $p) == ($congr % $p) or next;
 
-                    Math::GMPz::Rmpz_set_ui($u, $p);
-                    Math::GMPz::Rmpz_mul_ui($v, $m, $p);
-
-                    while (Math::GMPz::Rmpz_cmp($v, $B) <= 0) {
-                        if ($k == 1 and is_prime($v)) {
-                            ## ok
+                    if ($k == 1 and is_prime($p) and Math::GMPz::Rmpz_cmp_ui($m, 1) == 0) {
+                        ## ok
+                    }
+                    else {
+                        Math::GMPz::Rmpz_mul_ui($v, $m, $p);
+                        Math::GMPz::Rmpz_sub_ui($u, $v, 1);
+                        if (Math::GMPz::Rmpz_divisible_ui_p($u, znorder($base, $p))) {
+                            $callback->(Math::GMPz::Rmpz_init_set($v)) if !$seen{Math::GMPz::Rmpz_get_str($v, 10)}++;
                         }
-                        else {
-                            Math::GMPz::Rmpz_sub_ui($w, $v, 1);
-                            if ((ref($L) ? Math::GMPz::Rmpz_divisible_p($w, $L) : Math::GMPz::Rmpz_divisible_ui_p($w, $L))
-                                and Math::GMPz::Rmpz_divisible_ui_p($w, znorder($base, $u))) {
-                                $callback->(Math::GMPz::Rmpz_init_set($v));
-                            }
-                        }
-                        Math::GMPz::Rmpz_mul_ui($u, $u, $p);
-                        Math::GMPz::Rmpz_mul_ui($v, $v, $p);
                     }
                 }
             }
@@ -156,6 +135,26 @@ foreach my $k (1 .. 100) {
 }
 
 say join(', ', sort { $a <=> $b } @arr);
+
+# Run some tests
+
+if (0) {    # true to run some tests
+    foreach my $k (1 .. 5) {
+
+        my $lo           = pn_primorial($k);
+        my $hi           = mulint($lo, 10000);
+        my $omega_primes = omega_primes($k, $lo, $hi);
+
+        foreach my $base (2 .. 100) {
+            my @this = grep { is_strong_pseudoprime($_, $base) and !is_prime($_) } @$omega_primes;
+            my @that;
+            strong_fermat_pseudoprimes_in_range($lo, $hi, $k, $base, sub ($n) { push @that, $n });
+            @that = sort { $a <=> $b } @that;
+            join(' ', @this) eq join(' ', @that)
+              or die "Error for k = $k and base = $base with hi = $hi\n(@this) != (@that)";
+        }
+    }
+}
 
 __END__
 121, 703, 1891, 3281, 8401, 8911, 10585, 12403, 16531, 18721, 19345, 23521, 31621, 44287, 47197, 55969, 63139, 74593, 79003, 82513, 87913, 88573, 97567
