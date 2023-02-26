@@ -94,7 +94,8 @@ sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
                         }
                         else {
                             Math::GMPz::Rmpz_sub_ui($w, $v, 1);
-                            if (Math::GMPz::Rmpz_divisible_ui_p($w, znorder($base, $u))) {
+                            if ((ref($L) ? Math::GMPz::Rmpz_divisible_p($w, $L) : Math::GMPz::Rmpz_divisible_ui_p($w, $L))
+                                and Math::GMPz::Rmpz_divisible_ui_p($w, znorder($base, $u))) {
                                 $callback->(Math::GMPz::Rmpz_init_set($v));
                             }
                         }

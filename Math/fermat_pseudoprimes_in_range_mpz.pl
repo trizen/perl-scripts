@@ -48,22 +48,6 @@ sub fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
 
         if ($j == 1) {
 
-            Math::GMPz::Rmpz_cdiv_q($u, $A, $m);
-
-            if (Math::GMPz::Rmpz_fits_ulong_p($u)) {
-                $lo = vecmax($lo, Math::GMPz::Rmpz_get_ui($u));
-            }
-            elsif (Math::GMPz::Rmpz_cmp_ui($u, $lo) > 0) {
-                if (Math::GMPz::Rmpz_cmp_ui($u, $hi) > 0) {
-                    return;
-                }
-                $lo = Math::GMPz::Rmpz_get_ui($u);
-            }
-
-            if ($lo > $hi) {
-                return;
-            }
-
             Math::GMPz::Rmpz_invert($v, $m, $L);
 
             if (Math::GMPz::Rmpz_cmp_ui($v, $hi) > 0) {
@@ -88,9 +72,10 @@ sub fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
                         if ($k == 1 and is_prime($v)) {
                             ## ok
                         }
-                        else {
+                        elsif (Math::GMPz::Rmpz_cmp($v, $A) >= 0) {
                             Math::GMPz::Rmpz_sub_ui($w, $v, 1);
-                            if (Math::GMPz::Rmpz_divisible_ui_p($w, znorder($base, $u))) {
+                            if ((ref($L) ? Math::GMPz::Rmpz_divisible_p($w, $L) : Math::GMPz::Rmpz_divisible_ui_p($w, $L))
+                                and Math::GMPz::Rmpz_divisible_ui_p($w, znorder($base, $u))) {
                                 $callback->(Math::GMPz::Rmpz_init_set($v));
                             }
                         }

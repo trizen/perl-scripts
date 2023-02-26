@@ -29,13 +29,13 @@ use experimental qw(signatures);
 
 sub even_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
 
-    $A = vecmax($A, pn_primorial($k));
-
     if ($k <= 1) {
         return;
     }
 
-    sub ($m, $lambda, $lo, $j) {
+    $A = vecmax($A, pn_primorial($k));
+
+    sub ($m, $L, $lo, $j) {
 
         my $hi = rootint(divint($B, $m), $j);
 
@@ -43,32 +43,54 @@ sub even_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
             return;
         }
 
-        foreach my $p (@{primes($lo, $hi)}) {
+        if ($j == 1) {
 
-            if ($base % $p == 0) {
-                next;
+            if ($L == 1) {    # optimization
+                foreach my $p (@{primes($lo, $hi)}) {
+
+                    $base % $p == 0 and next;
+
+                    for (my ($q, $v) = ($p, $m * $p) ; $v <= $B ; ($q, $v) = ($q * $p, $v * $p)) {
+                        $v >= $A or next;
+                        $k == 1 and is_prime($v) and next;
+                        ($v - 1) % znorder($base, $q) == 0 or next;
+                        $callback->($v);
+                    }
+                }
+                return;
             }
 
-            for (my ($q, $v) = ($p, $m * $p) ; $v <= $B ; ($q, $v) = ($q * $p, $v * $p)) {
+            my $t = invmod($m, $L);
+            $t > $hi && return;
+            $t += $L while ($t < $lo);
 
-                my $z = znorder($base, $q);
-                gcd($m, $z) == 1 or last;
-
-                my $L = lcm($lambda, $z);
-
-                if ($j == 1) {
-                    $v >= $A or next;
-                    $k == 1 and is_prime($v) and next;
-                    ($v - 1) % $L == 0 or next;
-                    $callback->($v);
-                    next;
+            for (my $p = $t ; $p <= $hi ; $p += $L) {
+                if (is_prime($p) and $base % $p != 0) {
+                    for (my ($q, $v) = ($p, $m * $p) ; $v <= $B ; ($q, $v) = ($q * $p, $v * $p)) {
+                        $v >= $A or next;
+                        $k == 1 and is_prime($v) and next;
+                        ($v - 1) % $L == 0                 or next;
+                        ($v - 1) % znorder($base, $q) == 0 or next;
+                        $callback->($v);
+                    }
                 }
+            }
 
-                __SUB__->($v, $L, $p + 1, $j - 1);
+            return;
+        }
+
+        foreach my $p (@{primes($lo, $hi)}) {
+
+            $base % $p == 0 and next;
+
+            for (my ($q, $v) = ($p, $m * $p) ; $v <= $B ; ($q, $v) = ($q * $p, $v * $p)) {
+                my $z = znorder($base, $q);
+                gcd($v, $z) == 1 or last;
+                __SUB__->($v, lcm($L, $z), $p + 1, $j - 1);
             }
         }
       }
-      ->(2, 1, 3, $k-1);
+      ->(2, 1, 3, $k - 1);
 }
 
 # Generate all the even Fermat pseudoprimes to base 2 in range [1, 10^5]

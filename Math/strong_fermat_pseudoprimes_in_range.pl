@@ -26,11 +26,6 @@ use warnings;
 use ntheory      qw(:all);
 use experimental qw(signatures);
 
-sub divceil ($x, $y) {    # ceil(x/y)
-    my $q = divint($x, $y);
-    ($q * $y == $x) ? $q : ($q + 1);
-}
-
 sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
 
     $A = vecmax($A, pn_primorial($k));
@@ -46,9 +41,6 @@ sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
 
         if ($j == 1) {
 
-            $lo = vecmax($lo, divceil($A, $m));
-            $lo > $hi && return;
-
             if ($L == 1) {    # optimization
                 foreach my $p (@{primes($lo, $hi)}) {
 
@@ -59,6 +51,7 @@ sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
                     powmod($base, ($p - 1) >> ($val - $k_exp), $p) == ($congr % $p) or next;
 
                     for (my ($q, $v) = ($p, $m * $p) ; $v <= $B ; ($q, $v) = ($q * $p, $v * $p)) {
+                        $v >= $A or next;
                         $k == 1 and is_prime($v) and next;
                         ($v - 1) % znorder($base, $q) == 0 or next;
                         $callback->($v);
@@ -79,7 +72,9 @@ sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
                     powmod($base, ($p - 1) >> ($val - $k_exp), $p) == ($congr % $p) or next;
 
                     for (my ($q, $v) = ($p, $m * $p) ; $v <= $B ; ($q, $v) = ($q * $p, $v * $p)) {
+                        $v >= $A or next;
                         $k == 1 and is_prime($v) and next;
+                        ($v - 1) % $L == 0                 or next;
                         ($v - 1) % znorder($base, $q) == 0 or next;
                         $callback->($v);
                     }
