@@ -33,7 +33,6 @@ sub fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
 
     my $u = Math::GMPz::Rmpz_init();
     my $v = Math::GMPz::Rmpz_init();
-    my $w = Math::GMPz::Rmpz_init();
 
     my %seen;
 
@@ -73,8 +72,8 @@ sub fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
                         ## ok
                     }
                     elsif (Math::GMPz::Rmpz_cmp($v, $A) >= 0) {
-                        Math::GMPz::Rmpz_sub_ui($w, $v, 1);
-                        if (Math::GMPz::Rmpz_divisible_ui_p($w, znorder($base, $p))) {
+                        Math::GMPz::Rmpz_sub_ui($u, $v, 1);
+                        if (Math::GMPz::Rmpz_divisible_ui_p($u, znorder($base, $p))) {
                             $callback->(Math::GMPz::Rmpz_init_set($v)) if !$seen{Math::GMPz::Rmpz_get_str($v, 10)}++;
                         }
                     }
@@ -92,16 +91,18 @@ sub fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
 
             $base % $p == 0 and next;
 
-            Math::GMPz::Rmpz_set_ui($u, $p);
-            Math::GMPz::Rmpz_mul_ui($v, $m, $p);
+            my $z = znorder($base, $p);
+            Math::GMPz::Rmpz_gcd_ui($Math::GMPz::NULL, $m, $z) == 1 or next;
+            Math::GMPz::Rmpz_lcm_ui($lcm, $L, $z);
 
-            while (Math::GMPz::Rmpz_cmp($v, $B) <= 0) {
-                my $z = znorder($base, $u);
-                Math::GMPz::Rmpz_gcd_ui($Math::GMPz::NULL, $v, $z) == 1 or last;
-                Math::GMPz::Rmpz_lcm_ui($lcm, $L, $z);
+            Math::GMPz::Rmpz_set_ui($u, $p);
+
+            for (Math::GMPz::Rmpz_mul_ui($v, $m, $p) ;
+                 Math::GMPz::Rmpz_cmp($v, $B) <= 0 ;
+                 Math::GMPz::Rmpz_mul_ui($v, $v, $p)) {
                 __SUB__->($v, $lcm, $p + 1, $j - 1);
                 Math::GMPz::Rmpz_mul_ui($u, $u, $p);
-                Math::GMPz::Rmpz_mul_ui($v, $v, $p);
+                powmod($base, $z, $u) == 1 or last;
             }
         }
       }
@@ -129,7 +130,7 @@ if (0) {    # true to run some tests
 
         say "Testing k = $k";
 
-        my $lo           = pn_primorial($k)*4;
+        my $lo           = pn_primorial($k) * 4;
         my $hi           = mulint($lo, 1000);
         my $omega_primes = omega_primes($k, $lo, $hi);
 

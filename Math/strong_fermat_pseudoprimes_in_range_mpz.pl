@@ -100,16 +100,18 @@ sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
             $val > $k_exp                                                   or next;
             powmod($base, ($p - 1) >> ($val - $k_exp), $p) == ($congr % $p) or next;
 
-            Math::GMPz::Rmpz_set_ui($u, $p);
-            Math::GMPz::Rmpz_mul_ui($v, $m, $p);
+            my $z = znorder($base, $p);
+            Math::GMPz::Rmpz_gcd_ui($Math::GMPz::NULL, $m, $z) == 1 or next;
+            Math::GMPz::Rmpz_lcm_ui($lcm, $L, $z);
 
-            while (Math::GMPz::Rmpz_cmp($v, $B) <= 0) {
-                my $z = znorder($base, $u);
-                Math::GMPz::Rmpz_gcd_ui($Math::GMPz::NULL, $v, $z) == 1 or last;
-                Math::GMPz::Rmpz_lcm_ui($lcm, $L, $z);
+            Math::GMPz::Rmpz_set_ui($u, $p);
+
+            for (Math::GMPz::Rmpz_mul_ui($v, $m, $p) ;
+                 Math::GMPz::Rmpz_cmp($v, $B) <= 0 ;
+                 Math::GMPz::Rmpz_mul_ui($v, $v, $p)) {
                 __SUB__->($v, $lcm, $p + 1, $j - 1, $k_exp, $congr);
                 Math::GMPz::Rmpz_mul_ui($u, $u, $p);
-                Math::GMPz::Rmpz_mul_ui($v, $v, $p);
+                powmod($base, $z, $u) == 1 or last;
             }
         }
     };
@@ -144,7 +146,7 @@ if (0) {    # true to run some tests
 
         say "Testing k = $k";
 
-        my $lo           = pn_primorial($k)*4;
+        my $lo           = pn_primorial($k) * 4;
         my $hi           = mulint($lo, 1000);
         my $omega_primes = omega_primes($k, $lo, $hi);
 

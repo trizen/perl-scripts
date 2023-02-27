@@ -52,10 +52,10 @@ sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
                     $val > $k_exp                                                   or next;
                     powmod($base, ($p - 1) >> ($val - $k_exp), $p) == ($congr % $p) or next;
 
-                    for (my ($q, $v) = ($p, $m * $p) ; $v <= $B ; ($q, $v) = ($q * $p, $v * $p)) {
+                    for (my $v = $m * $p ; $v <= $B ; $v *= $p) {
                         $v >= $A or next;
                         $k == 1 and is_prime($v) and next;
-                        ($v - 1) % znorder($base, $q) == 0 or next;
+                        powmod($base, $v - 1, $v) == 1 or next;
                         $callback->($v) if !$seen{$v}++;
                     }
                 }
@@ -67,12 +67,12 @@ sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
             $t += $L while ($t < $lo);
 
             for (my $p = $t ; $p <= $hi ; $p += $L) {
-
-                my $val = valuation($p - 1, 2);
-                $val > $k_exp                                                   or next;
-                powmod($base, ($p - 1) >> ($val - $k_exp), $p) == ($congr % $p) or next;
-
                 if (is_prime_power($p) and gcd($m, $p) == 1 and gcd($base, $p) == 1) {
+
+                    my $val = valuation($p - 1, 2);
+                    $val > $k_exp                                                   or next;
+                    powmod($base, ($p - 1) >> ($val - $k_exp), $p) == ($congr % $p) or next;
+
                     my $v = $m * $p;
                     $v >= $A or next;
                     $k == 1 and is_prime($v) and next;
@@ -92,9 +92,15 @@ sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
             $val > $k_exp                                                   or next;
             powmod($base, ($p - 1) >> ($val - $k_exp), $p) == ($congr % $p) or next;
 
+            my $z = znorder($base, $p);
+            gcd($m, $z) == 1 or next;
+
             for (my ($q, $v) = ($p, $m * $p) ; $v <= $B ; ($q, $v) = ($q * $p, $v * $p)) {
-                my $z = znorder($base, $q);
-                gcd($v, $z) == 1 or last;
+
+                if ($q > $p) {
+                    powmod($base, $z, $q) == 1 or last;
+                }
+
                 __SUB__->($v, lcm($L, $z), $p + 1, $j - 1, $k_exp, $congr);
             }
         }
@@ -127,6 +133,8 @@ say join(', ', sort { $a <=> $b } @arr);
 
 if (0) {    # true to run some tests
     foreach my $k (1 .. 5) {
+
+        say "Testing k = $k";
 
         my $lo           = pn_primorial($k);
         my $hi           = mulint($lo, 10000);

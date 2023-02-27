@@ -54,10 +54,9 @@ sub even_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
 
                     $base % $p == 0 and next;
 
-                    for (my ($q, $v) = ($p, $m * $p) ; $v <= $B ; ($q, $v) = ($q * $p, $v * $p)) {
+                    for (my $v = $m * $p ; $v <= $B ; $v *= $p) {
                         $v >= $A or next;
                         $k == 1 and is_prime($v) and next;
-                        #($v - 1) % znorder($base, $q) == 0 or next;
                         powmod($base, $v, $v) == $base or next;
                         $callback->($v) if !$seen{$v}++;
                     }
@@ -74,6 +73,7 @@ sub even_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
                     my $v = $m * $p;
                     $v >= $A or next;
                     $k == 1 and is_prime($v) and next;
+
                     #($v - 1) % znorder($base, $p) == 0 or next;
                     powmod($base, $v, $v) == $base or next;
                     $callback->($v) if !$seen{$v}++;
@@ -87,10 +87,17 @@ sub even_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
 
             $base % $p == 0 and next;
 
+            my $z = znorder($base, $p);
+            gcd($m, $z) == 1 or next;
+            my $l = lcm($L, $z);
+
             for (my ($q, $v) = ($p, $m * $p) ; $v <= $B ; ($q, $v) = ($q * $p, $v * $p)) {
-                my $z = znorder($base, $q);
-                gcd($v, $z) == 1 or last;
-                __SUB__->($v, lcm($L, $z), $p + 1, $j - 1);
+
+                if ($q > $p) {
+                    powmod($base, $z, $q) == 1 or last;
+                }
+
+                __SUB__->($v, $l, $p + 1, $j - 1);
             }
         }
       }
