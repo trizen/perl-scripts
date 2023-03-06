@@ -458,6 +458,7 @@ A nice collection of day-to-day Perl scripts.
     * [Carmichael numbers in range mpz](./Math/carmichael_numbers_in_range_mpz.pl)
     * [Carmichael numbers random](./Math/carmichael_numbers_random.pl)
     * [Carmichael strong fermat pseudoprimes in range](./Math/carmichael_strong_fermat_pseudoprimes_in_range.pl)
+    * [Carmichael strong fermat pseudoprimes in range mpz](./Math/carmichael_strong_fermat_pseudoprimes_in_range_mpz.pl)
     * [Cartesian product iter](./Math/cartesian_product_iter.pl)
     * [Cartesian product rec](./Math/cartesian_product_rec.pl)
     * [Cauchy numbers of first type](./Math/cauchy_numbers_of_first_type.pl)
