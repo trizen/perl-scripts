@@ -26,7 +26,7 @@
 
 # General asymptotic formula:
 #
-#   Sum_{k=1..n} k^m * phi(k)  ~  F_(m+1)(n) / zeta(2).
+#   Sum_{k=1..n} k^m * phi(k)  ~  F_{m+1}(n) / zeta(2).
 #
 # where F_m(n) are the Faulhaber polynomials.
 
@@ -86,7 +86,7 @@ sub partial_sums_of_euler_totient ($n) {
         my $prev = $n;
 
         foreach my $k (1 .. $s) {
-            my $curr = (divint($n, $k + 1));
+            my $curr = divint($n, $k + 1);
             $T    = subint($T, mulint(subint($prev, $curr), $euler_sum_lookup[$k]));
             $prev = $curr;
         }
