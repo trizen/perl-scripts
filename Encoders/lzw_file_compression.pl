@@ -172,15 +172,7 @@ sub decompress ($compressed) {
     return $result;
 }
 
-# Compress file
-sub lzw_compress_file ($input, $output) {
-
-    my $compressed = do {
-        open my $fh, '<:raw', $input
-          or die "Can't open file <<$input>> for reading: $!";
-        local $/;
-        compress(<$fh>);
-    };
+sub encode_integers ($integers) {
 
     my @counts;
     my $count           = 0;
@@ -188,7 +180,7 @@ sub lzw_compress_file ($input, $output) {
     my $bits_max_symbol = 1 << $bits_width;
     my $processed_len   = 0;
 
-    foreach my $k (@$compressed) {
+    foreach my $k (@$integers) {
         while ($k >= $bits_max_symbol) {
 
             if ($count > 0) {
@@ -203,25 +195,19 @@ sub lzw_compress_file ($input, $output) {
         ++$count;
     }
 
-    push @counts, [$bits_width, scalar(@$compressed) - $processed_len];
+    push @counts, [$bits_width, scalar(@$integers) - $processed_len];
 
-    my $header = SIGNATURE;
-    my $clen   = scalar @counts;
-    $header .= chr($clen);
+    my $clen = scalar @counts;
+
+    my $compressed = '';
+    $compressed .= chr($clen);
 
     foreach my $pair (@counts) {
         my ($blen, $len) = @$pair;
         $len > 0 or next;
-        $header .= chr($blen);
-        $header .= pack('N', $len);
+        $compressed .= chr($blen);
+        $compressed .= pack('N', $len);
     }
-
-    # Open the output file for writing
-    open my $out_fh, '>:raw', $output
-      or die "Can't open file <<$output>> for write: $!";
-
-    # Print the header
-    print $out_fh $header;
 
     my $bits = '';
     foreach my $pair (@counts) {
@@ -229,32 +215,24 @@ sub lzw_compress_file ($input, $output) {
 
         $len > 0 or next;
 
-        foreach my $symbol (splice(@$compressed, 0, $len)) {
+        foreach my $symbol (splice(@$integers, 0, $len)) {
             $bits .= sprintf("%0*b", $blen, $symbol);
         }
 
         if (length($bits) % 8 == 0) {
-            print $out_fh pack('B*', $bits);
+            $compressed .= pack('B*', $bits);
             $bits = '';
         }
     }
 
     if ($bits ne '') {
-        print $out_fh pack('B*', $bits);
+        $compressed .= pack('B*', $bits);
     }
 
-    close $out_fh;
+    return \$compressed;
 }
 
-# Decompress file
-sub lzw_decompress_file ($input, $output) {
-
-    # Open and validate the input file
-    open my $fh, '<:raw', $input;
-    valid_archive($fh) || die "$0: file `$input' is not a \U${\FORMAT}\E v${\VERSION} archive!\n";
-
-    # Open the output file
-    open my $out_fh, '>:raw', $output;
+sub decode_integers ($fh) {
 
     my $count_len = ord(getc($fh));
     my @counts;
@@ -282,7 +260,41 @@ sub lzw_decompress_file ($input, $output) {
         }
     }
 
-    print $out_fh decompress(\@chunks);
+    return \@chunks;
+}
+
+# Compress file
+sub lzw_compress_file ($input, $output) {
+
+    my $compressed = do {
+        open my $fh, '<:raw', $input
+          or die "Can't open file <<$input>> for reading: $!";
+        local $/;
+        compress(<$fh>);
+    };
+
+    # Open the output file for writing
+    open my $out_fh, '>:raw', $output
+      or die "Can't open file <<$output>> for write: $!";
+
+    print $out_fh SIGNATURE;
+    print $out_fh ${encode_integers($compressed)};
+    close $out_fh;
+}
+
+# Decompress file
+sub lzw_decompress_file ($input, $output) {
+
+    # Open and validate the input file
+    open my $fh, '<:raw', $input;
+    valid_archive($fh) || die "$0: file `$input' is not a \U${\FORMAT}\E v${\VERSION} archive!\n";
+
+    my $chunks = decode_integers($fh);
+
+    # Open the output file
+    open my $out_fh, '>:raw', $output;
+
+    print $out_fh decompress($chunks);
     close $out_fh;
 }
 

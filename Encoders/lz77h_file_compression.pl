@@ -107,8 +107,8 @@ sub lz77_compression ($str, $uncompressed, $indices, $lengths) {
     my $la = 0;
 
     my $prefix = '';
-    my @bytes  = split(//, $str);
-    my $end    = $#bytes;
+    my @chars  = split(//, $str);
+    my $end    = $#chars;
 
     while ($la <= $end) {
 
@@ -116,21 +116,20 @@ sub lz77_compression ($str, $uncompressed, $indices, $lengths) {
         my $p = 0;
         my $tmp;
 
-        my $token = $bytes[$la];
+        my $token = $chars[$la];
 
         while (    $n < 255
                and $la + $n <= $end
                and ($tmp = index($prefix, $token, $p)) >= 0) {
             $p = $tmp;
-            $token .= $bytes[$la + $n];
+            $token .= $chars[$la + $n];
             ++$n;
         }
 
         --$n;
-        my $c = $bytes[$la + $n];
         push @$indices,      $p;
         push @$lengths,      $n;
-        push @$uncompressed, $c;
+        push @$uncompressed, $chars[$la + $n];
         $la += $n + 1;
         $prefix .= $token;
     }
@@ -219,6 +218,23 @@ sub create_huffman_entry ($bytes, $out_fh) {
     print $out_fh pack("B*", $enc);
 }
 
+sub read_bits ($fh, $bits_len) {
+
+    my $data = '';
+    read($fh, $data, $bits_len >> 3);
+    $data = unpack('B*', $data);
+
+    while (length($data) < $bits_len) {
+        $data .= unpack('B*', getc($fh));
+    }
+
+    if (length($data) > $bits_len) {
+        $data = substr($data, 0, $bits_len);
+    }
+
+    return $data;
+}
+
 sub decode_huffman_entry ($fh) {
 
     my @codes;
@@ -232,10 +248,7 @@ sub decode_huffman_entry ($fh) {
         }
     }
 
-    my $codes_bin = '';
-    while (length($codes_bin) < $codes_len) {
-        $codes_bin .= unpack('B*', getc($fh) // last);
-    }
+    my $codes_bin = read_bits($fh, $codes_len);
 
     my %rev_dict;
     foreach my $pair (@codes) {
@@ -246,19 +259,7 @@ sub decode_huffman_entry ($fh) {
     my $enc_len = unpack('N', join('', map { getc($fh) } 1 .. 4));
 
     if ($enc_len > 0) {
-
-        my $enc_data = '';
-        read($fh, $enc_data, $enc_len >> 3);
-        $enc_data = unpack('B*', $enc_data);
-
-        while (length($enc_data) < $enc_len) {
-            $enc_data .= unpack('B*', getc($fh));
-        }
-
-        if (length($enc_data) > $enc_len) {
-            $enc_data = substr($enc_data, 0, $enc_len);
-        }
-
+        my $enc_data = read_bits($fh, $enc_len);
         return huffman_decode($enc_data, \%rev_dict);
     }
 

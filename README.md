@@ -68,6 +68,7 @@ A nice collection of day-to-day Perl scripts.
     * [Huffman coding](./Encoders/huffman_coding.pl)
     * [Huffman file compression](./Encoders/huffman_file_compression.pl)
     * [Int2bytes](./Encoders/int2bytes.pl)
+    * [Integers binary encoding](./Encoders/integers_binary_encoding.pl)
     * [Length encoder](./Encoders/length_encoder.pl)
     * [Lz77 file compression](./Encoders/lz77_file_compression.pl)
     * [Lz77h file compression](./Encoders/lz77h_file_compression.pl)

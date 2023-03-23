@@ -108,8 +108,8 @@ sub compression ($str) {
     my $la = 0;
 
     my $prefix = '';
-    my @bytes  = split(//, $str);
-    my $end    = $#bytes;
+    my @chars  = split(//, $str);
+    my $end    = $#chars;
 
     while ($la <= $end) {
 
@@ -117,47 +117,23 @@ sub compression ($str) {
         my $p = 0;
         my $tmp;
 
-        my $token = $bytes[$la];
+        my $token = $chars[$la];
 
         while (    $n < 255
                and $la + $n <= $end
                and ($tmp = index($prefix, $token, $p)) >= 0) {
             $p = $tmp;
-            $token .= $bytes[$la + $n];
+            $token .= $chars[$la + $n];
             ++$n;
         }
 
         --$n;
-        my $c = $bytes[$la + $n];
-        push @rep, [$p, $n, ord($c)];
+        push(@rep, $p, $n, $chars[$la + $n]);
         $la += $n + 1;
         $prefix .= $token;
     }
 
-    join('', map { pack('SCC', @$_) } @rep);
-}
-
-sub decompression ($str) {
-
-    my $ret   = '';
-    my $chunk = '';
-
-    while (length($str)) {
-        my ($s, $l, $c) = unpack('SCC', substr($str, 0, 4, ''));
-
-        $chunk .= substr($chunk, $s, $l) . chr($c);
-
-        if (length($chunk) >= CHUNK_SIZE) {
-            $ret .= $chunk;
-            $chunk = '';
-        }
-    }
-
-    if ($chunk ne '') {
-        $ret .= $chunk;
-    }
-
-    $ret;
+    pack('(SCa)*', @rep);
 }
 
 # Compress file
@@ -194,13 +170,23 @@ sub lz77_decompress_file ($input, $output) {
     # Open the output file
     open my $out_fh, '>:raw', $output;
 
-    # Print the decompressed data
-    print $out_fh decompression(
-        do {
-            local $/;
-            scalar <$fh>;
+    my $chunk = '';
+    while (read($fh, (my $str), 4 * CHUNK_SIZE)) {
+        my @decoded = unpack('(SCa)*', $str);
+
+        while (@decoded) {
+            my ($s, $l, $c) = splice(@decoded, 0, 3);
+
+            $chunk .= substr($chunk, $s, $l) . $c;
+
+            if (length($chunk) >= CHUNK_SIZE) {
+                print $out_fh $chunk;
+                $chunk = '';
+            }
         }
-    );
+    }
+
+    print $out_fh $chunk;
 
     # Close the file
     close $fh;
