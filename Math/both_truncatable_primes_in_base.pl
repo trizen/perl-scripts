@@ -2,6 +2,7 @@
 
 # Daniel "Trizen" Șuteu
 # Date: 12 January 2019
+# Edit: 28 March 2023
 # https://github.com/trizen
 
 # Generate the entire sequence of both-truncatable primes in a given base.
@@ -26,73 +27,45 @@
 #  https://oeis.org/A323390 - Total number of primes that are both left-truncatable and right-truncatable in base n.
 #  https://oeis.org/A323396 - Irregular array read by rows, where T(n, k) is the k-th prime that is both left-truncatable and right-truncatable in base n.
 
-use 5.010;
-use strict;
-use warnings;
+use 5.036;
+use ntheory                qw(primes vecmax is_prime);
+use Math::Prime::Util::GMP qw(divint mulint addint subint);
 
-use Math::GMPz;
-use ntheory qw(primes is_prob_prime vecmax);
+sub is_left_truncatable ($n, $base) {
 
-{
-    my $t   = Math::GMPz::Rmpz_init_set_ui(1);
-    my $sum = Math::GMPz::Rmpz_init_set_ui(0);
-
-    sub digits2num {
-        my ($arr, $base) = @_;
-
-        Math::GMPz::Rmpz_set_ui($t,   1);
-        Math::GMPz::Rmpz_set_ui($sum, 0);
-
-        foreach my $d (@$arr) {
-            Math::GMPz::Rmpz_addmul_ui($sum, $t, $d);
-            Math::GMPz::Rmpz_mul_ui($t, $t, $base);
-        }
-
-        Math::GMPz::Rmpz_get_str($sum, 10);
-    }
-}
-
-sub is_left_truncatable {
-    my ($n, $base) = @_;
-
-    my @copy = @$n;
-
-    for (my @arr = shift(@copy) ; @copy > 0 ; push(@arr, shift(@copy))) {
-        is_prob_prime(digits2num(\@arr, $base)) || return 0;
+    for (my $r = $base ; $r < $n ; $r = mulint($r, $base)) {
+        is_prime(subint($n, mulint($r, divint($n, $r)))) || return 0;
     }
 
     return 1;
 }
 
-sub generate_from_prefix {
-    my ($p, $base) = @_;
+sub generate_from_prefix ($p, $base) {
 
     my @seq = ($p);
 
-    foreach my $n (1 .. $base - 1) {
-        my @next = ($n, @$p);
-        if (is_prob_prime(digits2num(\@next, $base))) {
-            push @seq, grep { is_left_truncatable($_, $base) } generate_from_prefix(\@next, $base);
+    foreach my $d (1 .. $base - 1) {
+        my $n = addint(mulint($p, $base), $d);
+        if (is_prime($n)) {
+            push @seq, grep { is_left_truncatable($_, $base) } generate_from_prefix($n, $base);
         }
     }
 
     return @seq;
 }
 
-sub both_truncatable_primes_in_base {
-    my ($base) = @_;
+sub both_truncatable_primes_in_base ($base) {
 
     return if $base <= 2;
 
     my @truncatable;
     foreach my $p (@{primes(2, $base - 1)}) {
-        push @truncatable, generate_from_prefix([$p], $base);
+        push @truncatable, generate_from_prefix($p, $base);
     }
-
-    map { digits2num($_, $base) } @truncatable;
+    return @truncatable;
 }
 
-foreach my $base (3..36) {
+foreach my $base (3 .. 36) {
     my @t = both_truncatable_primes_in_base($base);
     printf("There are %3d both-truncatable primes in base %2d where largest is %s\n", scalar(@t), $base, vecmax(@t));
 }
