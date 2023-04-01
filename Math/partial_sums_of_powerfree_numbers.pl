@@ -9,12 +9,9 @@
 # See also:
 #   https://oeis.org/A066779
 
-use 5.020;
-use strict;
-use warnings;
-
-use ntheory qw(:all);
-use experimental qw(signatures);
+use 5.036;
+use ntheory qw(addint mulint divint powint rootint
+               vecprod vecsum forsquarefree vecall factor_exp);
 
 sub T ($n) {    # n-th triangular number
     divint(mulint($n, addint($n, 1)), 2);

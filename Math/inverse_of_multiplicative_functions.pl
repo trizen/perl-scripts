@@ -39,7 +39,7 @@ sub dynamicPreimage ($N, $L, %opt) {
         }
     }
 
-    return if not exists $r{$N};
+    return if !exists $r{$N};
     sort { $a <=> $b } @{$r{$N}};
 }
 

@@ -14,8 +14,9 @@ use 5.020;
 use strict;
 use warnings;
 
+use ntheory qw(:all);
+use List::Util qw(uniq);
 use experimental qw(signatures);
-use ntheory qw(mulmod factor_exp vecsum todigits);
 
 sub factorial_power ($n, $p) {
     ($n - vecsum(todigits($n, $p))) / ($p - 1);
@@ -26,13 +27,17 @@ sub modular_binomial ($n, $k, $m) {
     my %kp;
     my $prod = 1;
 
-  OUTER: foreach my $r ($n - $k + 1 .. $n) {
+    forfactored {
 
-        foreach my $pair (factor_exp($r)) {
-            my ($p, $v) = @$pair;
+        my $r       = $_;
+        my @factors = uniq(@_);
+
+        foreach my $p (@factors) {
 
             if ($p <= $k) {
                 next if ((my $t = ($kp{$p} //= factorial_power($k, $p))) == 0);
+
+                my $v = valuation($r, $p);
 
                 if ($v >= $t) {
                     $v = $t;
@@ -42,7 +47,7 @@ sub modular_binomial ($n, $k, $m) {
                     $kp{$p} -= $v;
                 }
 
-                next OUTER if (($r /= $p**$v) == 1);
+                last if (($r /= $p**$v) <= 1);
             }
             else {
                 last;
@@ -50,7 +55,7 @@ sub modular_binomial ($n, $k, $m) {
         }
 
         $prod = mulmod($prod, $r, $m);
-    }
+    } $n - $k + 1, $n;
 
     return $prod;
 }

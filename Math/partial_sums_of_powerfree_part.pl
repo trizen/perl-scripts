@@ -11,12 +11,8 @@
 #   https://oeis.org/A050985 -- Cubefree part of n.
 #   https://oeis.org/A069891 -- a(n) = Sum_{k=1..n} A007913(k), the squarefree part of k.
 
-use 5.020;
-use strict;
-use warnings;
-
-use ntheory qw(:all);
-use experimental qw(signatures);
+use 5.036;
+use ntheory qw(divint addint mulint powint rootint factor_exp vecprod vecsum);
 
 sub T ($n) {    # n-th triangular number
     divint(mulint($n, addint($n, 1)), 2);
