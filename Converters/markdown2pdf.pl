@@ -2,12 +2,12 @@
 
 # Author: Trizen
 # Date: 29 July 2022
-# Edit: 07 August 2022
+# Edit: 16 April 2023
 # https://github.com/trizen
 
 # Markdown to PDF converter, with syntax highlighting.
 
-# Uses the following tools:
+# Using the following tools:
 #   md2html     -- for converting markdown to HTML (provided by md4c)
 #   highlight   -- for syntax highlighting
 #   wkhtmltopdf -- for converting HTML to PDF
@@ -26,9 +26,12 @@ use File::Temp   qw(tempfile);
 use Encode       qw(decode_utf8 encode_utf8);
 use Getopt::Long qw(GetOptions);
 
-my $style     = 'github';
-my $title     = 'Document';
-my $page_size = 'A3';
+my $md2html = "md2html";    # path to the `md2html` tool
+
+my $syntax_lang = 'text';
+my $style       = 'github';
+my $title       = 'Document';
+my $page_size   = 'A3';
 
 sub usage {
     my ($exit_code) = @_;
@@ -42,6 +45,7 @@ options:
     --style=s   : style theme for `highlight` (default: $style)
     --title=s   : title of the PDF file (default: $title)
     --size=s    : set paper size to: A4, Letter, etc. (default: $page_size)
+    --lang=s    : default syntax highlighting language (default: $syntax_lang)
 
 EOT
 
@@ -49,6 +53,7 @@ EOT
 }
 
 GetOptions(
+           "lang=s"  => \$syntax_lang,
            "style=s" => \$style,
            "title=s" => \$title,
            "size=s"  => \$page_size,
@@ -60,10 +65,10 @@ my $input_markdown_file = $ARGV[0] // usage(2);
 my $output_pdf_file     = $ARGV[1] // ($input_markdown_file . ".pdf");
 
 say ":: Converting Markdown to HTML...";
-my $html = `md2html --github \Q$input_markdown_file\E`;
+my $html = `\Q$md2html\E --github \Q$input_markdown_file\E`;
 
 if ($? != 0) {
-    die "`md2html` failed with code: $?";
+    die "`$md2html` failed with code: $?";
 }
 
 my $tree = HTML::TreeBuilder->new();
@@ -93,40 +98,48 @@ foreach my $entry (@nodes) {
         my $t = $entry->content->[0];
 
         if ($t->tag eq 'code') {
+
+            my $lang = $syntax_lang;
+
             my $class = $t->attr('class');
             if (defined($class) and $class =~ /^language-(.+)/) {
-
-                my $lang    = $1;
-                my $content = $t->content() // next;
-
-                if (ref($content) ne 'ARRAY') {
-                    warn ":: Unexpected entry: <<$content>>\n";
-                    next;
-                }
-
-                my $str = join(' ', @{$content});
-                print $in_fh encode_utf8($str);
-                seek($in_fh, 0, 0);
-
-                run3([@highlight, '--syntax', $lang, '--style', $style], $in_fh, $out_fh);
-
-                if ($? != 0) {
-                    die ":: Can't execute the `highlight` command!";
-                }
-
-                $code = "<pre class=hl>" . do {
-                    seek($out_fh, 0, 0);
-                    local $/;
-                    decode_utf8(<$out_fh>);
-                  }
-                  . "</pre>";
-
-                seek($in_fh,  0, 0);
-                seek($out_fh, 0, 0);
-
-                truncate($in_fh,  0);
-                truncate($out_fh, 0);
+                $lang = $1;
             }
+
+            if ($lang eq 'text' or $lang eq 'none' or $lang eq '') {    # no need to highlight plaintext
+                $html_content .= $code;
+                next;
+            }
+
+            my $content = $t->content() // next;
+
+            if (ref($content) ne 'ARRAY') {
+                warn ":: Unexpected entry: <<$content>>\n";
+                next;
+            }
+
+            my $str = join(' ', @{$content});
+            print $in_fh encode_utf8($str);
+            seek($in_fh, 0, 0);
+
+            run3([@highlight, '--syntax', $lang, '--style', $style], $in_fh, $out_fh);
+
+            if ($? != 0) {
+                die ":: Can't execute the `highlight` command!";
+            }
+
+            $code = "<pre class=hl>" . do {
+                seek($out_fh, 0, 0);
+                local $/;
+                decode_utf8(<$out_fh>);
+              }
+              . "</pre>";
+
+            seek($in_fh,  0, 0);
+            seek($out_fh, 0, 0);
+
+            truncate($in_fh,  0);
+            truncate($out_fh, 0);
         }
     }
 

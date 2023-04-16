@@ -6,8 +6,8 @@
 
 # Code to PDF converter, with syntax highlighting, given a summary file.
 
-# Uses the following tools:
-#   md2html         -- for converting markdown to HTML
+# Using the following tools:
+#   md2html         -- for converting markdown to HTML (provided by md4c)
 #   markdown2pdf.pl -- for converting markdown to PDF (with syntax highlighting)
 
 use 5.010;
@@ -22,6 +22,7 @@ use Getopt::Long qw(GetOptions);
 use URI::Escape  qw(uri_unescape);
 use Digest::MD5  qw(md5_hex);
 
+my $md2html      = "md2html";            # path to the `md2html` tool
 my $markdown2pdf = "markdown2pdf.pl";    # path to the `markdown2pdf.pl` script
 
 my $style     = 'github';
@@ -60,11 +61,11 @@ GetOptions(
 my $input_markdown_file = $ARGV[0] // usage(2);
 my $output_pdf_file     = $ARGV[1] // "OUTPUT.pdf";
 
-say ":: Converting $input_markdown_file to HTML...";
-my $html = `md2html $input_markdown_file`;
+say ":: Converting <<$input_markdown_file>> to HTML...";
+my $html = `\Q$md2html\E \Q$input_markdown_file\E`;
 
 if ($? != 0) {
-    die "`md2html` failed with code: $?";
+    die "`$md2html` failed with code: $?";
 }
 
 my $tree = HTML::TreeBuilder->new();
