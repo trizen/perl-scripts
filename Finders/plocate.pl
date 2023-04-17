@@ -1,7 +1,6 @@
 #!/usr/bin/perl
 
-# Daniel "Trizen" Șuteu
-# License: GPLv3
+# Author: Trizen
 # Date: 20 April 2012
 # https://github.com/trizen
 
@@ -14,7 +13,7 @@ use Getopt::Std qw(getopts);
 use File::Find qw(find);
 use File::Spec::Functions qw(rel2abs);
 
-my $DB_FILE = 'plocate.db';
+my $DB_FILE = rel2abs('plocate.db');
 
 sub usage {
     print <<"HELP";

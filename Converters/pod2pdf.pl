@@ -7,8 +7,8 @@
 # POD to PDF converter, with syntax highlighting.
 
 # Using the following tools:
-#   pod2markdown    -- for converting POD to markdown (part of Pod::Markdown)
-#   markdown2pdf.pl -- for converting markdown to PDF
+#   pod2markdown    -- for converting POD to Markdown (part of Pod::Markdown)
+#   markdown2pdf.pl -- for converting Markdown to PDF
 
 use 5.010;
 use strict;

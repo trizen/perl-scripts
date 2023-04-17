@@ -1,9 +1,8 @@
 #!/usr/bin/perl
 
-# Author: Șuteu "Trizen" Daniel
-# License: GPLv3
+# Author: Trizen
 # Date: 23th September 2013
-# http://trizenx.blogspot.com
+# https://trizenx.blogspot.com
 
 # Display all the files from a given directory with
 # size greater than N and modified in or after a given date.

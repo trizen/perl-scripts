@@ -6,8 +6,9 @@
 # Code improved by Daniel "Trizen" Șuteu
 # Added support for very large files and locale support
 
-# Date: 29th November 2013
-# http://trizenx.blogspot.com
+# Date: 29 November 2013
+# Edit: 17 April 2023
+# https://github.com/trizen
 
 use 5.010;
 use strict;
@@ -24,7 +25,7 @@ use Math::BigInt try => 'GMP,Pari';
 use Getopt::Std qw(getopts);
 
 my %opts;
-getopts('lh', \%opts);
+getopts('lnh', \%opts);
 
 sub usage {
     my ($code) = @_;
@@ -34,6 +35,7 @@ usage: $0 [options] <line> <file>
 
 options:
         -l  : use the current locale for string comparisons
+        -n  : use numeric comparisons
 
 example:
         perl $0 -l "hello world" bigList.txt
@@ -53,6 +55,13 @@ my $position = binary_search_file($fh, $word);
 if   (defined $position) { print "$word occurs at position $position\n" }
 else                     { print "$word does not occur in $file.\n" }
 
+sub compare {
+    my ($word1, $word2) = @_;
+
+    chomp $word1;
+    $opts{n} ? (Math::BigInt->new($word1) <=> Math::BigInt->new($word2)) : ($word1 cmp $word2);
+}
+
 sub binary_search_file {
     my ($file, $word) = @_;
 
@@ -62,7 +71,7 @@ sub binary_search_file {
     my $line;
     while ($high != $low) {
 
-        my $mid = ($high + $low) / 2;
+        my $mid = ($high + $low) >> 1;
         seek($file, $mid, 0);
 
         # $mid is probably in the middle of a line, so read the rest
@@ -84,18 +93,11 @@ sub binary_search_file {
         }
 
         compare($line, $word) == -1
-          ? ($low = $mid)
-          : ($high = $mid);
+          ? do { $low  = $mid }
+          : do { $high = $mid };
     }
 
     compare($line, $word) == 0
       ? $low
       : ();
-}
-
-sub compare {
-    my ($word1, $word2) = @_;
-
-    chomp $word1;
-    $word1 cmp $word2;
 }

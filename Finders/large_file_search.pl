@@ -1,9 +1,8 @@
 #!/usr/bin/perl
 
-# Author: Daniel "Trizen" Șuteu
-# License: GPLv3
+# Author: Trizen
 # Date: 28 July 2014
-# http://trizenx.blogspot.com
+# https://github.com/trizen
 
 # Search for a list of keywords inside a very large file
 

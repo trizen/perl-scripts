@@ -8,7 +8,7 @@
 # Markdown to PDF converter, with syntax highlighting.
 
 # Using the following tools:
-#   md2html     -- for converting markdown to HTML (provided by md4c)
+#   md2html     -- for converting Markdown to HTML (provided by md4c)
 #   highlight   -- for syntax highlighting
 #   wkhtmltopdf -- for converting HTML to PDF
 

@@ -7,8 +7,8 @@
 # Code to PDF converter, with syntax highlighting, given a summary file.
 
 # Using the following tools:
-#   md2html         -- for converting markdown to HTML (provided by md4c)
-#   markdown2pdf.pl -- for converting markdown to PDF (with syntax highlighting)
+#   md2html         -- for converting Markdown to HTML (provided by md4c)
+#   markdown2pdf.pl -- for converting Markdown to PDF (with syntax highlighting)
 
 use 5.010;
 use strict;
@@ -28,7 +28,7 @@ my $markdown2pdf = "markdown2pdf.pl";    # path to the `markdown2pdf.pl` script
 my $style     = 'github';
 my $title     = 'Document';
 my $lang      = 'perl';
-my $page_size = "A3";
+my $page_size = 'A3';
 
 sub usage {
     my ($exit_code) = @_;
@@ -227,7 +227,7 @@ sub determine_language_code {
 
     if (scalar(@found_codes) > 1) {
         warn ":: Ambiguous file extension for <<$file>>: it could be (@found_codes)\n";
-        @found_codes = sort(@found_codes);    # be deterministic
+        @found_codes = sort @found_codes;    # be deterministic
         return $found_codes[0];
     }
 

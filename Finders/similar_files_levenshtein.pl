@@ -1,10 +1,9 @@
 
 #!/usr/bin/perl
 
-# Author: Daniel "Trizen" Șuteu
-# License: GPLv3
+# Author: Trizen
 # Date: 13 January 2016
-# http://github.com/trizen
+# https://github.com/trizen
 
 # Finds files which have almost the same content, using the Levenshtein distance.
 

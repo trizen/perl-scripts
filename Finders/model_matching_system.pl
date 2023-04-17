@@ -1,11 +1,9 @@
 #!/usr/bin/perl
 
-# Author: Daniel "Trizen" Șuteu
-# License: GPLv3
+# Author: Trizen
 # Date: 12 June 2015
 # Edit: 25 July 2016
 # https://github.com/trizen
-# Email: <trizenx gmail="com"/>
 
 #
 ## A very fast complex matching system

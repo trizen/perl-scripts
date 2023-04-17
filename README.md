@@ -136,6 +136,7 @@ A nice collection of day-to-day Perl scripts.
     * [Large file search](./Finders/large_file_search.pl)
     * [Locatepm](./Finders/locatepm)
     * [Longest substring](./Finders/longest_substring.pl)
+    * [Mimefind](./Finders/mimefind.pl)
     * [Model matching system](./Finders/model_matching_system.pl)
     * [Path diff](./Finders/path_diff.pl)
     * [Plocate](./Finders/plocate.pl)

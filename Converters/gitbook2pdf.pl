@@ -7,8 +7,8 @@
 # Gitbook to PDF converter, with syntax highlighting.
 
 # Uses the following tools:
-#   md2html         -- for converting markdown to HTML (provided by md4c)
-#   markdown2pdf.pl -- for converting markdown to PDF (with syntax highlighting)
+#   md2html         -- for converting Markdown to HTML (provided by md4c)
+#   markdown2pdf.pl -- for converting Markdown to PDF (with syntax highlighting)
 
 use 5.010;
 use strict;
