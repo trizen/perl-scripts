@@ -30,10 +30,10 @@ usage: $0 [options] [input.md] [output.pdf]
 
 options:
 
-    --js        : allow web pages to run JavaScript (default: $js)
-    --js-delay  : wait some milliseconds for JavaScript to finish (default: $js_delay)
-    --title=s   : title of the PDF file
-    --size=s    : set paper size to: A4, Letter, etc. (default: $page_size)
+    --js         : allow web pages to run JavaScript (default: $js)
+    --js-delay=i : wait some milliseconds for JavaScript to finish (default: $js_delay)
+    --title=s    : title of the PDF file
+    --size=s     : set paper size to: A4, Letter, etc. (default: $page_size)
 
 EOT
 
@@ -44,7 +44,7 @@ GetOptions(
            "title=s"        => \$title,
            "size=s"         => \$page_size,
            'js|javascript!' => \$js,
-           'js-delay!'      => \$js_delay,
+           'js-delay=i'     => \$js_delay,
            "h|help"         => sub { usage(0) },
           )
   or die("Error in command line arguments\n");

@@ -22,32 +22,27 @@ use 5.020;
 use warnings;
 
 use Math::GMPz;
-use ntheory qw(:all);
+use ntheory      qw(:all);
 use experimental qw(signatures);
 
 sub fast_lucasVmod ($P, $n, $m) {    # assumes Q = 1
 
     my ($V1, $V2) = (Math::GMPz::Rmpz_init_set_ui(2), Math::GMPz::Rmpz_init_set($P));
-    my ($Q1, $Q2) = (Math::GMPz::Rmpz_init_set_ui(1), Math::GMPz::Rmpz_init_set_ui(1));
 
     foreach my $bit (todigits($n, 2)) {
-
-        Math::GMPz::Rmpz_mul($Q1, $Q1, $Q2);
-        Math::GMPz::Rmpz_mod($Q1, $Q1, $m);
 
         if ($bit) {
             Math::GMPz::Rmpz_mul($V1, $V1, $V2);
             Math::GMPz::Rmpz_powm_ui($V2, $V2, 2, $m);
-            Math::GMPz::Rmpz_submul($V1, $Q1, $P);
-            Math::GMPz::Rmpz_submul_ui($V2, $Q2, 2);
+            Math::GMPz::Rmpz_sub($V1, $V1, $P);
+            Math::GMPz::Rmpz_sub_ui($V2, $V2, 2);
             Math::GMPz::Rmpz_mod($V1, $V1, $m);
         }
         else {
-            Math::GMPz::Rmpz_set($Q2, $Q1);
             Math::GMPz::Rmpz_mul($V2, $V2, $V1);
             Math::GMPz::Rmpz_powm_ui($V1, $V1, 2, $m);
-            Math::GMPz::Rmpz_submul($V2, $Q1, $P);
-            Math::GMPz::Rmpz_submul_ui($V1, $Q2, 2);
+            Math::GMPz::Rmpz_sub($V2, $V2, $P);
+            Math::GMPz::Rmpz_sub_ui($V1, $V1, 2);
             Math::GMPz::Rmpz_mod($V2, $V2, $m);
         }
     }
@@ -85,7 +80,8 @@ sub chebyshev_factorization ($n, $B, $A = 127) {
         chebyshevTmod($p**int($lnB / log($p)), $x);
     }
 
-    foreach my $p (@{primes(sqrtint($B) + 1, $B)}) {
+    my $it = prime_iterator(sqrtint($B) + 1);
+    for (my $p = $it->() ; $p <= $B ; $p = $it->()) {
 
         chebyshevTmod($p, $x);    # T_k(x) (mod n)
 

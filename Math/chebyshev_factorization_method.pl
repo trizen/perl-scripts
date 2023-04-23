@@ -21,25 +21,33 @@
 use 5.020;
 use warnings;
 use experimental qw(signatures);
-use Math::AnyNum qw(:overload lucasVmod gcd next_prime invmod ilog);
 
-sub chebyshev_factorization ($n, $B = ilog($n, 2)**2, $a = 127) {
+use ntheory      qw(prime_iterator sqrtint primes logint);
+use Math::AnyNum qw(:overload lucasVmod gcd invmod mulmod is_coprime);
+
+sub chebyshev_factorization ($n, $B = logint($n, 2)**2, $a = 127) {
 
     my $x = $a;
     my $G = $B * $B;
     my $i = invmod(2, $n);
 
     my sub chebyshevTmod ($a, $x) {
-        (lucasVmod(2 * $x, 1, $a, $n) * $i) % $n;
+        mulmod(lucasVmod(2 * $x, 1, $a, $n), $i, $n);
     }
 
-    for (my $p = 2 ; $p <= $B ; $p = next_prime($p)) {
-        $x = chebyshevTmod($p**ilog($G, $p), $x);    # T_k(x) (mod n)
-        my $g = gcd($x - 1, $n);
-        return $g if ($g > 1);
+    foreach my $p (@{primes(2, sqrtint($B))}) {
+        for (1 .. logint($G, $p)) {
+            $x = chebyshevTmod($p, $x);    # T_k(x) (mod n)
+        }
     }
 
-    return 1;
+    my $it = prime_iterator(sqrtint($B) + 1);
+    for (my $p = $it->() ; $p <= $B ; $p = $it->()) {
+        $x = chebyshevTmod($p, $x);        # T_k(x) (mod n)
+        is_coprime($x - 1, $n) || return gcd($x - 1, $n);
+    }
+
+    return gcd($x - 1, $n);
 }
 
 say chebyshev_factorization(2**64 + 1,                     20);      #=> 274177           (p-1 is   20-smooth)
