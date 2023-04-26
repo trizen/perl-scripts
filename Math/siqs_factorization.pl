@@ -24,6 +24,7 @@ use experimental qw(signatures);
 
 use ntheory qw(
   urandomm valuation sqrtmod invmod random_prime factor_exp vecmin
+  is_square divisors todigits primes prime_iterator
 );
 
 use Math::Prime::Util::GMP qw(
@@ -886,31 +887,24 @@ sub cyclotomic_factorization ($n) {
 sub fast_lucasVmod ($P, $n, $m) {    # assumes Q = 1
 
     my ($V1, $V2) = (Math::GMPz::Rmpz_init_set_ui(2), Math::GMPz::Rmpz_init_set($P));
-    my ($Q1, $Q2) = (Math::GMPz::Rmpz_init_set_ui(1), Math::GMPz::Rmpz_init_set_ui(1));
 
-    foreach my $bit (ntheory::todigits($n, 2)) {
-
-        Math::GMPz::Rmpz_mul($Q1, $Q1, $Q2);
-        Math::GMPz::Rmpz_mod($Q1, $Q1, $m);
+    foreach my $bit (todigits($n, 2)) {
 
         if ($bit) {
             Math::GMPz::Rmpz_mul($V1, $V1, $V2);
             Math::GMPz::Rmpz_powm_ui($V2, $V2, 2, $m);
-            Math::GMPz::Rmpz_submul($V1, $Q1, $P);
-            Math::GMPz::Rmpz_submul_ui($V2, $Q2, 2);
+            Math::GMPz::Rmpz_sub($V1, $V1, $P);
+            Math::GMPz::Rmpz_sub_ui($V2, $V2, 2);
             Math::GMPz::Rmpz_mod($V1, $V1, $m);
         }
         else {
-            Math::GMPz::Rmpz_set($Q2, $Q1);
             Math::GMPz::Rmpz_mul($V2, $V2, $V1);
             Math::GMPz::Rmpz_powm_ui($V1, $V1, 2, $m);
-            Math::GMPz::Rmpz_submul($V2, $Q1, $P);
-            Math::GMPz::Rmpz_submul_ui($V1, $Q2, 2);
+            Math::GMPz::Rmpz_sub($V2, $V2, $P);
+            Math::GMPz::Rmpz_sub_ui($V1, $V1, 2);
             Math::GMPz::Rmpz_mod($V2, $V2, $m);
         }
     }
-
-    Math::GMPz::Rmpz_mod($V1, $V1, $m);
 
     return $V1;
 }
@@ -933,11 +927,19 @@ sub chebyshev_factorization ($n, $B, $A = 127) {
     }
 
     my $g   = Math::GMPz::Rmpz_init();
-    my $lnB = log($B);
+    my $lnB = 2 * log($B);
+    my $s   = sqrtint($B);
 
-    foreach my $p (sieve_primes(2, $B)) {
+    foreach my $p (@{primes(2, $s)}) {
+        for (1 .. int($lnB / log($p))) {
+            chebyshevTmod($p, $x);    # T_k(x) (mod n)
+        }
+    }
 
-        chebyshevTmod($p**int($lnB / log($p)), $x);    # T_k(x) (mod n)
+    my $it = prime_iterator($s + 1);
+    for (my $p = $it->() ; $p <= $B ; $p = $it->()) {
+
+        chebyshevTmod($p, $x);    # T_k(x) (mod n)
 
         Math::GMPz::Rmpz_sub_ui($g, $x, 1);
         Math::GMPz::Rmpz_gcd($g, $g, $n);
@@ -1590,7 +1592,7 @@ sub lucas_miller_factor ($n, $j, $tries) {
 
         $Q *= -1 if (rand(1) < 0.5);
 
-        next if ntheory::is_square($P * $P - 4 * $Q);
+        next if is_square($P * $P - 4 * $Q);
 
         my ($U1, $V1, $Q1) =
           map { Math::GMPz::Rmpz_init_set_str($_, 10) } lucas_sequence($n, $P, $Q, $d);
@@ -2165,7 +2167,7 @@ sub special_form_factorization ($n) {
     my $near_power = sub ($r, $e, $k) {
         my @factors;
 
-        foreach my $d (ntheory::divisors($e)) {
+        foreach my $d (divisors($e)) {
             my $x = $r**$d;
             foreach my $j (1, -1) {
 
@@ -2202,8 +2204,8 @@ sub special_form_factorization ($n) {
     my $diff_powers = sub ($r1, $e1, $r2, $e2) {
         my @factors;
 
-        my @d1 = ntheory::divisors($e1);
-        my @d2 = ntheory::divisors($e2);
+        my @d1 = divisors($e1);
+        my @d2 = divisors($e2);
 
         foreach my $d1 (@d1) {
             my $x = $r1**$d1;
@@ -2282,8 +2284,8 @@ sub special_form_factorization ($n) {
 
         my @factors;
 
-        my @divs1 = ntheory::divisors($e1);
-        my @divs2 = ntheory::divisors($e2);
+        my @divs1 = divisors($e1);
+        my @divs2 = divisors($e2);
 
         foreach my $d1 (@divs1) {
             my $x = $r**$d1;

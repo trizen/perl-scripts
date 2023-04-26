@@ -30,16 +30,13 @@ my $BOARD_SIZE = 8;
 my $PLANES_NUM = 3;
 
 my @parts = ('head', ('hit') x 7);
-my @plane_chars = (
-                   shuffle(
-                           '☗', '⛰', '♣', '★', '✠', '❂', '♜', '☂', '☀', '❤',
-                           '❆', '❃', '◕', '▣', '●', '▼', '■', '◉', '◆', '▲',
-                          )
-                  );
+my @plane_chars =
+  (shuffle('☗', '⛰', '♣', '★', '✠', '❂', '♜', '☂', '☀', '❤', '❆', '❃', '◕', '▣', '●', '▼', '■', '◉', '◆', '▲',));
 
 my $wrap_plane = 0;
 my $hit_char   = q{◌};
 my $miss_char  = q{`};
+my $use_colors = eval { require Term::ANSIColor; 1; };
 
 sub usage {
     print <<"EOT";
@@ -52,6 +49,7 @@ main:
         --hit=s     : character used when a plane is hit (default: "$hit_char")
         --miss=s    : character used when a plane is missed (default: "$miss_char")
         --planeN=s  : character used to draw the Nth killed plane (N=[1-99])
+        --colors!   : use ANSI colors (requires Term::ANSIColor) (default: $use_colors);
 
 help:
         --help      : print this message and exit
@@ -109,17 +107,16 @@ sub pointers {
     map {
         my ($row, $col) = ($x + $_->[0], $y + $_->[1]);
 
-        if ($row > $#{$board}) {
-            $wrap_plane || return;
-            $row %= scalar(@{$board});
+        if ($wrap_plane) {
+            $row %= $BOARD_SIZE;
+            $col %= $BOARD_SIZE;
         }
 
-        if ($col > $#{$board->[$row]}) {
-            $wrap_plane || return;
-            $col %= scalar(@{$board->[$row]});
-        }
+        $row < $BOARD_SIZE or return;
+        $col < $BOARD_SIZE or return;
 
-        !$wrap_plane && ($row < 0 || $col < 0) && return;
+        $row >= 0 or return;
+        $col >= 0 or return;
 
         \$board->[$row][$col]
     }[0, 0], grep { ref($_) eq 'ARRAY' } @{$indices};
@@ -204,10 +201,25 @@ sub print_ascii_table {
         $table->addRowLine();
     }
 
-    print $table;
+    my $t = $table->drawit;
+
+    if ($use_colors) {
+        my $hit_color  = Term::ANSIColor::colored($hit_char,  "bold red");
+        my $miss_color = Term::ANSIColor::colored($miss_char, "yellow");
+
+        $t =~ s{\Q$hit_char\E}{$hit_color}g;
+        $t =~ s{\Q$miss_char\E}{$miss_char}g;
+
+        foreach my $c (@plane_chars) {
+            my $plane_color = Term::ANSIColor::colored($c, "bold green");
+            $t =~ s{\Q$c\E}{$plane_color}g;
+        }
+    }
+
+    say $t;
 }
 
-my $count = 0;
+my $count      = 0;
 my @directions = (\&up, \&down, \&left, \&right);
 
 {
@@ -220,7 +232,7 @@ my @directions = (\&up, \&down, \&left, \&right);
     assign(
            change => 0,
            plane  => [$code->(\@play_board, $x, $y)],
-           data => [map { "$_$rand" } @parts],
+           data   => [map { "$_$rand" } @parts],
           )
       || redo;
 
@@ -243,7 +255,7 @@ print_ascii_table();
 
 while ($count > 0) {
 
-    my $input = lc $term->readline("\n=>> Your guess (ex: a4)\n> ");
+    my $input = lc $term->readline("=>> Your guess (ex: d4)\n> ");
     last if $input eq 'q' or $input eq 'quit';
 
     my ($letter, $y) = $input =~ /^\h*([a-z]+)\D*([0-9]+)/;
@@ -290,7 +302,7 @@ continue {
     print_ascii_table();
 }
 
-printf "\n** Info: %d tries in %d seconds\n", $tries, time - $start_time;
+printf "** Info: %d tries in %d seconds\n", $tries, time - $start_time;
 
 if ($count == 0) {
     say "** Congratulations! All the planes are destroyed!";
