@@ -150,6 +150,7 @@ A nice collection of day-to-day Perl scripts.
     * [Replace html links](./Formatters/replace_html_links.pl)
     * [Word columner](./Formatters/word_columner.pl)
 * Game solvers
+    * [Asciiplanes-player](./Game%20solvers/asciiplanes-player.pl)
     * [Dice game solver](./Game%20solvers/dice_game_solver.pl)
     * [Generate sudoku](./Game%20solvers/generate_sudoku.pl)
     * [Peg-solitaire-solver](./Game%20solvers/peg-solitaire-solver)

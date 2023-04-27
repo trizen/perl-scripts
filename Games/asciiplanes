@@ -29,12 +29,11 @@ my $version = 0.01;
 my $BOARD_SIZE = 8;
 my $PLANES_NUM = 3;
 
-my @parts = ('head', ('hit') x 7);
-my @plane_chars =
-  (shuffle('☗', '⛰', '♣', '★', '✠', '❂', '♜', '☂', '☀', '❤', '❆', '❃', '◕', '▣', '●', '▼', '■', '◉', '◆', '▲',));
+my @parts       = ('head', ('hit') x 7);
+my @plane_chars = (shuffle('♣', '★', '✠', '❂', '☀', '❤', '❆', '❃', '▣', '▼', '■', '◉', '◆', '▲'));
 
 my $wrap_plane = 0;
-my $hit_char   = q{◌};
+my $hit_char   = q{O};
 my $miss_char  = q{`};
 my $use_colors = eval { require Term::ANSIColor; 1; };
 
@@ -77,6 +76,7 @@ if (@ARGV) {
                              'hit-char=s'        => \$hit_char,
                              'miss-char=s'       => \$miss_char,
                              'wrap!'             => \$wrap_plane,
+                             'colors!'           => \$use_colors,
                              'help|h|?'          => \&usage,
                              'version|v|V'       => \&version,
                              'debug!'            => \$DEBUG,
@@ -208,7 +208,7 @@ sub print_ascii_table {
         my $miss_color = Term::ANSIColor::colored($miss_char, "yellow");
 
         $t =~ s{\Q$hit_char\E}{$hit_color}g;
-        $t =~ s{\Q$miss_char\E}{$miss_char}g;
+        $t =~ s{\Q$miss_char\E}{$miss_color}g;
 
         foreach my $c (@plane_chars) {
             my $plane_color = Term::ANSIColor::colored($c, "bold green");
@@ -255,7 +255,8 @@ print_ascii_table();
 
 while ($count > 0) {
 
-    my $input = lc $term->readline("=>> Your guess (ex: d4)\n> ");
+    print "=>> Your guess (ex: d4)\n";
+    my $input = lc($term->readline("> ") // last);
     last if $input eq 'q' or $input eq 'quit';
 
     my ($letter, $y) = $input =~ /^\h*([a-z]+)\D*([0-9]+)/;
