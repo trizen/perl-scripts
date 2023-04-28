@@ -2,7 +2,7 @@
 
 # Author: Trizen
 # Date: 01 December 2022
-# Edit: 02 December 2022
+# Edit: 28 April 2023
 # https://github.com/trizen
 
 # Compress/decompress files using Huffman coding.
@@ -25,11 +25,14 @@ use File::Basename qw(basename);
 
 use constant {
               PKGNAME => 'huffman-simple',
-              VERSION => '0.02',
+              VERSION => '0.03',
               FORMAT  => 'hfm',
              };
 
-use constant {SIGNATURE => uc(FORMAT) . chr(2)};
+use constant {
+              CHUNK_SIZE => 1024 * 1024,           # 1 MB
+              SIGNATURE  => uc(FORMAT) . chr(3),
+             };
 
 sub usage {
     my ($code) = @_;
@@ -150,26 +153,10 @@ sub valid_archive {
     return 1;
 }
 
-sub compress ($input, $output) {
+sub create_huffman_entry ($bytes, $out_fh) {
 
-    # Open the input file
-    open my $fh, '<:raw', $input;
-
-    # Open the output file and write the archive signature
-    open my $out_fh, '>:raw', $output;
-    print $out_fh SIGNATURE;
-
-    my $chars = do {
-        local $/;
-        <$fh>;
-    };
-
-    close $fh;
-
-    my @bytes = unpack('C*', $chars);
-
-    my ($h, $rev_h) = mktree(\@bytes);
-    my $enc = huffman_encode(\@bytes, $h);
+    my ($h, $rev_h) = mktree($bytes);
+    my $enc = huffman_encode($bytes, $h);
 
     my $dict  = '';
     my $codes = '';
@@ -184,18 +171,43 @@ sub compress ($input, $output) {
     print $out_fh pack("B*", $codes);
     print $out_fh pack("N",  length($enc));
     print $out_fh pack("B*", $enc);
+}
+
+sub compress ($input, $output) {
+
+    # Open the input file
+    open my $fh, '<:raw', $input;
+
+    # Open the output file and write the archive signature
+    open my $out_fh, '>:raw', $output;
+    print $out_fh SIGNATURE;
+
+    # Read and encode
+    while (read($fh, (my $chunk), CHUNK_SIZE)) {
+        create_huffman_entry([unpack('C*', $chunk)], $out_fh);
+    }
 
     return 1;
 }
 
-sub decompress ($input, $output) {
+sub read_bits ($fh, $bits_len) {
 
-    # Open and validate the input file
-    open my $fh, '<:raw', $input;
-    valid_archive($fh) || die "$0: file `$input' is not a \U${\FORMAT}\E v${\VERSION} archive!\n";
+    my $data = '';
+    read($fh, $data, $bits_len >> 3);
+    $data = unpack('B*', $data);
 
-    # Open the output file
-    open my $out_fh, '>:raw', $output;
+    while (length($data) < $bits_len) {
+        $data .= unpack('B*', getc($fh));
+    }
+
+    if (length($data) > $bits_len) {
+        $data = substr($data, 0, $bits_len);
+    }
+
+    return $data;
+}
+
+sub decode_huffman_entry ($fh, $out_fh) {
 
     my @codes;
     my $codes_len = 0;
@@ -208,10 +220,7 @@ sub decompress ($input, $output) {
         }
     }
 
-    my $codes_bin = '';
-    while (length($codes_bin) < $codes_len) {
-        $codes_bin .= unpack('B*', getc($fh) // last);
-    }
+    my $codes_bin = read_bits($fh, $codes_len);
 
     my %rev_dict;
     foreach my $pair (@codes) {
@@ -222,7 +231,25 @@ sub decompress ($input, $output) {
     my $enc_len = unpack('N', join('', map { getc($fh) } 1 .. 4));
 
     if ($enc_len > 0) {
-        print $out_fh huffman_decode(unpack("B" . $enc_len, do { local $/; <$fh> }), \%rev_dict);
+        print $out_fh huffman_decode(read_bits($fh, $enc_len), \%rev_dict);
+        return 1;
+    }
+
+    return 0;
+}
+
+sub decompress ($input, $output) {
+
+    # Open and validate the input file
+    open my $fh, '<:raw', $input;
+    valid_archive($fh) || die "$0: file `$input' is not a \U${\FORMAT}\E v${\VERSION} archive!\n";
+
+    # Open the output file
+    open my $out_fh, '>:raw', $output;
+
+    # Decode
+    while (!eof($fh)) {
+        decode_huffman_entry($fh, $out_fh) || last;
     }
 
     return 1;

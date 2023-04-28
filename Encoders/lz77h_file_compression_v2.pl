@@ -260,8 +260,7 @@ sub decode_huffman_entry ($fh) {
     my $enc_len = unpack('N', join('', map { getc($fh) } 1 .. 4));
 
     if ($enc_len > 0) {
-        my $enc_data = read_bits($fh, $enc_len);
-        return huffman_decode($enc_data, \%rev_dict);
+        return huffman_decode(read_bits($fh, $enc_len), \%rev_dict);
     }
 
     return '';

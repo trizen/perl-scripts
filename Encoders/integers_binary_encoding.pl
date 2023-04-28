@@ -31,7 +31,7 @@ sub encode_integers ($integers) {
         ++$count;
     }
 
-    push @counts, [$bits_width, scalar(@$integers) - $processed_len];
+    push @counts, grep { $_->[1] > 0 } [$bits_width, scalar(@$integers) - $processed_len];
 
     my $clen = scalar @counts;
 
@@ -40,7 +40,6 @@ sub encode_integers ($integers) {
 
     foreach my $pair (@counts) {
         my ($blen, $len) = @$pair;
-        $len > 0 or next;
         $compressed .= chr($blen);
         $compressed .= pack('N', $len);
     }
@@ -48,8 +47,6 @@ sub encode_integers ($integers) {
     my $bits = '';
     foreach my $pair (@counts) {
         my ($blen, $len) = @$pair;
-
-        $len > 0 or next;
 
         foreach my $symbol (splice(@$integers, 0, $len)) {
             $bits .= sprintf("%0*b", $blen, $symbol);
@@ -76,7 +73,7 @@ sub decode_integers ($str) {
     for (1 .. $count_len) {
         my $blen = ord(substr($str, 0, 1, ''));
         my $len  = unpack('N', join('', map { substr($str, 0, 1, '') } 1 .. 4));
-        push @counts, [$blen + 0, $len + 0];
+        push(@counts, [$blen + 0, $len + 0]) if ($len > 0);
     }
 
     my $bits = unpack('B*', $str);
@@ -84,7 +81,6 @@ sub decode_integers ($str) {
     my @chunks;
     foreach my $pair (@counts) {
         my ($blen, $len) = @$pair;
-        $len > 0 or next;
         foreach my $chunk (unpack(sprintf('(a%d)*', $blen), substr($bits, 0, $blen * $len, ''))) {
             push @chunks, oct('0b' . $chunk);
         }
