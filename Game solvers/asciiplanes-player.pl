@@ -273,9 +273,10 @@ sub guess ($info_board, $play_board, $plane_count) {
         my ($x, $y) = @{pop(@indices) // return};
 
         while (1) {
-            $play_board->[$x][$y] eq BLANK
-              and $info_board->[$x][$y] eq BLANK
-              and last;
+            if (    $play_board->[$x][$y] eq BLANK
+                and $info_board->[$x][$y] eq BLANK) {
+                last;
+            }
             ($x, $y) = @{pop(@indices) // return};
         }
 
@@ -363,9 +364,6 @@ sub solve ($callback) {
             guess($info_board, $play_board, $plane_count) || next;
             valid_assignment($play_board, $info_board, 1) || next;
 
-            my $all_dead = 1;
-            my $new_info = 0;
-
             # Prefer points nearest to the center of the board
             my @head_pos = (
                 map { $_->[0] } sort { $a->[1] <=> $b->[1] } map {
@@ -381,8 +379,7 @@ sub solve ($callback) {
                         grep { @$_ and all { $$_ ne AIR } @$_ }
                         map  { [pointers($info_board, $x, $y, $_)] } @DIRECTIONS
                     ]]
-                }
-                grep { $info_board->[$_->[0]][$_->[1]] eq BLANK } @head_pos
+                } grep { $info_board->[$_->[0]][$_->[1]] eq BLANK } @head_pos
             );
 #>>>
 
@@ -396,6 +393,9 @@ sub solve ($callback) {
                   } @head_pos
             );
 #>>>
+
+            my $all_dead = 1;
+            my $new_info = 0;
 
             foreach my $pos (@head_pos) {
 

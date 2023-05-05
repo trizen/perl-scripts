@@ -67,6 +67,7 @@ A nice collection of day-to-day Perl scripts.
     * [Binary arithmetic coding anynum](./Encoders/binary_arithmetic_coding_anynum.pl)
     * [Binradix arithmetic coding](./Encoders/binradix_arithmetic_coding.pl)
     * [Binradix arithmetic coding anynum](./Encoders/binradix_arithmetic_coding_anynum.pl)
+    * [Compress](./Encoders/compress.pl)
     * [Eyes dropper](./Encoders/eyes_dropper.pl)
     * [Huffman coding](./Encoders/huffman_coding.pl)
     * [Huffman file compression](./Encoders/huffman_file_compression.pl)

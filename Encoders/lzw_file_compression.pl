@@ -144,28 +144,25 @@ sub compress ($uncompressed) {
 sub decompress ($compressed) {
 
     # Build the dictionary
-    my $dict_size = 256;
-    my %dictionary;
+    my $dict_size  = 256;
+    my @dictionary = map { chr($_) } 0 .. $dict_size - 1;
 
-    foreach my $i (0 .. $dict_size - 1) {
-        $dictionary{$i} = chr($i);
-    }
-
-    my $w      = $dictionary{$compressed->[0]};
+    my $w      = $dictionary[$compressed->[0]];
     my $result = $w;
 
     foreach my $j (1 .. $#{$compressed}) {
         my $k = $compressed->[$j];
 
         my $entry =
-            exists($dictionary{$k}) ? $dictionary{$k}
-          : ($k == $dict_size)      ? ($w . substr($w, 0, 1))
-          :                           die "Bad compressed k: $k";
+            ($k < $dict_size)  ? $dictionary[$k]
+          : ($k == $dict_size) ? ($w . substr($w, 0, 1))
+          :                      die "Bad compressed k: $k";
 
         $result .= $entry;
 
         # Add w+entry[0] to the dictionary
-        $dictionary{$dict_size++} = $w . substr($entry, 0, 1);
+        push @dictionary, $w . substr($entry, 0, 1);
+        ++$dict_size;
         $w = $entry;
     }
 

@@ -123,7 +123,7 @@ sub qoi_encoder ($img) {
     }
 
     if ($run > 0) {
-        push(@bytes, 0b11_00_00_00 | ($run - 1));
+        push(@bytes, QOI_OP_RUN | ($run - 1));
     }
 
     push(@bytes, (0x00) x 7);

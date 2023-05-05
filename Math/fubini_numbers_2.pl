@@ -22,7 +22,7 @@ sub fubini_numbers {
 
     foreach my $i (1 .. $n) {
         foreach my $k (0 .. $i - 1) {
-            $F[$i] += $F[$k] * binomial($i, $i - $k);
+            $F[$i] += $F[$k] * binomial($i, $k);
         }
     }
 

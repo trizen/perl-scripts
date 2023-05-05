@@ -12,10 +12,26 @@ my $width  = 0;
 my $height = 0;
 my $colors = 255;
 
+sub print_usage {
+    print <<"EOT";
+usage: $0 [options] [<input.bin] [>output.pgm]
+
+options:
+
+    --width=i   : width of the image (default: $width)
+    --height=i  : height of the image (default: $height)
+    --colors=i  : number of colors (default: $colors)
+    --help      : display this message and exit
+
+EOT
+    exit;
+}
+
 GetOptions(
            "w|width=i"  => \$width,
            "h|height=i" => \$height,
            "c|colors=i" => \$colors,
+           "h|help"     => \&print_usage,
           )
   or die "Error in arguments";
 
