@@ -22,13 +22,20 @@ sub walk ($node, $code, $h, $rev_h) {
 sub mktree ($bytes) {
     my (%freq, @nodes);
 
-    $freq{$_}++ for @$bytes;
-    @nodes = map { [$_, $freq{$_}] } keys %freq;
+    ++$freq{$_} for @$bytes;
+    @nodes = map { [$_, $freq{$_}] } sort { $a <=> $b } keys %freq;
 
     do {    # poor man's priority queue
         @nodes = sort { $a->[1] <=> $b->[1] } @nodes;
         my ($x, $y) = splice(@nodes, 0, 2);
-        push @nodes, [[$x, $y], $x->[1] + $y->[1]];
+        if (defined($x)) {
+            if (defined($y)) {
+                push @nodes, [[$x, $y], $x->[1] + $y->[1]];
+            }
+            else {
+                push @nodes, [[$x], $x->[1]];
+            }
+        }
     } while (@nodes > 1);
 
     walk($nodes[0], '', {}, {});

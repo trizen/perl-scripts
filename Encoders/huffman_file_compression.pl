@@ -122,8 +122,13 @@ sub mktree ($bytes) {
     do {    # poor man's priority queue
         @nodes = sort { $a->[1] <=> $b->[1] } @nodes;
         my ($x, $y) = splice(@nodes, 0, 2);
-        if (defined($x) and defined($y)) {
-            push @nodes, [[$x, $y], $x->[1] + $y->[1]];
+        if (defined($x)) {
+            if (defined($y)) {
+                push @nodes, [[$x, $y], $x->[1] + $y->[1]];
+            }
+            else {
+                push @nodes, [[$x], $x->[1]];
+            }
         }
     } while (@nodes > 1);
 

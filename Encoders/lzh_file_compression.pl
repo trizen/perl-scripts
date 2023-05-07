@@ -2,10 +2,9 @@
 
 # Author: Trizen
 # Date: 15 December 2022
-# Edit: 22 March 2023
 # https://github.com/trizen
 
-# Compress/decompress files using LZ77 compression + Huffman coding (v2).
+# Compress/decompress files using LZ77 compression + Huffman coding.
 
 use 5.020;
 use strict;
@@ -17,13 +16,13 @@ use Getopt::Std    qw(getopts);
 use File::Basename qw(basename);
 
 use constant {
-              PKGNAME    => 'LZ77H',
-              VERSION    => '0.02',
-              FORMAT     => 'lz77h2',
+              PKGNAME    => 'LZH',
+              VERSION    => '0.01',
+              FORMAT     => 'lzh',
               CHUNK_SIZE => 1 << 16,
              };
 
-use constant {SIGNATURE => "LZ77H" . chr(2)};
+use constant {SIGNATURE => "LZH" . chr(1)};
 
 sub usage {
     my ($code) = @_;
@@ -178,8 +177,13 @@ sub mktree ($bytes) {
     do {    # poor man's priority queue
         @nodes = sort { $a->[1] <=> $b->[1] } @nodes;
         my ($x, $y) = splice(@nodes, 0, 2);
-        if (defined($x) and defined($y)) {
-            push @nodes, [[$x, $y], $x->[1] + $y->[1]];
+        if (defined($x)) {
+            if (defined($y)) {
+                push @nodes, [[$x, $y], $x->[1] + $y->[1]];
+            }
+            else {
+                push @nodes, [[$x], $x->[1]];
+            }
         }
     } while (@nodes > 1);
 
@@ -281,19 +285,19 @@ sub lz77h_compress_file ($input, $output) {
     # Print the header
     print $out_fh $header;
 
+    my (@uncompressed, @indices, @lengths);
+
     # Compress data
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
-
-        my (@uncompressed, @indices, @lengths);
         lz77_compression($chunk, \@uncompressed, \@indices, \@lengths);
-
-        @indices      = unpack('C*', pack('S*', @indices));
-        @uncompressed = unpack('C*', join('', @uncompressed));
-
-        create_huffman_entry(\@uncompressed, $out_fh);
-        create_huffman_entry(\@indices,      $out_fh);
-        create_huffman_entry(\@lengths,      $out_fh);
     }
+
+    @indices      = unpack('C*', pack('S*', @indices));
+    @uncompressed = unpack('C*', join('', @uncompressed));
+
+    create_huffman_entry(\@uncompressed, $out_fh);
+    create_huffman_entry(\@indices,      $out_fh);
+    create_huffman_entry(\@lengths,      $out_fh);
 
     # Close the file
     close $out_fh;
@@ -309,14 +313,11 @@ sub lz77h_decompress_file ($input, $output) {
     # Open the output file
     open my $out_fh, '>:raw', $output;
 
-    while (!eof($fh)) {
+    my @uncompressed = split(//, decode_huffman_entry($fh));
+    my @indices      = unpack('S*', decode_huffman_entry($fh));
+    my @lengths      = unpack('C*', decode_huffman_entry($fh));
 
-        my @uncompressed = split(//, decode_huffman_entry($fh));
-        my @indices      = unpack('S*', decode_huffman_entry($fh));
-        my @lengths      = unpack('C*', decode_huffman_entry($fh));
-
-        print $out_fh lz77_decompression(\@uncompressed, \@indices, \@lengths);
-    }
+    print $out_fh lz77_decompression(\@uncompressed, \@indices, \@lengths);
 
     # Close the file
     close $fh;

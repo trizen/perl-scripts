@@ -33,10 +33,7 @@ sub encode_integers ($integers) {
 
     push @counts, grep { $_->[1] > 0 } [$bits_width, scalar(@$integers) - $processed_len];
 
-    my $clen = scalar @counts;
-
-    my $compressed = '';
-    $compressed .= chr($clen);
+    my $compressed = chr(scalar @counts);
 
     foreach my $pair (@counts) {
         my ($blen, $len) = @$pair;

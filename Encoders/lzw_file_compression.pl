@@ -166,7 +166,7 @@ sub decompress ($compressed) {
         $w = $entry;
     }
 
-    return $result;
+    return \$result;
 }
 
 sub encode_integers ($integers) {
@@ -194,10 +194,7 @@ sub encode_integers ($integers) {
 
     push @counts, [$bits_width, scalar(@$integers) - $processed_len];
 
-    my $clen = scalar @counts;
-
-    my $compressed = '';
-    $compressed .= chr($clen);
+    my $compressed = chr(scalar @counts);
 
     foreach my $pair (@counts) {
         my ($blen, $len) = @$pair;
@@ -229,24 +226,38 @@ sub encode_integers ($integers) {
     return \$compressed;
 }
 
+sub read_bits ($fh, $bits_len) {
+
+    my $data = '';
+    read($fh, $data, $bits_len >> 3);
+    $data = unpack('B*', $data);
+
+    while (length($data) < $bits_len) {
+        $data .= unpack('B*', getc($fh));
+    }
+
+    if (length($data) > $bits_len) {
+        $data = substr($data, 0, $bits_len);
+    }
+
+    return $data;
+}
+
 sub decode_integers ($fh) {
 
     my $count_len = ord(getc($fh));
+
     my @counts;
+    my $bits_len = 0;
 
     for (1 .. $count_len) {
         my $blen = ord(getc($fh));
         my $len  = unpack('N', join('', map { getc($fh) } 1 .. 4));
         push @counts, [$blen + 0, $len + 0];
+        $bits_len += $blen * $len;
     }
 
-    my $bits = unpack(
-        'B*',
-        do {
-            local $/;
-            <$fh>;
-        }
-    );
+    my $bits = read_bits($fh, $bits_len);
 
     my @chunks;
     foreach my $pair (@counts) {
@@ -291,7 +302,7 @@ sub lzw_decompress_file ($input, $output) {
     # Open the output file
     open my $out_fh, '>:raw', $output;
 
-    print $out_fh decompress($chunks);
+    print $out_fh ${decompress($chunks)};
     close $out_fh;
 }
 

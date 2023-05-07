@@ -2,9 +2,10 @@
 
 # Author: Trizen
 # Date: 15 December 2022
+# Edit: 08 May 2023
 # https://github.com/trizen
 
-# Compress/decompress files using LZ77 compression + Huffman coding.
+# Compress/decompress files using LZ77 compression + integers encoding + Huffman coding.
 
 use 5.020;
 use strict;
@@ -16,13 +17,16 @@ use Getopt::Std    qw(getopts);
 use File::Basename qw(basename);
 
 use constant {
-              PKGNAME    => 'LZ77H',
-              VERSION    => '0.01',
-              FORMAT     => 'lz77h',
-              CHUNK_SIZE => 1 << 16,
-             };
+    PKGNAME => 'LZIH',
+    VERSION => '0.01',
+    FORMAT  => 'lzih',
 
-use constant {SIGNATURE => "LZ77H" . chr(1)};
+    COMPRESSED_BYTE   => chr(1),
+    UNCOMPRESSED_BYTE => chr(0),
+    CHUNK_SIZE        => 1 << 16,    # higher value = better compression
+};
+
+use constant {SIGNATURE => "LZIH" . chr(1)};
 
 sub usage {
     my ($code) = @_;
@@ -129,7 +133,7 @@ sub lz77_compression ($str, $uncompressed, $indices, $lengths) {
         --$n;
         push @$indices,      $p;
         push @$lengths,      $n;
-        push @$uncompressed, $chars[$la + $n];
+        push @$uncompressed, ord($chars[$la + $n]);
         $la += $n + 1;
         $prefix .= $token;
     }
@@ -157,6 +161,88 @@ sub lz77_decompression ($uncompressed, $indices, $lengths) {
     $ret;
 }
 
+sub encode_integers ($integers) {
+
+    my @counts;
+    my $count           = 0;
+    my $bits_width      = 1;
+    my $bits_max_symbol = 1 << $bits_width;
+    my $processed_len   = 0;
+
+    foreach my $k (@$integers) {
+        while ($k >= $bits_max_symbol) {
+
+            if ($count > 0) {
+                push @counts, [$bits_width, $count];
+                $processed_len += $count;
+            }
+
+            $count = 0;
+            $bits_max_symbol *= 2;
+            $bits_width      += 1;
+        }
+        ++$count;
+    }
+
+    push @counts, grep { $_->[1] > 0 } [$bits_width, scalar(@$integers) - $processed_len];
+
+    my $compressed = chr(scalar @counts);
+
+    foreach my $pair (@counts) {
+        my ($blen, $len) = @$pair;
+        $compressed .= chr($blen);
+        $compressed .= pack('N', $len);
+    }
+
+    my $bits = '';
+    foreach my $pair (@counts) {
+        my ($blen, $len) = @$pair;
+
+        foreach my $symbol (splice(@$integers, 0, $len)) {
+            $bits .= sprintf("%0*b", $blen, $symbol);
+        }
+
+        if (length($bits) % 8 == 0) {
+            $compressed .= pack('B*', $bits);
+            $bits = '';
+        }
+    }
+
+    if ($bits ne '') {
+        $compressed .= pack('B*', $bits);
+    }
+
+    return \$compressed;
+}
+
+sub decode_integers ($fh) {
+
+    my $count_len = ord(getc($fh));
+
+    my @counts;
+    my $bits_len = 0;
+
+    for (1 .. $count_len) {
+        my $blen = ord(getc($fh));
+        my $len  = unpack('N', join('', map { getc($fh) } 1 .. 4));
+        push @counts, [$blen + 0, $len + 0];
+        $bits_len += $blen * $len;
+    }
+
+    my $bits = read_bits($fh, $bits_len);
+
+    my @chunks;
+    foreach my $pair (@counts) {
+        my ($blen, $len) = @$pair;
+        $len > 0 or next;
+        foreach my $chunk (unpack(sprintf('(a%d)*', $blen), substr($bits, 0, $blen * $len, ''))) {
+            push @chunks, oct('0b' . $chunk);
+        }
+    }
+
+    return \@chunks;
+}
+
 # produce encode and decode dictionary from a tree
 sub walk ($node, $code, $h, $rev_h) {
 
@@ -177,8 +263,13 @@ sub mktree ($bytes) {
     do {    # poor man's priority queue
         @nodes = sort { $a->[1] <=> $b->[1] } @nodes;
         my ($x, $y) = splice(@nodes, 0, 2);
-        if (defined($x) and defined($y)) {
-            push @nodes, [[$x, $y], $x->[1] + $y->[1]];
+        if (defined($x)) {
+            if (defined($y)) {
+                push @nodes, [[$x, $y], $x->[1] + $y->[1]];
+            }
+            else {
+                push @nodes, [[$x], $x->[1]];
+            }
         }
     } while (@nodes > 1);
 
@@ -203,16 +294,16 @@ sub create_huffman_entry ($bytes, $out_fh) {
     my ($h, $rev_h) = mktree($bytes);
     my $enc = huffman_encode($bytes, $h);
 
-    my $dict  = '';
+    my @lengths;
     my $codes = '';
 
     foreach my $i (0 .. 255) {
         my $c = $h->{$i} // '';
         $codes .= $c;
-        $dict  .= chr(length($c));
+        push @lengths, length($c);
     }
 
-    print $out_fh $dict;
+    print $out_fh ${encode_integers(\@lengths)};
     print $out_fh pack("B*", $codes);
     print $out_fh pack("N",  length($enc));
     print $out_fh pack("B*", $enc);
@@ -239,12 +330,17 @@ sub decode_huffman_entry ($fh) {
 
     my @codes;
     my $codes_len = 0;
+    my @lengths   = @{decode_integers($fh)};
 
-    foreach my $c (0 .. 255) {
-        my $l = ord(getc($fh));
+    if (scalar(@lengths) != 256) {
+        die "Invalid Huffman entry!";
+    }
+
+    foreach my $i (0 .. $#lengths) {
+        my $l = $lengths[$i];
         if ($l > 0) {
             $codes_len += $l;
-            push @codes, [$c, $l];
+            push @codes, [$i, $l];
         }
     }
 
@@ -259,8 +355,7 @@ sub decode_huffman_entry ($fh) {
     my $enc_len = unpack('N', join('', map { getc($fh) } 1 .. 4));
 
     if ($enc_len > 0) {
-        my $enc_data = read_bits($fh, $enc_len);
-        return huffman_decode($enc_data, \%rev_dict);
+        return huffman_decode(read_bits($fh, $enc_len), \%rev_dict);
     }
 
     return '';
@@ -281,19 +376,27 @@ sub lz77h_compress_file ($input, $output) {
     # Print the header
     print $out_fh $header;
 
-    my (@uncompressed, @indices, @lengths);
-
     # Compress data
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
+
+        my (@uncompressed, @indices, @lengths);
         lz77_compression($chunk, \@uncompressed, \@indices, \@lengths);
+
+        my $est_ratio = length($chunk) / (4 * scalar(@uncompressed));
+
+        say(scalar(@uncompressed), ' -> ', $est_ratio);
+
+        if ($est_ratio > 1) {
+            print $out_fh COMPRESSED_BYTE;
+            create_huffman_entry(\@uncompressed, $out_fh);
+            create_huffman_entry(\@lengths,      $out_fh);
+            print $out_fh ${encode_integers(\@indices)};
+        }
+        else {
+            print $out_fh UNCOMPRESSED_BYTE;
+            create_huffman_entry([unpack('C*', $chunk)], $out_fh);
+        }
     }
-
-    @indices      = unpack('C*', pack('S*', @indices));
-    @uncompressed = unpack('C*', join('', @uncompressed));
-
-    create_huffman_entry(\@uncompressed, $out_fh);
-    create_huffman_entry(\@indices,      $out_fh);
-    create_huffman_entry(\@lengths,      $out_fh);
 
     # Close the file
     close $out_fh;
@@ -309,11 +412,25 @@ sub lz77h_decompress_file ($input, $output) {
     # Open the output file
     open my $out_fh, '>:raw', $output;
 
-    my @uncompressed = split(//, decode_huffman_entry($fh));
-    my @indices      = unpack('S*', decode_huffman_entry($fh));
-    my @lengths      = unpack('C*', decode_huffman_entry($fh));
+    while (!eof($fh)) {
 
-    print $out_fh lz77_decompression(\@uncompressed, \@indices, \@lengths);
+        my $compression_byte = getc($fh);
+
+        if ($compression_byte eq COMPRESSED_BYTE) {
+
+            my @uncompressed = split(//, decode_huffman_entry($fh));
+            my @lengths      = unpack('C*', decode_huffman_entry($fh));
+            my $indices      = decode_integers($fh);
+
+            print $out_fh lz77_decompression(\@uncompressed, $indices, \@lengths);
+        }
+        elsif ($compression_byte eq UNCOMPRESSED_BYTE) {
+            print $out_fh decode_huffman_entry($fh);
+        }
+        else {
+            die "Invalid compression...";
+        }
+    }
 
     # Close the file
     close $fh;

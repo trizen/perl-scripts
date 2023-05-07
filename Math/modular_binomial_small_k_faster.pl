@@ -9,6 +9,9 @@
 # Implemented using the identity:
 #    binomial(n, k) = Product_{r = n-k+1..n}(r) / k!
 
+# And also using the identitiy:
+#   binomial(n, k) = Prod_{j=0..k-1} (n-j)/(j+1)
+
 # See also:
 #   https://en.wikipedia.org/wiki/Lucas%27s_theorem
 
@@ -16,8 +19,8 @@ use 5.020;
 use strict;
 use warnings;
 
-use ntheory qw(:all);
-use List::Util qw(uniq);
+use ntheory      qw(:all);
+use List::Util   qw(uniq);
 use experimental qw(signatures);
 
 sub factorial_power ($n, $p) {
@@ -28,6 +31,20 @@ sub modular_binomial_small_k ($n, $k, $m) {
 
     my %kp;
     my $prod = 1;
+
+    if ($n - $k < $k) {
+        $k = $n - $k;
+    }
+
+    if (is_prime($m)) {
+
+        foreach my $j (0 .. $k - 1) {
+            $prod = mulmod($prod, $n - $j, $m);
+            $prod = divmod($prod, $j + 1, $m);
+        }
+
+        return $prod;
+    }
 
     forfactored {
 
@@ -115,6 +132,10 @@ sub modular_binomial ($n, $k, $m) {
         return modint(1, $m);
     }
 
+    if ($n - $k < $k) {
+        $k = $n - $k;
+    }
+
     is_square_free(absint($m))
       || return modint(modular_binomial_small_k($n, $k, absint($m)), $m);
 
@@ -136,14 +157,16 @@ sub modular_binomial ($n, $k, $m) {
     modint(chinese(@congruences), $m);
 }
 
-say modular_binomial(12,   5,   100000);     #=> 792
-say modular_binomial(16,   4,   100000);     #=> 1820
-say modular_binomial(100,  50,  139);        #=> 71
-say modular_binomial(1000, 10,  1243);       #=> 848
-say modular_binomial(124,  42,  1234567);    #=> 395154
-say modular_binomial(1e9,  1e4, 1234567);    #=> 833120
-say modular_binomial(1e10, 1e5, 1234567);    #=> 589372
-say modular_binomial(1e10, 1e6, 1234567);    #=> 456887
+say modular_binomial(12,   5,   100000);       #=> 792
+say modular_binomial(16,   4,   100000);       #=> 1820
+say modular_binomial(100,  50,  139);          #=> 71
+say modular_binomial(1000, 10,  1243);         #=> 848
+say modular_binomial(124,  42,  1234567);      #=> 395154
+say modular_binomial(1e9,  1e4, 1234567);      #=> 833120
+say modular_binomial(1e10, 1e5, 1234567);      #=> 589372
+say modular_binomial(1e10, 1e6, 1234567);      #=> 456887
+say modular_binomial(1e9,  1e4, 123456791);    #=> 106271399
+say modular_binomial(1e10, 1e5, 123456791);    #=> 20609240
 
 __END__
 use Test::More tests => 8820;

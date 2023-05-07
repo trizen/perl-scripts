@@ -9,8 +9,11 @@
 # This implementation reads from STDIN and outputs to STDOUT:
 #   perl compress.pl < input.txt > output.Z
 
-# See also:
+# Reference:
+#   Data Compression (Summer 2023) - Lecture 4 - The Unix 'compress' Program
 #   https://youtube.com/watch?v=1cJL9Va80Pk
+
+# See also:
 #   https://en.wikipedia.org/wiki/Lempel%E2%80%93Ziv%E2%80%93Welch
 
 use 5.036;
