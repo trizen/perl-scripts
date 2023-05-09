@@ -22,9 +22,9 @@ use warnings;
 
 use experimental qw(refaliasing);
 
-use File::Find qw(find);
-use List::Util qw(first min max);
-use Encode qw(decode_utf8);
+use File::Find   qw(find);
+use List::Util   qw(first min max);
+use Encode       qw(decode_utf8);
 use Getopt::Long qw(GetOptions :config no_ignore_case);
 
 sub help {
@@ -36,16 +36,17 @@ usage: $0 [options] /my/path [...]
 Options:
         -f  --first!         : keep only the first file from each group
         -l  --last!          : keep only the last file from each group
-        -g  --groups=[s]     : group individually files which contain this words
-        -G  --nogroups=[s]   : group together files which contain this words
-        -c  --contains=[s]   : ignore files which doesn't contain this words
-        -C  --nocontains=[s] : ignore files which contain this words
+        -g  --groups=[s]     : group individually files which contain these words
+        -G  --nogroups=[s]   : group together files which contain these words
+        -c  --contains=[s]   : ignore files which doesn't contain these words
+        -C  --nocontains=[s] : ignore files which contain these words
         -i  --insensitive    : make all words case-insensitive
         -s  --size!          : group files by size (default: off)
         -p  --percentage=f   : mark the files as similar based on this percent
         -r  --round-up!      : round up the percentage (default: off)
-        -L  --levenshtein    : use the Levenshtein distance algorithm
-        -J  --jaro           : use the Jaro distance algorithm
+        -L  --levenshtein!   : use the Levenshtein distance algorithm
+        -J  --jaro!          : use the Jaro distance algorithm
+        -u  --unidecode!     : normalize Unicode characters to ASCII equivalents
 
 Usage example:
     $0 --percentage=75 ~/Music
@@ -71,6 +72,7 @@ my $first         = 0;    # bool
 my $last          = 0;    # bool
 my $round_up      = 0;    # bool
 my $group_by_size = 0;    # bool
+my $unidecode     = 0;    # bool
 my $insensitive   = 0;    # bool
 my $levenshtein   = 0;    # bool
 my $jaro_distance = 0;    # bool
@@ -87,6 +89,7 @@ GetOptions(
            'i|insensitive!' => \$insensitive,
            'p|percentage=f' => \$percentage,
            'L|levenshtein!' => \$levenshtein,
+           'u|unidecode!'   => \$unidecode,
            'J|jaro!'        => \$jaro_distance,
            's|size!'        => \$group_by_size,
            'h|help'         => sub { help(0) },
@@ -192,7 +195,7 @@ sub jaro_cmp($$) {
     foreach my $i (0 .. $#s) {
 
         my $start = max(0, $i - $match_distance);
-        my $end = min($i + $match_distance + 1, $t_len);
+        my $end   = min($i + $match_distance + 1, $t_len);
 
         foreach my $j ($start .. $end - 1) {
             $t_matches[$j] and next;
@@ -221,6 +224,19 @@ sub jaro_cmp($$) {
       : -1;
 }
 
+sub normalize_filename {
+    my $str = shift;
+
+    $str = decode_utf8($str);
+
+    if ($unidecode) {
+        require Text::Unidecode;
+        $str = Text::Unidecode::unidecode($str);
+    }
+
+    join(' ', split(' ', lc($str =~ s{\.\w{1,5}\z}{}r =~ s/[^\pN\pL]+/ /gr)));
+}
+
 sub find_similar_filenames (&@) {
     my $code = shift;
 
@@ -235,14 +251,15 @@ sub find_similar_filenames (&@) {
                 defined(first { $File::Find::name =~ $_ } @no_contains) && return;
             }
 
-            (-f)
-              && push @{$files{$group_by_size ? (-s _) : 'key'}}, {
-                name => do {
-                    my $str = join(' ', split(' ', lc(decode_utf8($_) =~ s{\.\w{1,5}\z}{}r =~ s/[^\pN\pL]+/ /gr)));
-                    ($levenshtein || $jaro_distance) ? [$str =~ /\X/g] : $str;
-                },
-                real_name => $File::Find::name,
-                                                                  };
+            if (-f) {
+                push @{$files{$group_by_size ? (-s _) : 'key'}}, {
+                    name => do {
+                        my $str = normalize_filename($_);
+                        ($levenshtein || $jaro_distance) ? [$str =~ /\X/g] : $str;
+                    },
+                    real_name => $File::Find::name,
+                };
+            }
         }
     } => @_;
 
@@ -281,7 +298,7 @@ sub find_similar_filenames (&@) {
             do {
                 my %seen;
                 sort grep { !$seen{$_}++ } @files;
-              }
+            }
         );
     }
 
