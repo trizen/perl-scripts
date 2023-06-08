@@ -2,34 +2,34 @@
 
 # Daniel "Trizen" Șuteu
 # Date: 11 February 2016
-# Website: https://github.com/trizen
+# Edit: 08 June 2023
+# https://github.com/trizen
 
 # Arithmetic coding compressor for small files.
 
 # See also:
 #   https://en.wikipedia.org/wiki/Arithmetic_coding#Arithmetic_coding_as_a_generalized_change_of_radix
 
-use 5.010;
+use 5.020;
 use strict;
 use autodie;
 use warnings;
 
-use Getopt::Std qw(getopts);
+use Getopt::Std    qw(getopts);
 use File::Basename qw(basename);
+use experimental   qw(signatures);
 
 use Math::GMPz;
-use Math::MPFR;
 
 use constant {
               PKGNAME => 'TAC Compressor',
-              VERSION => '0.02',
+              VERSION => '0.03',
               FORMAT  => 'tac',
              };
 
-use constant {SIGNATURE => uc(FORMAT) . chr(1)};
+use constant {SIGNATURE => uc(FORMAT) . chr(3)};
 
-sub usage {
-    my ($code) = @_;
+sub usage ($code = 0) {
     print <<"EOH";
 usage: $0 [options] [input file] [output file]
 
@@ -50,7 +50,7 @@ examples:
 
 EOH
 
-    exit($code // 0);
+    exit($code);
 }
 
 sub version {
@@ -96,8 +96,7 @@ sub main {
     }
 }
 
-sub valid_archive {
-    my ($fh) = @_;
+sub valid_archive ($fh) {
 
     if (read($fh, (my $sig), length(SIGNATURE), 0) == length(SIGNATURE)) {
         $sig eq SIGNATURE || return;
@@ -106,8 +105,106 @@ sub valid_archive {
     return 1;
 }
 
-sub cumulative_freq {
-    my ($freq) = @_;
+sub read_bits ($fh, $bits_len) {
+
+    my $data = '';
+    read($fh, $data, $bits_len >> 3);
+    $data = unpack('B*', $data);
+
+    while (length($data) < $bits_len) {
+        $data .= unpack('B*', getc($fh));
+    }
+
+    if (length($data) > $bits_len) {
+        $data = substr($data, 0, $bits_len);
+    }
+
+    return $data;
+}
+
+sub encode_integers ($integers) {
+
+    my @counts;
+    my $count           = 0;
+    my $bits_width      = 1;
+    my $bits_max_symbol = 1 << $bits_width;
+    my $processed_len   = 0;
+
+    foreach my $k (@$integers) {
+        while ($k >= $bits_max_symbol) {
+
+            if ($count > 0) {
+                push @counts, [$bits_width, $count];
+                $processed_len += $count;
+            }
+
+            $count = 0;
+            $bits_max_symbol *= 2;
+            $bits_width      += 1;
+        }
+        ++$count;
+    }
+
+    push @counts, grep { $_->[1] > 0 } [$bits_width, scalar(@$integers) - $processed_len];
+
+    my $compressed = chr(scalar @counts);
+
+    foreach my $pair (@counts) {
+        my ($blen, $len) = @$pair;
+        $compressed .= chr($blen);
+        $compressed .= pack('N', $len);
+    }
+
+    my $bits = '';
+    foreach my $pair (@counts) {
+        my ($blen, $len) = @$pair;
+
+        foreach my $symbol (splice(@$integers, 0, $len)) {
+            $bits .= sprintf("%0*b", $blen, $symbol);
+        }
+
+        if (length($bits) % 8 == 0) {
+            $compressed .= pack('B*', $bits);
+            $bits = '';
+        }
+    }
+
+    if ($bits ne '') {
+        $compressed .= pack('B*', $bits);
+    }
+
+    return $compressed;
+}
+
+sub decode_integers ($fh) {
+
+    my $count_len = ord(getc($fh));
+
+    my @counts;
+    my $bits_len = 0;
+
+    for (1 .. $count_len) {
+        my $blen = ord(getc($fh));
+        my $len  = unpack('N', join('', map { getc($fh) } 1 .. 4));
+        push @counts, [$blen + 0, $len + 0];
+        $bits_len += $blen * $len;
+    }
+
+    my $bits = read_bits($fh, $bits_len);
+
+    my @chunks;
+    foreach my $pair (@counts) {
+        my ($blen, $len) = @$pair;
+        $len > 0 or next;
+        foreach my $chunk (unpack(sprintf('(a%d)*', $blen), substr($bits, 0, $blen * $len, ''))) {
+            push @chunks, oct('0b' . $chunk);
+        }
+    }
+
+    return \@chunks;
+}
+
+sub cumulative_freq ($freq) {
 
     my %cf;
     my $total = Math::GMPz->new(0);
@@ -119,10 +216,7 @@ sub cumulative_freq {
     return %cf;
 }
 
-sub compress {
-    my ($input, $output) = @_;
-
-    use bytes;
+sub compress ($input, $output) {
 
     # Open the input file
     open my $fh, '<:raw', $input;
@@ -159,72 +253,76 @@ sub compress {
     # Each term is multiplied by the product of the
     # frequencies of all previously occurring symbols
     foreach my $c (@chars) {
-        ($L *= $base) += $cf{$c} * $pf;
-        $pf *= $freq{$c};
+        Math::GMPz::Rmpz_mul($L, $L, $base);
+        Math::GMPz::Rmpz_addmul($L, $pf, $cf{$c});
+        Math::GMPz::Rmpz_mul_ui($pf, $pf, $freq{$c});
     }
 
     # Upper bound
     my $U = $L + $pf;
 
     # Compute the power for left shift
-    my $mpfr = log(Math::MPFR->new($pf)) / log(2);
-    my $pow  = Math::GMPz::Rmpz_init();
-    Math::MPFR::Rmpfr_get_z($pow, $mpfr, 0);
-    $pow = 0 + Math::GMPz::Rmpz_get_str($pow, 10);
+    my $pow = Math::GMPz::Rmpz_sizeinbase($pf, 2) - 1;
 
     # Set $enc to (U-1) divided by 2^pow
     my $enc = ($U - 1) >> $pow;
 
     # Remove any divisibility by 2
-    if ($enc > 0 and $enc % 2 == 0) {
+    if ($enc > 0 and Math::GMPz::Rmpz_even_p($enc)) {
         $pow += Math::GMPz::Rmpz_remove($enc, $enc, Math::GMPz->new(2));
     }
 
     my $bin = Math::GMPz::Rmpz_get_str($enc, 2);
 
-    my $encoded = pack('L', $pow);    # the power value
+    my $encoded = '';
     $encoded .= chr(scalar(keys %freq) - 1);    # number of unique chars
-    $encoded .= chr(length($bin) % 8);          # padding
+    $encoded .= pack('N', length($bin));
 
-    while (my ($k, $v) = each %freq) {
-        $encoded .= $k . pack('S', $v);         # char => freq
+    my @freqs;
+
+    foreach my $k (sort { ($freq{$a} <=> $freq{$b}) || ($a cmp $b) } keys %freq) {
+        push @freqs, $freq{$k};
+        $encoded .= $k;
     }
 
-    print {$out_fh} $encoded, pack('B*', $bin);
+    push @freqs, $pow;
+    $encoded .= encode_integers(\@freqs);
+
+    print {$out_fh} $encoded;
+    print {$out_fh} pack('B*', $bin);
     close $out_fh;
 }
 
-sub decompress {
-    my ($input, $output) = @_;
-
-    use bytes;
+sub decompress ($input, $output) {
 
     # Open and validate the input file
     open my $fh, '<:raw', $input;
     valid_archive($fh) || die "$0: file `$input' is not a \U${\FORMAT}\E archive!\n";
-    my $content = do { local $/; <$fh> };
-    close $fh;
 
-    my ($pow, $uniq, $padd) = unpack('LCC', $content);
-    substr($content, 0, length(pack('LCC', 0, 0, 0)), '');
+    my $num_symbols = ord(getc($fh));
+    my $bits_len    = unpack('N', join('', map { getc($fh) } 1 .. 4));
+
+    read($fh, (my $str), 1 + $num_symbols) == 1 + $num_symbols
+      or die "Can't read symbols...";
+
+    my @chars = split(//, $str);
+    my @freqs = @{decode_integers($fh)};
+    my $pow2  = pop(@freqs);
+
+    if (scalar(@chars) != scalar(@freqs)) {
+        die "Invalid encoding...";
+    }
 
     # Create the frequency table (char => freq)
     my %freq;
-    foreach my $i (0 .. $uniq) {
-        my ($char, $f) = unpack('aS', $content);
-        $freq{$char} = $f;
-        substr($content, 0, length(pack('aS', 0, 0)), '');
+    foreach my $i (0 .. $#chars) {
+        $freq{$chars[$i]} = $freqs[$i];
     }
 
     # Decode the bits into an integer
-    my $enc = Math::GMPz->new(unpack('B*', $content), 2);
+    my $enc = Math::GMPz->new(read_bits($fh, $bits_len), 2);
 
-    # Remove the trailing bits (if any)
-    if ($padd != 0) {
-        $enc >>= (8 - $padd);
-    }
-
-    $enc <<= $pow;
+    $enc <<= $pow2;
 
     my $base = 0;
     $base += $_ for values %freq;
@@ -252,15 +350,22 @@ sub decompress {
     # Open the output file
     open my $out_fh, '>:raw', $output;
 
+    my $div = Math::GMPz::Rmpz_init();
+
     # Decode the input number
-    for (my $pow = Math::GMPz->new($base)**($base - 1) ; $pow > 0 ; $pow /= $base) {
-        my $div = $enc / $pow;
+    for (my $pow = Math::GMPz->new($base)**($base - 1) ;
+         Math::GMPz::Rmpz_sgn($pow) > 0 ;
+         Math::GMPz::Rmpz_tdiv_q_ui($pow, $pow, $base)) {
+
+        Math::GMPz::Rmpz_tdiv_q($div, $enc, $pow);
 
         my $c  = $dict{$div};
         my $fv = $freq{$c};
         my $cv = $cf{$c};
 
-        ($enc -= $pow * $cv) /= $fv;
+        Math::GMPz::Rmpz_submul($enc, $pow, $cv);
+        Math::GMPz::Rmpz_tdiv_q_ui($enc, $enc, $fv);
+
         print {$out_fh} $c;
     }
 
