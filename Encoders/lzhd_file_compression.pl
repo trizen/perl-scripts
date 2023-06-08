@@ -5,7 +5,9 @@
 # Edit: 08 June 2023
 # https://github.com/trizen
 
-# Compress/decompress files using LZ77 compression + integers encoding + Huffman coding.
+# Compress/decompress files using LZ77 compression + Huffman coding.
+
+# Encoding the distances/indices using a DEFLATE-like approach.
 
 use 5.020;
 use strict;
@@ -18,16 +20,16 @@ use File::Basename qw(basename);
 use List::Util     qw(max);
 
 use constant {
-    PKGNAME => 'LZIH',
-    VERSION => '0.02',
-    FORMAT  => 'lzih',
+    PKGNAME => 'LZHD',
+    VERSION => '0.01',
+    FORMAT  => 'lzhd',
 
     COMPRESSED_BYTE   => chr(1),
     UNCOMPRESSED_BYTE => chr(0),
     CHUNK_SIZE        => 1 << 16,    # higher value = better compression
 };
 
-use constant {SIGNATURE => "LZIH" . chr(2)};
+use constant {SIGNATURE => "LZHD" . chr(1)};
 
 sub usage {
     my ($code) = @_;
@@ -333,7 +335,8 @@ sub decode_huffman_entry ($fh) {
 
     my @codes;
     my $codes_len = 0;
-    my @lengths   = @{decode_integers($fh)};
+
+    my @lengths = @{decode_integers($fh)};
 
     foreach my $i (0 .. $#lengths) {
         my $l = $lengths[$i];
@@ -358,6 +361,73 @@ sub decode_huffman_entry ($fh) {
     }
 
     return '';
+}
+
+my @distance_symbols = (
+
+    # [distance value, offset bits]
+    [0,  0],
+    [1,  0],
+    [2,  0],
+    [3,  0],
+    [4,  0],
+    [5,  1],
+    [7,  1],
+    [9,  2],
+    [13, 2],
+    [17, 3],
+    [25, 3],
+    [33, 4],
+    [49, 4],
+    [65, 5],
+    [97, 5],
+                       );
+
+until ($distance_symbols[-1][0] > CHUNK_SIZE) {
+    push @distance_symbols, [int($distance_symbols[-1][0] * (4 / 3)), $distance_symbols[-1][1] + 1,];
+
+    push @distance_symbols, [int($distance_symbols[-1][0] * (3 / 2)), $distance_symbols[-1][1],];
+}
+
+sub encode_distances ($distances, $out_fh) {
+
+    my @symbols;
+    my $offset_bits = '';
+
+    foreach my $dist (@$distances) {
+        foreach my $i (0 .. $#distance_symbols) {
+            if ($distance_symbols[$i][0] > $dist) {
+                push @symbols, $i - 1;
+
+                if ($distance_symbols[$i - 1][1] > 0) {
+                    $offset_bits .= sprintf('%0*b', $distance_symbols[$i - 1][1], $dist - $distance_symbols[$i - 1][0]);
+                }
+                last;
+            }
+        }
+    }
+
+    create_huffman_entry(\@symbols, $out_fh);
+    print $out_fh pack('B*', $offset_bits);
+}
+
+sub decode_distances ($fh) {
+
+    my @symbols  = unpack('C*', decode_huffman_entry($fh));
+    my $bits_len = 0;
+
+    foreach my $i (@symbols) {
+        $bits_len += $distance_symbols[$i][1];
+    }
+
+    my $bits = read_bits($fh, $bits_len);
+
+    my @distances;
+    foreach my $i (@symbols) {
+        push @distances, $distance_symbols[$i][0] + oct('0b' . substr($bits, 0, $distance_symbols[$i][1], ''));
+    }
+
+    return \@distances;
 }
 
 # Compress file
@@ -389,7 +459,7 @@ sub lz77h_compress_file ($input, $output) {
             print $out_fh COMPRESSED_BYTE;
             create_huffman_entry(\@uncompressed, $out_fh);
             create_huffman_entry(\@lengths,      $out_fh);
-            print $out_fh ${encode_integers(\@indices)};
+            encode_distances(\@indices, $out_fh);
         }
         else {
             print $out_fh UNCOMPRESSED_BYTE;
@@ -419,7 +489,7 @@ sub lz77h_decompress_file ($input, $output) {
 
             my @uncompressed = split(//, decode_huffman_entry($fh));
             my @lengths      = unpack('C*', decode_huffman_entry($fh));
-            my $indices      = decode_integers($fh);
+            my $indices      = decode_distances($fh);
 
             print $out_fh lz77_decompression(\@uncompressed, $indices, \@lengths);
         }

@@ -76,6 +76,7 @@ A nice collection of day-to-day Perl scripts.
     * [Length encoder](./Encoders/length_encoder.pl)
     * [Lz77 file compression](./Encoders/lz77_file_compression.pl)
     * [Lzh file compression](./Encoders/lzh_file_compression.pl)
+    * [Lzhd file compression](./Encoders/lzhd_file_compression.pl)
     * [Lzih file compression](./Encoders/lzih_file_compression.pl)
     * [Lzt-fast](./Encoders/lzt-fast.pl)
     * [Lzt-hc](./Encoders/lzt-hc.pl)
