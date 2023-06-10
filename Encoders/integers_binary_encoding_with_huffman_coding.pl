@@ -1,175 +1,22 @@
 #!/usr/bin/perl
 
 # Author: Trizen
-# Date: 15 December 2022
-# Edit: 08 June 2023
+# Date: 10 June 2023
 # https://github.com/trizen
 
-# Compress/decompress files using LZ77 compression + Huffman coding.
+# Encode and decode a random list of integers into a binary string, using a DEFLATE-like approach + Huffman coding.
 
-# Encoding the distances/indices using a DEFLATE-like approach.
+use 5.036;
+use List::Util qw(max shuffle);
 
-use 5.020;
-use strict;
-use warnings;
-
-use experimental qw(signatures);
-
-use Getopt::Std    qw(getopts);
-use File::Basename qw(basename);
-use List::Util     qw(max);
-
-use constant {
-    PKGNAME => 'LZHD',
-    VERSION => '0.01',
-    FORMAT  => 'lzhd',
-
-    COMPRESSED_BYTE   => chr(1),
-    UNCOMPRESSED_BYTE => chr(0),
-    CHUNK_SIZE        => 1 << 16,    # higher value = better compression
-};
-
-use constant {SIGNATURE => "LZHD" . chr(1)};
+use constant {MAX_INT => (1 << 32) - 1};
 
 # [distance value, offset bits]
 my @DISTANCE_SYMBOLS = ([0, 0], [1, 0], [2, 0], [3, 0], [4, 0]);
 
-until ($DISTANCE_SYMBOLS[-1][0] > CHUNK_SIZE) {
+until ($DISTANCE_SYMBOLS[-1][0] > MAX_INT) {
     push @DISTANCE_SYMBOLS, [int($DISTANCE_SYMBOLS[-1][0] * (4 / 3)), $DISTANCE_SYMBOLS[-1][1] + 1];
     push @DISTANCE_SYMBOLS, [int($DISTANCE_SYMBOLS[-1][0] * (3 / 2)), $DISTANCE_SYMBOLS[-1][1]];
-}
-
-sub usage {
-    my ($code) = @_;
-    print <<"EOH";
-usage: $0 [options] [input file] [output file]
-
-options:
-        -e            : extract
-        -i <filename> : input filename
-        -o <filename> : output filename
-        -r            : rewrite output
-
-        -v            : version number
-        -h            : this message
-
-examples:
-         $0 document.txt
-         $0 document.txt archive.${\FORMAT}
-         $0 archive.${\FORMAT} document.txt
-         $0 -e -i archive.${\FORMAT} -o document.txt
-
-EOH
-
-    exit($code // 0);
-}
-
-sub version {
-    printf("%s %s\n", PKGNAME, VERSION);
-    exit;
-}
-
-sub valid_archive {
-    my ($fh) = @_;
-
-    if (read($fh, (my $sig), length(SIGNATURE), 0) == length(SIGNATURE)) {
-        $sig eq SIGNATURE || return;
-    }
-
-    return 1;
-}
-
-sub main {
-    my %opt;
-    getopts('ei:o:vhr', \%opt);
-
-    $opt{h} && usage(0);
-    $opt{v} && version();
-
-    my ($input, $output) = @ARGV;
-    $input  //= $opt{i} // usage(2);
-    $output //= $opt{o};
-
-    my $ext = qr{\.${\FORMAT}\z}io;
-    if ($opt{e} || $input =~ $ext) {
-
-        if (not defined $output) {
-            ($output = basename($input)) =~ s{$ext}{}
-              || die "$0: no output file specified!\n";
-        }
-
-        if (not $opt{r} and -e $output) {
-            print "'$output' already exists! -- Replace? [y/N] ";
-            <STDIN> =~ /^y/i || exit 17;
-        }
-
-        lz77h_decompress_file($input, $output)
-          || die "$0: error: decompression failed!\n";
-    }
-    elsif ($input !~ $ext || (defined($output) && $output =~ $ext)) {
-        $output //= basename($input) . '.' . FORMAT;
-        lz77h_compress_file($input, $output)
-          || die "$0: error: compression failed!\n";
-    }
-    else {
-        warn "$0: don't know what to do...\n";
-        usage(1);
-    }
-}
-
-sub lz77_compression ($str, $uncompressed, $indices, $lengths) {
-
-    my $la = 0;
-
-    my $prefix = '';
-    my @chars  = split(//, $str);
-    my $end    = $#chars;
-
-    while ($la <= $end) {
-
-        my $n = 1;
-        my $p = 0;
-        my $tmp;
-
-        my $token = $chars[$la];
-
-        while (    $n < 255
-               and $la + $n <= $end
-               and ($tmp = index($prefix, $token, $p)) >= 0) {
-            $p = $tmp;
-            $token .= $chars[$la + $n];
-            ++$n;
-        }
-
-        --$n;
-        push @$indices,      $p;
-        push @$lengths,      $n;
-        push @$uncompressed, ord($chars[$la + $n]);
-        $la += $n + 1;
-        $prefix .= $token;
-    }
-
-    return;
-}
-
-sub lz77_decompression ($uncompressed, $indices, $lengths) {
-
-    my $ret   = '';
-    my $chunk = '';
-
-    foreach my $i (0 .. $#{$uncompressed}) {
-        $chunk .= substr($chunk, $indices->[$i], $lengths->[$i]) . $uncompressed->[$i];
-        if (length($chunk) >= CHUNK_SIZE) {
-            $ret .= $chunk;
-            $chunk = '';
-        }
-    }
-
-    if ($chunk ne '') {
-        $ret .= $chunk;
-    }
-
-    $ret;
 }
 
 sub encode_integers ($integers) {
@@ -371,12 +218,12 @@ sub decode_huffman_entry ($fh) {
     return '';
 }
 
-sub encode_distances ($distances, $out_fh) {
+sub encode_integers_deflate_like ($integers) {
 
     my @symbols;
     my $offset_bits = '';
 
-    foreach my $dist (@$distances) {
+    foreach my $dist (@$integers) {
         foreach my $i (0 .. $#DISTANCE_SYMBOLS) {
             if ($DISTANCE_SYMBOLS[$i][0] > $dist) {
                 push @symbols, $i - 1;
@@ -389,11 +236,16 @@ sub encode_distances ($distances, $out_fh) {
         }
     }
 
+    my $str = '';
+    open(my $out_fh, '>:raw', \$str);
     create_huffman_entry(\@symbols, $out_fh);
     print $out_fh pack('B*', $offset_bits);
+    return $str;
 }
 
-sub decode_distances ($fh) {
+sub decode_integers_deflate_like ($str) {
+
+    open(my $fh, '<:raw', \$str);
 
     my @symbols  = unpack('C*', decode_huffman_entry($fh));
     my $bits_len = 0;
@@ -412,81 +264,16 @@ sub decode_distances ($fh) {
     return \@distances;
 }
 
-# Compress file
-sub lz77h_compress_file ($input, $output) {
+my @integers = shuffle(map { int(rand($_)) } 1 .. 1000);
+my $str      = encode_integers_deflate_like([@integers]);
 
-    open my $fh, '<:raw', $input
-      or die "Can't open file <<$input>> for reading: $!";
+say "Encoded length: ", length($str);
+say "Rawdata length: ", length(join(' ', @integers));
 
-    my $header = SIGNATURE;
+my $decoded = decode_integers_deflate_like($str);
 
-    # Open the output file for writing
-    open my $out_fh, '>:raw', $output
-      or die "Can't open file <<$output>> for write: $!";
+join(' ', @integers) eq join(' ', @$decoded) or die "Decoding error";
 
-    # Print the header
-    print $out_fh $header;
-
-    # Compress data
-    while (read($fh, (my $chunk), CHUNK_SIZE)) {
-
-        my (@uncompressed, @indices, @lengths);
-        lz77_compression($chunk, \@uncompressed, \@indices, \@lengths);
-
-        my $est_ratio = length($chunk) / (4 * scalar(@uncompressed));
-
-        say(scalar(@uncompressed), ' -> ', $est_ratio);
-
-        if ($est_ratio > 1) {
-            print $out_fh COMPRESSED_BYTE;
-            create_huffman_entry(\@uncompressed, $out_fh);
-            create_huffman_entry(\@lengths,      $out_fh);
-            encode_distances(\@indices, $out_fh);
-        }
-        else {
-            print $out_fh UNCOMPRESSED_BYTE;
-            create_huffman_entry([unpack('C*', $chunk)], $out_fh);
-        }
-    }
-
-    # Close the file
-    close $out_fh;
-}
-
-# Decompress file
-sub lz77h_decompress_file ($input, $output) {
-
-    # Open and validate the input file
-    open my $fh, '<:raw', $input;
-    valid_archive($fh) || die "$0: file `$input' is not a \U${\FORMAT}\E v${\VERSION} archive!\n";
-
-    # Open the output file
-    open my $out_fh, '>:raw', $output;
-
-    while (!eof($fh)) {
-
-        my $compression_byte = getc($fh);
-
-        if ($compression_byte eq COMPRESSED_BYTE) {
-
-            my @uncompressed = split(//, decode_huffman_entry($fh));
-            my @lengths      = unpack('C*', decode_huffman_entry($fh));
-            my $indices      = decode_distances($fh);
-
-            print $out_fh lz77_decompression(\@uncompressed, $indices, \@lengths);
-        }
-        elsif ($compression_byte eq UNCOMPRESSED_BYTE) {
-            print $out_fh decode_huffman_entry($fh);
-        }
-        else {
-            die "Invalid compression...";
-        }
-    }
-
-    # Close the file
-    close $fh;
-    close $out_fh;
-}
-
-main();
-exit(0);
+__END__
+Encoded length: 1211
+Rawdata length: 3603
