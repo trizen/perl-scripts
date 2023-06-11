@@ -9,7 +9,7 @@
 use 5.036;
 use List::Util qw(max shuffle);
 
-use constant {MAX_INT => (1 << 32) - 1};
+use constant {MAX_INT => 0b11111111111111111111111111111111};
 
 # [distance value, offset bits]
 my @DISTANCE_SYMBOLS = ([0, 0], [1, 0], [2, 0], [3, 0], [4, 0]);
