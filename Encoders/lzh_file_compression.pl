@@ -230,7 +230,7 @@ sub read_bits ($fh, $bits_len) {
     $data = unpack('B*', $data);
 
     while (length($data) < $bits_len) {
-        $data .= unpack('B*', getc($fh));
+        $data .= unpack('B*', getc($fh) // return undef);
     }
 
     if (length($data) > $bits_len) {
