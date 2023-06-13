@@ -473,7 +473,7 @@ sub lz77h_compress_file ($input, $output) {
 
         say(scalar(@uncompressed), ' -> ', $est_ratio);
 
-        if ($est_ratio > 0.9) {
+        if ($est_ratio > 0.85) {
             print $out_fh COMPRESSED_BYTE;
             create_huffman_entry(\@uncompressed, $out_fh);
             create_huffman_entry(\@lengths,      $out_fh);

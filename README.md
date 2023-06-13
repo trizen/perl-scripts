@@ -88,6 +88,7 @@ A nice collection of day-to-day Perl scripts.
     * [Lzw compression](./Encoders/lzw_compression.pl)
     * [Lzw file compression](./Encoders/lzw_file_compression.pl)
     * [Math expr encoder](./Encoders/math_expr_encoder.pl)
+    * [Move-to-front transform](./Encoders/move-to-front_transform.pl)
     * [String to integer encoding based on primes](./Encoders/string_to_integer_encoding_based_on_primes.pl)
     * [Tac-compressor](./Encoders/tac-compressor.pl)
     * [Tacc-compressor](./Encoders/tacc-compressor.pl)
