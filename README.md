@@ -68,6 +68,8 @@ A nice collection of day-to-day Perl scripts.
     * [Binradix arithmetic coding](./Encoders/binradix_arithmetic_coding.pl)
     * [Binradix arithmetic coding anynum](./Encoders/binradix_arithmetic_coding_anynum.pl)
     * [Compress](./Encoders/compress.pl)
+    * [Delta encoding with elias coding](./Encoders/delta_encoding_with_elias_coding.pl)
+    * [Delta encoding with unary coding](./Encoders/delta_encoding_with_unary_coding.pl)
     * [Eyes dropper](./Encoders/eyes_dropper.pl)
     * [Huffman coding](./Encoders/huffman_coding.pl)
     * [Huffman file compression](./Encoders/huffman_file_compression.pl)
