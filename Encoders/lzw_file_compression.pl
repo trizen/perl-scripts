@@ -2,7 +2,7 @@
 
 # Author: Trizen
 # Date: 08 December 2022
-# Edit: 12 June 2023
+# Edit: 13 June 2023
 # https://github.com/trizen
 
 # Compress/decompress files using LZW compression.
@@ -21,11 +21,11 @@ use File::Basename qw(basename);
 
 use constant {
               PKGNAME => 'LZW',
-              VERSION => '0.02',
+              VERSION => '0.03',
               FORMAT  => 'lzw',
              };
 
-use constant {SIGNATURE => "LZW" . chr(2)};
+use constant {SIGNATURE => "LZW" . chr(3)};
 
 sub usage {
     my ($code) = @_;
@@ -196,48 +196,68 @@ sub read_bits ($fh, $bits_len) {
     return $data;
 }
 
-sub elias_encoding ($integers) {    # all ints >= 1
+sub delta_encode ($integers) {
+
+    my @deltas;
+    my $prev = 0;
+
+    unshift(@$integers, scalar(@$integers));
+
+    while (@$integers) {
+        my $curr = shift(@$integers);
+        push @deltas, $curr - $prev;
+        $prev = $curr;
+    }
 
     my $bitstring = '';
-    foreach my $k (scalar(@$integers), @$integers) {
-        if ($k == 1) {
+
+    foreach my $d (@deltas) {
+        if ($d == 0) {
             $bitstring .= '0';
         }
         else {
-            my $t = sprintf('%b', $k - 1);
-            $bitstring .= ('1' x length($t)) . '0' . substr($t, 1);
+            my $t = sprintf('%b', abs($d));
+            $bitstring .= ('1' . (($d < 0) ? '0' : '1') . ('1' x (length($t) - 1)) . '0' . substr($t, 1));
         }
     }
 
     pack('B*', $bitstring);
 }
 
-sub elias_decoding ($fh) {
+sub delta_decode ($fh) {
 
-    my @ints;
-    my $len = 0;
-    my $buffer;
+    my @deltas;
+    my $buffer = '';
+    my $len    = 0;
 
     for (my $k = 0 ; $k <= $len ; ++$k) {
+        my $bit = read_bit($fh, \$buffer);
 
-        my $bit_len = 0;
-        while (read_bit($fh, \$buffer) eq '1') {
-            ++$bit_len;
-        }
-
-        if ($bit_len > 0) {
-            push @ints, 1 + oct('0b' . '1' . join('', map { read_bit($fh, \$buffer) } 1 .. ($bit_len - 1)));
+        if ($bit eq '0') {
+            push @deltas, 0;
         }
         else {
-            push @ints, 1;
+            my $bit = read_bit($fh, \$buffer);
+            my $n   = 0;
+            ++$n while (read_bit($fh, \$buffer) eq '1');
+            my $d = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. $n));
+            push @deltas, ($bit eq '1' ? $d : -$d);
         }
 
         if ($k == 0) {
-            $len = pop(@ints);
+            $len = pop(@deltas);
         }
     }
 
-    return \@ints;
+    my @acc;
+    my $prev = $len;
+
+    foreach my $d (@deltas) {
+        $prev += $d;
+        push @acc, $prev;
+    }
+
+    return \@acc;
 }
 
 sub encode_integers ($integers) {
@@ -265,7 +285,7 @@ sub encode_integers ($integers) {
 
     push @counts, grep { $_->[1] > 0 } [$bits_width, scalar(@$integers) - $processed_len];
 
-    my $compressed = elias_encoding([map { @$_ } @counts]);
+    my $compressed = delta_encode([(map { $_->[0] } @counts), (map { $_->[1] } @counts)]);
 
     my $bits = '';
     foreach my $pair (@counts) {
@@ -281,28 +301,32 @@ sub encode_integers ($integers) {
 
 sub decode_integers ($fh) {
 
-    my $ints = elias_decoding($fh);
+    my $ints = delta_decode($fh);
+    my $half = scalar(@$ints) >> 1;
 
     my @counts;
+    foreach my $i (0 .. ($half - 1)) {
+        push @counts, [$ints->[$i], $ints->[$half + $i]];
+    }
+
     my $bits_len = 0;
 
-    while (@$ints) {
-        my ($blen, $len) = splice(@$ints, 0, 2);
-        push @counts, [$blen, $len];
+    foreach my $pair (@counts) {
+        my ($blen, $len) = @$pair;
         $bits_len += $blen * $len;
     }
 
     my $bits = read_bits($fh, $bits_len);
 
-    my @chunks;
+    my @integers;
     foreach my $pair (@counts) {
         my ($blen, $len) = @$pair;
         foreach my $chunk (unpack(sprintf('(a%d)*', $blen), substr($bits, 0, $blen * $len, ''))) {
-            push @chunks, oct('0b' . $chunk);
+            push @integers, oct('0b' . $chunk);
         }
     }
 
-    return \@chunks;
+    return \@integers;
 }
 
 # Compress file

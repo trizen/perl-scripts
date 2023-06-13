@@ -119,6 +119,7 @@ sub walk ($node, $code, $h, $rev_h) {
     return ($h, $rev_h);
 }
 
+# make a tree, and return resulting dictionaries
 sub mktree_from_freq ($freq) {
 
     my @nodes = map { [$_, $freq->{$_}] } sort { $a <=> $b } keys %$freq;
@@ -139,13 +140,6 @@ sub mktree_from_freq ($freq) {
     walk($nodes[0], '', {}, {});
 }
 
-# make a tree, and return resulting dictionaries
-sub mktree ($bytes) {
-    my %freq;
-    ++$freq{$_} for @$bytes;
-    return mktree_from_freq(\%freq);
-}
-
 sub huffman_encode ($bytes, $dict) {
     my $enc = '';
     for (@$bytes) {
@@ -164,7 +158,7 @@ sub create_huffman_entry ($bytes, $out_fh) {
     my %freq;
     ++$freq{$_} for @$bytes;
 
-    my ($h, $rev_h) = mktree($bytes);
+    my ($h, $rev_h) = mktree_from_freq(\%freq);
     my $enc = huffman_encode($bytes, $h);
 
     my $max_symbol = max(@$bytes);

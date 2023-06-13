@@ -2,7 +2,7 @@
 
 # Author: Trizen
 # Date: 15 December 2022
-# Edit: 08 June 2023
+# Edit: 13 June 2023
 # https://github.com/trizen
 
 # Compress/decompress files using LZ77 compression + Huffman coding.
@@ -21,7 +21,7 @@ use List::Util     qw(max);
 
 use constant {
     PKGNAME => 'LZHD',
-    VERSION => '0.01',
+    VERSION => '0.02',
     FORMAT  => 'lzhd',
 
     COMPRESSED_BYTE   => chr(1),
@@ -29,7 +29,7 @@ use constant {
     CHUNK_SIZE        => 1 << 16,    # higher value = better compression
 };
 
-use constant {SIGNATURE => "LZHD" . chr(1)};
+use constant {SIGNATURE => "LZHD" . chr(2)};
 
 # [distance value, offset bits]
 my @DISTANCE_SYMBOLS = ([0, 0], [1, 0], [2, 0], [3, 0], [4, 0]);

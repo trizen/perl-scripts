@@ -2,7 +2,7 @@
 
 # Author: Trizen
 # Date: 15 December 2022
-# Edit: 08 June 2023
+# Edit: 13 June 2023
 # https://github.com/trizen
 
 # Compress/decompress files using LZ77 compression + integers encoding + Huffman coding.
@@ -19,7 +19,7 @@ use List::Util     qw(max);
 
 use constant {
     PKGNAME => 'LZIH',
-    VERSION => '0.03',
+    VERSION => '0.04',
     FORMAT  => 'lzih',
 
     COMPRESSED_BYTE   => chr(1),
@@ -27,7 +27,7 @@ use constant {
     CHUNK_SIZE        => 1 << 16,    # higher value = better compression
 };
 
-use constant {SIGNATURE => "LZIH" . chr(3)};
+use constant {SIGNATURE => "LZIH" . chr(4)};
 
 sub usage {
     my ($code) = @_;
@@ -188,48 +188,68 @@ sub read_bits ($fh, $bits_len) {
     return $data;
 }
 
-sub elias_encoding ($integers) {    # all ints >= 1
+sub delta_encode ($integers) {
+
+    my @deltas;
+    my $prev = 0;
+
+    unshift(@$integers, scalar(@$integers));
+
+    while (@$integers) {
+        my $curr = shift(@$integers);
+        push @deltas, $curr - $prev;
+        $prev = $curr;
+    }
 
     my $bitstring = '';
-    foreach my $k (scalar(@$integers), @$integers) {
-        if ($k == 1) {
+
+    foreach my $d (@deltas) {
+        if ($d == 0) {
             $bitstring .= '0';
         }
         else {
-            my $t = sprintf('%b', $k - 1);
-            $bitstring .= ('1' x length($t)) . '0' . substr($t, 1);
+            my $t = sprintf('%b', abs($d));
+            $bitstring .= ('1' . (($d < 0) ? '0' : '1') . ('1' x (length($t) - 1)) . '0' . substr($t, 1));
         }
     }
 
     pack('B*', $bitstring);
 }
 
-sub elias_decoding ($fh) {
+sub delta_decode ($fh) {
 
-    my @ints;
-    my $len = 0;
-    my $buffer;
+    my @deltas;
+    my $buffer = '';
+    my $len    = 0;
 
     for (my $k = 0 ; $k <= $len ; ++$k) {
+        my $bit = read_bit($fh, \$buffer);
 
-        my $bit_len = 0;
-        while (read_bit($fh, \$buffer) eq '1') {
-            ++$bit_len;
-        }
-
-        if ($bit_len > 0) {
-            push @ints, 1 + oct('0b' . '1' . join('', map { read_bit($fh, \$buffer) } 1 .. ($bit_len - 1)));
+        if ($bit eq '0') {
+            push @deltas, 0;
         }
         else {
-            push @ints, 1;
+            my $bit = read_bit($fh, \$buffer);
+            my $n   = 0;
+            ++$n while (read_bit($fh, \$buffer) eq '1');
+            my $d = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. $n));
+            push @deltas, ($bit eq '1' ? $d : -$d);
         }
 
         if ($k == 0) {
-            $len = pop(@ints);
+            $len = pop(@deltas);
         }
     }
 
-    return \@ints;
+    my @acc;
+    my $prev = $len;
+
+    foreach my $d (@deltas) {
+        $prev += $d;
+        push @acc, $prev;
+    }
+
+    return \@acc;
 }
 
 sub encode_integers ($integers) {
@@ -257,7 +277,7 @@ sub encode_integers ($integers) {
 
     push @counts, grep { $_->[1] > 0 } [$bits_width, scalar(@$integers) - $processed_len];
 
-    my $compressed = elias_encoding([map { @$_ } @counts]);
+    my $compressed = delta_encode([(map { $_->[0] } @counts), (map { $_->[1] } @counts)]);
 
     my $bits = '';
     foreach my $pair (@counts) {
@@ -273,28 +293,32 @@ sub encode_integers ($integers) {
 
 sub decode_integers ($fh) {
 
-    my $ints = elias_decoding($fh);
+    my $ints = delta_decode($fh);
+    my $half = scalar(@$ints) >> 1;
 
     my @counts;
+    foreach my $i (0 .. ($half - 1)) {
+        push @counts, [$ints->[$i], $ints->[$half + $i]];
+    }
+
     my $bits_len = 0;
 
-    while (@$ints) {
-        my ($blen, $len) = splice(@$ints, 0, 2);
-        push @counts, [$blen, $len];
+    foreach my $pair (@counts) {
+        my ($blen, $len) = @$pair;
         $bits_len += $blen * $len;
     }
 
     my $bits = read_bits($fh, $bits_len);
 
-    my @chunks;
+    my @integers;
     foreach my $pair (@counts) {
         my ($blen, $len) = @$pair;
         foreach my $chunk (unpack(sprintf('(a%d)*', $blen), substr($bits, 0, $blen * $len, ''))) {
-            push @chunks, oct('0b' . $chunk);
+            push @integers, oct('0b' . $chunk);
         }
     }
 
-    return \@chunks;
+    return \@integers;
 }
 
 # produce encode and decode dictionary from a tree
@@ -308,11 +332,9 @@ sub walk ($node, $code, $h, $rev_h) {
 }
 
 # make a tree, and return resulting dictionaries
-sub mktree ($bytes) {
-    my (%freq, @nodes);
+sub mktree_from_freq ($freq) {
 
-    ++$freq{$_} for @$bytes;
-    @nodes = map { [$_, $freq{$_}] } sort { $a <=> $b } keys %freq;
+    my @nodes = map { [$_, $freq->{$_}] } sort { $a <=> $b } keys %$freq;
 
     do {    # poor man's priority queue
         @nodes = sort { $a->[1] <=> $b->[1] } @nodes;
@@ -345,22 +367,22 @@ sub huffman_decode ($bits, $hash) {
 
 sub create_huffman_entry ($bytes, $out_fh) {
 
-    my ($h, $rev_h) = mktree($bytes);
+    my %freq;
+    ++$freq{$_} for @$bytes;
+
+    my ($h, $rev_h) = mktree_from_freq(\%freq);
     my $enc = huffman_encode($bytes, $h);
 
     my $max_symbol = max(@$bytes);
 
-    my @lengths;
+    my @freqs;
     my $codes = '';
 
     foreach my $i (0 .. $max_symbol) {
-        my $c = $h->{$i} // '';
-        $codes .= $c;
-        push @lengths, length($c);
+        push @freqs, $freq{$i} // 0;
     }
 
-    print $out_fh encode_integers(\@lengths);
-    print $out_fh pack("B*", $codes);
+    print $out_fh delta_encode(\@freqs);
     print $out_fh pack("N",  length($enc));
     print $out_fh pack("B*", $enc);
 }
@@ -369,28 +391,26 @@ sub decode_huffman_entry ($fh) {
 
     my @codes;
     my $codes_len = 0;
-    my @lengths   = @{decode_integers($fh)};
 
-    foreach my $i (0 .. $#lengths) {
-        my $l = $lengths[$i];
-        if ($l > 0) {
-            $codes_len += $l;
-            push @codes, [$i, $l];
+    my @freqs = @{delta_decode($fh)};
+
+    my %freq;
+    foreach my $i (0 .. $#freqs) {
+        if ($freqs[$i]) {
+            $freq{$i} = $freqs[$i];
         }
     }
 
-    my $codes_bin = read_bits($fh, $codes_len);
+    my (undef, $rev_dict) = mktree_from_freq(\%freq);
 
-    my %rev_dict;
-    foreach my $pair (@codes) {
-        my $code = substr($codes_bin, 0, $pair->[1], '');
-        $rev_dict{$code} = chr($pair->[0]);
+    foreach my $k (keys %$rev_dict) {
+        $rev_dict->{$k} = chr($rev_dict->{$k});
     }
 
     my $enc_len = unpack('N', join('', map { getc($fh) } 1 .. 4));
 
     if ($enc_len > 0) {
-        return huffman_decode(read_bits($fh, $enc_len), \%rev_dict);
+        return huffman_decode(read_bits($fh, $enc_len), $rev_dict);
     }
 
     return '';
@@ -421,7 +441,7 @@ sub lz77h_compress_file ($input, $output) {
 
         say(scalar(@uncompressed), ' -> ', $est_ratio);
 
-        if ($est_ratio > 1) {
+        if ($est_ratio > 0.85) {
             print $out_fh COMPRESSED_BYTE;
             create_huffman_entry(\@uncompressed, $out_fh);
             create_huffman_entry(\@lengths,      $out_fh);

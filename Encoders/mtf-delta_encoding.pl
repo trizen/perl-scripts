@@ -4,7 +4,7 @@
 # Date: 13 June 2023
 # https://github.com/trizen
 
-# Implementation of the Move-to-Frond transform, combined with Delta encoding.
+# Implementation of the Move-to-Front transform, combined with Delta encoding.
 
 # References:
 #   Data Compression (Summer 2023) - Lecture 6 - Delta Compression and Prediction
@@ -14,15 +14,18 @@
 #   https://youtube.com/watch?v=Q2pinaj3i9Y
 
 use 5.036;
-use List::Util qw(first);
 
 sub mtf_encode ($bytes, $alphabet = [0 .. 255]) {
 
     my @C;
 
+    my @table;
+    @table[@$alphabet] = (0 .. $#{$alphabet});
+
     foreach my $c (@$bytes) {
-        push @C, first { $alphabet->[$_] == $c } 0 .. $#{$alphabet};
-        unshift(@$alphabet, splice(@{$alphabet}, $C[-1], 1));
+        push @C, (my $index = $table[$c]);
+        unshift(@$alphabet, splice(@{$alphabet}, $index, 1));
+        @table[@{$alphabet}[0 .. $index]] = (0 .. $index);
     }
 
     return \@C;

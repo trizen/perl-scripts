@@ -10,20 +10,19 @@
 #   COMP526 Unit 7-6 2020-03-24 Compression - Move-to-front transform
 #   https://youtube.com/watch?v=Q2pinaj3i9Y
 
-use 5.020;
-use strict;
-use warnings;
-
-use experimental qw(signatures);
-use List::Util   qw(first);
+use 5.036;
 
 sub mtf_encode ($bytes, $alphabet = [0 .. 255]) {
 
     my @C;
 
+    my @table;
+    @table[@$alphabet] = (0 .. $#{$alphabet});
+
     foreach my $c (@$bytes) {
-        push @C, first { $alphabet->[$_] == $c } 0 .. $#{$alphabet};
-        unshift(@$alphabet, splice(@{$alphabet}, $C[-1], 1));
+        push @C, (my $index = $table[$c]);
+        unshift(@$alphabet, splice(@{$alphabet}, $index, 1));
+        @table[@{$alphabet}[0 .. $index]] = (0 .. $index);
     }
 
     return \@C;
