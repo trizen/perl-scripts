@@ -119,12 +119,9 @@ sub walk ($node, $code, $h, $rev_h) {
     return ($h, $rev_h);
 }
 
-# make a tree, and return resulting dictionaries
-sub mktree ($bytes) {
-    my (%freq, @nodes);
+sub mktree_from_freq ($freq) {
 
-    ++$freq{$_} for @$bytes;
-    @nodes = map { [$_, $freq{$_}] } sort { $a <=> $b } keys %freq;
+    my @nodes = map { [$_, $freq->{$_}] } sort { $a <=> $b } keys %$freq;
 
     do {    # poor man's priority queue
         @nodes = sort { $a->[1] <=> $b->[1] } @nodes;
@@ -142,6 +139,13 @@ sub mktree ($bytes) {
     walk($nodes[0], '', {}, {});
 }
 
+# make a tree, and return resulting dictionaries
+sub mktree ($bytes) {
+    my %freq;
+    ++$freq{$_} for @$bytes;
+    return mktree_from_freq(\%freq);
+}
+
 sub huffman_encode ($bytes, $dict) {
     my $enc = '';
     for (@$bytes) {
@@ -157,22 +161,22 @@ sub huffman_decode ($bits, $hash) {
 
 sub create_huffman_entry ($bytes, $out_fh) {
 
+    my %freq;
+    ++$freq{$_} for @$bytes;
+
     my ($h, $rev_h) = mktree($bytes);
     my $enc = huffman_encode($bytes, $h);
 
     my $max_symbol = max(@$bytes);
 
-    my @lengths;
+    my @freqs;
     my $codes = '';
 
     foreach my $i (0 .. $max_symbol) {
-        my $c = $h->{$i} // '';
-        $codes .= $c;
-        push @lengths, length($c);
+        push @freqs, $freq{$i} // 0;
     }
 
-    print $out_fh delta_encode(\@lengths);
-    print $out_fh pack("B*", $codes);
+    print $out_fh delta_encode(\@freqs);
     print $out_fh pack("N",  length($enc));
     print $out_fh pack("B*", $enc);
 }
@@ -182,28 +186,25 @@ sub decode_huffman_entry ($fh) {
     my @codes;
     my $codes_len = 0;
 
-    my @lengths = @{delta_decode($fh)};
+    my @freqs = @{delta_decode($fh)};
 
-    foreach my $i (0 .. $#lengths) {
-        my $l = $lengths[$i];
-        if ($l > 0) {
-            $codes_len += $l;
-            push @codes, [$i, $l];
+    my %freq;
+    foreach my $i (0 .. $#freqs) {
+        if ($freqs[$i]) {
+            $freq{$i} = $freqs[$i];
         }
     }
 
-    my $codes_bin = read_bits($fh, $codes_len);
+    my (undef, $rev_dict) = mktree_from_freq(\%freq);
 
-    my %rev_dict;
-    foreach my $pair (@codes) {
-        my $code = substr($codes_bin, 0, $pair->[1], '');
-        $rev_dict{$code} = chr($pair->[0]);
+    foreach my $k (keys %$rev_dict) {
+        $rev_dict->{$k} = chr($rev_dict->{$k});
     }
 
     my $enc_len = unpack('N', join('', map { getc($fh) } 1 .. 4));
 
     if ($enc_len > 0) {
-        return huffman_decode(read_bits($fh, $enc_len), \%rev_dict);
+        return huffman_decode(read_bits($fh, $enc_len), $rev_dict);
     }
 
     return '';
