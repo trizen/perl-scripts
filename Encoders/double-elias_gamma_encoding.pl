@@ -1,10 +1,10 @@
 #!/usr/bin/perl
 
 # Author: Trizen
-# Date: 13 June 2023
+# Date: 14 June 2023
 # https://github.com/trizen
 
-# Implementation of the Elias gamma encoding scheme.
+# Implementation of the double-variant of the Elias gamma encoding scheme, optimized for large integers.
 
 # Reference:
 #   COMP526 7-5 SS7.4 Run length encoding
@@ -25,8 +25,15 @@ sub elias_encoding ($integers) {
 
     my $bitstring = '';
     foreach my $k (scalar(@$integers), @$integers) {
-        my $t = sprintf('%b', $k + 1);
-        $bitstring .= ('1' x (length($t) - 1)) . '0' . substr($t, 1);
+        if ($k == 0) {
+            $bitstring .= '0';
+        }
+        else {
+            my $t = sprintf('%b', $k);
+            my $l = length($t) + 1;
+            my $L = sprintf('%b', $l);
+            $bitstring .= ('1' x (length($L) - 1)) . '0' . substr($L, 1) . substr($t, 1);
+        }
     }
 
     pack('B*', $bitstring);
@@ -45,7 +52,16 @@ sub elias_decoding ($str) {
         my $bl = 0;
         ++$bl while (read_bit($fh, \$buffer) eq '1');
 
-        push @ints, oct('0b' . '1' . join('', map { read_bit($fh, \$buffer) } 1 .. $bl)) - 1;
+        if ($bl > 0) {
+
+            my $bl2 = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. $bl)) - 1;
+            my $int = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. ($bl2 - 1)));
+
+            push @ints, $int;
+        }
+        else {
+            push @ints, 0;
+        }
 
         if ($k == 0) {
             $len = pop(@ints);
@@ -66,5 +82,5 @@ my $decoded = elias_decoding($str);
 join(' ', @integers) eq join(' ', @$decoded) or die "Decoding error";
 
 __END__
-Encoded length: 1777
-Rawdata length: 3594
+Encoded length: 1631
+Rawdata length: 3616

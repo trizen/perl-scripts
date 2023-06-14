@@ -196,68 +196,52 @@ sub read_bits ($fh, $bits_len) {
     return $data;
 }
 
-sub delta_encode ($integers) {
-
-    my @deltas;
-    my $prev = 0;
-
-    unshift(@$integers, scalar(@$integers));
-
-    while (@$integers) {
-        my $curr = shift(@$integers);
-        push @deltas, $curr - $prev;
-        $prev = $curr;
-    }
+sub elias_encoding ($integers) {
 
     my $bitstring = '';
-
-    foreach my $d (@deltas) {
-        if ($d == 0) {
+    foreach my $k (scalar(@$integers), @$integers) {
+        if ($k == 0) {
             $bitstring .= '0';
         }
         else {
-            my $t = sprintf('%b', abs($d));
-            $bitstring .= ('1' . (($d < 0) ? '0' : '1') . ('1' x (length($t) - 1)) . '0' . substr($t, 1));
+            my $t = sprintf('%b', $k);
+            my $l = length($t) + 1;
+            my $L = sprintf('%b', $l);
+            $bitstring .= ('1' x (length($L) - 1)) . '0' . substr($L, 1) . substr($t, 1);
         }
     }
 
     pack('B*', $bitstring);
 }
 
-sub delta_decode ($fh) {
+sub elias_decoding ($fh) {
 
-    my @deltas;
-    my $buffer = '';
+    my @ints;
     my $len    = 0;
+    my $buffer = '';
 
     for (my $k = 0 ; $k <= $len ; ++$k) {
-        my $bit = read_bit($fh, \$buffer);
 
-        if ($bit eq '0') {
-            push @deltas, 0;
+        my $bl = 0;
+        ++$bl while (read_bit($fh, \$buffer) eq '1');
+
+        if ($bl > 0) {
+
+            my $bl2 = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. $bl)) - 1;
+            my $int = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. ($bl2 - 1)));
+
+            push @ints, $int;
         }
         else {
-            my $bit = read_bit($fh, \$buffer);
-            my $n   = 0;
-            ++$n while (read_bit($fh, \$buffer) eq '1');
-            my $d = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. $n));
-            push @deltas, ($bit eq '1' ? $d : -$d);
+            push @ints, 0;
         }
 
         if ($k == 0) {
-            $len = pop(@deltas);
+            $len = pop(@ints);
         }
     }
 
-    my @acc;
-    my $prev = $len;
-
-    foreach my $d (@deltas) {
-        $prev += $d;
-        push @acc, $prev;
-    }
-
-    return \@acc;
+    return \@ints;
 }
 
 sub encode_integers ($integers) {
@@ -285,7 +269,7 @@ sub encode_integers ($integers) {
 
     push @counts, grep { $_->[1] > 0 } [$bits_width, scalar(@$integers) - $processed_len];
 
-    my $compressed = delta_encode([(map { $_->[0] } @counts), (map { $_->[1] } @counts)]);
+    my $compressed = elias_encoding([(map { $_->[0] } @counts), (map { $_->[1] } @counts)]);
 
     my $bits = '';
     foreach my $pair (@counts) {
@@ -301,7 +285,7 @@ sub encode_integers ($integers) {
 
 sub decode_integers ($fh) {
 
-    my $ints = delta_decode($fh);
+    my $ints = elias_decoding($fh);
     my $half = scalar(@$ints) >> 1;
 
     my @counts;

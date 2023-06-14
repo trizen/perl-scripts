@@ -4,7 +4,7 @@
 # Date: 14 June 2023
 # https://github.com/trizen
 
-# Implementation of the Delta encoding scheme, combined with Elias gamma encoding, optimized for moderately large deltas.
+# Implementation of the Delta encoding scheme, combined with Elias gamma encoding, optimized for very large deltas.
 
 # Reference:
 #   Data Compression (Summer 2023) - Lecture 6 - Delta Compression and Prediction
@@ -42,7 +42,8 @@ sub delta_encode ($integers) {
         }
         else {
             my $t = sprintf('%b', abs($d));
-            $bitstring .= '1' . (($d < 0) ? '0' : '1') . ('1' x (length($t) - 1)) . '0' . substr($t, 1);
+            my $l = sprintf('%b', length($t) + 1);
+            $bitstring .= '1' . (($d < 0) ? '0' : '1') . ('1' x (length($l) - 1)) . '0' . substr($l, 1) . substr($t, 1);
         }
     }
 
@@ -65,10 +66,14 @@ sub delta_decode ($str) {
         }
         else {
             my $bit = read_bit($fh, \$buffer);
-            my $n   = 0;
-            ++$n while (read_bit($fh, \$buffer) eq '1');
-            my $d = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. $n));
-            push @deltas, ($bit eq '1' ? $d : -$d);
+
+            my $bl = 0;
+            ++$bl while (read_bit($fh, \$buffer) eq '1');
+
+            my $bl2 = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. $bl)) - 1;
+            my $int = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. ($bl2 - 1)));
+
+            push @deltas, ($bit eq '1' ? $int : -$int);
         }
 
         if ($k == 0) {
@@ -106,5 +111,5 @@ join(' ', @integers) eq join(' ', @$decoded) or die "Decoding error";
 }
 
 __END__
-Encoded length: 1882
-Rawdata length: 3626
+Encoded length: 1763
+Rawdata length: 3615

@@ -74,7 +74,7 @@ sub delta_encode ($bytes) {    # all bytes in the range [0, 255]
         }
         else {
             my $t = sprintf('%b', abs($d));
-            $bitstring .= ('1' . (($d < 0) ? '0' : '1') . ('1' x (length($t) - 1)) . '0' . substr($t, 1));
+            $bitstring .= '1' . (($d < 0) ? '0' : '1') . ('1' x (length($t) - 1)) . '0' . substr($t, 1);
         }
     }
 

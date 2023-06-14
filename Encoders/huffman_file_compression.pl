@@ -19,7 +19,7 @@ use warnings;
 
 use experimental qw(signatures);
 
-use List::Util     qw(min);
+use List::Util     qw(min max);
 use Getopt::Std    qw(getopts);
 use File::Basename qw(basename);
 
@@ -102,6 +102,84 @@ sub main {
     }
 }
 
+sub read_bit ($fh, $bitstring) {
+
+    if (($$bitstring // '') eq '') {
+        $$bitstring = unpack('b*', getc($fh) // return undef);
+    }
+
+    chop($$bitstring);
+}
+
+sub delta_encode ($integers) {
+
+    my @deltas;
+    my $prev = 0;
+
+    unshift(@$integers, scalar(@$integers));
+
+    while (@$integers) {
+        my $curr = shift(@$integers);
+        push @deltas, $curr - $prev;
+        $prev = $curr;
+    }
+
+    my $bitstring = '';
+
+    foreach my $d (@deltas) {
+        if ($d == 0) {
+            $bitstring .= '0';
+        }
+        else {
+            my $t = sprintf('%b', abs($d));
+            my $l = sprintf('%b', length($t) + 1);
+            $bitstring .= '1' . (($d < 0) ? '0' : '1') . ('1' x (length($l) - 1)) . '0' . substr($l, 1) . substr($t, 1);
+        }
+    }
+
+    pack('B*', $bitstring);
+}
+
+sub delta_decode ($fh) {
+
+    my @deltas;
+    my $buffer = '';
+    my $len    = 0;
+
+    for (my $k = 0 ; $k <= $len ; ++$k) {
+        my $bit = read_bit($fh, \$buffer);
+
+        if ($bit eq '0') {
+            push @deltas, 0;
+        }
+        else {
+            my $bit = read_bit($fh, \$buffer);
+
+            my $bl = 0;
+            ++$bl while (read_bit($fh, \$buffer) eq '1');
+
+            my $bl2 = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. $bl)) - 1;
+            my $int = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. ($bl2 - 1)));
+
+            push @deltas, ($bit eq '1' ? $int : -$int);
+        }
+
+        if ($k == 0) {
+            $len = pop(@deltas);
+        }
+    }
+
+    my @acc;
+    my $prev = $len;
+
+    foreach my $d (@deltas) {
+        $prev += $d;
+        push @acc, $prev;
+    }
+
+    return \@acc;
+}
+
 # produce encode and decode dictionary from a tree
 sub walk ($node, $code, $h, $rev_h) {
 
@@ -113,11 +191,9 @@ sub walk ($node, $code, $h, $rev_h) {
 }
 
 # make a tree, and return resulting dictionaries
-sub mktree ($bytes) {
-    my (%freq, @nodes);
+sub mktree_from_freq ($freq) {
 
-    ++$freq{$_} for @$bytes;
-    @nodes = map { [$_, $freq{$_}] } sort { $a <=> $b } keys %freq;
+    my @nodes = map { [$_, $freq->{$_}] } sort { $a <=> $b } keys %$freq;
 
     do {    # poor man's priority queue
         @nodes = sort { $a->[1] <=> $b->[1] } @nodes;
@@ -160,20 +236,22 @@ sub valid_archive {
 
 sub create_huffman_entry ($bytes, $out_fh) {
 
-    my ($h, $rev_h) = mktree($bytes);
+    my %freq;
+    ++$freq{$_} for @$bytes;
+
+    my ($h, $rev_h) = mktree_from_freq(\%freq);
     my $enc = huffman_encode($bytes, $h);
 
-    my $dict  = '';
+    my $max_symbol = max(@$bytes);
+
+    my @freqs;
     my $codes = '';
 
-    foreach my $i (0 .. 255) {
-        my $c = $h->{$i} // '';
-        $codes .= $c;
-        $dict  .= chr(length($c));
+    foreach my $i (0 .. $max_symbol) {
+        push @freqs, $freq{$i} // 0;
     }
 
-    print $out_fh $dict;
-    print $out_fh pack("B*", $codes);
+    print $out_fh delta_encode(\@freqs);
     print $out_fh pack("N",  length($enc));
     print $out_fh pack("B*", $enc);
 }
@@ -217,26 +295,25 @@ sub decode_huffman_entry ($fh, $out_fh) {
     my @codes;
     my $codes_len = 0;
 
-    foreach my $c (0 .. 255) {
-        my $l = ord(getc($fh));
-        if ($l > 0) {
-            $codes_len += $l;
-            push @codes, [$c, $l];
+    my @freqs = @{delta_decode($fh)};
+
+    my %freq;
+    foreach my $i (0 .. $#freqs) {
+        if ($freqs[$i]) {
+            $freq{$i} = $freqs[$i];
         }
     }
 
-    my $codes_bin = read_bits($fh, $codes_len);
+    my (undef, $rev_dict) = mktree_from_freq(\%freq);
 
-    my %rev_dict;
-    foreach my $pair (@codes) {
-        my $code = substr($codes_bin, 0, $pair->[1], '');
-        $rev_dict{$code} = chr($pair->[0]);
+    foreach my $k (keys %$rev_dict) {
+        $rev_dict->{$k} = chr($rev_dict->{$k});
     }
 
     my $enc_len = unpack('N', join('', map { getc($fh) } 1 .. 4));
 
     if ($enc_len > 0) {
-        print $out_fh huffman_decode(read_bits($fh, $enc_len), \%rev_dict);
+        print $out_fh huffman_decode(read_bits($fh, $enc_len), $rev_dict);
         return 1;
     }
 

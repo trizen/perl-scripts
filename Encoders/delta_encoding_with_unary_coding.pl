@@ -30,7 +30,7 @@ sub delta_encode ($bytes) {
             $bitstring .= '0';
         }
         else {
-            $bitstring .= ('1' . (($d < 0) ? '0' : '1') . ('1' x (abs($d) - 1)) . '0');
+            $bitstring .= '1' . (($d < 0) ? '0' : '1') . ('1' x (abs($d) - 1)) . '0';
         }
     }
 
