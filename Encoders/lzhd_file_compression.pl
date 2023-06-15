@@ -154,22 +154,13 @@ sub lz77_compression ($str, $uncompressed, $indices, $lengths) {
 
 sub lz77_decompression ($uncompressed, $indices, $lengths) {
 
-    my $ret   = '';
     my $chunk = '';
 
     foreach my $i (0 .. $#{$uncompressed}) {
         $chunk .= substr($chunk, $indices->[$i], $lengths->[$i]) . $uncompressed->[$i];
-        if (length($chunk) >= CHUNK_SIZE) {
-            $ret .= $chunk;
-            $chunk = '';
-        }
     }
 
-    if ($chunk ne '') {
-        $ret .= $chunk;
-    }
-
-    $ret;
+    return $chunk;
 }
 
 sub read_bit ($fh, $bitstring) {

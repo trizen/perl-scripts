@@ -2,7 +2,7 @@
 
 # Author: Trizen
 # Date: 08 December 2022
-# Edit: 13 June 2023
+# Edit: 15 June 2023
 # https://github.com/trizen
 
 # Compress/decompress files using LZW compression.
@@ -20,10 +20,12 @@ use Getopt::Std    qw(getopts);
 use File::Basename qw(basename);
 
 use constant {
-              PKGNAME => 'LZW',
-              VERSION => '0.03',
-              FORMAT  => 'lzw',
-             };
+    PKGNAME => 'LZW',
+    VERSION => '0.03',
+    FORMAT  => 'lzw',
+
+    CHUNK_SIZE => 1 << 17,    # higher value = better compression
+};
 
 use constant {SIGNATURE => "LZW" . chr(3)};
 
@@ -316,19 +318,24 @@ sub decode_integers ($fh) {
 # Compress file
 sub lzw_compress_file ($input, $output) {
 
-    my $compressed = do {
-        open my $fh, '<:raw', $input
-          or die "Can't open file <<$input>> for reading: $!";
-        local $/;
-        compress(<$fh>);
-    };
+    open my $fh, '<:raw', $input
+      or die "Can't open file <<$input>> for reading: $!";
+
+    my $header = SIGNATURE;
 
     # Open the output file for writing
     open my $out_fh, '>:raw', $output
       or die "Can't open file <<$output>> for write: $!";
 
-    print $out_fh SIGNATURE;
-    print $out_fh encode_integers($compressed);
+    # Print the header
+    print $out_fh $header;
+
+    # Compress data
+    while (read($fh, (my $chunk), CHUNK_SIZE)) {
+        print $out_fh encode_integers(compress($chunk));
+    }
+
+    # Close the output file
     close $out_fh;
 }
 
@@ -339,12 +346,14 @@ sub lzw_decompress_file ($input, $output) {
     open my $fh, '<:raw', $input;
     valid_archive($fh) || die "$0: file `$input' is not a \U${\FORMAT}\E v${\VERSION} archive!\n";
 
-    my $chunks = decode_integers($fh);
-
     # Open the output file
     open my $out_fh, '>:raw', $output;
 
-    print $out_fh ${decompress($chunks)};
+    while (!eof($fh)) {
+        print $out_fh ${decompress(decode_integers($fh))};
+    }
+
+    # Close the output file
     close $out_fh;
 }
 
