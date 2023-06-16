@@ -2,6 +2,7 @@
 
 # Author: Trizen
 # Date: 15 June 2023
+# Edit: 16 June 2023
 # https://github.com/trizen
 
 # Compress/decompress files using Burrows-Wheeler Transform (BWT) + LZ77 compression + Huffman coding.
@@ -15,16 +16,16 @@ use List::Util     qw(max uniq);
 
 use constant {
     PKGNAME => 'BWLZ',
-    VERSION => '0.01',
+    VERSION => '0.02',
     FORMAT  => 'bwlz',
 
     COMPRESSED_BYTE   => chr(1),
     UNCOMPRESSED_BYTE => chr(0),
-    CHUNK_SIZE        => 1 << 16,    # higher value = better compression
+    CHUNK_SIZE        => 1 << 17,    # higher value = better compression
     LOOKAHEAD_LEN     => 128,
 };
 
-use constant {SIGNATURE => "BWLZ" . chr(1)};
+use constant {SIGNATURE => "BWLZ" . chr(2)};
 
 # [distance value, offset bits]
 my @DISTANCE_SYMBOLS = ([0, 0], [1, 0], [2, 0], [3, 0], [4, 0]);
@@ -528,12 +529,14 @@ sub rle4_encode ($bytes) {    # RLE1
         if ($run >= 4) {
 
             $run = 0;
-            while ($run < 256 and $i <= $end and $bytes->[$i] == $prev) {
+            $i += 1;
+
+            while ($run < 254 and $i <= $end and $bytes->[$i] == $prev) {
                 ++$run;
                 ++$i;
             }
 
-            push @rle, $run - 1;
+            push @rle, $run;
             $run = 1;
 
             if ($i <= $end) {
@@ -572,6 +575,57 @@ sub rle4_decode ($bytes) {    # RLE1
             }
 
             $run = 0;
+        }
+    }
+
+    return \@dec;
+}
+
+sub rle_encode ($bytes) {    # RLE2
+
+    my @rle;
+    my $end = $#{$bytes};
+
+    for (my $i = 0 ; $i <= $end ; ++$i) {
+
+        my $run = 0;
+        while ($i <= $end and $bytes->[$i] == 0) {
+            ++$run;
+            ++$i;
+        }
+
+        if ($run >= 1) {
+            my $t = sprintf('%b', $run + 1);
+            push @rle, split(//, substr($t, 1));
+        }
+
+        if ($i <= $end) {
+            push @rle, $bytes->[$i] + 1;
+        }
+    }
+
+    return \@rle;
+}
+
+sub rle_decode ($rle) {    # RLE2
+
+    my @dec;
+    my $end = $#{$rle};
+
+    for (my $i = 0 ; $i <= $end ; ++$i) {
+        my $k = $rle->[$i];
+
+        if ($k == 0 or $k == 1) {
+            my $run = 1;
+            while (($i <= $end) and ($k == 0 or $k == 1)) {
+                ($run <<= 1) |= $k;
+                $k = $rle->[++$i];
+            }
+            push @dec, (0) x ($run - 1);
+        }
+
+        if ($i <= $end) {
+            push @dec, $k - 1;
         }
     }
 
@@ -663,16 +717,22 @@ sub lz77h_compress_file ($input, $output) {
         my @bytes    = unpack('C*', $bwt);
         my @alphabet = sort { $a <=> $b } uniq(@bytes);
 
-        $data = pack('C*', @{mtf_encode(\@bytes, [@alphabet])});
+        my $enc_bytes = mtf_encode(\@bytes, [@alphabet]);
+
+        if ($alphabet[-1] < 255) {
+            $enc_bytes = rle_encode($enc_bytes);
+        }
+
+        $data = pack('C*', @$enc_bytes);
 
         my (@uncompressed, @indices, @lengths);
         lz77_compression($data, \@uncompressed, \@indices, \@lengths);
 
-        my $est_ratio = length($data) / (4 * scalar(@uncompressed));
+        my $est_ratio = length($chunk) / (4 * scalar(@uncompressed));
 
-        say("\nEst. ratio: ", scalar(@uncompressed), ' -> ', $est_ratio);
+        say("\nEst. ratio: ", $est_ratio, " (", scalar(@uncompressed), " uncompressed bytes)");
 
-        if ($est_ratio > 0.85) {
+        if ($est_ratio > 0.8) {
             print $out_fh COMPRESSED_BYTE;
             print $out_fh pack('N', $idx);
             print $out_fh encode_alphabet(\@alphabet);
@@ -712,9 +772,16 @@ sub lz77h_decompress_file ($input, $output) {
             my @lengths      = unpack('C*', decode_huffman_entry($fh));
             my $indices      = decode_distances($fh);
 
-            my $dec = lz77_decompression(\@uncompressed, $indices, \@lengths);
-            my $bwt = pack('C*', @{mtf_decode([unpack('C*', $dec)], [@$alphabet])});
-            print $out_fh pack('C*', @{rle4_decode([unpack('C*', bwt_decode($bwt, $idx))])});
+            my $dec   = lz77_decompression(\@uncompressed, $indices, \@lengths);
+            my $bytes = [unpack('C*', $dec)];
+
+            if ($alphabet->[-1] < 255) {
+                $bytes = rle_decode($bytes);
+            }
+
+            $bytes = mtf_decode($bytes, [@$alphabet]);
+
+            print $out_fh pack('C*', @{rle4_decode([unpack('C*', bwt_decode(pack('C*', @$bytes), $idx))])});
         }
         elsif ($compression_byte eq UNCOMPRESSED_BYTE) {
             print $out_fh decode_huffman_entry($fh);

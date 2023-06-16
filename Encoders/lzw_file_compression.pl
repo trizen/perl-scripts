@@ -271,6 +271,10 @@ sub encode_integers ($integers) {
 
     push @counts, grep { $_->[1] > 0 } [$bits_width, scalar(@$integers) - $processed_len];
 
+    say "Bit sizes: ", join(' ', map { $_->[0] } @counts);
+    say "Lengths  : ", join(' ', map { $_->[1] } @counts);
+    say '';
+
     my $compressed = elias_encoding([(map { $_->[0] } @counts), (map { $_->[1] } @counts)]);
 
     my $bits = '';

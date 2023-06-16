@@ -342,12 +342,14 @@ sub rle4_encode ($bytes) {    # RLE1
         if ($run >= 4) {
 
             $run = 0;
-            while ($run < 255 and $i <= $end and $bytes->[$i] == $prev) {
+            $i += 1;
+
+            while ($run < 254 and $i <= $end and $bytes->[$i] == $prev) {
                 ++$run;
                 ++$i;
             }
 
-            push @rle, $run - 1;
+            push @rle, $run;
             $run = 1;
 
             if ($i <= $end) {

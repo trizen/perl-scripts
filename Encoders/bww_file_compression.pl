@@ -2,6 +2,7 @@
 
 # Author: Trizen
 # Date: 15 June 2023
+# Edit: 16 June 2023
 # https://github.com/trizen
 
 # Compress/decompress files using Burrows-Wheeler Transform (BWT) + LZW compression.
@@ -16,14 +17,14 @@ use List::Util     qw(max uniq);
 
 use constant {
     PKGNAME => 'BWW',
-    VERSION => '0.01',
+    VERSION => '0.02',
     FORMAT  => 'bww',
 
     CHUNK_SIZE    => 1 << 17,    # higher value = better compression
     LOOKAHEAD_LEN => 128,
 };
 
-use constant {SIGNATURE => "BWW" . chr(1)};
+use constant {SIGNATURE => "BWW" . chr(2)};
 
 sub usage {
     my ($code) = @_;
@@ -246,12 +247,14 @@ sub rle4_encode ($bytes) {    # RLE1
         if ($run >= 4) {
 
             $run = 0;
-            while ($run < 255 and $i <= $end and $bytes->[$i] == $prev) {
+            $i += 1;
+
+            while ($run < 254 and $i <= $end and $bytes->[$i] == $prev) {
                 ++$run;
                 ++$i;
             }
 
-            push @rle, $run - 1;
+            push @rle, $run;
             $run = 1;
 
             if ($i <= $end) {
@@ -417,7 +420,7 @@ sub decompress ($compressed) {
         $w = $entry;
     }
 
-    return \$result;
+    return $result;
 }
 
 sub read_bit ($fh, $bitstring) {
@@ -632,6 +635,57 @@ sub delta_decode ($fh) {
     return \@acc;
 }
 
+sub rle_encode ($bytes) {    # RLE2
+
+    my @rle;
+    my $end = $#{$bytes};
+
+    for (my $i = 0 ; $i <= $end ; ++$i) {
+
+        my $run = 0;
+        while ($i <= $end and $bytes->[$i] == 0) {
+            ++$run;
+            ++$i;
+        }
+
+        if ($run >= 1) {
+            my $t = sprintf('%b', $run + 1);
+            push @rle, split(//, substr($t, 1));
+        }
+
+        if ($i <= $end) {
+            push @rle, $bytes->[$i] + 1;
+        }
+    }
+
+    return \@rle;
+}
+
+sub rle_decode ($rle) {    # RLE2
+
+    my @dec;
+    my $end = $#{$rle};
+
+    for (my $i = 0 ; $i <= $end ; ++$i) {
+        my $k = $rle->[$i];
+
+        if ($k == 0 or $k == 1) {
+            my $run = 1;
+            while (($i <= $end) and ($k == 0 or $k == 1)) {
+                ($run <<= 1) |= $k;
+                $k = $rle->[++$i];
+            }
+            push @dec, (0) x ($run - 1);
+        }
+
+        if ($i <= $end) {
+            push @dec, $k - 1;
+        }
+    }
+
+    return \@dec;
+}
+
 # Compress file
 sub lzw_compress_file ($input, $output) {
 
@@ -659,8 +713,13 @@ sub lzw_compress_file ($input, $output) {
 
         say "# symbols : ", scalar(@alphabet), "\n";
 
-        my $mtf = mtf_encode(\@bytes, [@alphabet]);
-        my $lzw = compress(pack('C*', @$mtf));
+        my $enc_bytes = mtf_encode(\@bytes, [@alphabet]);
+
+        if ($alphabet[-1] < 255) {
+            $enc_bytes = rle_encode($enc_bytes);
+        }
+
+        my $lzw = compress(pack('C*', @$enc_bytes));
 
         print $out_fh pack('N', $idx);
         print $out_fh $alphabet_enc;
@@ -687,10 +746,15 @@ sub lzw_decompress_file ($input, $output) {
         my $alphabet = decode_alphabet($fh);
         my $lzw      = decode_integers($fh);
 
-        my $dec = ${decompress($lzw)};
-        my $bwt = pack('C*', @{mtf_decode([unpack('C*', $dec)], $alphabet)});
+        my $bytes = [unpack('C*', decompress($lzw))];
 
-        print $out_fh pack('C*', @{rle4_decode([unpack('C*', bwt_decode($bwt, $idx))])});
+        if ($alphabet->[-1] < 255) {
+            $bytes = rle_decode($bytes);
+        }
+
+        $bytes = mtf_decode($bytes, [@$alphabet]);
+
+        print $out_fh pack('C*', @{rle4_decode([unpack('C*', bwt_decode(pack('C*', @$bytes), $idx))])});
     }
 
     # Close the output file
