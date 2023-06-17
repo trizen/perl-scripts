@@ -93,12 +93,12 @@ sub main {
             <STDIN> =~ /^y/i || exit 17;
         }
 
-        lzw_decompress_file($input, $output)
+        decompress_file($input, $output)
           || die "$0: error: decompression failed!\n";
     }
     elsif ($input !~ $ext || (defined($output) && $output =~ $ext)) {
         $output //= basename($input) . '.' . FORMAT;
-        lzw_compress_file($input, $output)
+        compress_file($input, $output)
           || die "$0: error: compression failed!\n";
     }
     else {
@@ -320,7 +320,7 @@ sub decode_integers ($fh) {
 }
 
 # Compress file
-sub lzw_compress_file ($input, $output) {
+sub compress_file ($input, $output) {
 
     open my $fh, '<:raw', $input
       or die "Can't open file <<$input>> for reading: $!";
@@ -344,7 +344,7 @@ sub lzw_compress_file ($input, $output) {
 }
 
 # Decompress file
-sub lzw_decompress_file ($input, $output) {
+sub decompress_file ($input, $output) {
 
     # Open and validate the input file
     open my $fh, '<:raw', $input;

@@ -2,12 +2,19 @@
 
 # Author: Trizen
 # Date: 15 June 2023
-# Edit: 16 June 2023
+# Edit: 17 June 2023
 # https://github.com/trizen
 
 # Compress/decompress files using Burrows-Wheeler Transform (BWT) + LZ77 compression + Huffman coding.
 
-# Encoding the distances/indices using a DEFLATE-like approach.
+# Encoding the literals and the pointers using a DEFLATE-like approach.
+
+# References:
+#   Data Compression (Summer 2023) - Lecture 11 - DEFLATE (gzip)
+#   https://youtube.com/watch?v=SJPvNi4HrWQ
+#
+#   Data Compression (Summer 2023) - Lecture 13 - BZip2
+#   https://youtube.com/watch?v=cvoZbBZ3M2A
 
 use 5.036;
 use Getopt::Std    qw(getopts);
@@ -16,23 +23,54 @@ use List::Util     qw(max uniq);
 
 use constant {
     PKGNAME => 'BWLZ',
-    VERSION => '0.02',
+    VERSION => '0.03',
     FORMAT  => 'bwlz',
 
-    COMPRESSED_BYTE   => chr(1),
-    UNCOMPRESSED_BYTE => chr(0),
-    CHUNK_SIZE        => 1 << 17,    # higher value = better compression
-    LOOKAHEAD_LEN     => 128,
+    CHUNK_SIZE    => 1 << 16,    # higher value = better compression
+    LOOKAHEAD_LEN => 128,
 };
 
-use constant {SIGNATURE => "BWLZ" . chr(2)};
+use constant {SIGNATURE => uc(FORMAT) . chr(3)};
 
 # [distance value, offset bits]
-my @DISTANCE_SYMBOLS = ([0, 0], [1, 0], [2, 0], [3, 0], [4, 0]);
+my @DISTANCE_SYMBOLS = map { [$_, 0] } (0 .. 4);
 
 until ($DISTANCE_SYMBOLS[-1][0] > CHUNK_SIZE) {
     push @DISTANCE_SYMBOLS, [int($DISTANCE_SYMBOLS[-1][0] * (4 / 3)), $DISTANCE_SYMBOLS[-1][1] + 1];
     push @DISTANCE_SYMBOLS, [int($DISTANCE_SYMBOLS[-1][0] * (3 / 2)), $DISTANCE_SYMBOLS[-1][1]];
+}
+
+# [length, offset bits]
+my @LENGTH_SYMBOLS = ((map { [$_, 0] } (5 .. 10)));
+
+{
+    my $delta = 1;
+    until ($LENGTH_SYMBOLS[-1][0] > 163) {
+        push @LENGTH_SYMBOLS, [$LENGTH_SYMBOLS[-1][0] + $delta, $LENGTH_SYMBOLS[-1][1] + 1];
+        $delta *= 2;
+        push @LENGTH_SYMBOLS, [$LENGTH_SYMBOLS[-1][0] + $delta, $LENGTH_SYMBOLS[-1][1]];
+        push @LENGTH_SYMBOLS, [$LENGTH_SYMBOLS[-1][0] + $delta, $LENGTH_SYMBOLS[-1][1]];
+        push @LENGTH_SYMBOLS, [$LENGTH_SYMBOLS[-1][0] + $delta, $LENGTH_SYMBOLS[-1][1]];
+    }
+    push @LENGTH_SYMBOLS, [258, 0];
+}
+
+my @DISTANCE_INDICES;
+
+foreach my $i (0 .. $#DISTANCE_SYMBOLS) {
+    my ($min, $bits) = @{$DISTANCE_SYMBOLS[$i]};
+    foreach my $k ($min .. $min + (1 << $bits) - 1) {
+        $DISTANCE_INDICES[$k] = $i;
+    }
+}
+
+my @LENGTH_INDICES;
+
+foreach my $i (0 .. $#LENGTH_SYMBOLS) {
+    my ($min, $bits) = @{$LENGTH_SYMBOLS[$i]};
+    foreach my $k ($min .. $min + (1 << $bits) - 1) {
+        $LENGTH_INDICES[$k] = $i;
+    }
 }
 
 sub usage {
@@ -99,12 +137,12 @@ sub main {
             <STDIN> =~ /^y/i || exit 17;
         }
 
-        lz77h_decompress_file($input, $output)
+        decompress_file($input, $output)
           || die "$0: error: decompression failed!\n";
     }
     elsif ($input !~ $ext || (defined($output) && $output =~ $ext)) {
         $output //= basename($input) . '.' . FORMAT;
-        lz77h_compress_file($input, $output)
+        compress_file($input, $output)
           || die "$0: error: compression failed!\n";
     }
     else {
@@ -113,13 +151,16 @@ sub main {
     }
 }
 
-sub lz77_compression ($str, $uncompressed, $indices, $lengths) {
+sub lz77_compression ($str, $uncompressed, $indices, $lengths, $has_backreference) {
 
     my $la = 0;
 
     my $prefix = '';
     my @chars  = split(//, $str);
     my $end    = $#chars;
+
+    my $min_len = $LENGTH_SYMBOLS[0][0];
+    my $max_len = $LENGTH_SYMBOLS[-1][0];
 
     while ($la <= $end) {
 
@@ -129,7 +170,7 @@ sub lz77_compression ($str, $uncompressed, $indices, $lengths) {
 
         my $token = $chars[$la];
 
-        while (    $n < 255
+        while (    $n <= $max_len
                and $la + $n <= $end
                and ($tmp = index($prefix, $token, $p)) >= 0) {
             $p = $tmp;
@@ -138,11 +179,21 @@ sub lz77_compression ($str, $uncompressed, $indices, $lengths) {
         }
 
         --$n;
-        push @$indices,      $p;
-        push @$lengths,      $n;
-        push @$uncompressed, ord($chars[$la + $n]);
-        $la += $n + 1;
-        $prefix .= $token;
+
+        if ($n >= $min_len) {
+            push @$lengths,           $n;
+            push @$indices,           $p;
+            push @$has_backreference, 1;
+            push @$uncompressed,      ord($chars[$la + $n]);
+            $la += $n + 1;
+            $prefix .= $token;
+        }
+        else {
+            push @$has_backreference, (0) x ($n + 1);
+            push @$uncompressed, unpack('C*', substr($prefix, $p, $n) . $chars[$la + $n]);
+            $la += $n + 1;
+            $prefix .= $token;
+        }
     }
 
     return;
@@ -153,7 +204,7 @@ sub lz77_decompression ($uncompressed, $indices, $lengths) {
     my $chunk = '';
 
     foreach my $i (0 .. $#{$uncompressed}) {
-        $chunk .= substr($chunk, $indices->[$i], $lengths->[$i]) . $uncompressed->[$i];
+        $chunk .= substr($chunk, $indices->[$i], $lengths->[$i]) . chr($uncompressed->[$i]);
     }
 
     return $chunk;
@@ -290,7 +341,7 @@ sub huffman_encode ($bytes, $dict) {
 
 sub huffman_decode ($bits, $hash) {
     local $" = '|';
-    $bits =~ s/(@{[sort { length($a) <=> length($b) } keys %{$hash}]})/$hash->{$1}/gr;    # very fast
+    $bits =~ s/(@{[sort { length($a) <=> length($b) } keys %{$hash}]})/$hash->{$1} /gr;    # very fast
 }
 
 sub create_huffman_entry ($bytes, $out_fh) {
@@ -301,7 +352,7 @@ sub create_huffman_entry ($bytes, $out_fh) {
     my ($h, $rev_h) = mktree_from_freq(\%freq);
     my $enc = huffman_encode($bytes, $h);
 
-    my $max_symbol = max(@$bytes);
+    my $max_symbol = max(@$bytes) // 0;
     say "Max symbol: $max_symbol";
 
     my @freqs;
@@ -333,57 +384,104 @@ sub decode_huffman_entry ($fh) {
     my (undef, $rev_dict) = mktree_from_freq(\%freq);
 
     foreach my $k (keys %$rev_dict) {
-        $rev_dict->{$k} = chr($rev_dict->{$k});
+        $rev_dict->{$k} = $rev_dict->{$k};
     }
 
     my $enc_len = unpack('N', join('', map { getc($fh) } 1 .. 4));
 
     if ($enc_len > 0) {
-        return huffman_decode(read_bits($fh, $enc_len), $rev_dict);
+        return [split(' ', huffman_decode(read_bits($fh, $enc_len), $rev_dict))];
     }
 
-    return '';
+    return [];
 }
 
-sub encode_distances ($distances, $out_fh) {
+sub deflate_encode ($literals, $distances, $lengths, $has_backreference, $out_fh) {
 
-    my @symbols;
+    my @len_symbols;
+    my @dist_symbols;
     my $offset_bits = '';
 
-    foreach my $dist (@$distances) {
-        foreach my $i (0 .. $#DISTANCE_SYMBOLS) {
-            if ($DISTANCE_SYMBOLS[$i][0] > $dist) {
-                push @symbols, $i - 1;
+    my $j = 0;
+    foreach my $k (0 .. $#{$literals}) {
 
-                if ($DISTANCE_SYMBOLS[$i - 1][1] > 0) {
-                    $offset_bits .= sprintf('%0*b', $DISTANCE_SYMBOLS[$i - 1][1], $dist - $DISTANCE_SYMBOLS[$i - 1][0]);
-                }
-                last;
+        my $lit = $literals->[$k];
+        push @len_symbols, $lit;
+
+        $has_backreference->[$k] || next;
+
+        my $len  = $lengths->[$j];
+        my $dist = $distances->[$j];
+
+        $j += 1;
+
+        {
+            my $len_idx = $LENGTH_INDICES[$len];
+            my ($min, $bits) = @{$LENGTH_SYMBOLS[$len_idx]};
+
+            push @len_symbols, $len_idx + 256;
+
+            if ($bits > 0) {
+                $offset_bits .= sprintf('%0*b', $bits, $len - $min);
+            }
+        }
+
+        {
+            my $dist_idx = $DISTANCE_INDICES[$dist];
+            my ($min, $bits) = @{$DISTANCE_SYMBOLS[$dist_idx]};
+
+            push @dist_symbols, $dist_idx;
+
+            if ($bits > 0) {
+                $offset_bits .= sprintf('%0*b', $bits, $dist - $min);
             }
         }
     }
 
-    create_huffman_entry(\@symbols, $out_fh);
+    create_huffman_entry(\@len_symbols,  $out_fh);
+    create_huffman_entry(\@dist_symbols, $out_fh);
     print $out_fh pack('B*', $offset_bits);
 }
 
-sub decode_distances ($fh) {
+sub deflate_decode ($fh) {
 
-    my @symbols  = unpack('C*', decode_huffman_entry($fh));
+    my @len_symbols  = @{decode_huffman_entry($fh)};
+    my @dist_symbols = @{decode_huffman_entry($fh)};
+
     my $bits_len = 0;
 
-    foreach my $i (@symbols) {
+    foreach my $i (@dist_symbols) {
         $bits_len += $DISTANCE_SYMBOLS[$i][1];
+    }
+
+    foreach my $i (@len_symbols) {
+        if ($i >= 256) {
+            $bits_len += $LENGTH_SYMBOLS[$i - 256][1];
+        }
     }
 
     my $bits = read_bits($fh, $bits_len);
 
+    my @literals;
+    my @lengths;
     my @distances;
-    foreach my $i (@symbols) {
-        push @distances, $DISTANCE_SYMBOLS[$i][0] + oct('0b' . substr($bits, 0, $DISTANCE_SYMBOLS[$i][1], ''));
+
+    my $j = 0;
+
+    foreach my $i (@len_symbols) {
+        if ($i >= 256) {
+            my $dist = $dist_symbols[$j++];
+            $lengths[-1]   = $LENGTH_SYMBOLS[$i - 256][0] + oct('0b' . substr($bits, 0, $LENGTH_SYMBOLS[$i - 256][1], ''));
+            $distances[-1] = $DISTANCE_SYMBOLS[$dist][0] + oct('0b' . substr($bits, 0, $DISTANCE_SYMBOLS[$dist][1], ''));
+        }
+        else {
+            push @literals,  $i;
+            push @lengths,   0;
+            push @distances, 0;
+        }
     }
 
-    return \@distances;
+    return (\@literals, \@distances, \@lengths);
 }
 
 sub mtf_encode ($bytes, $alphabet = [0 .. 255]) {
@@ -692,7 +790,7 @@ sub decode_alphabet ($fh) {
 }
 
 # Compress file
-sub lz77h_compress_file ($input, $output) {
+sub compress_file ($input, $output) {
 
     open my $fh, '<:raw', $input
       or die "Can't open file <<$input>> for reading: $!";
@@ -725,25 +823,15 @@ sub lz77h_compress_file ($input, $output) {
 
         $data = pack('C*', @$enc_bytes);
 
-        my (@uncompressed, @indices, @lengths);
-        lz77_compression($data, \@uncompressed, \@indices, \@lengths);
+        my (@uncompressed, @indices, @lengths, @has_backreference);
+        lz77_compression($data, \@uncompressed, \@indices, \@lengths, \@has_backreference);
 
-        my $est_ratio = length($chunk) / (4 * scalar(@uncompressed));
+        my $est_ratio = length($chunk) / (scalar(@uncompressed) + scalar(@lengths) + 2 * scalar(@indices));
+        say "\nEst. ratio: ", $est_ratio, " (", scalar(@uncompressed), " uncompressed bytes)";
 
-        say("\nEst. ratio: ", $est_ratio, " (", scalar(@uncompressed), " uncompressed bytes)");
-
-        if ($est_ratio > 0.8) {
-            print $out_fh COMPRESSED_BYTE;
-            print $out_fh pack('N', $idx);
-            print $out_fh encode_alphabet(\@alphabet);
-            create_huffman_entry(\@uncompressed, $out_fh);
-            create_huffman_entry(\@lengths,      $out_fh);
-            encode_distances(\@indices, $out_fh);
-        }
-        else {
-            print $out_fh UNCOMPRESSED_BYTE;
-            create_huffman_entry(\@chunk_bytes, $out_fh);
-        }
+        print $out_fh pack('N', $idx);
+        print $out_fh encode_alphabet(\@alphabet);
+        deflate_encode(\@uncompressed, \@indices, \@lengths, \@has_backreference, $out_fh);
     }
 
     # Close the output file
@@ -751,7 +839,7 @@ sub lz77h_compress_file ($input, $output) {
 }
 
 # Decompress file
-sub lz77h_decompress_file ($input, $output) {
+sub decompress_file ($input, $output) {
 
     # Open and validate the input file
     open my $fh, '<:raw', $input;
@@ -762,33 +850,21 @@ sub lz77h_decompress_file ($input, $output) {
 
     while (!eof($fh)) {
 
-        my $compression_byte = getc($fh);
+        my $idx      = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
+        my $alphabet = decode_alphabet($fh);
 
-        if ($compression_byte eq COMPRESSED_BYTE) {
+        my ($uncompressed, $indices, $lengths) = deflate_decode($fh);
+        my $dec = lz77_decompression($uncompressed, $indices, $lengths);
 
-            my $idx          = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
-            my $alphabet     = decode_alphabet($fh);
-            my @uncompressed = split(//, decode_huffman_entry($fh));
-            my @lengths      = unpack('C*', decode_huffman_entry($fh));
-            my $indices      = decode_distances($fh);
+        my $bytes = [unpack('C*', $dec)];
 
-            my $dec   = lz77_decompression(\@uncompressed, $indices, \@lengths);
-            my $bytes = [unpack('C*', $dec)];
-
-            if ($alphabet->[-1] < 255) {
-                $bytes = rle_decode($bytes);
-            }
-
-            $bytes = mtf_decode($bytes, [@$alphabet]);
-
-            print $out_fh pack('C*', @{rle4_decode([unpack('C*', bwt_decode(pack('C*', @$bytes), $idx))])});
+        if ($alphabet->[-1] < 255) {
+            $bytes = rle_decode($bytes);
         }
-        elsif ($compression_byte eq UNCOMPRESSED_BYTE) {
-            print $out_fh decode_huffman_entry($fh);
-        }
-        else {
-            die "Invalid compression...";
-        }
+
+        $bytes = mtf_decode($bytes, [@$alphabet]);
+
+        print $out_fh pack('C*', @{rle4_decode([unpack('C*', bwt_decode(pack('C*', @$bytes), $idx))])});
     }
 
     # Close the output file
