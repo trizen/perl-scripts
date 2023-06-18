@@ -245,8 +245,6 @@ sub create_huffman_entry ($bytes, $out_fh) {
     my $max_symbol = max(keys %freq) // 0;
 
     my @freqs;
-    my $codes = '';
-
     foreach my $i (0 .. $max_symbol) {
         push @freqs, $freq{$i} // 0;
     }
@@ -259,10 +257,13 @@ sub create_huffman_entry ($bytes, $out_fh) {
 sub compress ($input, $output) {
 
     # Open the input file
-    open my $fh, '<:raw', $input;
+    open my $fh, '<:raw', $input
+      or die "Can't open file <<$input>> for reading: $!";
 
     # Open the output file and write the archive signature
-    open my $out_fh, '>:raw', $output;
+    open my $out_fh, '>:raw', $output
+      or die "Can't open file <<$output>> for writing: $!";
+
     print $out_fh SIGNATURE;
 
     # Read and encode
@@ -292,9 +293,6 @@ sub read_bits ($fh, $bits_len) {
 
 sub decode_huffman_entry ($fh, $out_fh) {
 
-    my @codes;
-    my $codes_len = 0;
-
     my @freqs = @{delta_decode($fh)};
 
     my %freq;
@@ -323,11 +321,14 @@ sub decode_huffman_entry ($fh, $out_fh) {
 sub decompress ($input, $output) {
 
     # Open and validate the input file
-    open my $fh, '<:raw', $input;
+    open my $fh, '<:raw', $input
+      or die "Can't open file <<$input>> for reading: $!";
+
     valid_archive($fh) || die "$0: file `$input' is not a \U${\FORMAT}\E v${\VERSION} archive!\n";
 
     # Open the output file
-    open my $out_fh, '>:raw', $output;
+    open my $out_fh, '>:raw', $output
+      or die "Can't open file <<$output>> for writing: $!";
 
     # Decode
     while (!eof($fh)) {

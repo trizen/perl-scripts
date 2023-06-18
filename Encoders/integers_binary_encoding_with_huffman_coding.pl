@@ -12,7 +12,7 @@ use List::Util qw(max shuffle);
 use constant {MAX_INT => 0b11111111111111111111111111111111};
 
 # [distance value, offset bits]
-my @DISTANCE_SYMBOLS = ([0, 0], [1, 0], [2, 0], [3, 0], [4, 0]);
+my @DISTANCE_SYMBOLS = (map { [$_, 0] } 0 .. 4);
 
 until ($DISTANCE_SYMBOLS[-1][0] > MAX_INT) {
     push @DISTANCE_SYMBOLS, [int($DISTANCE_SYMBOLS[-1][0] * (4 / 3)), $DISTANCE_SYMBOLS[-1][1] + 1];
@@ -164,8 +164,6 @@ sub create_huffman_entry ($bytes, $out_fh) {
     my $max_symbol = max(keys %freq) // 0;
 
     my @freqs;
-    my $codes = '';
-
     foreach my $i (0 .. $max_symbol) {
         push @freqs, $freq{$i} // 0;
     }
@@ -176,9 +174,6 @@ sub create_huffman_entry ($bytes, $out_fh) {
 }
 
 sub decode_huffman_entry ($fh) {
-
-    my @codes;
-    my $codes_len = 0;
 
     my @freqs = @{delta_decode($fh)};
 

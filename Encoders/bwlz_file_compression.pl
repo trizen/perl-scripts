@@ -2,7 +2,7 @@
 
 # Author: Trizen
 # Date: 15 June 2023
-# Edit: 17 June 2023
+# Edit: 20 June 2023
 # https://github.com/trizen
 
 # Compress/decompress files using Burrows-Wheeler Transform (BWT) + LZ77 compression + Huffman coding.
@@ -20,7 +20,7 @@ use 5.036;
 use Getopt::Std    qw(getopts);
 use File::Basename qw(basename);
 use List::Util     qw(max uniq);
-use POSIX          qw(ceil);
+use POSIX          qw(ceil log2);
 
 use constant {
     PKGNAME => 'BWLZ',
@@ -194,17 +194,17 @@ sub lz77_compression ($str, $uncompressed, $indices, $lengths, $has_backreferenc
         if ($n >= $min_len) {
 
             my $dist = $DISTANCE_SYMBOLS[$DISTANCE_INDICES[$la - $p]];
-            $enc_bits_len += $dist->[1] + ceil(log((1 + $distance_count) / (1 + ($distance_freq{$dist->[0]} // 0))) / log(2));
+            $enc_bits_len += $dist->[1] + ceil(log2((1 + $distance_count) / (1 + ($distance_freq{$dist->[0]} // 0))));
 
             my $len_idx = $LENGTH_INDICES[$n];
             my $len     = $LENGTH_SYMBOLS[$len_idx];
 
-            $enc_bits_len += $len->[1] + ceil(log((1 + $literal_count) / (1 + ($literal_freq{$len_idx + 256} // 0))) / log(2));
+            $enc_bits_len += $len->[1] + ceil(log2((1 + $literal_count) / (1 + ($literal_freq{$len_idx + 256} // 0))));
 
             my %freq;
             foreach my $c (unpack('C*', substr($prefix, $p, $n))) {
                 ++$freq{$c};
-                $literal_bits_len += ceil(log(($n + $literal_count) / ($freq{$c} + ($literal_freq{$c} // 0))) / log(2));
+                $literal_bits_len += ceil(log2(($n + $literal_count) / ($freq{$c} + ($literal_freq{$c} // 0))));
             }
         }
 
@@ -283,7 +283,7 @@ sub read_bits ($fh, $bits_len) {
     return $data;
 }
 
-sub delta_encode ($integers) {
+sub delta_encode ($integers, $double = 0) {
 
     my @deltas;
     my $prev = 0;
@@ -301,6 +301,11 @@ sub delta_encode ($integers) {
     foreach my $d (@deltas) {
         if ($d == 0) {
             $bitstring .= '0';
+        }
+        elsif ($double) {
+            my $t = sprintf('%b', abs($d));
+            my $l = sprintf('%b', length($t) + 1);
+            $bitstring .= '1' . (($d < 0) ? '0' : '1') . ('1' x (length($l) - 1)) . '0' . substr($l, 1) . substr($t, 1);
         }
         else {
             my $t = sprintf('%b', abs($d));
@@ -311,7 +316,7 @@ sub delta_encode ($integers) {
     pack('B*', $bitstring);
 }
 
-sub delta_decode ($fh) {
+sub delta_decode ($fh, $double = 0) {
 
     my @deltas;
     my $buffer = '';
@@ -323,72 +328,7 @@ sub delta_decode ($fh) {
         if ($bit eq '0') {
             push @deltas, 0;
         }
-        else {
-            my $bit = read_bit($fh, \$buffer);
-            my $n   = 0;
-            ++$n while (read_bit($fh, \$buffer) eq '1');
-            my $d = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. $n));
-            push @deltas, ($bit eq '1' ? $d : -$d);
-        }
-
-        if ($k == 0) {
-            $len = pop(@deltas);
-        }
-    }
-
-    my @acc;
-    my $prev = $len;
-
-    foreach my $d (@deltas) {
-        $prev += $d;
-        push @acc, $prev;
-    }
-
-    return \@acc;
-}
-
-sub delta_encode2 ($integers) {
-
-    my @deltas;
-    my $prev = 0;
-
-    unshift(@$integers, scalar(@$integers));
-
-    while (@$integers) {
-        my $curr = shift(@$integers);
-        push @deltas, $curr - $prev;
-        $prev = $curr;
-    }
-
-    my $bitstring = '';
-
-    foreach my $d (@deltas) {
-        if ($d == 0) {
-            $bitstring .= '0';
-        }
-        else {
-            my $t = sprintf('%b', abs($d));
-            my $l = sprintf('%b', length($t) + 1);
-            $bitstring .= '1' . (($d < 0) ? '0' : '1') . ('1' x (length($l) - 1)) . '0' . substr($l, 1) . substr($t, 1);
-        }
-    }
-
-    pack('B*', $bitstring);
-}
-
-sub delta_decode2 ($fh) {
-
-    my @deltas;
-    my $buffer = '';
-    my $len    = 0;
-
-    for (my $k = 0 ; $k <= $len ; ++$k) {
-        my $bit = read_bit($fh, \$buffer);
-
-        if ($bit eq '0') {
-            push @deltas, 0;
-        }
-        else {
+        elsif ($double) {
             my $bit = read_bit($fh, \$buffer);
 
             my $bl = 0;
@@ -398,6 +338,13 @@ sub delta_decode2 ($fh) {
             my $int = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. ($bl2 - 1)));
 
             push @deltas, ($bit eq '1' ? $int : -$int);
+        }
+        else {
+            my $bit = read_bit($fh, \$buffer);
+            my $n   = 0;
+            ++$n while (read_bit($fh, \$buffer) eq '1');
+            my $d = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. $n));
+            push @deltas, ($bit eq '1' ? $d : -$d);
         }
 
         if ($k == 0) {
@@ -472,8 +419,6 @@ sub create_huffman_entry ($bytes, $out_fh) {
     say "Max symbol: $max_symbol";
 
     my @freqs;
-    my $codes = '';
-
     foreach my $i (0 .. $max_symbol) {
         push @freqs, $freq{$i} // 0;
     }
@@ -485,9 +430,6 @@ sub create_huffman_entry ($bytes, $out_fh) {
 
 sub decode_huffman_entry ($fh) {
 
-    my @codes;
-    my $codes_len = 0;
-
     my @freqs = @{delta_decode($fh)};
 
     my %freq;
@@ -498,10 +440,6 @@ sub decode_huffman_entry ($fh) {
     }
 
     my (undef, $rev_dict) = mktree_from_freq(\%freq);
-
-    foreach my $k (keys %$rev_dict) {
-        $rev_dict->{$k} = $rev_dict->{$k};
-    }
 
     my $enc_len = unpack('N', join('', map { getc($fh) } 1 .. 4));
 
@@ -872,7 +810,7 @@ sub encode_alphabet ($alphabet) {
         }
     }
 
-    my $delta = delta_encode2([@marked]);
+    my $delta = delta_encode([@marked], 1);
 
     say "Populated : ", sprintf('%08b', $populated);
     say "Marked    : @marked";
@@ -887,7 +825,7 @@ sub encode_alphabet ($alphabet) {
 sub decode_alphabet ($fh) {
 
     my @populated = split(//, sprintf('%08b', ord(getc($fh))));
-    my $marked    = delta_decode2($fh);
+    my $marked    = delta_decode($fh, 1);
 
     my @alphabet;
     for (my $i = 0 ; $i <= 255 ; $i += 32) {
@@ -958,11 +896,14 @@ sub compress_file ($input, $output) {
 sub decompress_file ($input, $output) {
 
     # Open and validate the input file
-    open my $fh, '<:raw', $input;
+    open my $fh, '<:raw', $input
+      or die "Can't open file <<$input>> for reading: $!";
+
     valid_archive($fh) || die "$0: file `$input' is not a \U${\FORMAT}\E v${\VERSION} archive!\n";
 
     # Open the output file
-    open my $out_fh, '>:raw', $output;
+    open my $out_fh, '>:raw', $output
+      or die "Can't open file <<$output>> for writing: $!";
 
     while (!eof($fh)) {
 

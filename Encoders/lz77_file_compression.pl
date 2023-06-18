@@ -164,11 +164,14 @@ sub compress_file ($input, $output) {
 sub decompress_file ($input, $output) {
 
     # Open and validate the input file
-    open my $fh, '<:raw', $input;
+    open my $fh, '<:raw', $input
+      or die "Can't open file <<$input>> for reading: $!";
+
     valid_archive($fh) || die "$0: file `$input' is not a \U${\FORMAT}\E v${\VERSION} archive!\n";
 
     # Open the output file
-    open my $out_fh, '>:raw', $output;
+    open my $out_fh, '>:raw', $output
+      or die "Can't open file <<$output>> for writing: $!";
 
     my $chunk = '';
     while (read($fh, (my $str), 4 * CHUNK_SIZE)) {

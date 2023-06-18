@@ -17,7 +17,7 @@ use 5.036;
 use Getopt::Std    qw(getopts);
 use File::Basename qw(basename);
 use List::Util     qw(max);
-use POSIX          qw(ceil);
+use POSIX          qw(ceil log2);
 
 use constant {
     PKGNAME => 'LZSS',
@@ -190,17 +190,17 @@ sub lz77_compression ($str, $uncompressed, $indices, $lengths, $has_backreferenc
         if ($n >= $min_len) {
 
             my $dist = $DISTANCE_SYMBOLS[$DISTANCE_INDICES[$la - $p]];
-            $enc_bits_len += $dist->[1] + ceil(log((1 + $distance_count) / (1 + ($distance_freq{$dist->[0]} // 0))) / log(2));
+            $enc_bits_len += $dist->[1] + ceil(log2((1 + $distance_count) / (1 + ($distance_freq{$dist->[0]} // 0))));
 
             my $len_idx = $LENGTH_INDICES[$n];
             my $len     = $LENGTH_SYMBOLS[$len_idx];
 
-            $enc_bits_len += $len->[1] + ceil(log((1 + $literal_count) / (1 + ($literal_freq{$len_idx + 256} // 0))) / log(2));
+            $enc_bits_len += $len->[1] + ceil(log2((1 + $literal_count) / (1 + ($literal_freq{$len_idx + 256} // 0))));
 
             my %freq;
             foreach my $c (unpack('C*', substr($prefix, $p, $n))) {
                 ++$freq{$c};
-                $literal_bits_len += ceil(log(($n + $literal_count) / ($freq{$c} + ($literal_freq{$c} // 0))) / log(2));
+                $literal_bits_len += ceil(log2(($n + $literal_count) / ($freq{$c} + ($literal_freq{$c} // 0))));
             }
         }
 
@@ -398,8 +398,6 @@ sub create_huffman_entry ($bytes, $out_fh) {
     my $max_symbol = max(keys %freq) // 0;
 
     my @freqs;
-    my $codes = '';
-
     foreach my $i (0 .. $max_symbol) {
         push @freqs, $freq{$i} // 0;
     }
@@ -411,9 +409,6 @@ sub create_huffman_entry ($bytes, $out_fh) {
 
 sub decode_huffman_entry ($fh) {
 
-    my @codes;
-    my $codes_len = 0;
-
     my @freqs = @{delta_decode($fh)};
 
     my %freq;
@@ -424,10 +419,6 @@ sub decode_huffman_entry ($fh) {
     }
 
     my (undef, $rev_dict) = mktree_from_freq(\%freq);
-
-    foreach my $k (keys %$rev_dict) {
-        $rev_dict->{$k} = $rev_dict->{$k};
-    }
 
     my $enc_len = unpack('N', join('', map { getc($fh) } 1 .. 4));
 
@@ -561,11 +552,14 @@ sub compress_file ($input, $output) {
 sub decompress_file ($input, $output) {
 
     # Open and validate the input file
-    open my $fh, '<:raw', $input;
+    open my $fh, '<:raw', $input
+      or die "Can't open file <<$input>> for reading: $!";
+
     valid_archive($fh) || die "$0: file `$input' is not a \U${\FORMAT}\E v${\VERSION} archive!\n";
 
     # Open the output file
-    open my $out_fh, '>:raw', $output;
+    open my $out_fh, '>:raw', $output
+      or die "Can't open file <<$output>> for writing: $!";
 
     while (!eof($fh)) {
         my ($uncompressed, $indices, $lengths) = deflate_decode($fh);
