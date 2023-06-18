@@ -20,17 +20,18 @@ use 5.036;
 use Getopt::Std    qw(getopts);
 use File::Basename qw(basename);
 use List::Util     qw(max uniq);
+use POSIX          qw(ceil);
 
 use constant {
     PKGNAME => 'BWLZ',
-    VERSION => '0.03',
+    VERSION => '0.04',
     FORMAT  => 'bwlz',
 
-    CHUNK_SIZE    => 1 << 16,    # higher value = better compression
+    CHUNK_SIZE    => 1 << 17,    # higher value = better compression
     LOOKAHEAD_LEN => 128,
 };
 
-use constant {SIGNATURE => uc(FORMAT) . chr(3)};
+use constant {SIGNATURE => uc(FORMAT) . chr(4)};
 
 # [distance value, offset bits]
 my @DISTANCE_SYMBOLS = map { [$_, 0] } (0 .. 4);
@@ -41,7 +42,7 @@ until ($DISTANCE_SYMBOLS[-1][0] > CHUNK_SIZE) {
 }
 
 # [length, offset bits]
-my @LENGTH_SYMBOLS = ((map { [$_, 0] } (5 .. 10)));
+my @LENGTH_SYMBOLS = ((map { [$_, 0] } (4 .. 10)));
 
 {
     my $delta = 1;
@@ -61,6 +62,7 @@ foreach my $i (0 .. $#DISTANCE_SYMBOLS) {
     my ($min, $bits) = @{$DISTANCE_SYMBOLS[$i]};
     foreach my $k ($min .. $min + (1 << $bits) - 1) {
         $DISTANCE_INDICES[$k] = $i;
+        last if ($k >= CHUNK_SIZE);
     }
 }
 
@@ -162,6 +164,12 @@ sub lz77_compression ($str, $uncompressed, $indices, $lengths, $has_backreferenc
     my $min_len = $LENGTH_SYMBOLS[0][0];
     my $max_len = $LENGTH_SYMBOLS[-1][0];
 
+    my %literal_freq;
+    my %distance_freq;
+
+    my $literal_count  = 0;
+    my $distance_count = 0;
+
     while ($la <= $end) {
 
         my $n = 1;
@@ -180,18 +188,55 @@ sub lz77_compression ($str, $uncompressed, $indices, $lengths, $has_backreferenc
 
         --$n;
 
+        my $enc_bits_len     = 0;
+        my $literal_bits_len = 0;
+
         if ($n >= $min_len) {
+
+            my $dist = $DISTANCE_SYMBOLS[$DISTANCE_INDICES[$la - $p]];
+            $enc_bits_len += $dist->[1] + ceil(log((1 + $distance_count) / (1 + ($distance_freq{$dist->[0]} // 0))) / log(2));
+
+            my $len_idx = $LENGTH_INDICES[$n];
+            my $len     = $LENGTH_SYMBOLS[$len_idx];
+
+            $enc_bits_len += $len->[1] + ceil(log((1 + $literal_count) / (1 + ($literal_freq{$len_idx + 256} // 0))) / log(2));
+
+            my %freq;
+            foreach my $c (unpack('C*', substr($prefix, $p, $n))) {
+                ++$freq{$c};
+                $literal_bits_len += ceil(log(($n + $literal_count) / ($freq{$c} + ($literal_freq{$c} // 0))) / log(2));
+            }
+        }
+
+        if ($n >= $min_len and $enc_bits_len + 8 < $literal_bits_len) {
+
             push @$lengths,           $n;
-            push @$indices,           $p;
+            push @$indices,           $la - $p;
             push @$has_backreference, 1;
             push @$uncompressed,      ord($chars[$la + $n]);
-            $la += $n + 1;
+
+            my $dist_idx = $DISTANCE_INDICES[$la - $p];
+            my $dist     = $DISTANCE_SYMBOLS[$dist_idx];
+
+            ++$distance_count;
+            ++$distance_freq{$dist->[0]};
+
+            ++$literal_freq{$LENGTH_INDICES[$n] + 256};
+            ++$literal_freq{ord $chars[$la + $n]};
+
+            $literal_count += 2;
+            $la            += $n + 1;
             $prefix .= $token;
         }
         else {
+            my @bytes = unpack('C*', substr($prefix, $p, $n) . $chars[$la + $n]);
+
             push @$has_backreference, (0) x ($n + 1);
-            push @$uncompressed, unpack('C*', substr($prefix, $p, $n) . $chars[$la + $n]);
-            $la += $n + 1;
+            push @$uncompressed, @bytes;
+            ++$literal_freq{$_} for @bytes;
+
+            $literal_count += $n + 1;
+            $la            += $n + 1;
             $prefix .= $token;
         }
     }
@@ -201,10 +246,12 @@ sub lz77_compression ($str, $uncompressed, $indices, $lengths, $has_backreferenc
 
 sub lz77_decompression ($uncompressed, $indices, $lengths) {
 
-    my $chunk = '';
+    my $chunk  = '';
+    my $offset = 0;
 
     foreach my $i (0 .. $#{$uncompressed}) {
-        $chunk .= substr($chunk, $indices->[$i], $lengths->[$i]) . chr($uncompressed->[$i]);
+        $chunk .= substr($chunk, $offset - $indices->[$i], $lengths->[$i]) . chr($uncompressed->[$i]);
+        $offset += $lengths->[$i] + 1;
     }
 
     return $chunk;
@@ -300,6 +347,75 @@ sub delta_decode ($fh) {
     return \@acc;
 }
 
+sub delta_encode2 ($integers) {
+
+    my @deltas;
+    my $prev = 0;
+
+    unshift(@$integers, scalar(@$integers));
+
+    while (@$integers) {
+        my $curr = shift(@$integers);
+        push @deltas, $curr - $prev;
+        $prev = $curr;
+    }
+
+    my $bitstring = '';
+
+    foreach my $d (@deltas) {
+        if ($d == 0) {
+            $bitstring .= '0';
+        }
+        else {
+            my $t = sprintf('%b', abs($d));
+            my $l = sprintf('%b', length($t) + 1);
+            $bitstring .= '1' . (($d < 0) ? '0' : '1') . ('1' x (length($l) - 1)) . '0' . substr($l, 1) . substr($t, 1);
+        }
+    }
+
+    pack('B*', $bitstring);
+}
+
+sub delta_decode2 ($fh) {
+
+    my @deltas;
+    my $buffer = '';
+    my $len    = 0;
+
+    for (my $k = 0 ; $k <= $len ; ++$k) {
+        my $bit = read_bit($fh, \$buffer);
+
+        if ($bit eq '0') {
+            push @deltas, 0;
+        }
+        else {
+            my $bit = read_bit($fh, \$buffer);
+
+            my $bl = 0;
+            ++$bl while (read_bit($fh, \$buffer) eq '1');
+
+            my $bl2 = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. $bl)) - 1;
+            my $int = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. ($bl2 - 1)));
+
+            push @deltas, ($bit eq '1' ? $int : -$int);
+        }
+
+        if ($k == 0) {
+            $len = pop(@deltas);
+        }
+    }
+
+    my @acc;
+    my $prev = $len;
+
+    foreach my $d (@deltas) {
+        $prev += $d;
+        push @acc, $prev;
+    }
+
+    return \@acc;
+}
+
 # produce encode and decode dictionary from a tree
 sub walk ($node, $code, $h, $rev_h) {
 
@@ -352,7 +468,7 @@ sub create_huffman_entry ($bytes, $out_fh) {
     my ($h, $rev_h) = mktree_from_freq(\%freq);
     my $enc = huffman_encode($bytes, $h);
 
-    my $max_symbol = max(@$bytes) // 0;
+    my $max_symbol = max(keys %freq) // 0;
     say "Max symbol: $max_symbol";
 
     my @freqs;
@@ -756,7 +872,7 @@ sub encode_alphabet ($alphabet) {
         }
     }
 
-    my $delta = delta_encode([@marked]);
+    my $delta = delta_encode2([@marked]);
 
     say "Populated : ", sprintf('%08b', $populated);
     say "Marked    : @marked";
@@ -771,7 +887,7 @@ sub encode_alphabet ($alphabet) {
 sub decode_alphabet ($fh) {
 
     my @populated = split(//, sprintf('%08b', ord(getc($fh))));
-    my $marked    = delta_decode($fh);
+    my $marked    = delta_decode2($fh);
 
     my @alphabet;
     for (my $i = 0 ; $i <= 255 ; $i += 32) {

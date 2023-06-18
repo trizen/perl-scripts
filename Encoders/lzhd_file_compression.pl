@@ -41,6 +41,7 @@ foreach my $i (0 .. $#DISTANCE_SYMBOLS) {
     my ($min, $bits) = @{$DISTANCE_SYMBOLS[$i]};
     foreach my $k ($min .. $min + (1 << $bits) - 1) {
         $DISTANCE_INDICES[$k] = $i;
+        last if ($k >= CHUNK_SIZE);
     }
 }
 
@@ -310,7 +311,7 @@ sub create_huffman_entry ($bytes, $out_fh) {
     my ($h, $rev_h) = mktree_from_freq(\%freq);
     my $enc = huffman_encode($bytes, $h);
 
-    my $max_symbol = max(@$bytes) // 0;
+    my $max_symbol = max(keys %freq) // 0;
 
     my @freqs;
     my $codes = '';

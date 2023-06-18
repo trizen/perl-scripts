@@ -17,6 +17,7 @@ use 5.036;
 use Getopt::Std    qw(getopts);
 use File::Basename qw(basename);
 use List::Util     qw(max);
+use POSIX          qw(ceil);
 
 use constant {
     PKGNAME => 'LZSS',
@@ -37,7 +38,7 @@ until ($DISTANCE_SYMBOLS[-1][0] > CHUNK_SIZE) {
 }
 
 # [length, offset bits]
-my @LENGTH_SYMBOLS = ((map { [$_, 0] } (5 .. 10)));
+my @LENGTH_SYMBOLS = ((map { [$_, 0] } (4 .. 10)));
 
 {
     my $delta = 1;
@@ -57,6 +58,7 @@ foreach my $i (0 .. $#DISTANCE_SYMBOLS) {
     my ($min, $bits) = @{$DISTANCE_SYMBOLS[$i]};
     foreach my $k ($min .. $min + (1 << $bits) - 1) {
         $DISTANCE_INDICES[$k] = $i;
+        last if ($k >= CHUNK_SIZE);
     }
 }
 
@@ -158,6 +160,12 @@ sub lz77_compression ($str, $uncompressed, $indices, $lengths, $has_backreferenc
     my $min_len = $LENGTH_SYMBOLS[0][0];
     my $max_len = $LENGTH_SYMBOLS[-1][0];
 
+    my %literal_freq;
+    my %distance_freq;
+
+    my $literal_count  = 0;
+    my $distance_count = 0;
+
     while ($la <= $end) {
 
         my $n = 1;
@@ -176,18 +184,55 @@ sub lz77_compression ($str, $uncompressed, $indices, $lengths, $has_backreferenc
 
         --$n;
 
+        my $enc_bits_len     = 0;
+        my $literal_bits_len = 0;
+
         if ($n >= $min_len) {
+
+            my $dist = $DISTANCE_SYMBOLS[$DISTANCE_INDICES[$la - $p]];
+            $enc_bits_len += $dist->[1] + ceil(log((1 + $distance_count) / (1 + ($distance_freq{$dist->[0]} // 0))) / log(2));
+
+            my $len_idx = $LENGTH_INDICES[$n];
+            my $len     = $LENGTH_SYMBOLS[$len_idx];
+
+            $enc_bits_len += $len->[1] + ceil(log((1 + $literal_count) / (1 + ($literal_freq{$len_idx + 256} // 0))) / log(2));
+
+            my %freq;
+            foreach my $c (unpack('C*', substr($prefix, $p, $n))) {
+                ++$freq{$c};
+                $literal_bits_len += ceil(log(($n + $literal_count) / ($freq{$c} + ($literal_freq{$c} // 0))) / log(2));
+            }
+        }
+
+        if ($n >= $min_len and $enc_bits_len < $literal_bits_len) {
+
             push @$lengths,           $n;
             push @$indices,           $la - $p;
             push @$has_backreference, 1;
             push @$uncompressed,      ord($chars[$la + $n]);
-            $la += $n + 1;
+
+            my $dist_idx = $DISTANCE_INDICES[$la - $p];
+            my $dist     = $DISTANCE_SYMBOLS[$dist_idx];
+
+            ++$distance_count;
+            ++$distance_freq{$dist->[0]};
+
+            ++$literal_freq{$LENGTH_INDICES[$n] + 256};
+            ++$literal_freq{ord $chars[$la + $n]};
+
+            $literal_count += 2;
+            $la            += $n + 1;
             $prefix .= $token;
         }
         else {
+            my @bytes = unpack('C*', substr($prefix, $p, $n) . $chars[$la + $n]);
+
             push @$has_backreference, (0) x ($n + 1);
-            push @$uncompressed, unpack('C*', substr($prefix, $p, $n) . $chars[$la + $n]);
-            $la += $n + 1;
+            push @$uncompressed, @bytes;
+            ++$literal_freq{$_} for @bytes;
+
+            $literal_count += $n + 1;
+            $la            += $n + 1;
             $prefix .= $token;
         }
     }
@@ -350,7 +395,7 @@ sub create_huffman_entry ($bytes, $out_fh) {
     my ($h, $rev_h) = mktree_from_freq(\%freq);
     my $enc = huffman_encode($bytes, $h);
 
-    my $max_symbol = max(@$bytes) // 0;
+    my $max_symbol = max(keys %freq) // 0;
 
     my @freqs;
     my $codes = '';

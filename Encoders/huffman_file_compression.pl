@@ -242,7 +242,7 @@ sub create_huffman_entry ($bytes, $out_fh) {
     my ($h, $rev_h) = mktree_from_freq(\%freq);
     my $enc = huffman_encode($bytes, $h);
 
-    my $max_symbol = max(@$bytes);
+    my $max_symbol = max(keys %freq) // 0;
 
     my @freqs;
     my $codes = '';
