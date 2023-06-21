@@ -191,11 +191,7 @@ sub mktree ($bytes) {
 }
 
 sub huffman_encode ($bytes, $dict) {
-    my $enc = '';
-    for (@$bytes) {
-        $enc .= $dict->{$_} // die "bad char: $_";
-    }
-    return $enc;
+    join('', @{$dict}{@$bytes});
 }
 
 sub huffman_decode ($bits, $hash) {

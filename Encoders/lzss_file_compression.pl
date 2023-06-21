@@ -169,14 +169,14 @@ sub lz77_compression ($str, $uncompressed, $indices, $lengths, $has_backreferenc
     while ($la <= $end) {
 
         my $n = 1;
-        my $p = 0;
+        my $p = length($prefix);
         my $tmp;
 
         my $token = $chars[$la];
 
         while (    $n <= $max_len
                and $la + $n <= $end
-               and ($tmp = index($prefix, $token, $p)) >= 0) {
+               and ($tmp = rindex($prefix, $token, $p)) >= 0) {
             $p = $tmp;
             $token .= $chars[$la + $n];
             ++$n;
@@ -375,11 +375,7 @@ sub mktree_from_freq ($freq) {
 }
 
 sub huffman_encode ($bytes, $dict) {
-    my $enc = '';
-    for (@$bytes) {
-        $enc .= $dict->{$_} // die "bad char: $_";
-    }
-    return $enc;
+    join('', @{$dict}{@$bytes});
 }
 
 sub huffman_decode ($bits, $hash) {
