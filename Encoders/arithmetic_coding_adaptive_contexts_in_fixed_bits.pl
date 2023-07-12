@@ -190,11 +190,13 @@ sub decode ($bits) {
     my $context = 1;
 
     while (1) {
+
         my $w  = $C[$context]{high} - $C[$context]{low} + 1;
         my $ss = int((($C[$context]{T} * ($enc - $C[$context]{low} + 1)) - 1) / $w);
 
         my $i = undef;
         foreach my $j (0 .. 257) {
+            $C[$context]{freq}{$j} > 0 or next;
             if ($C[$context]{cf_low}->{$j} <= $ss and $ss < $C[$context]{cf_high}->{$j}) {
                 $i = $j;
                 last;
@@ -264,6 +266,7 @@ sub decode ($bits) {
         }
 
         if ($i == ESCAPE) {
+            $context == 1 or die "error";
             $context = 0;
         }
         elsif ($context == 0) {

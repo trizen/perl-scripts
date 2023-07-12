@@ -71,6 +71,7 @@ A nice collection of day-to-day Perl scripts.
     * [Binradix arithmetic coding](./Encoders/binradix_arithmetic_coding.pl)
     * [Binradix arithmetic coding anynum](./Encoders/binradix_arithmetic_coding_anynum.pl)
     * [Burrows-wheeler transform](./Encoders/burrows-wheeler_transform.pl)
+    * [Bwac file compression](./Encoders/bwac_file_compression.pl)
     * [Bwlz file compression](./Encoders/bwlz_file_compression.pl)
     * [Bwt file compression](./Encoders/bwt_file_compression.pl)
     * [Bww file compression](./Encoders/bww_file_compression.pl)

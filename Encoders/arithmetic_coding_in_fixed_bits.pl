@@ -12,6 +12,7 @@
 
 use 5.036;
 
+use List::Util qw(max);
 use constant {BITS => 31};
 
 use constant {
@@ -26,7 +27,7 @@ sub create_cfreq ($freq) {
     my %cf_high;
     my $T = 0;
 
-    foreach my $i (0 .. 256) {
+    foreach my $i (sort { $a <=> $b } keys %$freq) {
         $freq->{$i} // next;
         $cf_low{$i} = $T;
         $T += $freq->{$i};
@@ -39,14 +40,16 @@ sub create_cfreq ($freq) {
 sub encode ($string) {
 
     my $enc   = '';
-    my $bytes = [unpack('C*', $string), 256];
+    my @bytes = unpack('C*', $string);
+
+    push @bytes, max(@bytes) + 1;
 
     my %freq;
-    ++$freq{$_} for @$bytes;
+    ++$freq{$_} for @bytes;
 
     # Workaround for low frequencies
     foreach my $k (keys %freq) {
-        $freq{$k} += 256 if ($freq{$k} < 256);
+        $freq{$k} += 256;
     }
 
     my ($cf_low, $cf_high, $T) = create_cfreq(\%freq);
@@ -59,7 +62,7 @@ sub encode ($string) {
     my $high     = MAX;
     my $uf_count = 0;
 
-    foreach my $c (@$bytes) {
+    foreach my $c (@bytes) {
 
         my $w = $high - $low + 1;
 
@@ -141,12 +144,13 @@ sub decode ($bits, $freq) {
     my $enc  = oct('0b' . join '', map { getc($fh) // 0 } 1 .. BITS);
 
     my @table;
-    foreach my $i (0 .. 256) {
-        $cf_low->{$i} // next;
+    foreach my $i (sort { $a <=> $b } keys %$freq) {
         foreach my $j ($cf_low->{$i} .. $cf_high->{$i} - 1) {
             $table[$j] = $i;
         }
     }
+
+    my $eof = max(keys %$freq);
 
     while (1) {
 
@@ -154,7 +158,7 @@ sub decode ($bits, $freq) {
         my $ss = int((($T * ($enc - $low + 1)) - 1) / $w);    # FIXME: sometimes this value is incorrect
 
         my $i = $table[$ss];
-        last if ($i == 256);
+        last if ($i == $eof);
 
         $dec .= chr($i);
 

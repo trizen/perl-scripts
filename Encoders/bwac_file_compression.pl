@@ -2,10 +2,10 @@
 
 # Author: Trizen
 # Date: 14 June 2023
-# Edit: 20 June 2023
+# Edit: 12 July 2023
 # https://github.com/trizen
 
-# Compress/decompress files using Burrows-Wheeler Transform (BWT) + Move-to-Front Transform + Run-length encoding + Huffman coding.
+# Compress/decompress files using Burrows-Wheeler Transform (BWT) + Move-to-Front Transform + Run-length encoding + Arithmetic Coding.
 
 # Reference:
 #   Data Compression (Summer 2023) - Lecture 13 - BZip2
@@ -18,15 +18,22 @@ use File::Basename qw(basename);
 use List::Util     qw(max uniq);
 
 use constant {
-    PKGNAME => 'BWT',
-    VERSION => '0.02',
-    FORMAT  => 'bwt',
+    PKGNAME => 'BWAC',
+    VERSION => '0.01',
+    FORMAT  => 'bwac',
 
-    CHUNK_SIZE    => 1 << 17,
+    BITS          => 31,
+    CHUNK_SIZE    => 1 << 16,
     LOOKAHEAD_LEN => 128,
 };
 
-use constant {SIGNATURE => "BWT" . chr(2)};
+use constant {
+              MAX  => (1 << BITS) - 1,
+              MSB  => (1 << (BITS - 1)),
+              SMSB => (1 << (BITS - 2)),
+             };
+
+use constant {SIGNATURE => uc(FORMAT) . chr(1)};
 
 sub usage {
     my ($code) = @_;
@@ -160,6 +167,200 @@ sub read_bits ($fh, $bits_len) {
     return $data;
 }
 
+sub create_cfreq ($freq) {
+
+    my %cf_low;
+    my %cf_high;
+    my $T = 0;
+
+    foreach my $i (sort { $a <=> $b } keys %$freq) {
+        $cf_low{$i} = $T;
+        $T += $freq->{$i};
+        $cf_high{$i} = $T;
+    }
+
+    return (\%cf_low, \%cf_high, $T);
+}
+
+sub ac_encode ($bytes_arr) {
+
+    my $enc   = '';
+    my @bytes = (@$bytes_arr, max(@$bytes_arr) + 1);
+
+    my %freq;
+    ++$freq{$_} for @bytes;
+
+    # Workaround for low frequencies
+    foreach my $k (keys %freq) {
+        $freq{$k} += 256;
+    }
+
+    my ($cf_low, $cf_high, $T) = create_cfreq(\%freq);
+
+    if ($T > MAX) {
+        die "Too few bits: $T > ${\MAX}";
+    }
+
+    my $low      = 0;
+    my $high     = MAX;
+    my $uf_count = 0;
+
+    foreach my $c (@bytes) {
+
+        my $w = $high - $low + 1;
+
+        $high = ($low + int(($w * $cf_high->{$c}) / $T));
+        $low  = ($low + int(($w * $cf_low->{$c}) / $T));
+
+        if ($high > MAX) {
+            die "high > MAX: $high > ${\MAX}";
+        }
+
+        if ($low >= $high) { die "$low >= $high" }
+
+        while (1) {
+
+            if (($low & MSB) == ($high & MSB)) {
+
+                my $bit = ($low & MSB) >> (BITS - 1);
+
+                $enc .= $bit;
+
+                if ($uf_count > 0) {
+                    $enc .= join('', (1 - $bit) x $uf_count);
+                    $uf_count = 0;
+                }
+
+                if ($bit == 1) {
+                    $low  ^= MSB;
+                    $high ^= MSB;
+                }
+
+                $low  <<= 1;
+                $high <<= 1;
+                $high |= 1;
+            }
+            elsif ((($low & SMSB) == SMSB) and (($high & SMSB) == 0)) {
+
+                $low ^= SMSB;
+                ##$low = (($low & MSB) >> 1) | ($low & (SMSB - 1));
+
+                $high -= SMSB if ($high >= SMSB);
+                ##$high = (($high & MSB) >> 1) | ($high & (SMSB - 1));
+
+                $low  <<= 1;
+                $high <<= 1;
+                $high |= 1;
+
+                $uf_count += 1;
+            }
+            else {
+                last;
+            }
+        }
+    }
+
+    if ($enc eq '') {
+        my $bit = ($low & MSB) >> (BITS - 1);
+
+        $enc .= $bit;
+
+        if ($uf_count > 0) {
+            $enc .= join('', (1 - $bit) x ($uf_count));
+            $uf_count = 0;
+        }
+    }
+
+    $enc .= '1';
+
+    return ($enc, \%freq);
+}
+
+sub ac_decode ($fh, $freq) {
+
+    my ($cf_low, $cf_high, $T) = create_cfreq($freq);
+
+    my @dec;
+    my $low  = 0;
+    my $high = MAX;
+
+    my $enc = oct('0b' . join '', map { getc($fh) // 0 } 1 .. BITS);
+
+    my @table;
+    foreach my $i (sort { $a <=> $b } keys %$freq) {
+        foreach my $j ($cf_low->{$i} .. $cf_high->{$i} - 1) {
+            $table[$j] = $i;
+        }
+    }
+
+    my $eof = max(keys(%$freq));
+
+    while (1) {
+
+        my $w  = $high - $low + 1;
+        my $ss = int((($T * ($enc - $low + 1)) - 1) / $w);    # FIXME: sometimes this value is incorrect
+
+        my $i = $table[$ss];
+        last if ($i == $eof);
+
+        push @dec, $i;
+
+        $high = $low + int(($w * $cf_high->{$i}) / $T);
+        $low  = $low + int(($w * $cf_low->{$i}) / $T);
+
+        if ($high > MAX) {
+            die "error";
+        }
+
+        if ($low >= $high) { die "$low >= $high" }
+
+        while (1) {
+
+            if (($low & MSB) == ($high & MSB)) {
+
+                if (($low & MSB) == MSB) {
+                    $low  ^= MSB;
+                    $high ^= MSB;
+                }
+
+                $low  <<= 1;
+                $high <<= 1;
+                $high |= 1;
+
+                if (($enc & MSB) == MSB) {
+                    $enc ^= MSB;
+                }
+
+                $enc <<= 1;
+                $enc |= getc($fh) // 0;
+            }
+            elsif ((($low & SMSB) == SMSB) and (($high & SMSB) == 0)) {
+
+                $low ^= SMSB;
+                ##$low = (($low & MSB) >> 1) | ($low & (SMSB - 1));
+
+                $high -= SMSB;
+                ##$high = (($high & MSB) >> 1) | ($high & (SMSB - 1));
+
+                $enc -= SMSB if ($enc >= SMSB);
+                ##$enc = (($enc & MSB) >> 1) | ($enc & (SMSB - 1));
+
+                $low  <<= 1;
+                $high <<= 1;
+                $enc  <<= 1;
+
+                $high |= 1;
+                $enc  |= getc($fh) // 0;
+            }
+            else {
+                last;
+            }
+        }
+    }
+
+    return \@dec;
+}
+
 sub delta_encode ($integers, $double = 0) {
 
     my @deltas;
@@ -240,60 +441,13 @@ sub delta_decode ($fh, $double = 0) {
     return \@acc;
 }
 
-# produce encode and decode dictionary from a tree
-sub walk ($node, $code, $h, $rev_h) {
+sub create_ac_entry ($bytes, $out_fh) {
 
-    my $c = $node->[0] // return ($h, $rev_h);
-    if (ref $c) { walk($c->[$_], $code . $_, $h, $rev_h) for ('0', '1') }
-    else        { $h->{$c} = $code; $rev_h->{$code} = $c }
-
-    return ($h, $rev_h);
-}
-
-# make a tree, and return resulting dictionaries
-sub mktree_from_freq ($freq) {
-
-    my @nodes = map { [$_, $freq->{$_}] } sort { $a <=> $b } keys %$freq;
-
-    do {    # poor man's priority queue
-        @nodes = sort { $a->[1] <=> $b->[1] } @nodes;
-        my ($x, $y) = splice(@nodes, 0, 2);
-        if (defined($x)) {
-            if (defined($y)) {
-                push @nodes, [[$x, $y], $x->[1] + $y->[1]];
-            }
-            else {
-                push @nodes, [[$x], $x->[1]];
-            }
-        }
-    } while (@nodes > 1);
-
-    walk($nodes[0], '', {}, {});
-}
-
-sub huffman_encode ($bytes, $dict) {
-    join('', @{$dict}{@$bytes});
-}
-
-sub huffman_decode ($bits, $hash) {
-    local $" = '|';
-    $bits =~ s/(@{[sort { length($a) <=> length($b) } keys %{$hash}]})/$hash->{$1} /gr;    # very fast
-}
-
-sub create_huffman_entry ($bytes, $out_fh) {
-
-    my %freq;
-    ++$freq{$_} for @$bytes;
-
-    my ($h, $rev_h) = mktree_from_freq(\%freq);
-    my $enc = huffman_encode($bytes, $h);
-
-    my $max_symbol = max(keys %freq) // 0;
-    say "Max symbol: $max_symbol\n";
+    my ($enc, $freq) = ac_encode($bytes);
 
     my @freqs;
-    foreach my $i (0 .. $max_symbol) {
-        push @freqs, $freq{$i} // 0;
+    foreach my $i (0 .. max(keys %$freq)) {
+        push @freqs, $freq->{$i} // 0;
     }
 
     print $out_fh delta_encode(\@freqs);
@@ -301,7 +455,7 @@ sub create_huffman_entry ($bytes, $out_fh) {
     print $out_fh pack("B*", $enc);
 }
 
-sub decode_huffman_entry ($fh) {
+sub decode_ac_entry ($fh) {
 
     my @freqs = @{delta_decode($fh)};
 
@@ -312,13 +466,13 @@ sub decode_huffman_entry ($fh) {
         }
     }
 
-    my (undef, $rev_dict) = mktree_from_freq(\%freq);
-
     my $enc_len = unpack('N', join('', map { getc($fh) } 1 .. 4));
     say "Encoded length: $enc_len\n";
 
     if ($enc_len > 0) {
-        return [split(' ', huffman_decode(read_bits($fh, $enc_len), $rev_dict))];
+        my $bits = read_bits($fh, $enc_len);
+        open my $bits_fh, '<:raw', \$bits;
+        return ac_decode($bits_fh, \%freq);
     }
 
     return [];
@@ -572,7 +726,7 @@ sub encode_alphabet ($alphabet) {
 
     say "Populated : ", sprintf('%08b', $populated);
     say "Marked    : @marked";
-    say "Delta len : ", length($delta);
+    say "Delta len : ", length($delta), "\n";
 
     my $encoded = '';
     $encoded .= chr($populated);
@@ -617,7 +771,7 @@ sub compression ($chunk, $out_fh) {
 
     print $out_fh pack('N', $idx);
     print $out_fh $alphabet_enc;
-    create_huffman_entry($rle, $out_fh);
+    create_ac_entry($rle, $out_fh);
 }
 
 sub decompression ($fh, $out_fh) {
@@ -628,7 +782,7 @@ sub decompression ($fh, $out_fh) {
     say "BWT index = $idx";
     say "Alphabet size: ", scalar(@$alphabet);
 
-    my $rle  = decode_huffman_entry($fh);
+    my $rle  = decode_ac_entry($fh);
     my $mtf  = rle_decode($rle);
     my $bwt  = mtf_decode($mtf, $alphabet);
     my $rle4 = bwt_decode(pack('C*', @$bwt), $idx);
