@@ -61,7 +61,10 @@ A nice collection of day-to-day Perl scripts.
     * [Brute-force resistant hashing](./Digest/brute-force_resistant_hashing.pl)
 * Encoders
     * [Arithmetic coding](./Encoders/arithmetic_coding.pl)
+    * [Arithmetic coding adaptive contexts in fixed bits](./Encoders/arithmetic_coding_adaptive_contexts_in_fixed_bits.pl)
+    * [Arithmetic coding adaptive in fixed bits](./Encoders/arithmetic_coding_adaptive_in_fixed_bits.pl)
     * [Arithmetic coding anynum](./Encoders/arithmetic_coding_anynum.pl)
+    * [Arithmetic coding in fixed bits](./Encoders/arithmetic_coding_in_fixed_bits.pl)
     * [Ascii encode decode](./Encoders/ascii_encode_decode.pl)
     * [Binary arithmetic coding](./Encoders/binary_arithmetic_coding.pl)
     * [Binary arithmetic coding anynum](./Encoders/binary_arithmetic_coding_anynum.pl)
