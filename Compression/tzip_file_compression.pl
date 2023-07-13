@@ -17,7 +17,7 @@ use strict;
 use autodie;
 use warnings;
 
-use Getopt::Std qw(getopts);
+use Getopt::Std    qw(getopts);
 use File::Basename qw(basename);
 
 our $DEBUG = 0;
@@ -25,7 +25,7 @@ our $DEBUG = 0;
 use constant {
               CHUNK_SIZE => 2 * 1024**2,      # 2 MB
               SIGNATURE  => 'TZP' . chr(1),
-              FORMAT => 'tzp',
+              FORMAT     => 'tzp',
              };
 
 sub main {
