@@ -24,7 +24,7 @@ use Math::GMPz;
 use constant {
               PKGNAME => 'TAC Compressor',
               VERSION => '0.03',
-              FORMAT  => 'tac',
+              FORMAT  => 'tacc',
              };
 
 use constant {SIGNATURE => uc(FORMAT) . chr(3)};

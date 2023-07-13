@@ -19,12 +19,14 @@ use warnings;
 
 use List::Util qw(min);
 use Getopt::Std qw(getopts);
+use File::Basename qw(basename);
 
 our $DEBUG = 0;
 
 use constant {
               CHUNK_SIZE => 1024,             # in bytes
               SIGNATURE  => 'TZP' . chr(1),
+              FORMAT => 'tzp',
              };
 
 sub main {
@@ -38,7 +40,7 @@ sub main {
     $output //= $opt{o};
 
     $DEBUG = $opt{v};
-    my $ext = qr{\.tzp\z}i;
+    my $ext = qr{\.${\FORMAT}\z}i;
     if ($opt{e} || $input =~ $ext) {
 
         if (not defined $output) {
@@ -55,7 +57,7 @@ sub main {
           || die "$0: error: decompression failed!\n";
     }
     elsif ($input !~ $ext || (defined($output) && $output =~ $ext)) {
-        $output //= $input . '.tzp';
+        $output //= basename($input) . '.' . FORMAT;
         compress($input, $output)
           || die "$0: error: compression failed!\n";
     }

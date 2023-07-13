@@ -3,31 +3,29 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Created on: 21 May 2014
-# Latest edit on: 23 April 2015
+# Latest edit on: 26 April 2015
 # Website: http://github.com/trizen
 
 # A new type of LZ compression + Huffman coding, featuring a very short decompression time.
-# (decompression is broken and needs to be fixed)
 
 use 5.010;
 use strict;
 use autodie;
 use warnings;
 
-use List::Util qw(min);
 use Getopt::Std qw(getopts);
 use File::Basename qw(basename);
 
 use constant {
-              PKGNAME => 'lzt-simple',
-              VERSION => '0.03',
-              FORMAT  => 'lzt',
+              PKGNAME => 'lzhc',
+              VERSION => '0.02',
+              FORMAT  => 'lzhc',
              };
 
 use constant {
-              MIN       => 3 * 3 + 1,             # 3 bytes per position * 3 positions
-              BUFFER    => 9999,
-              SIGNATURE => uc(FORMAT) . chr(3),
+              MIN       => 4,
+              BUFFER    => 256,
+              SIGNATURE => uc(FORMAT) . chr(2),
              };
 
 sub usage {
@@ -98,67 +96,6 @@ sub main {
     }
 }
 
-sub _make_map {
-    my ($int) = @_;
-
-    my @groups = ([], [], []);
-    for my $i (1 .. 3) {
-        foreach my $j (0 .. length($int) - $i) {
-            $i > 1 && substr($int, $j, 1) == 0 && next;
-            (my $num = substr($int, $j, $i)) > 255 && next;
-            $groups[$i - 1][$j] = $num;
-        }
-    }
-
-    my @map = [[]];
-    for (my $j = 0 ; $j <= $#{$groups[0]} ; $j++) {
-        for (my $i = $j ; $i <= $#{$groups[0]} ; $i++) {
-            if (defined($groups[2][$i])) {
-                push @{$map[$j][$j]}, $groups[2][$i];
-                $i += 2;
-            }
-            elsif (defined($groups[1][$i])) {
-                push @{$map[$j][$j]}, $groups[1][$i];
-                $i += 1;
-            }
-            else {
-                push @{$map[$j][$j]}, $groups[0][$i];
-            }
-        }
-    }
-
-    return \@map;
-}
-
-sub int2bytes {
-    my ($int) = @_;
-
-    my $data = _make_map($int);
-
-    my @nums;
-    foreach my $arr (@{$data}) {
-        for my $i (0 .. $#{$arr}) {
-            if (ref($arr->[$i]) eq 'ARRAY') {
-                my $head = _make_map(substr($int, 0, $i));
-                push @nums, [@{$head->[0][0]}, @{$arr->[$i]}];
-            }
-        }
-    }
-
-    my $min   = min(map { $#{$_} } @nums);
-    my @bytes = do {
-        my %seen;
-        grep { !$seen{join(' ', @{$_})}++ } grep { $#{$_} == $min } @nums;
-    };
-
-    return \@bytes;
-}
-
-sub size2bytes {
-    my $size_bytes = ${int2bytes(int($_[0]))}[0];
-    (chr($#{$size_bytes} + 1), join('', map { chr } @{$size_bytes}));
-}
-
 sub walk {
     my ($n, $s, $h) = @_;
     if (exists($n->{a})) {
@@ -194,7 +131,7 @@ sub mktree {
 
 sub huffman_encode {
     my ($str, $dict) = @_;
-    join('', map { $dict->{$_} // die("bad char: $_") } split(//, $str));
+    join('', map { $dict->{$_} // die("bad char $_") } split(//, $str));
 }
 
 sub huffman_decode {
@@ -216,9 +153,6 @@ sub valid_archive {
 sub compress {
     my ($input, $output) = @_;
 
-    # Treat strings as sequences of bytes
-    use bytes;
-
     # Open the input file
     open my $fh, '<:raw', $input;
 
@@ -231,9 +165,6 @@ sub compress {
         my %dict;
         my $max = int($len / 2);
 
-        say "** Creating the LZT dictionary...";
-
-        # This code needs to be optimized or replaced
         foreach my $i (reverse(MIN .. $max)) {
             foreach my $j (0 .. $len - $i * 2) {
                 if ((my $pos = index($block, substr($block, $j, $i), $j + $i)) != -1) {
@@ -257,69 +188,61 @@ sub compress {
             }
         }
 
-        say "** Creating the Huffman dictionary...";
-
-        my $text = join(
-            '',
-
-            # Length of the uncompressed text
-            size2bytes(length($uncompressed)),
-
-            # LZT pairs num
-            size2bytes($#pairs + 1),
-
-            # LZT pairs encoded into bytes
-            (
-             map {
-                 map { size2bytes($_) }
-                   @{$_}
-               } @pairs
-            ),
-
-            # The uncompressed text
-            $uncompressed,
-                       );
-
-        my $huffman_hash = mktree($text);
-        my $huffman_enc  = huffman_encode($text, $huffman_hash);
+        my $huffman_hash = mktree($uncompressed);
+        my $huffman_enc  = huffman_encode($uncompressed, $huffman_hash);
 
         my %huffman_dict;
         foreach my $k (keys %{$huffman_hash}) {
             push @{$huffman_dict{length($huffman_hash->{$k})}}, [$k, $huffman_hash->{$k}];
         }
 
-        my $h_dictionary = join(
-            '',
-            map {
-                    chr($_)
-                  . chr($#{$huffman_dict{$_}} + 1)
-                  . join('', map { $_->[0] } @{$huffman_dict{$_}})
-                  . pack('B*', join('', map { $_->[1] } @{$huffman_dict{$_}}))
-              } sort { $a <=> $b } keys %huffman_dict
-        );
+        {
+            use bytes;
 
-        say "** Huffman dictionary length: ", length($h_dictionary);
+            my $binary_enc   = pack('B*', $huffman_enc);
+            my $encoding_len = length($binary_enc);
 
-        say "** Compressing...";
-        my $binary_enc   = pack('B*', $huffman_enc);
-        my $encoding_len = length($binary_enc);
+            printf("%3d -> %3d (%.2f%%)\n", $len, $encoding_len, ($len - $encoding_len) / $len * 100);
+            print {$out_fh}
 
-        printf("%3d -> %3d (%.2f%%)\n", $len, $encoding_len, ($len - $encoding_len) / $len * 100);
-        print {$out_fh}
+              # Length of the uncompressed text
+              chr(length($uncompressed) - 1),
 
-          # Huffman dictionary size
-          chr(scalar(keys(%huffman_dict))),
+              # LZT pairs num
+              chr($#pairs + 1),
 
-          # Huffman dictionary into bytes
-          $h_dictionary,
+              # LZT pairs encoded into bytes
+              (
+                map {
+                    map { chr }
+                      @{$_}
+                  } @pairs
+              ),
 
-          # Huffman encoded bytes length
-          size2bytes($encoding_len - 1),
+              # Huffman dictionary size
+              chr(scalar(keys(%huffman_dict)) > 0 ? scalar(keys(%huffman_dict)) - 1 : 0),
 
-          # Huffman encoded bytes
-          $binary_enc;
+              # Huffman dictionary into bytes
+              (
+                join(
+                    '',
+                    map {
+                            chr($_)
+                          . chr($#{$huffman_dict{$_}} + 1)
+                          . join('', map { $_->[0] } @{$huffman_dict{$_}})
+                          . pack('B*', join('', map { $_->[1] } @{$huffman_dict{$_}}))
+                      } sort { $a <=> $b } keys %huffman_dict
+                    )
+              ),
 
-        say "** Done!";
+              # Huffman encoded bytes length
+              chr($encoding_len - 1),
+
+              # Huffman encoded bytes
+              $binary_enc
+        }
+
+        #   exit;
     }
 
     close $fh;
@@ -352,7 +275,7 @@ sub decompress {
 
         # Create the Huffman dictionary
         my %huffman_dict;
-        for my $i (1 .. ord($huffman_pairs)) {
+        for my $i (1 .. ord($huffman_pairs) + 1) {
             read($fh, (my $pattern_len), 1);
             read($fh, (my $pattern_num), 1);
 
@@ -375,7 +298,7 @@ sub decompress {
         read($fh, (my $bytes),     ord($bytes_len) + 1);
 
         # Huffman decoding
-        my $len   = ord($len_byte);
+        my $len   = ord($len_byte) + 1;
         my $block = substr(huffman_decode(\%huffman_dict, $bytes), 0, $len);
 
         my $acc          = 0;

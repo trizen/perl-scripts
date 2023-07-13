@@ -17,7 +17,7 @@ use Getopt::Std qw(getopts);
 use File::Basename qw(basename);
 
 use constant {
-              PKGNAME => 'lzt-simple',
+              PKGNAME => 'lzt',
               VERSION => '0.01',
               FORMAT  => 'lzt',
              };
