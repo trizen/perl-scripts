@@ -2,7 +2,7 @@
 
 # Daniel "Trizen" Șuteu
 # Date: 11 February 2016
-# Edit: 08 June 2023
+# Edit: 14 July 2023
 # https://github.com/trizen
 
 # Arithmetic coding compressor for small files.
@@ -23,11 +23,11 @@ use Math::GMPz;
 
 use constant {
               PKGNAME => 'TAC Compressor',
-              VERSION => '0.03',
+              VERSION => '0.04',
               FORMAT  => 'tacc',
              };
 
-use constant {SIGNATURE => uc(FORMAT) . chr(3)};
+use constant {SIGNATURE => uc(FORMAT) . chr(4)};
 
 sub usage ($code = 0) {
     print <<"EOH";
@@ -105,6 +105,15 @@ sub valid_archive ($fh) {
     return 1;
 }
 
+sub read_bit ($fh, $bitstring) {
+
+    if (($$bitstring // '') eq '') {
+        $$bitstring = unpack('b*', getc($fh) // return undef);
+    }
+
+    chop($$bitstring);
+}
+
 sub read_bits ($fh, $bits_len) {
 
     my $data = '';
@@ -122,86 +131,68 @@ sub read_bits ($fh, $bits_len) {
     return $data;
 }
 
-sub encode_integers ($integers) {
+sub delta_encode ($integers) {
 
-    my @counts;
-    my $count           = 0;
-    my $bits_width      = 1;
-    my $bits_max_symbol = 1 << $bits_width;
-    my $processed_len   = 0;
+    my @deltas;
+    my $prev = 0;
 
-    foreach my $k (@$integers) {
-        while ($k >= $bits_max_symbol) {
+    unshift(@$integers, scalar(@$integers));
 
-            if ($count > 0) {
-                push @counts, [$bits_width, $count];
-                $processed_len += $count;
-            }
-
-            $count = 0;
-            $bits_max_symbol *= 2;
-            $bits_width      += 1;
-        }
-        ++$count;
+    while (@$integers) {
+        my $curr = shift(@$integers);
+        push @deltas, $curr - $prev;
+        $prev = $curr;
     }
 
-    push @counts, grep { $_->[1] > 0 } [$bits_width, scalar(@$integers) - $processed_len];
+    my $bitstring = '';
 
-    my $compressed = chr(scalar @counts);
-
-    foreach my $pair (@counts) {
-        my ($blen, $len) = @$pair;
-        $compressed .= chr($blen);
-        $compressed .= pack('N', $len);
-    }
-
-    my $bits = '';
-    foreach my $pair (@counts) {
-        my ($blen, $len) = @$pair;
-
-        foreach my $symbol (splice(@$integers, 0, $len)) {
-            $bits .= sprintf("%0*b", $blen, $symbol);
+    foreach my $d (@deltas) {
+        if ($d == 0) {
+            $bitstring .= '0';
         }
-
-        if (length($bits) % 8 == 0) {
-            $compressed .= pack('B*', $bits);
-            $bits = '';
+        else {
+            my $t = sprintf('%b', abs($d));
+            $bitstring .= '1' . (($d < 0) ? '0' : '1') . ('1' x (length($t) - 1)) . '0' . substr($t, 1);
         }
     }
 
-    if ($bits ne '') {
-        $compressed .= pack('B*', $bits);
-    }
-
-    return $compressed;
+    pack('B*', $bitstring);
 }
 
-sub decode_integers ($fh) {
+sub delta_decode ($fh) {
 
-    my $count_len = ord(getc($fh));
+    my @deltas;
+    my $buffer = '';
+    my $len    = 0;
 
-    my @counts;
-    my $bits_len = 0;
+    for (my $k = 0 ; $k <= $len ; ++$k) {
+        my $bit = read_bit($fh, \$buffer);
 
-    for (1 .. $count_len) {
-        my $blen = ord(getc($fh));
-        my $len  = unpack('N', join('', map { getc($fh) } 1 .. 4));
-        push @counts, [$blen + 0, $len + 0];
-        $bits_len += $blen * $len;
-    }
+        if ($bit eq '0') {
+            push @deltas, 0;
+        }
+        else {
+            my $bit = read_bit($fh, \$buffer);
+            my $n   = 0;
+            ++$n while (read_bit($fh, \$buffer) eq '1');
+            my $d = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. $n));
+            push @deltas, ($bit eq '1' ? $d : -$d);
+        }
 
-    my $bits = read_bits($fh, $bits_len);
-
-    my @chunks;
-    foreach my $pair (@counts) {
-        my ($blen, $len) = @$pair;
-        $len > 0 or next;
-        foreach my $chunk (unpack(sprintf('(a%d)*', $blen), substr($bits, 0, $blen * $len, ''))) {
-            push @chunks, oct('0b' . $chunk);
+        if ($k == 0) {
+            $len = pop(@deltas);
         }
     }
 
-    return \@chunks;
+    my @acc;
+    my $prev = $len;
+
+    foreach my $d (@deltas) {
+        $prev += $d;
+        push @acc, $prev;
+    }
+
+    return \@acc;
 }
 
 sub cumulative_freq ($freq) {
@@ -286,7 +277,7 @@ sub compress ($input, $output) {
     }
 
     push @freqs, $pow;
-    $encoded .= encode_integers(\@freqs);
+    $encoded .= delta_encode(\@freqs);
 
     print {$out_fh} $encoded;
     print {$out_fh} pack('B*', $bin);
@@ -306,7 +297,7 @@ sub decompress ($input, $output) {
       or die "Can't read symbols...";
 
     my @chars = split(//, $str);
-    my @freqs = @{decode_integers($fh)};
+    my @freqs = @{delta_decode($fh)};
     my $pow2  = pop(@freqs);
 
     if (scalar(@chars) != scalar(@freqs)) {

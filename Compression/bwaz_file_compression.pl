@@ -2,10 +2,10 @@
 
 # Author: Trizen
 # Date: 14 June 2023
-# Edit: 13 July 2023
+# Edit: 14 July 2023
 # https://github.com/trizen
 
-# Compress/decompress files using Burrows-Wheeler Transform (BWT) + Move-to-Front Transform + Run-length encoding + Adaptive Arithmetic Coding.
+# Compress/decompress files using Burrows-Wheeler Transform (BWT) + Move-to-Front Transform + Run-length encoding + Arithmetic Coding (integer version).
 
 # Reference:
 #   Data Compression (Summer 2023) - Lecture 13 - BZip2
@@ -15,24 +15,17 @@ use 5.036;
 
 use Getopt::Std    qw(getopts);
 use File::Basename qw(basename);
-use List::Util     qw(max uniq);
+use List::Util     qw(sum max uniq);
+use Math::GMPz;
 
 use constant {
-    PKGNAME => 'BWAD',
+    PKGNAME => 'BWAZ',
     VERSION => '0.01',
-    FORMAT  => 'bwad',
+    FORMAT  => 'bwaz',
 
-    BITS          => 31,
-    INITIAL_FREQ  => 256,       # low initial frequency leads to rounding errors
     CHUNK_SIZE    => 1 << 16,
     LOOKAHEAD_LEN => 128,
 };
-
-use constant {
-              MAX  => (1 << BITS) - 1,
-              MSB  => (1 << (BITS - 1)),
-              SMSB => (1 << (BITS - 2)),
-             };
 
 use constant {SIGNATURE => uc(FORMAT) . chr(1)};
 
@@ -168,190 +161,6 @@ sub read_bits ($fh, $bits_len) {
     return $data;
 }
 
-sub create_cfreq ($freq_value, $max_symbol) {
-
-    my %cf_low;
-    my %cf_high;
-    my $T = 0;
-
-    my %freq;
-
-    foreach my $i (0 .. $max_symbol) {
-        $freq{$i}   = $freq_value;
-        $cf_low{$i} = $T;
-        $T += $freq_value;
-        $cf_high{$i} = $T;
-    }
-
-    return (\%freq, \%cf_low, \%cf_high, $T);
-}
-
-sub increment_freq ($c, $max_symbol, $freq, $cf_low, $cf_high) {
-
-    $freq->{$c}++;
-    my $T = $cf_low->{$c};
-
-    foreach my $i ($c .. $max_symbol) {
-        $cf_low->{$i} = $T;
-        $T += $freq->{$i};
-        $cf_high->{$i} = $T;
-    }
-
-    return $T;
-}
-
-sub ac_encode ($bytes_arr) {
-
-    my $enc   = '';
-    my @bytes = (@$bytes_arr, max(@$bytes_arr) + 1);
-
-    my $max_symbol = max(@bytes);
-    my ($freq, $cf_low, $cf_high, $T) = create_cfreq(INITIAL_FREQ, $max_symbol);
-
-    if ($T > MAX) {
-        die "Too few bits: $T > ${\MAX}";
-    }
-
-    my $low      = 0;
-    my $high     = MAX;
-    my $uf_count = 0;
-
-    foreach my $c (@bytes) {
-
-        my $w = $high - $low + 1;
-
-        $high = ($low + int(($w * $cf_high->{$c}) / $T));
-        $low  = ($low + int(($w * $cf_low->{$c}) / $T));
-
-        $T = increment_freq($c, $max_symbol, $freq, $cf_low, $cf_high);
-
-        if ($high > MAX) {
-            die "high > MAX: $high > ${\MAX}";
-        }
-
-        if ($low >= $high) { die "$low >= $high" }
-
-        while (1) {
-
-            if (($low & MSB) == ($high & MSB)) {
-
-                my $bit = ($low & MSB) >> (BITS - 1);
-
-                $enc .= $bit;
-
-                if ($uf_count > 0) {
-                    $enc .= join('', (1 - $bit) x $uf_count);
-                    $uf_count = 0;
-                }
-
-                if ($bit == 1) {
-                    $low  ^= MSB;
-                    $high ^= MSB;
-                }
-
-                $low  <<= 1;
-                $high <<= 1;
-                $high |= 1;
-            }
-            elsif ((($low & SMSB) == SMSB) and (($high & SMSB) == 0)) {
-
-                $low ^= SMSB;
-                $high -= SMSB if ($high >= SMSB);
-
-                $low  <<= 1;
-                $high <<= 1;
-                $high |= 1;
-
-                $uf_count += 1;
-            }
-            else {
-                last;
-            }
-        }
-    }
-
-    $enc .= '1';
-    return ($enc, $max_symbol);
-}
-
-sub ac_decode ($fh, $max_symbol) {
-
-    my ($freq, $cf_low, $cf_high, $T) = create_cfreq(INITIAL_FREQ, $max_symbol);
-
-    my @dec;
-    my $low  = 0;
-    my $high = MAX;
-
-    my $enc = oct('0b' . join '', map { getc($fh) // 0 } 1 .. BITS);
-
-    while (1) {
-        my $w  = ($high + 1) - $low;
-        my $ss = int((($T * ($enc - $low + 1)) - 1) / $w);
-
-        my $i = 0;
-        foreach my $j (0 .. $max_symbol) {
-            if ($cf_low->{$j} <= $ss and $ss < $cf_high->{$j}) {
-                $i = $j;
-                last;
-            }
-        }
-
-        last if ($i == $max_symbol);
-        push @dec, $i;
-
-        $high = $low + int(($w * $cf_high->{$i}) / $T);
-        $low  = $low + int(($w * $cf_low->{$i}) / $T);
-
-        $T = increment_freq($i, $max_symbol, $freq, $cf_low, $cf_high);
-
-        if ($high > MAX) {
-            die "high > MAX: ($high > ${\MAX})";
-        }
-
-        if ($low >= $high) { die "$low >= $high" }
-
-        while (1) {
-
-            if (($low & MSB) == ($high & MSB)) {
-
-                if (($low & MSB) == MSB) {
-                    $low  ^= MSB;
-                    $high ^= MSB;
-                }
-
-                $low  <<= 1;
-                $high <<= 1;
-                $high |= 1;
-
-                if (($enc & MSB) == MSB) {
-                    $enc ^= MSB;
-                }
-
-                $enc <<= 1;
-                $enc |= getc($fh) // 0;
-            }
-            elsif ((($low & SMSB) == SMSB) and (($high & SMSB) == 0)) {
-
-                $low ^= SMSB;
-                $high -= SMSB;
-                $enc  -= SMSB if ($enc >= SMSB);
-
-                $low  <<= 1;
-                $high <<= 1;
-                $enc  <<= 1;
-
-                $high |= 1;
-                $enc  |= getc($fh) // 0;
-            }
-            else {
-                last;
-            }
-        }
-    }
-
-    return \@dec;
-}
-
 sub delta_encode ($integers, $double = 0) {
 
     my @deltas;
@@ -432,48 +241,159 @@ sub delta_decode ($fh, $double = 0) {
     return \@acc;
 }
 
+sub cumulative_freq ($freq) {
+
+    my %cf;
+    my $total = 0;
+    foreach my $c (sort { $a <=> $b } keys %$freq) {
+        $cf{$c} = $total;
+        $total += $freq->{$c};
+    }
+
+    return %cf;
+}
+
+sub ac_encode ($bytes_arr) {
+
+    my @chars = @$bytes_arr;
+
+    # The frequency characters
+    my %freq;
+    ++$freq{$_} for @chars;
+
+    # Create the cumulative frequency table
+    my %cf = cumulative_freq(\%freq);
+
+    # Limit and base
+    my $base = Math::GMPz->new(scalar @chars);
+
+    # Lower bound
+    my $L = Math::GMPz->new(0);
+
+    # Product of all frequencies
+    my $pf = Math::GMPz->new(1);
+
+    # Each term is multiplied by the product of the
+    # frequencies of all previously occurring symbols
+    foreach my $c (@chars) {
+        Math::GMPz::Rmpz_mul($L, $L, $base);
+        Math::GMPz::Rmpz_addmul_ui($L, $pf, $cf{$c});
+        Math::GMPz::Rmpz_mul_ui($pf, $pf, $freq{$c});
+    }
+
+    # Upper bound
+    my $U = $L + $pf;
+
+    # Compute the power for left shift
+    my $pow = Math::GMPz::Rmpz_sizeinbase($pf, 2) - 1;
+
+    # Set $enc to (U-1) divided by 2^pow
+    my $enc = ($U - 1) >> $pow;
+
+    # Remove any divisibility by 2
+    if ($enc > 0 and Math::GMPz::Rmpz_even_p($enc)) {
+        $pow += Math::GMPz::Rmpz_remove($enc, $enc, Math::GMPz->new(2));
+    }
+
+    my $bin = Math::GMPz::Rmpz_get_str($enc, 2);
+
+    return ($bin, $pow, \%freq);
+}
+
+sub ac_decode ($bits, $pow2, $freq) {
+
+    # Decode the bits into an integer
+    my $enc = Math::GMPz->new($bits, 2);
+
+    $enc <<= $pow2;
+
+    my $base = sum(values %$freq);
+
+    # Create the cumulative frequency table
+    my %cf = cumulative_freq($freq);
+
+    # Create the dictionary
+    my %dict;
+    while (my ($k, $v) = each %cf) {
+        $dict{$v} = $k;
+    }
+
+    # Fill the gaps in the dictionary
+    my $lchar;
+    foreach my $i (0 .. $base - 1) {
+        if (exists $dict{$i}) {
+            $lchar = $dict{$i};
+        }
+        elsif (defined $lchar) {
+            $dict{$i} = $lchar;
+        }
+    }
+
+    my $div = Math::GMPz::Rmpz_init();
+
+    my @dec;
+
+    # Decode the input number
+    for (my $pow = Math::GMPz->new($base)**($base - 1) ;
+         Math::GMPz::Rmpz_sgn($pow) > 0 ;
+         Math::GMPz::Rmpz_tdiv_q_ui($pow, $pow, $base)) {
+
+        Math::GMPz::Rmpz_tdiv_q($div, $enc, $pow);
+
+        my $c  = $dict{$div};
+        my $fv = $freq->{$c};
+        my $cv = $cf{$c};
+
+        Math::GMPz::Rmpz_submul_ui($enc, $pow, $cv);
+        Math::GMPz::Rmpz_tdiv_q_ui($enc, $enc, $fv);
+
+        push @dec, $c;
+    }
+
+    return \@dec;
+}
+
 sub create_ac_entry ($bytes, $out_fh) {
 
-    my ($enc, $max_symbol) = ac_encode($bytes);
+    my ($enc, $pow, $freq) = ac_encode($bytes);
+
+    my @freqs;
+    my $max_symbol = max(keys %$freq);
+
+    foreach my $k (0 .. $max_symbol) {
+        push @freqs, $freq->{$k} // 0;
+    }
+
+    push @freqs, $pow;
+    push @freqs, length($enc);
 
     say "Max symbol: $max_symbol\n";
 
-    print $out_fh delta_encode([$max_symbol, length($enc)], 1);
+    print $out_fh delta_encode(\@freqs);
     print $out_fh pack("B*", $enc);
 }
 
 sub decode_ac_entry ($fh) {
 
-    my ($max_symbol, $enc_len) = @{delta_decode($fh, 1)};
+    my @freqs    = @{delta_decode($fh)};
+    my $bits_len = pop(@freqs);
+    my $pow2     = pop(@freqs);
 
-    say "Encoded length: $enc_len\n";
+    my %freq;
+    foreach my $i (0 .. $#freqs) {
+        if ($freqs[$i]) {
+            $freq{$i} = $freqs[$i];
+        }
+    }
 
-    if ($enc_len > 0) {
-        my $bits = read_bits($fh, $enc_len);
-        open my $bits_fh, '<:raw', \$bits;
-        return ac_decode($bits_fh, $max_symbol);
+    say "Encoded length: $bits_len\n";
+    my $bits = read_bits($fh, $bits_len);
+
+    if ($bits_len > 0) {
+        return ac_decode($bits, $pow2, \%freq);
     }
 
     return [];
-}
-
-sub bwt_lookahead ($s) {    # O(n) space (moderately fast)
-    [
-     sort {
-         my $t = substr($s, $a, LOOKAHEAD_LEN);
-         my $u = substr($s, $b, LOOKAHEAD_LEN);
-
-         if (length($t) < LOOKAHEAD_LEN) {
-             $t .= substr($s, 0, ($a < LOOKAHEAD_LEN) ? $a : (LOOKAHEAD_LEN - length($t)));
-         }
-
-         if (length($u) < LOOKAHEAD_LEN) {
-             $u .= substr($s, 0, ($b < LOOKAHEAD_LEN) ? $b : (LOOKAHEAD_LEN - length($u)));
-         }
-
-         ($t cmp $u) || ((substr($s, $a) . substr($s, 0, $a)) cmp(substr($s, $b) . substr($s, 0, $b)))
-       } 0 .. length($s) - 1
-    ];
 }
 
 sub bwt_balanced ($s) {    # O(n * LOOKAHEAD_LEN) space (fast)
@@ -496,7 +416,6 @@ sub bwt_balanced ($s) {    # O(n * LOOKAHEAD_LEN) space (fast)
 
 sub bwt_encode ($s) {
 
-    ##my $bwt = bwt_lookahead($s);
     my $bwt = bwt_balanced($s);
 
     my $ret    = join('', map { substr($s, $_ - 1, 1) } @$bwt);
