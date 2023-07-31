@@ -88,6 +88,7 @@ A nice collection of day-to-day Perl scripts.
     * [Arithmetic coding adaptive in fixed bits](./Encoding/arithmetic_coding_adaptive_in_fixed_bits.pl)
     * [Arithmetic coding anynum](./Encoding/arithmetic_coding_anynum.pl)
     * [Arithmetic coding in fixed bits](./Encoding/arithmetic_coding_in_fixed_bits.pl)
+    * [Arithmetic coding mpz](./Encoding/arithmetic_coding_mpz.pl)
     * [Ascii encode decode](./Encoding/ascii_encode_decode.pl)
     * [Binary arithmetic coding](./Encoding/binary_arithmetic_coding.pl)
     * [Binary arithmetic coding anynum](./Encoding/binary_arithmetic_coding_anynum.pl)
