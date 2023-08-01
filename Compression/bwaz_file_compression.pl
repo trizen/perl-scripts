@@ -282,20 +282,21 @@ sub ac_encode ($bytes_arr) {
     }
 
     # Upper bound
-    my $U = $L + $pf;
+    Math::GMPz::Rmpz_add($L, $L, $pf);
 
     # Compute the power for left shift
     my $pow = Math::GMPz::Rmpz_sizeinbase($pf, 2) - 1;
 
     # Set $enc to (U-1) divided by 2^pow
-    my $enc = ($U - 1) >> $pow;
+    Math::GMPz::Rmpz_sub_ui($L, $L, 1);
+    Math::GMPz::Rmpz_div_2exp($L, $L, $pow);
 
     # Remove any divisibility by 2
-    if ($enc > 0 and Math::GMPz::Rmpz_even_p($enc)) {
-        $pow += Math::GMPz::Rmpz_remove($enc, $enc, Math::GMPz->new(2));
+    if ($L > 0 and Math::GMPz::Rmpz_even_p($L)) {
+        $pow += Math::GMPz::Rmpz_remove($L, $L, Math::GMPz->new(2));
     }
 
-    my $bin = Math::GMPz::Rmpz_get_str($enc, 2);
+    my $bin = Math::GMPz::Rmpz_get_str($L, 2);
 
     return ($bin, $pow, \%freq);
 }
@@ -304,8 +305,7 @@ sub ac_decode ($bits, $pow2, $freq) {
 
     # Decode the bits into an integer
     my $enc = Math::GMPz->new($bits, 2);
-
-    $enc <<= $pow2;
+    Math::GMPz::Rmpz_mul_2exp($enc, $enc, $pow2);
 
     my $base = sum(values %$freq);
 

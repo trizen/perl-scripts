@@ -98,6 +98,7 @@ A nice collection of day-to-day Perl scripts.
     * [Delta encoding with double-elias coding](./Encoding/delta_encoding_with_double-elias_coding.pl)
     * [Delta encoding with elias coding](./Encoding/delta_encoding_with_elias_coding.pl)
     * [Delta encoding with unary coding](./Encoding/delta_encoding_with_unary_coding.pl)
+    * [Delta rle elias encoding](./Encoding/delta_rle_elias_encoding.pl)
     * [Double-elias gamma encoding](./Encoding/double-elias_gamma_encoding.pl)
     * [Elias gamma encoding](./Encoding/elias_gamma_encoding.pl)
     * [Eyes dropper](./Encoding/eyes_dropper.pl)
@@ -114,6 +115,7 @@ A nice collection of day-to-day Perl scripts.
     * [Mtf-delta encoding](./Encoding/mtf-delta_encoding.pl)
     * [String to integer encoding based on primes](./Encoding/string_to_integer_encoding_based_on_primes.pl)
     * [Tlen encoding](./Encoding/tlen_encoding.pl)
+    * [Variable length run encoding](./Encoding/variable_length_run_encoding.pl)
 * Encryption
     * [Age-lf](./Encryption/age-lf.pl)
     * [Backdoored rsa with x25519](./Encryption/backdoored_rsa_with_x25519.pl)
