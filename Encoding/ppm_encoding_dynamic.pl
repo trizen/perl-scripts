@@ -6,6 +6,8 @@
 
 # Implementation of a PPM (prediction by partial-matching) encoder, using Huffman Coding.
 
+# This variant dynamically increments the context-length, based on the input data, in order to reduce the number of escape symbols being generated.
+
 # See also:
 #   https://rosettacode.org/wiki/huffman_coding
 
@@ -17,9 +19,10 @@ use 5.036;
 use List::Util qw(max uniq);
 
 use constant {
-              ESCAPE_SYMBOL => 256,    # escape symbol
-              CONTEXTS_NUM  => 4,      # maximum number of contexts
-              VERBOSE       => 0,      # verbose/debug mode
+              ESCAPE_SYMBOL   => 256,    # escape symbol
+              CONTEXTS_NUM    => 3,      # maximum number of contexts
+              INITIAL_CONTEXT => 1,      # start in this context
+              VERBOSE         => 0,      # verbose/debug mode
              };
 
 # produce encode and decode dictionary from a tree
@@ -75,9 +78,11 @@ sub encode ($symbols, $alphabet) {
         $c->{$s}{tree} = (mktree_from_freq($c->{$s}{freq}))[0];
     }
 
+    my $prev_ctx = INITIAL_CONTEXT;
+
     foreach my $symbol (@$symbols) {
 
-        foreach my $k (reverse(0 .. $#ctx)) {
+        foreach my $k (reverse(0 .. $prev_ctx)) {
             $s = join(' ', @prev[max($#prev - $k + 2, 0) .. $#prev]);
 
             if (!exists($ctx[$k]{$s})) {
@@ -93,12 +98,14 @@ sub encode ($symbols, $alphabet) {
 
                 say STDERR "Encoding $symbol with context=$k using $ctx[$k]{$s}{tree}{$symbol} and prefix ($s)" if VERBOSE;
                 push @enc, $ctx[$k]{$s}{tree}{$symbol};
+                ++$prev_ctx if ($prev_ctx < $#ctx);
 
                 push @prev, $symbol;
                 shift(@prev) if (scalar(@prev) >= CONTEXTS_NUM);
                 last;
             }
 
+            --$prev_ctx;
             $ctx[$k]{$s}{tree} = (mktree_from_freq($ctx[$k]{$s}{freq}))[0];
             push @enc, $ctx[$k]{$s}{tree}{(ESCAPE_SYMBOL)};
             say STDERR "Escaping from context = $k with $ctx[$k]{$s}{tree}{(ESCAPE_SYMBOL)}" if VERBOSE;
@@ -126,8 +133,8 @@ sub decode ($enc, $alphabet) {
         $c->{$s}{tree} = (mktree_from_freq($c->{$s}{freq}))[1];
     }
 
-    my $context = CONTEXTS_NUM;
-    my @key     = @prev;
+    my $prev_ctx = my $context = INITIAL_CONTEXT;
+    my @key      = @prev;
 
     foreach my $bit (split(//, $enc)) {
 
@@ -147,13 +154,14 @@ sub decode ($enc, $alphabet) {
             }
             else {
                 push @out, $symbol;
-                foreach my $k (max($context, 1) .. CONTEXTS_NUM) {
+                foreach my $k (max($context, 1) .. $prev_ctx) {
                     my $s = join(' ', @prev[max($#prev - $k + 2, 0) .. $#prev]);
                     $ctx[$k]{$s}{freq} //= freq([ESCAPE_SYMBOL]);
                     ++$ctx[$k]{$s}{freq}{$symbol};
                     $ctx[$k]{$s}{tree} = (mktree_from_freq($ctx[$k]{$s}{freq}))[1];
                 }
-                $context = CONTEXTS_NUM;
+                ++$context if ($context < $#ctx);
+                $prev_ctx = $context;
                 push @prev, $symbol;
                 shift(@prev) if (scalar(@prev) >= CONTEXTS_NUM);
                 @key = @prev[max($#prev - $context + 2, 0) .. $#prev];

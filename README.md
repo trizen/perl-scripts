@@ -115,6 +115,7 @@ A nice collection of day-to-day Perl scripts.
     * [Move-to-front transform](./Encoding/move-to-front_transform.pl)
     * [Mtf-delta encoding](./Encoding/mtf-delta_encoding.pl)
     * [Ppm encoding](./Encoding/ppm_encoding.pl)
+    * [Ppm encoding dynamic](./Encoding/ppm_encoding_dynamic.pl)
     * [String to integer encoding based on primes](./Encoding/string_to_integer_encoding_based_on_primes.pl)
     * [Tlen encoding](./Encoding/tlen_encoding.pl)
     * [Variable length run encoding](./Encoding/variable_length_run_encoding.pl)
