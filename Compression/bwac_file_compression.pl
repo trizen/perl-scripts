@@ -185,7 +185,7 @@ sub create_cfreq ($freq) {
 sub ac_encode ($bytes_arr) {
 
     my $enc   = '';
-    my @bytes = (@$bytes_arr, max(@$bytes_arr) + 1);
+    my @bytes = (@$bytes_arr, (max(@$bytes_arr) // 0) + 1);
 
     my %freq;
     ++$freq{$_} for @bytes;
@@ -290,7 +290,7 @@ sub ac_decode ($fh, $freq) {
         }
     }
 
-    my $eof = max(keys(%$freq));
+    my $eof = max(keys(%$freq)) // 0;
 
     while (1) {
 
@@ -437,7 +437,7 @@ sub create_ac_entry ($bytes, $out_fh) {
 
     my ($enc, $freq) = ac_encode($bytes);
 
-    my $max_symbol = max(keys %$freq);
+    my $max_symbol = max(keys %$freq) // 0;
     say "Max symbol: $max_symbol\n";
 
     my @freqs;

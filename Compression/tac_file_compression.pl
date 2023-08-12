@@ -16,7 +16,7 @@ use strict;
 use autodie;
 use warnings;
 
-use Getopt::Std qw(getopts);
+use Getopt::Std    qw(getopts);
 use File::Basename qw(basename);
 use Math::BigInt (try => 'GMP');
 
@@ -176,12 +176,12 @@ sub compress {
     }
 
     my $bin     = substr($enc->as_bin, 2);
-    my $encoded = pack('L', $pow);           # the power value
-    $encoded .= chr(scalar(keys %freq) - 1); # number of unique chars
-    $encoded .= chr(length($bin) % 8);       # padding
+    my $encoded = pack('L', $pow);              # the power value
+    $encoded .= chr(scalar(keys %freq) - 1);    # number of unique chars
+    $encoded .= chr(length($bin) % 8);          # padding
 
     while (my ($k, $v) = each %freq) {
-        $encoded .= $k . pack('S', $v);      # char => freq
+        $encoded .= $k . pack('S', $v);         # char => freq
     }
 
     print {$out_fh} $encoded, pack('B*', $bin);

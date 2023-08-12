@@ -19,7 +19,7 @@
 use 5.036;
 
 use constant {
-              BUFFER_SIZE     => 8 * 512,         # must be a multiple of 8
+              BUFFER_SIZE     => 8 * 512,          # must be a multiple of 8
               MAGIC_SIGNATURE => "\x1f\x9d\x90",
              };
 

@@ -2,10 +2,10 @@
 
 # Author: Trizen
 # Date: 15 June 2023
-# Edit: 20 June 2023
+# Edit: 12 August 2023
 # https://github.com/trizen
 
-# Compress/decompress files using Burrows-Wheeler Transform (BWT) + LZ77 compression + Huffman coding.
+# Compress/decompress files using Burrows-Wheeler Transform (BWT) + LZ77 compression + Arithmetic Coding.
 
 # Encoding the literals and the pointers using a DEFLATE-like approach.
 
@@ -19,19 +19,20 @@
 use 5.036;
 use Getopt::Std    qw(getopts);
 use File::Basename qw(basename);
-use List::Util     qw(max uniq);
+use List::Util     qw(max uniq sum);
 use POSIX          qw(ceil log2);
+use Math::GMPz;
 
 use constant {
-    PKGNAME => 'BWLZ',
-    VERSION => '0.04',
-    FORMAT  => 'bwlz',
+    PKGNAME => 'BWLA',
+    VERSION => '0.01',
+    FORMAT  => 'bwla',
 
-    CHUNK_SIZE    => 1 << 17,    # higher value = better compression
+    CHUNK_SIZE    => 1 << 16,    # higher value = better compression
     LOOKAHEAD_LEN => 128,
 };
 
-use constant {SIGNATURE => uc(FORMAT) . chr(4)};
+use constant {SIGNATURE => uc(FORMAT) . chr(1)};
 
 # [distance value, offset bits]
 my @DISTANCE_SYMBOLS = map { [$_, 0] } (0 .. 4);
@@ -363,70 +364,148 @@ sub delta_decode ($fh, $double = 0) {
     return \@acc;
 }
 
-# produce encode and decode dictionary from a tree
-sub walk ($node, $code, $h, $rev_h) {
+sub cumulative_freq ($freq) {
 
-    my $c = $node->[0] // return ($h, $rev_h);
-    if (ref $c) { walk($c->[$_], $code . $_, $h, $rev_h) for ('0', '1') }
-    else        { $h->{$c} = $code; $rev_h->{$code} = $c }
-
-    return ($h, $rev_h);
-}
-
-# make a tree, and return resulting dictionaries
-sub mktree_from_freq ($freq) {
-
-    my @nodes = map { [$_, $freq->{$_}] } sort { $a <=> $b } keys %$freq;
-
-    do {    # poor man's priority queue
-        @nodes = sort { $a->[1] <=> $b->[1] } @nodes;
-        my ($x, $y) = splice(@nodes, 0, 2);
-        if (defined($x)) {
-            if (defined($y)) {
-                push @nodes, [[$x, $y], $x->[1] + $y->[1]];
-            }
-            else {
-                push @nodes, [[$x], $x->[1]];
-            }
-        }
-    } while (@nodes > 1);
-
-    walk($nodes[0], '', {}, {});
-}
-
-sub huffman_encode ($bytes, $dict) {
-    join('', @{$dict}{@$bytes});
-}
-
-sub huffman_decode ($bits, $hash) {
-    local $" = '|';
-    $bits =~ s/(@{[sort { length($a) <=> length($b) } keys %{$hash}]})/$hash->{$1} /gr;    # very fast
-}
-
-sub create_huffman_entry ($bytes, $out_fh) {
-
-    my %freq;
-    ++$freq{$_} for @$bytes;
-
-    my ($h, $rev_h) = mktree_from_freq(\%freq);
-    my $enc = huffman_encode($bytes, $h);
-
-    my $max_symbol = max(keys %freq) // 0;
-    say "Max symbol: $max_symbol";
-
-    my @freqs;
-    foreach my $i (0 .. $max_symbol) {
-        push @freqs, $freq{$i} // 0;
+    my %cf;
+    my $total = 0;
+    foreach my $c (sort { $a <=> $b } keys %$freq) {
+        $cf{$c} = $total;
+        $total += $freq->{$c};
     }
 
+    return %cf;
+}
+
+sub ac_encode ($bytes_arr) {
+
+    my @chars = @$bytes_arr;
+
+    # The frequency characters
+    my %freq;
+    ++$freq{$_} for @chars;
+
+    # Create the cumulative frequency table
+    my %cf = cumulative_freq(\%freq);
+
+    # Limit and base
+    my $base = Math::GMPz->new(scalar @chars);
+
+    # Lower bound
+    my $L = Math::GMPz->new(0);
+
+    # Product of all frequencies
+    my $pf = Math::GMPz->new(1);
+
+    # Each term is multiplied by the product of the
+    # frequencies of all previously occurring symbols
+    foreach my $c (@chars) {
+        Math::GMPz::Rmpz_mul($L, $L, $base);
+        Math::GMPz::Rmpz_addmul_ui($L, $pf, $cf{$c});
+        Math::GMPz::Rmpz_mul_ui($pf, $pf, $freq{$c});
+    }
+
+    # Upper bound
+    Math::GMPz::Rmpz_add($L, $L, $pf);
+
+    # Compute the power for left shift
+    my $pow = Math::GMPz::Rmpz_sizeinbase($pf, 2) - 1;
+
+    # Set $enc to (U-1) divided by 2^pow
+    Math::GMPz::Rmpz_sub_ui($L, $L, 1);
+    Math::GMPz::Rmpz_div_2exp($L, $L, $pow);
+
+    # Remove any divisibility by 2
+    if ($L > 0 and Math::GMPz::Rmpz_even_p($L)) {
+        $pow += Math::GMPz::Rmpz_remove($L, $L, Math::GMPz->new(2));
+    }
+
+    my $bin = Math::GMPz::Rmpz_get_str($L, 2);
+
+    return ($bin, $pow, \%freq);
+}
+
+sub ac_decode ($bits, $pow2, $freq) {
+
+    # Decode the bits into an integer
+    my $enc = Math::GMPz->new($bits, 2);
+    Math::GMPz::Rmpz_mul_2exp($enc, $enc, $pow2);
+
+    my $base = sum(values %$freq) // 0;
+
+    if ($base == 0) {
+        return [];
+    }
+    elsif ($base == 1) {
+        return [keys %$freq];
+    }
+
+    # Create the cumulative frequency table
+    my %cf = cumulative_freq($freq);
+
+    # Create the dictionary
+    my %dict;
+    while (my ($k, $v) = each %cf) {
+        $dict{$v} = $k;
+    }
+
+    # Fill the gaps in the dictionary
+    my $lchar;
+    foreach my $i (0 .. $base - 1) {
+        if (exists $dict{$i}) {
+            $lchar = $dict{$i};
+        }
+        elsif (defined $lchar) {
+            $dict{$i} = $lchar;
+        }
+    }
+
+    my $div = Math::GMPz::Rmpz_init();
+
+    my @dec;
+
+    # Decode the input number
+    for (my $pow = Math::GMPz->new($base)**($base - 1) ;
+         Math::GMPz::Rmpz_sgn($pow) > 0 ;
+         Math::GMPz::Rmpz_tdiv_q_ui($pow, $pow, $base)) {
+
+        Math::GMPz::Rmpz_tdiv_q($div, $enc, $pow);
+
+        my $c  = $dict{$div};
+        my $fv = $freq->{$c};
+        my $cv = $cf{$c};
+
+        Math::GMPz::Rmpz_submul_ui($enc, $pow, $cv);
+        Math::GMPz::Rmpz_tdiv_q_ui($enc, $enc, $fv);
+
+        push @dec, $c;
+    }
+
+    return \@dec;
+}
+
+sub create_ac_entry ($bytes, $out_fh) {
+
+    my ($enc, $pow, $freq) = ac_encode($bytes);
+
+    my @freqs;
+    my $max_symbol = max(keys %$freq) // 0;
+
+    foreach my $k (0 .. $max_symbol) {
+        push @freqs, $freq->{$k} // 0;
+    }
+
+    push @freqs, $pow;
+    push @freqs, length($enc);
+
     print $out_fh delta_encode(\@freqs);
-    print $out_fh pack("N",  length($enc));
     print $out_fh pack("B*", $enc);
 }
 
-sub decode_huffman_entry ($fh) {
+sub decode_ac_entry ($fh) {
 
-    my @freqs = @{delta_decode($fh)};
+    my @freqs    = @{delta_decode($fh)};
+    my $bits_len = pop(@freqs);
+    my $pow2     = pop(@freqs);
 
     my %freq;
     foreach my $i (0 .. $#freqs) {
@@ -435,12 +514,10 @@ sub decode_huffman_entry ($fh) {
         }
     }
 
-    my (undef, $rev_dict) = mktree_from_freq(\%freq);
+    my $bits = read_bits($fh, $bits_len);
 
-    my $enc_len = unpack('N', join('', map { getc($fh) } 1 .. 4));
-
-    if ($enc_len > 0) {
-        return [split(' ', huffman_decode(read_bits($fh, $enc_len), $rev_dict))];
+    if ($bits_len > 0) {
+        return ac_decode($bits, $pow2, \%freq);
     }
 
     return [];
@@ -488,15 +565,15 @@ sub deflate_encode ($literals, $distances, $lengths, $has_backreference, $out_fh
         }
     }
 
-    create_huffman_entry(\@len_symbols,  $out_fh);
-    create_huffman_entry(\@dist_symbols, $out_fh);
+    create_ac_entry(\@len_symbols,  $out_fh);
+    create_ac_entry(\@dist_symbols, $out_fh);
     print $out_fh pack('B*', $offset_bits);
 }
 
 sub deflate_decode ($fh) {
 
-    my @len_symbols  = @{decode_huffman_entry($fh)};
-    my @dist_symbols = @{decode_huffman_entry($fh)};
+    my @len_symbols  = @{decode_ac_entry($fh)};
+    my @dist_symbols = @{decode_ac_entry($fh)};
 
     my $bits_len = 0;
 

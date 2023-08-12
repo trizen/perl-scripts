@@ -80,7 +80,14 @@ sub ac_decode ($bits, $pow2, $freq) {
 
     $enc <<= $pow2;
 
-    my $base = sum(values %$freq);
+    my $base = sum(values %$freq) // 0;
+
+    if ($base == 0) {
+        return [];
+    }
+    elsif ($base == 1) {
+        return [keys %$freq];
+    }
 
     # Create the cumulative frequency table
     my %cf = cumulative_freq($freq);
@@ -130,7 +137,7 @@ sub ac_decode ($bits, $pow2, $freq) {
 ## Run some tests
 #
 foreach my $str (
-        'this is a message for you to encode and to decode correctly!',
+        '', 'a', 'this is a message for you to encode and to decode correctly!',
         join('', 'a' .. 'z', 0 .. 9, 'A' .. 'Z', 0 .. 9),
         qw(DABDDB DABDDBBDDBA ABBDDD ABRACADABRA CoMpReSSeD Sidef Trizen google TOBEORNOTTOBEORTOBEORNOT),
         'In a positional numeral system the radix, or base, is numerically equal to a number of different symbols '

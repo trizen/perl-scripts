@@ -17,6 +17,7 @@ use warnings;
 
 use Getopt::Std    qw(getopts);
 use File::Basename qw(basename);
+use List::Util     qw(sum);
 use experimental   qw(signatures);
 
 use Math::GMPz;
@@ -315,8 +316,7 @@ sub decompress ($input, $output) {
 
     $enc <<= $pow2;
 
-    my $base = 0;
-    $base += $_ for values %freq;
+    my $base = sum(values %freq) // 0;
 
     # Create the cumulative frequency table
     my %cf = cumulative_freq(\%freq);
@@ -340,6 +340,16 @@ sub decompress ($input, $output) {
 
     # Open the output file
     open my $out_fh, '>:raw', $output;
+
+    if ($base == 0) {
+        close $out_fh;
+        return;
+    }
+    elsif ($base == 1) {
+        print {$out_fh} keys %$freq;
+        close $out_fh;
+        return;
+    }
 
     my $div = Math::GMPz::Rmpz_init();
 

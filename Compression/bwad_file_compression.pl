@@ -203,9 +203,9 @@ sub increment_freq ($c, $max_symbol, $freq, $cf_low, $cf_high) {
 sub ac_encode ($bytes_arr) {
 
     my $enc   = '';
-    my @bytes = (@$bytes_arr, max(@$bytes_arr) + 1);
+    my @bytes = (@$bytes_arr, (max(@$bytes_arr) // 0) + 1);
 
-    my $max_symbol = max(@bytes);
+    my $max_symbol = max(@bytes) // 0;
     my ($freq, $cf_low, $cf_high, $T) = create_cfreq(INITIAL_FREQ, $max_symbol);
 
     if ($T > MAX) {
