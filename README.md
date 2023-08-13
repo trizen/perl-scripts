@@ -58,6 +58,8 @@ A nice collection of day-to-day Perl scripts.
     * [Lzw file compression](./Compression/lzw_file_compression.pl)
     * [Mrh file compression](./Compression/mrh_file_compression.pl)
     * [Ppmh file compression](./Compression/ppmh_file_compression.pl)
+    * [Rlac file compression](./Compression/rlac_file_compression.pl)
+    * [Rlh file compression](./Compression/rlh_file_compression.pl)
     * [Tac file compression](./Compression/tac_file_compression.pl)
     * [Tacc file compression](./Compression/tacc_file_compression.pl)
     * [Tzip2 file compression](./Compression/tzip2_file_compression.pl)
