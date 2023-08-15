@@ -2,7 +2,7 @@
 
 # Author: Trizen
 # Date: 14 June 2023
-# Edit: 20 June 2023
+# Edit: 15 August 2023
 # https://github.com/trizen
 
 # Compress/decompress files using Move-to-Front Transform + Run-length encoding + Huffman coding.
@@ -15,13 +15,13 @@ use List::Util     qw(max uniq);
 
 use constant {
     PKGNAME => 'MRH',
-    VERSION => '0.02',
+    VERSION => '0.03',
     FORMAT  => 'mrh',
 
     CHUNK_SIZE => 1 << 16,
 };
 
-use constant {SIGNATURE => "MRH" . chr(2)};
+use constant {SIGNATURE => uc(FORMAT) . chr(3)};
 
 sub usage {
     my ($code) = @_;
@@ -505,26 +505,26 @@ sub decode_alphabet ($fh) {
 
 sub compression ($chunk, $out_fh) {
 
-    my @bytes        = unpack('C*', $chunk);
-    my @alphabet     = sort { $a <=> $b } uniq(@bytes);
+    my $bytes        = [unpack('C*', $chunk)];
+    my @alphabet     = sort { $a <=> $b } uniq(@$bytes);
     my $alphabet_enc = encode_alphabet(\@alphabet);
 
-    my $mtf  = mtf_encode(\@bytes, [@alphabet]);
-    my $rle4 = rle4_encode($mtf);
-    my $rle  = rle_encode($rle4);
+    $bytes = mtf_encode($bytes, [@alphabet]);
+    $bytes = rle_encode($bytes);
+    $bytes = rle4_encode($bytes);
 
     print $out_fh $alphabet_enc;
-    create_huffman_entry($rle, $out_fh);
+    create_huffman_entry($bytes, $out_fh);
 }
 
 sub decompression ($fh, $out_fh) {
     my $alphabet = decode_alphabet($fh);
     say "Alphabet size: ", scalar(@$alphabet);
 
-    my $rle   = decode_huffman_entry($fh);
-    my $rle4  = rle_decode($rle);
-    my $mtf   = rle4_decode($rle4);
-    my $bytes = mtf_decode($mtf, [@$alphabet]);
+    my $bytes = decode_huffman_entry($fh);
+    $bytes = rle4_decode($bytes);
+    $bytes = rle_decode($bytes);
+    $bytes = mtf_decode($bytes, [@$alphabet]);
 
     print $out_fh pack('C*', @$bytes);
 }
