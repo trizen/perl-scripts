@@ -346,7 +346,7 @@ sub decompress ($input, $output) {
         return;
     }
     elsif ($base == 1) {
-        print {$out_fh} keys %$freq;
+        print {$out_fh} keys %freq;
         close $out_fh;
         return;
     }
