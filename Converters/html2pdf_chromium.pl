@@ -43,6 +43,9 @@ my $output_pdf_file = $ARGV[1] // "output.pdf";
 
 say ":: Converting HTML to PDF...";
 
+# Reference:
+#   https://peter.sh/experiments/chromium-command-line-switches/
+
 system(
     qw(
       chromium

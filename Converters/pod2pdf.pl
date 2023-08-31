@@ -30,7 +30,7 @@ sub usage {
     $exit_code //= 0;
 
     print <<"EOT";
-usage: $0 [options] [input.md] [output.pdf]
+usage: $0 [options] [input.pod] [output.pdf]
 
 options:
 
@@ -53,7 +53,7 @@ GetOptions(
   or die("Error in command line arguments\n");
 
 my $input_pod_file  = $ARGV[0] // usage(2);
-my $output_pdf_file = $ARGV[1] // ($input_pod_file . ".pdf");
+my $output_pdf_file = $ARGV[1] // "output.pdf";
 
 say ":: Converting POD to Markdown...";
 
