@@ -76,6 +76,7 @@ A nice collection of day-to-day Perl scripts.
     * [Html2text](./Converters/html2text.pl)
     * [Json2csv](./Converters/json2csv.pl)
     * [Markdown2pdf](./Converters/markdown2pdf.pl)
+    * [Markdown2pdf chromium](./Converters/markdown2pdf_chromium.pl)
     * [Mkv audio to opus](./Converters/mkv_audio_to_opus.pl)
     * [Notepadfree to txt](./Converters/notepadfree_to_txt.pl)
     * [Pod2pdf](./Converters/pod2pdf.pl)

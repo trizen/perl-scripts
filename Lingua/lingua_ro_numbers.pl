@@ -14,6 +14,6 @@ require Term::ReadLine;
 my $term = Term::ReadLine->new($0);
 
 while (1) {
-    my $num = $term->readline("Introduceți un număr: ");
+    my $num = $term->readline("Introduceți un număr: ") // last;
     say +(looks_like_number($num) ? number_to_ro($num) : ro_to_number($num)) // next;
 }
