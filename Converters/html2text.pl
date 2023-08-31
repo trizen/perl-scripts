@@ -36,12 +36,12 @@ sub extract_html ($source) {
         require HTTP::Message;
 
         my $lwp = LWP::UserAgent->new(
-                                     env_proxy => 1,
-                                     timeout   => 15,
-                                     agent => "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0",
-                                     cookie_jar => {},
-                                     ssl_opts   => {verify_hostname => 0},
-        );
+                                      env_proxy  => 1,
+                                      timeout    => 15,
+                                      agent      => "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0",
+                                      cookie_jar => {},
+                                      ssl_opts   => {verify_hostname => 0},
+                                     );
 
         state $accepted_encodings = HTTP::Message::decodable();
         $lwp->default_header('Accept-Encoding' => $accepted_encodings);

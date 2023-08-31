@@ -4,7 +4,7 @@
 # Date: 16 April 2023
 # https://github.com/trizen
 
-# HTML to PDF converter, with JavaScript support.
+# HTML|URL to PDF converter, with JavaScript support.
 
 # Using the following tool:
 #   wkhtmltopdf -- for converting HTML to PDF
@@ -26,7 +26,7 @@ sub usage {
     $exit_code //= 0;
 
     print <<"EOT";
-usage: $0 [options] [input.md] [output.pdf]
+usage: $0 [options] [input.html | URL] [output.pdf]
 
 options:
 
@@ -50,7 +50,7 @@ GetOptions(
   or die("Error in command line arguments\n");
 
 my $input_html_file = $ARGV[0] // usage(2);
-my $output_pdf_file = $ARGV[1] // ($input_html_file . ".pdf");
+my $output_pdf_file = $ARGV[1] // "output.pdf";
 
 say ":: Converting HTML to PDF...";
 

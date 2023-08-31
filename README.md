@@ -73,6 +73,7 @@ A nice collection of day-to-day Perl scripts.
     * [Gdbm to berkeley](./Converters/gdbm_to_berkeley.pl)
     * [Gitbook2pdf](./Converters/gitbook2pdf.pl)
     * [Html2pdf](./Converters/html2pdf.pl)
+    * [Html2pdf chromium](./Converters/html2pdf_chromium.pl)
     * [Html2text](./Converters/html2text.pl)
     * [Json2csv](./Converters/json2csv.pl)
     * [Markdown2pdf](./Converters/markdown2pdf.pl)

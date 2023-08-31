@@ -200,13 +200,16 @@ do {
 
 say ":: Converting HTML to PDF...";
 
+# Reference:
+#   https://peter.sh/experiments/chromium-command-line-switches/
+
 system(
     qw(chromium
       --headless
       --disable-gpu
-      --run-all-compositor-stages-before-draw
-      --virtual-time-budget=10000
       --no-pdf-header-footer
+      --disable-pdf-tagging
+      --enable-local-file-accesses
     ),
     "--print-to-pdf=$output_pdf_file",
     $tmp_html_file,
