@@ -47,6 +47,7 @@ A nice collection of day-to-day Perl scripts.
     * [Huffman file compression](./Compression/huffman_file_compression.pl)
     * [Lz77 file compression](./Compression/lz77_file_compression.pl)
     * [Lzac file compression](./Compression/lzac_file_compression.pl)
+    * [Lzbw file compression](./Compression/lzbw_file_compression.pl)
     * [Lzh file compression](./Compression/lzh_file_compression.pl)
     * [Lzhc file compression](./Compression/lzhc_file_compression.pl)
     * [Lzhd file compression](./Compression/lzhd_file_compression.pl)
