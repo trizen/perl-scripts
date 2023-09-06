@@ -82,6 +82,7 @@ A nice collection of day-to-day Perl scripts.
     * [Mkv audio to opus](./Converters/mkv_audio_to_opus.pl)
     * [Notepadfree to txt](./Converters/notepadfree_to_txt.pl)
     * [Pod2pdf](./Converters/pod2pdf.pl)
+    * [Recompress audio track](./Converters/recompress_audio_track.pl)
     * [Unicode2ascii](./Converters/unicode2ascii.pl)
     * [Vnt2txt simple](./Converters/vnt2txt_simple.pl)
     * [Xml2hash](./Converters/xml2hash.pl)

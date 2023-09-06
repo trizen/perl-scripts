@@ -761,12 +761,12 @@ sub compress_file ($input, $output) {
 
     my $create_bz2_block = sub {
 
-        length($uncompressed) > 0 or return;
+        scalar(@sizes) > 0 or return;
 
         print $out_fh COMPRESSED_BYTE;
         print $out_fh delta_encode(\@sizes, 1);
 
-        my $indices = encode_integers([@indices_block]);
+        my $indices = encode_integers(\@indices_block);
 
         bz2_compression($uncompressed, $out_fh);
         bz2_compression($lengths,      $out_fh);
