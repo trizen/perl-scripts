@@ -10,7 +10,7 @@
 #   ffmpeg
 #   exiftool
 
-# usage:
+# Usage:
 #   perl recompress_audio_track.pl [files | directories]
 
 use 5.036;
@@ -42,7 +42,6 @@ sub recompress_audio_track ($video_file) {
     # When the original file is smaller, keep the original file
     if ((-s $orig_audio_file) <= (-s $new_audio_file)) {
         say ":: The original audio track is smaller... Will keep it...";
-        unlink($new_audio_file);
         $new_audio_file = $orig_audio_file;
     }
 
@@ -56,9 +55,24 @@ sub recompress_audio_track ($video_file) {
     my $basename         = basename($video_file) =~ s{\.\w+\z}{.mkv}r;
     my $final_video_file = catfile($dir, $basename);
 
+    if ($final_video_file !~ /\.mkv\z/) {
+        $final_video_file .= '.mkv';
+    }
+
+    my $original_size = -s $orig_audio_file;
+    my $new_size      = -s $new_audio_file;
+
+    printf(":: Saved: %.2f MB (%.2f%%)\n", ($original_size - $new_size) / 1024**2, ($original_size - $new_size) / $original_size * 100);
+
     unlink($video_file);
     unlink($new_audio_file);
     unlink($orig_audio_file);
+
+    if (-e -d $final_video_file) {
+        say ":: File <<$final_video_file>> is a directory... Skipping...";
+        unlink($new_video_file);
+        return;
+    }
 
     move($new_video_file, $final_video_file);
 }
@@ -73,7 +87,7 @@ find(
     {
      wanted => sub {
          if (-f $_ and is_video_file($_)) {
-             say ":: Processing: $_";
+             say "\n:: Processing: $_";
              recompress_audio_track($_);
          }
      },

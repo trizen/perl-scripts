@@ -474,16 +474,16 @@ sub deflate_encode ($literals, $distances, $lengths, $has_backreference, $out_fh
 
 sub deflate_decode ($fh) {
 
-    my @len_symbols  = @{decode_huffman_entry($fh)};
-    my @dist_symbols = @{decode_huffman_entry($fh)};
+    my $len_symbols  = decode_huffman_entry($fh);
+    my $dist_symbols = decode_huffman_entry($fh);
 
     my $bits_len = 0;
 
-    foreach my $i (@dist_symbols) {
+    foreach my $i (@$dist_symbols) {
         $bits_len += $DISTANCE_SYMBOLS[$i][1];
     }
 
-    foreach my $i (@len_symbols) {
+    foreach my $i (@$len_symbols) {
         if ($i >= 256) {
             $bits_len += $LENGTH_SYMBOLS[$i - 256][1];
         }
@@ -497,9 +497,9 @@ sub deflate_decode ($fh) {
 
     my $j = 0;
 
-    foreach my $i (@len_symbols) {
+    foreach my $i (@$len_symbols) {
         if ($i >= 256) {
-            my $dist = $dist_symbols[$j++];
+            my $dist = $dist_symbols->[$j++];
             $lengths[-1]   = $LENGTH_SYMBOLS[$i - 256][0] + oct('0b' . substr($bits, 0, $LENGTH_SYMBOLS[$i - 256][1], ''));
             $distances[-1] = $DISTANCE_SYMBOLS[$dist][0] + oct('0b' . substr($bits, 0, $DISTANCE_SYMBOLS[$dist][1], ''));
         }

@@ -1,14 +1,17 @@
 #!/usr/bin/perl
 
 # Author: Trizen
-# Date: 05 September 2023
+# Date: 07 September 2023
 # https://github.com/trizen
 
-# Compress/decompress files using LZ77 compression + integers encoding + Burrows-Wheeler Transform (BWT) + Huffman coding.
+# Compress/decompress files using LZ77 compression + DEFLATE integers encoding + Burrows-Wheeler Transform (BWT) + Huffman coding.
 
 # References:
 #   Data Compression (Summer 2023) - Lecture 13 - BZip2
 #   https://youtube.com/watch?v=cvoZbBZ3M2A
+#
+#   Data Compression (Summer 2023) - Lecture 11 - DEFLATE (gzip)
+#   https://youtube.com/watch?v=SJPvNi4HrWQ
 
 use 5.036;
 use Getopt::Std    qw(getopts);
@@ -16,9 +19,9 @@ use File::Basename qw(basename);
 use List::Util     qw(max uniq);
 
 use constant {
-    PKGNAME => 'LZBW',
+    PKGNAME => 'LZBWH',
     VERSION => '0.01',
-    FORMAT  => 'lzbw',
+    FORMAT  => 'lzbwh',
 
     COMPRESSED_BYTE   => chr(1),
     UNCOMPRESSED_BYTE => chr(0),
@@ -26,12 +29,21 @@ use constant {
     DELTA_BYTE    => chr(0),
     NONDELTA_BYTE => chr(1),
 
-    CHUNK_SIZE            => 1 << 16,    # higher value = better compression
+    CHUNK_SIZE            => 1 << 16,                              # higher value = better compression
     LOOKAHEAD_LEN         => 128,
-    RANDOM_DATA_THRESHOLD => 0.85,       # in ratio
+    RANDOM_DATA_THRESHOLD => 0.85,                                 # in ratio
+    MAX_INT               => 0b11111111111111111111111111111111,
 };
 
 use constant {SIGNATURE => uc(FORMAT) . chr(1)};
+
+# [distance value, offset bits]
+my @DISTANCE_SYMBOLS = (map { [$_, 0] } 0 .. 4);
+
+until ($DISTANCE_SYMBOLS[-1][0] > MAX_INT) {
+    push @DISTANCE_SYMBOLS, [int($DISTANCE_SYMBOLS[-1][0] * (4 / 3)), $DISTANCE_SYMBOLS[-1][1] + 1];
+    push @DISTANCE_SYMBOLS, [int($DISTANCE_SYMBOLS[-1][0] * (3 / 2)), $DISTANCE_SYMBOLS[-1][1]];
+}
 
 sub usage {
     my ($code) = @_;
@@ -267,71 +279,46 @@ sub delta_decode ($fh, $double = 0) {
 
 sub encode_integers ($integers) {
 
-    my @counts;
-    my $count           = 0;
-    my $bits_width      = 1;
-    my $bits_max_symbol = 1 << $bits_width;
-    my $processed_len   = 0;
+    my @symbols;
+    my $offset_bits = '';
 
-    foreach my $k (@$integers) {
-        while ($k >= $bits_max_symbol) {
+    foreach my $dist (@$integers) {
+        foreach my $i (0 .. $#DISTANCE_SYMBOLS) {
+            if ($DISTANCE_SYMBOLS[$i][0] > $dist) {
+                push @symbols, $i - 1;
 
-            if ($count > 0) {
-                push @counts, [$bits_width, $count];
-                $processed_len += $count;
+                if ($DISTANCE_SYMBOLS[$i - 1][1] > 0) {
+                    $offset_bits .= sprintf('%0*b', $DISTANCE_SYMBOLS[$i - 1][1], $dist - $DISTANCE_SYMBOLS[$i - 1][0]);
+                }
+                last;
             }
-
-            $count = 0;
-            $bits_max_symbol *= 2;
-            $bits_width      += 1;
-        }
-        ++$count;
-    }
-
-    push @counts, grep { $_->[1] > 0 } [$bits_width, scalar(@$integers) - $processed_len];
-
-    my $compressed = delta_encode([(map { $_->[0] } @counts), (map { $_->[1] } @counts)]);
-
-    my $bits = '';
-    foreach my $pair (@counts) {
-        my ($blen, $len) = @$pair;
-        foreach my $symbol (splice(@$integers, 0, $len)) {
-            $bits .= sprintf("%0*b", $blen, $symbol);
         }
     }
 
-    $compressed .= pack('B*', $bits);
-    return $compressed;
+    my $str = '';
+    open(my $out_fh, '>:raw', \$str);
+    create_huffman_entry(\@symbols, $out_fh);
+    print $out_fh pack('B*', $offset_bits);
+    return $str;
 }
 
 sub decode_integers ($fh) {
 
-    my $ints = delta_decode($fh);
-    my $half = scalar(@$ints) >> 1;
-
-    my @counts;
-    foreach my $i (0 .. ($half - 1)) {
-        push @counts, [$ints->[$i], $ints->[$half + $i]];
-    }
-
+    my $symbols  = decode_huffman_entry($fh);
     my $bits_len = 0;
 
-    foreach my $pair (@counts) {
-        my ($blen, $len) = @$pair;
-        $bits_len += $blen * $len;
+    foreach my $i (@$symbols) {
+        $bits_len += $DISTANCE_SYMBOLS[$i][1];
     }
 
     my $bits = read_bits($fh, $bits_len);
 
-    my @integers;
-    foreach my $pair (@counts) {
-        my ($blen, $len) = @$pair;
-        foreach my $chunk (unpack(sprintf('(a%d)*', $blen), substr($bits, 0, $blen * $len, ''))) {
-            push @integers, oct('0b' . $chunk);
-        }
+    my @distances;
+    foreach my $i (@$symbols) {
+        push @distances, $DISTANCE_SYMBOLS[$i][0] + oct('0b' . substr($bits, 0, $DISTANCE_SYMBOLS[$i][1], ''));
     }
 
-    return \@integers;
+    return \@distances;
 }
 
 # produce encode and decode dictionary from a tree
