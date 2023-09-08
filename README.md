@@ -96,6 +96,7 @@ A nice collection of day-to-day Perl scripts.
 * Digest
     * [Brute-force resistant hashing](./Digest/brute-force_resistant_hashing.pl)
 * Encoding
+    * [Adaptive huffman coding](./Encoding/adaptive_huffman_coding.pl)
     * [Arithmetic coding](./Encoding/arithmetic_coding.pl)
     * [Arithmetic coding adaptive contexts in fixed bits](./Encoding/arithmetic_coding_adaptive_contexts_in_fixed_bits.pl)
     * [Arithmetic coding adaptive in fixed bits](./Encoding/arithmetic_coding_adaptive_in_fixed_bits.pl)

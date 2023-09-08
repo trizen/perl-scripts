@@ -150,8 +150,7 @@ sub compress {
 
         my $uncomp_len = length($uncompressed);
         printf("%3d -> %3d (%.2f%%)\n", $len, $uncomp_len, ($len - $uncomp_len) / $len * 100);
-        print {$out_fh} pack('S', $uncomp_len - 1), pack('S', scalar @pairs), (map { pack('SSC', @{$_}) } @pairs),
-          $uncompressed;
+        print {$out_fh} pack('S', $uncomp_len - 1), pack('S', scalar @pairs), (map { pack('SSC', @{$_}) } @pairs), $uncompressed;
     }
 
     close $fh;

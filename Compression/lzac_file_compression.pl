@@ -362,9 +362,7 @@ sub ac_decode ($bits, $pow2, $freq) {
     my @dec;
 
     # Decode the input number
-    for (my $pow = Math::GMPz->new($base)**($base - 1) ;
-         Math::GMPz::Rmpz_sgn($pow) > 0 ;
-         Math::GMPz::Rmpz_tdiv_q_ui($pow, $pow, $base)) {
+    for (my $pow = Math::GMPz->new($base)**($base - 1) ; Math::GMPz::Rmpz_sgn($pow) > 0 ; Math::GMPz::Rmpz_tdiv_q_ui($pow, $pow, $base)) {
 
         Math::GMPz::Rmpz_tdiv_q($div, $enc, $pow);
 

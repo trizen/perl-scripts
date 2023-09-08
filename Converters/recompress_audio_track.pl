@@ -68,19 +68,13 @@ sub recompress_audio_track ($video_file) {
     unlink($new_audio_file);
     unlink($orig_audio_file);
 
-    if (-e -d $final_video_file) {
-        say ":: File <<$final_video_file>> is a directory... Skipping...";
-        unlink($new_video_file);
-        return;
-    }
-
     move($new_video_file, $final_video_file);
 }
 
 my @dirs = @ARGV;
 
 if (not @dirs) {
-    die "usage: $0 [files | dirs]\n";
+    die "usage: $0 [files | directories]\n";
 }
 
 find(

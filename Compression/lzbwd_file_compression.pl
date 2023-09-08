@@ -26,9 +26,6 @@ use constant {
     COMPRESSED_BYTE   => chr(1),
     UNCOMPRESSED_BYTE => chr(0),
 
-    DELTA_BYTE    => chr(0),
-    NONDELTA_BYTE => chr(1),
-
     CHUNK_SIZE            => 1 << 17,                              # higher value = better compression
     LOOKAHEAD_LEN         => 128,
     RANDOM_DATA_THRESHOLD => 0.85,                                 # in ratio
