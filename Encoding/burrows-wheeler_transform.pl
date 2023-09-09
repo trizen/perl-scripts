@@ -77,12 +77,8 @@ sub bwt_lookahead ($s) {    # O(n) space (moderately fast)
 }
 
 sub bwt_balanced ($s) {    # O(n * LOOKAHEAD_LEN) space (fast)
-    [
-     map { $_->[1] } sort {
-              ($a->[0] cmp $b->[0])
-           || ((substr($s, $a->[1]) . substr($s, 0, $a->[1])) cmp(substr($s, $b->[1]) . substr($s, 0, $b->[1])))
-       }
-       map {
+    [map { $_->[1] } sort { ($a->[0] cmp $b->[0]) || ((substr($s, $a->[1]) . substr($s, 0, $a->[1])) cmp(substr($s, $b->[1]) . substr($s, 0, $b->[1]))) }
+     map {
          my $t = substr($s, $_, LOOKAHEAD_LEN);
 
          if (length($t) < LOOKAHEAD_LEN) {

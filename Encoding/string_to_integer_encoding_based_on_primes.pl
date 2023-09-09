@@ -30,9 +30,9 @@ use open IO => ':utf8';
 use experimental qw(signatures);
 
 use List::Util qw(max);
-use Encode qw(encode_utf8 decode_utf8);
+use Encode     qw(encode_utf8 decode_utf8);
 
-use ntheory qw(vecprod);
+use ntheory                qw(vecprod);
 use Math::Prime::Util::GMP qw(:all);
 
 use Test::More tests => 3;

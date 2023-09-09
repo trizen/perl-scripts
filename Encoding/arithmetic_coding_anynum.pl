@@ -57,8 +57,8 @@ sub arithmethic_coding {
     # Each term is multiplied by the product of the
     # frequencies of all previously occurring symbols
     foreach my $c (@chars) {
-        $L *= $base;
-        $L += $cf{$c} * $pf;
+        $L  *= $base;
+        $L  += $cf{$c} * $pf;
         $pf *= $freq{$c};
     }
 
@@ -132,11 +132,11 @@ sub arithmethic_decoding {
 my $radix = 10;    # can be any integer >= 2
 
 foreach my $str (
-    qw(DABDDB DABDDBBDDBA ABBDDD ABRACADABRA CoMpReSSeD Sidef Trizen google TOBEORNOTTOBEORTOBEORNOT 吹吹打打),
-    'In a positional numeral system the radix, or base, is numerically equal to a number of different symbols '
-    . 'used to express the number. For example, in the decimal system the number of symbols is 10, namely 0, 1, 2, '
-    . '3, 4, 5, 6, 7, 8, and 9. The radix is used to express any finite integer in a presumed multiplier in polynomial '
-    . 'form. For example, the number 457 is actually 4×102 + 5×101 + 7×100, where base 10 is presumed but not shown explicitly.'
+                 qw(DABDDB DABDDBBDDBA ABBDDD ABRACADABRA CoMpReSSeD Sidef Trizen google TOBEORNOTTOBEORTOBEORNOT 吹吹打打),
+                 'In a positional numeral system the radix, or base, is numerically equal to a number of different symbols '
+                 . 'used to express the number. For example, in the decimal system the number of symbols is 10, namely 0, 1, 2, '
+                 . '3, 4, 5, 6, 7, 8, and 9. The radix is used to express any finite integer in a presumed multiplier in polynomial '
+                 . 'form. For example, the number 457 is actually 4×102 + 5×101 + 7×100, where base 10 is presumed but not shown explicitly.'
   ) {
     my ($enc, $pow, $freq) = arithmethic_coding($str, $radix);
     my $dec = arithmethic_decoding($enc, $radix, $pow, $freq);

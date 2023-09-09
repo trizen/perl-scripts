@@ -114,9 +114,7 @@ sub ac_decode ($bits, $pow2, $freq) {
     my @dec;
 
     # Decode the input number
-    for (my $pow = Math::GMPz->new($base)**($base - 1) ;
-         Math::GMPz::Rmpz_sgn($pow) > 0 ;
-         Math::GMPz::Rmpz_tdiv_q_ui($pow, $pow, $base)) {
+    for (my $pow = Math::GMPz->new($base)**($base - 1) ; Math::GMPz::Rmpz_sgn($pow) > 0 ; Math::GMPz::Rmpz_tdiv_q_ui($pow, $pow, $base)) {
 
         Math::GMPz::Rmpz_tdiv_q($div, $enc, $pow);
 
@@ -137,13 +135,15 @@ sub ac_decode ($bits, $pow2, $freq) {
 ## Run some tests
 #
 foreach my $str (
-        '', 'a', 'this is a message for you to encode and to decode correctly!',
-        join('', 'a' .. 'z', 0 .. 9, 'A' .. 'Z', 0 .. 9),
-        qw(DABDDB DABDDBBDDBA ABBDDD ABRACADABRA CoMpReSSeD Sidef Trizen google TOBEORNOTTOBEORTOBEORNOT),
-        'In a positional numeral system the radix, or base, is numerically equal to a number of different symbols '
-        . 'used to express the number. For example, in the decimal system the number of symbols is 10, namely 0, 1, 2, '
-        . '3, 4, 5, 6, 7, 8, and 9. The radix is used to express any finite integer in a presumed multiplier in polynomial '
-        . 'form. For example, the number 457 is actually 4×102 + 5×101 + 7×100, where base 10 is presumed but not shown explicitly.'
+                 '',
+                 'a',
+                 'this is a message for you to encode and to decode correctly!',
+                 join('', 'a' .. 'z', 0 .. 9, 'A' .. 'Z', 0 .. 9),
+                 qw(DABDDB DABDDBBDDBA ABBDDD ABRACADABRA CoMpReSSeD Sidef Trizen google TOBEORNOTTOBEORTOBEORNOT),
+                 'In a positional numeral system the radix, or base, is numerically equal to a number of different symbols '
+                 . 'used to express the number. For example, in the decimal system the number of symbols is 10, namely 0, 1, 2, '
+                 . '3, 4, 5, 6, 7, 8, and 9. The radix is used to express any finite integer in a presumed multiplier in polynomial '
+                 . 'form. For example, the number 457 is actually 4×102 + 5×101 + 7×100, where base 10 is presumed but not shown explicitly.'
   ) {
 
     my @bytes = unpack('C*', $str);

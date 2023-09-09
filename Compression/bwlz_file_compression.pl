@@ -61,8 +61,8 @@ my @DISTANCE_INDICES;
 foreach my $i (0 .. $#DISTANCE_SYMBOLS) {
     my ($min, $bits) = @{$DISTANCE_SYMBOLS[$i]};
     foreach my $k ($min .. $min + (1 << $bits) - 1) {
+        last if ($k > CHUNK_SIZE);
         $DISTANCE_INDICES[$k] = $i;
-        last if ($k >= CHUNK_SIZE);
     }
 }
 

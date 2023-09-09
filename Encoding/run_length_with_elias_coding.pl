@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Implementation of Delta + Run-length + Elias coding, for encoding arbitrary integers.
+# Implementation of Run-length + Elias coding, for encoding arbitrary non-negative integers.
 
 # References:
 #   Data Compression (Summer 2023) - Lecture 5 - Basic Techniques
@@ -44,21 +44,12 @@ sub run_length ($arr) {
     return \@result;
 }
 
-sub DRE_encoding ($integers, $double = 0) {
+sub RLEE_encoding ($integers, $double = 0) {
 
-    my @deltas;
-    my $prev = 0;
-
-    unshift(@$integers, scalar(@$integers));
-
-    while (@$integers) {
-        my $curr = shift(@$integers);
-        push @deltas, $curr - $prev;
-        $prev = $curr;
-    }
+    my @symbols = (scalar(@$integers), @$integers);
 
     my $bitstring = '';
-    my $rle       = run_length(\@deltas);
+    my $rle       = run_length(\@symbols);
 
     foreach my $cv (@$rle) {
         my ($c, $v) = @$cv;
@@ -69,11 +60,11 @@ sub DRE_encoding ($integers, $double = 0) {
         elsif ($double) {
             my $t = sprintf('%b', abs($c));
             my $l = sprintf('%b', length($t) + 1);
-            $bitstring .= '1' . (($c < 0) ? '0' : '1') . ('1' x (length($l) - 1)) . '0' . substr($l, 1) . substr($t, 1);
+            $bitstring .= '1' . ('1' x (length($l) - 1)) . '0' . substr($l, 1) . substr($t, 1);
         }
         else {
             my $t = sprintf('%b', abs($c));
-            $bitstring .= '1' . (($c < 0) ? '0' : '1') . ('1' x (length($t) - 1)) . '0' . substr($t, 1);
+            $bitstring .= '1' . ('1' x (length($t) - 1)) . '0' . substr($t, 1);
         }
 
         if ($v == 1) {
@@ -88,11 +79,11 @@ sub DRE_encoding ($integers, $double = 0) {
     pack('B*', $bitstring);
 }
 
-sub DRE_decoding ($bitstring, $double = 0) {
+sub RLEE_decoding ($bitstring, $double = 0) {
 
     open my $fh, '<:raw', \$bitstring;
 
-    my @deltas;
+    my @values;
     my $buffer = '';
     my $len    = 0;
 
@@ -100,25 +91,22 @@ sub DRE_decoding ($bitstring, $double = 0) {
         my $bit = read_bit($fh, \$buffer) // last;
 
         if ($bit eq '0') {
-            push @deltas, 0;
+            push @values, 0;
         }
         elsif ($double) {
-            my $bit = read_bit($fh, \$buffer);
-
             my $bl = 0;
             ++$bl while (read_bit($fh, \$buffer) eq '1');
 
             my $bl2 = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. $bl)) - 1;
             my $int = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. ($bl2 - 1)));
 
-            push @deltas, ($bit eq '1' ? $int : -$int);
+            push @values, $int;
         }
         else {
-            my $bit = read_bit($fh, \$buffer);
-            my $n   = 0;
+            my $n = 0;
             ++$n while (read_bit($fh, \$buffer) eq '1');
             my $d = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. $n));
-            push @deltas, ($bit eq '1' ? $d : -$d);
+            push @values, $d;
         }
 
         my $bl = 0;
@@ -129,56 +117,52 @@ sub DRE_decoding ($bitstring, $double = 0) {
         if ($bl > 0) {
             my $run = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. $bl)) - 1;
             $k += $run;
-            push @deltas, ($deltas[-1]) x $run;
+            push @values, ($values[-1]) x $run;
         }
 
         if ($k == 0) {
-            $len = pop(@deltas);
+            $len = pop(@values);
         }
     }
 
-    my @acc;
-    my $prev = $len;
-
-    foreach my $d (@deltas) {
-        $prev += $d;
-        push @acc, $prev;
-    }
-
-    return \@acc;
+    return \@values;
 }
 
-my $str   = join('', 'a' x 13, 'b' x 14, 'c' x 10, 'd' x 3, 'e' x 1, 'f' x 1, 'g' x 4);
-my @bytes = unpack('C*', $str);
+my @symbols = (
+               6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 1, 1, 3, 3, 1, 2, 3, 0, 0, 1, 2, 4, 2, 1, 0, 1, 2, 1, 1, 0, 0, 1
+              );
 
-my $enc = DRE_encoding(\@bytes);
-my $dec = pack('C*', @{DRE_decoding($enc)});
+my $enc = RLEE_encoding([@symbols]);
+my $dec = RLEE_decoding($enc);
 
 say unpack('B*', $enc);
-say $dec;
+say "@$dec";
 
-$dec eq $str or die "error: $dec != $str";
+"@$dec" eq "@symbols" or die "error";
 
 do {
     my @integers = map { int(rand($_)) } 1 .. 1000;
-    my $str      = DRE_encoding([@integers], 1);
+    my $str      = RLEE_encoding([@integers], 1);
 
     say "Encoded length: ", length($str);
     say "Rawdata length: ", length(join(' ', @integers));
 
-    my $decoded = DRE_decoding($str, 1);
+    my $decoded = RLEE_decoding($str, 1);
 
     join(' ', @integers) eq join(' ', @$decoded) or die "Decoding error";
 
     {
         open my $fh, '<:raw', __FILE__;
         my $str     = do { local $/; <$fh> };
-        my $encoded = DRE_encoding([unpack('C*', $str)], 1);
-        my $decoded = DRE_decoding($encoded, 1);
+        my $encoded = RLEE_encoding([unpack('C*', $str)], 1);
+        my $decoded = RLEE_decoding($encoded, 1);
         $str eq pack('C*', @$decoded) or die "error";
     }
   }
 
 __END__
-Encoded length: 1879
-Rawdata length: 3628
+111111100110010111010001111110000000110100010100110110010011000110100100100110001110000110001000010011000101000100100000
+6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 3 0 1 1 3 3 1 2 3 0 0 1 2 4 2 1 0 1 2 1 1 0 0 1
+Encoded length: 1867
+Rawdata length: 3606

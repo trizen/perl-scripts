@@ -114,16 +114,7 @@ sub length_encoder {
     my $pbytes = join('', map { chr } @pos);
     my $lbytes = join('', map { chr } @len);
 
-    return
-        chr(length($bbytes))
-      . chr(length($bin) % 8)
-      . chr(length($pbytes))
-      . chr(length($lbytes))
-      . chr(length($dec))
-      . $bbytes
-      . $pbytes
-      . $lbytes
-      . $dec;
+    return chr(length($bbytes)) . chr(length($bin) % 8) . chr(length($pbytes)) . chr(length($lbytes)) . chr(length($dec)) . $bbytes . $pbytes . $lbytes . $dec;
 }
 
 foreach my $str (

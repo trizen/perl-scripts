@@ -130,6 +130,7 @@ A nice collection of day-to-day Perl scripts.
     * [Mtf-delta encoding](./Encoding/mtf-delta_encoding.pl)
     * [Ppm encoding](./Encoding/ppm_encoding.pl)
     * [Ppm encoding dynamic](./Encoding/ppm_encoding_dynamic.pl)
+    * [Run length with elias coding](./Encoding/run_length_with_elias_coding.pl)
     * [String to integer encoding based on primes](./Encoding/string_to_integer_encoding_based_on_primes.pl)
     * [Tlen encoding](./Encoding/tlen_encoding.pl)
     * [Variable length run encoding](./Encoding/variable_length_run_encoding.pl)

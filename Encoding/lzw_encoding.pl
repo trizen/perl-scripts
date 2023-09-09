@@ -19,7 +19,7 @@ sub create_dictionary() {
     return %dictionary;
 }
 
-sub compress($uncompressed) {
+sub compress ($uncompressed) {
 
     my $dict_size  = DICT_SIZE;
     my %dictionary = create_dictionary();
@@ -46,7 +46,7 @@ sub compress($uncompressed) {
     return @compressed;
 }
 
-sub decompress(@compressed) {
+sub decompress (@compressed) {
 
     my $dict_size  = DICT_SIZE;
     my %dictionary = create_dictionary();
@@ -91,6 +91,6 @@ if ($dec ne $orig) {
     die "Decompression failed!";
 }
 
-printf("Original    size  : %s\n", length($orig));
-printf("Compressed  size  : %s\n", length($enc));
+printf("Original    size  : %s\n",     length($orig));
+printf("Compressed  size  : %s\n",     length($enc));
 printf("Compression ratio : %.2f%%\n", (length($orig) - length($enc)) / length($orig) * 100);
