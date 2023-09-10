@@ -22,7 +22,7 @@ use constant {
               CHUNK_SIZE => 1 << 16,
              };
 
-use constant {SIGNATURE => "LZ77" . chr(2)};
+use constant {SIGNATURE => uc(FORMAT) . chr(2)};
 
 sub usage {
     my ($code) = @_;

@@ -5,7 +5,7 @@
 # Edit: 13 June 2023
 # https://github.com/trizen
 
-# Compress/decompress files using LZ77 compression + integers encoding + Huffman coding.
+# Compress/decompress files using LZ77 compression + fixed-width integers encoding + Huffman coding.
 
 use 5.020;
 use strict;
@@ -27,7 +27,7 @@ use constant {
     CHUNK_SIZE        => 1 << 16,    # higher value = better compression
 };
 
-use constant {SIGNATURE => "LZIH" . chr(4)};
+use constant {SIGNATURE => uc(FORMAT) . chr(4)};
 
 sub usage {
     my ($code) = @_;

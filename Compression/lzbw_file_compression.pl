@@ -4,7 +4,7 @@
 # Date: 05 September 2023
 # https://github.com/trizen
 
-# Compress/decompress files using LZ77 compression + integers encoding + Burrows-Wheeler Transform (BWT) + Huffman coding.
+# Compress/decompress files using LZ77 compression + fixed-width integers encoding + Burrows-Wheeler Transform (BWT) + Huffman coding.
 
 # References:
 #   Data Compression (Summer 2023) - Lecture 13 - BZip2
@@ -444,7 +444,12 @@ sub mtf_decode ($encoded, $alphabet = [0 .. 255]) {
 }
 
 sub bwt_balanced ($s) {    # O(n * LOOKAHEAD_LEN) space (fast)
-    [map { $_->[1] } sort { ($a->[0] cmp $b->[0]) || ((substr($s, $a->[1]) . substr($s, 0, $a->[1])) cmp(substr($s, $b->[1]) . substr($s, 0, $b->[1]))) }
+#<<<
+    [
+     map { $_->[1] } sort {
+              ($a->[0] cmp $b->[0])
+           || ((substr($s, $a->[1]) . substr($s, 0, $a->[1])) cmp(substr($s, $b->[1]) . substr($s, 0, $b->[1])))
+     }
      map {
          my $t = substr($s, $_, LOOKAHEAD_LEN);
 
@@ -455,6 +460,7 @@ sub bwt_balanced ($s) {    # O(n * LOOKAHEAD_LEN) space (fast)
          [$t, $_]
        } 0 .. length($s) - 1
     ];
+#>>>
 }
 
 sub bwt_encode ($s) {

@@ -24,7 +24,7 @@ use constant {
     LOOKAHEAD_LEN => 128,
 };
 
-use constant {SIGNATURE => "BWW" . chr(2)};
+use constant {SIGNATURE => uc(FORMAT) . chr(2)};
 
 sub usage {
     my ($code) = @_;
@@ -132,26 +132,8 @@ sub mtf_decode ($encoded, $alphabet = [0 .. 255]) {
     return \@S;
 }
 
-sub bwt_lookahead ($s) {    # O(n) space (moderately fast)
-    [
-     sort {
-         my $t = substr($s, $a, LOOKAHEAD_LEN);
-         my $u = substr($s, $b, LOOKAHEAD_LEN);
-
-         if (length($t) < LOOKAHEAD_LEN) {
-             $t .= substr($s, 0, ($a < LOOKAHEAD_LEN) ? $a : (LOOKAHEAD_LEN - length($t)));
-         }
-
-         if (length($u) < LOOKAHEAD_LEN) {
-             $u .= substr($s, 0, ($b < LOOKAHEAD_LEN) ? $b : (LOOKAHEAD_LEN - length($u)));
-         }
-
-         ($t cmp $u) || ((substr($s, $a) . substr($s, 0, $a)) cmp(substr($s, $b) . substr($s, 0, $b)))
-       } 0 .. length($s) - 1
-    ];
-}
-
 sub bwt_balanced ($s) {    # O(n * LOOKAHEAD_LEN) space (fast)
+#<<<
     [
      map { $_->[1] } sort {
               ($a->[0] cmp $b->[0])
@@ -167,11 +149,11 @@ sub bwt_balanced ($s) {    # O(n * LOOKAHEAD_LEN) space (fast)
          [$t, $_]
        } 0 .. length($s) - 1
     ];
+#>>>
 }
 
 sub bwt_encode ($s) {
 
-    #my $bwt = bwt_lookahead($s);
     my $bwt = bwt_balanced($s);
 
     my $ret    = join('', map { substr($s, $_ - 1, 1) } @$bwt);

@@ -1,17 +1,14 @@
 #!/usr/bin/perl
 
 # Author: Trizen
-# Date: 07 September 2023
+# Date: 10 September 2023
 # https://github.com/trizen
 
-# Compress/decompress files using LZ77 compression + DEFLATE integers encoding + Burrows-Wheeler Transform (BWT) + Huffman coding.
+# Compress/decompress files using Burrows-Wheeler Transform (BWT) + Variable Run-Length encoding + Bzip2.
 
-# References:
+# Reference:
 #   Data Compression (Summer 2023) - Lecture 13 - BZip2
 #   https://youtube.com/watch?v=cvoZbBZ3M2A
-#
-#   Data Compression (Summer 2023) - Lecture 11 - DEFLATE (gzip)
-#   https://youtube.com/watch?v=SJPvNi4HrWQ
 
 use 5.036;
 use Getopt::Std    qw(getopts);
@@ -19,28 +16,15 @@ use File::Basename qw(basename);
 use List::Util     qw(max uniq);
 
 use constant {
-    PKGNAME => 'LZBWH',
+    PKGNAME => 'BWRL',
     VERSION => '0.01',
-    FORMAT  => 'lzbwh',
+    FORMAT  => 'bwrl',
 
-    COMPRESSED_BYTE   => chr(1),
-    UNCOMPRESSED_BYTE => chr(0),
-
-    CHUNK_SIZE            => 1 << 16,                              # higher value = better compression
-    LOOKAHEAD_LEN         => 128,
-    RANDOM_DATA_THRESHOLD => 0.85,                                 # in ratio
-    MAX_INT               => 0b11111111111111111111111111111111,
+    CHUNK_SIZE    => 1 << 17,    # higher value = better compression
+    LOOKAHEAD_LEN => 128,
 };
 
 use constant {SIGNATURE => uc(FORMAT) . chr(1)};
-
-# [distance value, offset bits]
-my @DISTANCE_SYMBOLS = (map { [$_, 0] } 0 .. 4);
-
-until ($DISTANCE_SYMBOLS[-1][0] > MAX_INT) {
-    push @DISTANCE_SYMBOLS, [int($DISTANCE_SYMBOLS[-1][0] * (4 / 3)), $DISTANCE_SYMBOLS[-1][1] + 1];
-    push @DISTANCE_SYMBOLS, [int($DISTANCE_SYMBOLS[-1][0] * (3 / 2)), $DISTANCE_SYMBOLS[-1][1]];
-}
 
 sub usage {
     my ($code) = @_;
@@ -118,54 +102,6 @@ sub main {
         warn "$0: don't know what to do...\n";
         usage(1);
     }
-}
-
-sub lz77_compression ($str, $uncompressed, $indices, $lengths) {
-
-    my $la = 0;
-
-    my $prefix = '';
-    my @chars  = split(//, $str);
-    my $end    = $#chars;
-
-    while ($la <= $end) {
-
-        my $n = 1;
-        my $p = length($prefix);
-        my $tmp;
-
-        my $token = $chars[$la];
-
-        while (    $n < 255
-               and $la + $n <= $end
-               and ($tmp = rindex($prefix, $token, $p)) >= 0) {
-            $p = $tmp;
-            $token .= $chars[$la + $n];
-            ++$n;
-        }
-
-        --$n;
-        push @$indices,      $la - $p;
-        push @$lengths,      $n;
-        push @$uncompressed, ord($chars[$la + $n]);
-        $la += $n + 1;
-        $prefix .= $token;
-    }
-
-    return;
-}
-
-sub lz77_decompression ($uncompressed, $indices, $lengths) {
-
-    my $chunk  = '';
-    my $offset = 0;
-
-    foreach my $i (0 .. $#{$uncompressed}) {
-        $chunk .= substr($chunk, $offset - $indices->[$i], $lengths->[$i]) . $uncompressed->[$i];
-        $offset += $lengths->[$i] + 1;
-    }
-
-    return $chunk;
 }
 
 sub read_bit ($fh, $bitstring) {
@@ -272,50 +208,6 @@ sub delta_decode ($fh, $double = 0) {
     }
 
     return \@acc;
-}
-
-sub encode_integers ($integers) {
-
-    my @symbols;
-    my $offset_bits = '';
-
-    foreach my $dist (@$integers) {
-        foreach my $i (0 .. $#DISTANCE_SYMBOLS) {
-            if ($DISTANCE_SYMBOLS[$i][0] > $dist) {
-                push @symbols, $i - 1;
-
-                if ($DISTANCE_SYMBOLS[$i - 1][1] > 0) {
-                    $offset_bits .= sprintf('%0*b', $DISTANCE_SYMBOLS[$i - 1][1], $dist - $DISTANCE_SYMBOLS[$i - 1][0]);
-                }
-                last;
-            }
-        }
-    }
-
-    my $str = '';
-    open(my $out_fh, '>:raw', \$str);
-    create_huffman_entry(\@symbols, $out_fh);
-    print $out_fh pack('B*', $offset_bits);
-    return $str;
-}
-
-sub decode_integers ($fh) {
-
-    my $symbols  = decode_huffman_entry($fh);
-    my $bits_len = 0;
-
-    foreach my $i (@$symbols) {
-        $bits_len += $DISTANCE_SYMBOLS[$i][1];
-    }
-
-    my $bits = read_bits($fh, $bits_len);
-
-    my @distances;
-    foreach my $i (@$symbols) {
-        push @distances, $DISTANCE_SYMBOLS[$i][0] + oct('0b' . substr($bits, 0, $DISTANCE_SYMBOLS[$i][1], ''));
-    }
-
-    return \@distances;
 }
 
 # produce encode and decode dictionary from a tree
@@ -725,6 +617,74 @@ sub bz2_decompression ($fh, $out_fh) {
     print $out_fh pack('C*', @$data);
 }
 
+sub run_length ($arr) {
+
+    @$arr || return [];
+
+    my @result     = [$arr->[0], 1];
+    my $prev_value = $arr->[0];
+
+    foreach my $i (1 .. $#{$arr}) {
+
+        my $curr_value = $arr->[$i];
+
+        if ($curr_value eq $prev_value) {
+            ++$result[-1][1];
+        }
+        else {
+            push(@result, [$curr_value, 1]);
+        }
+
+        $prev_value = $curr_value;
+    }
+
+    return \@result;
+}
+
+sub VLR_encoding ($bytes) {
+
+    my $uncompressed = '';
+    my $bitstream    = '';
+    my $rle          = run_length($bytes);
+
+    foreach my $cv (@$rle) {
+        my ($c, $v) = @$cv;
+        $uncompressed .= $c;
+        if ($v == 1) {
+            $bitstream .= '0';
+        }
+        else {
+            my $t = sprintf('%b', $v);
+            $bitstream .= join('', '1' x (length($t) - 1), '0', substr($t, 1));
+        }
+    }
+
+    return ($uncompressed, pack('B*', $bitstream));
+}
+
+sub VLR_decoding ($uncompressed, $bits_fh) {
+
+    my $decoded = '';
+    my $buffer  = '';
+
+    foreach my $c (@$uncompressed) {
+
+        my $bl = 0;
+        while (read_bit($bits_fh, \$buffer) == 1) {
+            ++$bl;
+        }
+
+        if ($bl > 0) {
+            $decoded .= $c x (oct('0b1' . join('', map { read_bit($bits_fh, \$buffer) } 1 .. $bl)));
+        }
+        else {
+            $decoded .= $c;
+        }
+    }
+
+    return $decoded;
+}
+
 # Compress file
 sub compress_file ($input, $output) {
 
@@ -740,63 +700,17 @@ sub compress_file ($input, $output) {
     # Print the header
     print $out_fh $header;
 
-    my $lengths      = '';
-    my $uncompressed = '';
-
-    my @sizes;
-    my @indices_block;
-
-    open my $uc_fh,  '>:raw', \$uncompressed;
-    open my $len_fh, '>:raw', \$lengths;
-
-    my $create_bz2_block = sub {
-
-        scalar(@sizes) > 0 or return;
-
-        print $out_fh COMPRESSED_BYTE;
-        print $out_fh delta_encode(\@sizes, 1);
-
-        my $indices = encode_integers(\@indices_block);
-
-        bz2_compression($uncompressed, $out_fh);
-        bz2_compression($lengths,      $out_fh);
-        bz2_compression($indices,      $out_fh);
-
-        @sizes         = ();
-        @indices_block = ();
-
-        open $uc_fh,  '>:raw', \$uncompressed;
-        open $len_fh, '>:raw', \$lengths;
-    };
-
     # Compress data
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
 
-        my (@uncompressed, @indices, @lengths);
-        lz77_compression($chunk, \@uncompressed, \@indices, \@lengths);
+        my ($bwt,          $idx)     = bwt_encode($chunk);
+        my ($uncompressed, $lengths) = VLR_encoding([split(//, $bwt)]);
 
-        my $est_ratio = length($chunk) / (4 * scalar(@uncompressed));
-        say "Est. ratio: ", $est_ratio, " (", scalar(@uncompressed), " uncompressed bytes)";
-
-        if ($est_ratio > RANDOM_DATA_THRESHOLD) {
-            push @sizes, scalar(@uncompressed);
-            print $uc_fh pack('C*', @uncompressed);
-            print $len_fh pack('C*', @lengths);
-            push @indices_block, @indices;
-        }
-        else {
-            say "Random data detected...";
-            $create_bz2_block->();
-            print $out_fh UNCOMPRESSED_BYTE;
-            create_huffman_entry([unpack 'C*', $chunk], $out_fh);
-        }
-
-        if (length($uncompressed) >= CHUNK_SIZE) {
-            $create_bz2_block->();
-        }
+        print $out_fh pack('N', $idx);
+        bz2_compression($uncompressed, $out_fh);
+        bz2_compression($lengths,      $out_fh);
     }
 
-    $create_bz2_block->();
     close $out_fh;
 }
 
@@ -815,51 +729,21 @@ sub decompress_file ($input, $output) {
 
     while (!eof($fh)) {
 
-        my $compression_byte = getc($fh);
-
-        if ($compression_byte eq UNCOMPRESSED_BYTE) {
-            say "Decoding random data...";
-            print $out_fh pack('C*', @{decode_huffman_entry($fh)});
-            next;
-        }
-        elsif ($compression_byte ne COMPRESSED_BYTE) {
-            die "decompression error";
-        }
-
-        my @sizes = @{delta_decode($fh, 1)};
-
-        my $indices      = '';
-        my $lengths      = '';
         my $uncompressed = '';
+        my $lengths      = '';
 
         open my $uc_fh,  '>:raw',  \$uncompressed;
-        open my $len_fh, '>:raw',  \$lengths;
-        open my $idx_fh, '+>:raw', \$indices;
+        open my $len_fh, '+>:raw', \$lengths;
+
+        my $idx = unpack('N', join('', map { getc($fh) // die "decompression error" } 1 .. 4));
 
         bz2_decompression($fh, $uc_fh);     # uncompressed
         bz2_decompression($fh, $len_fh);    # lengths
-        bz2_decompression($fh, $idx_fh);    # indices
 
-        seek($idx_fh, 0, 0);
+        seek($len_fh, 0, 0);
 
-        my @indices      = @{decode_integers($idx_fh)};
-        my @uncompressed = split(//, $uncompressed);
-        my @lengths      = unpack('C*', $lengths);
-
-        while (@uncompressed) {
-
-            my $size = shift(@sizes) // die "decompression error";
-
-            my @uncompressed_chunk = splice(@uncompressed, 0, $size);
-            my @lengths_chunk      = splice(@lengths,      0, $size);
-            my @indices_chunk      = splice(@indices,      0, $size);
-
-            scalar(@uncompressed_chunk) == $size or die "decompression error";
-            scalar(@lengths_chunk) == $size      or die "decompression error";
-            scalar(@indices_chunk) == $size      or die "decompression error";
-
-            print $out_fh lz77_decompression(\@uncompressed_chunk, \@indices_chunk, \@lengths_chunk);
-        }
+        my $dec = VLR_decoding([split(//, $uncompressed)], $len_fh);
+        print $out_fh bwt_decode($dec, $idx);
     }
 
     close $fh;

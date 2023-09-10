@@ -426,7 +426,12 @@ sub mtf_decode ($encoded, $alphabet = [0 .. 255]) {
 }
 
 sub bwt_balanced ($s) {    # O(n * LOOKAHEAD_LEN) space (fast)
-    [map { $_->[1] } sort { ($a->[0] cmp $b->[0]) || ((substr($s, $a->[1]) . substr($s, 0, $a->[1])) cmp(substr($s, $b->[1]) . substr($s, 0, $b->[1]))) }
+#<<<
+    [
+     map { $_->[1] } sort {
+              ($a->[0] cmp $b->[0])
+           || ((substr($s, $a->[1]) . substr($s, 0, $a->[1])) cmp(substr($s, $b->[1]) . substr($s, 0, $b->[1])))
+     }
      map {
          my $t = substr($s, $_, LOOKAHEAD_LEN);
 
@@ -437,6 +442,7 @@ sub bwt_balanced ($s) {    # O(n * LOOKAHEAD_LEN) space (fast)
          [$t, $_]
        } 0 .. length($s) - 1
     ];
+#>>>
 }
 
 sub bwt_encode ($s) {

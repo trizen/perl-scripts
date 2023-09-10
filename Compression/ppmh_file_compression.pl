@@ -32,7 +32,7 @@ use constant {
     HUFFMAN_MODE => chr(2),
 };
 
-use constant {SIGNATURE => "PPMH" . chr(1)};
+use constant {SIGNATURE => uc(FORMAT) . chr(1)};
 
 sub usage {
     my ($code) = @_;
@@ -560,8 +560,7 @@ sub compression ($chunk, $out_fh) {
     printf("Before VRL : %s (saving %.2f%%)\n", length($enc), (length($chunk) - length($enc) / 8) / length($chunk) * 100);
 
     my $vrl_enc = binary_vrl_encoding($enc);
-    printf("After VRL  : %s (saving %.2f%%)\n\n",
-           length($vrl_enc), (length($chunk) - length($vrl_enc) / 8) / length($chunk) * 100);
+    printf("After VRL  : %s (saving %.2f%%)\n\n", length($vrl_enc), (length($chunk) - length($vrl_enc) / 8) / length($chunk) * 100);
 
     my $mode = PPM_MODE;
 

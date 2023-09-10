@@ -26,7 +26,7 @@ use constant {
     LOOKAHEAD_LEN => 128,
 };
 
-use constant {SIGNATURE => "BWT" . chr(2)};
+use constant {SIGNATURE => uc(FORMAT) . chr(2)};
 
 sub usage {
     my ($code) = @_;
@@ -104,34 +104,6 @@ sub main {
         warn "$0: don't know what to do...\n";
         usage(1);
     }
-}
-
-sub mtf_encode ($bytes, $alphabet = [0 .. 255]) {
-
-    my @C;
-
-    my @table;
-    @table[@$alphabet] = (0 .. $#{$alphabet});
-
-    foreach my $c (@$bytes) {
-        push @C, (my $index = $table[$c]);
-        unshift(@$alphabet, splice(@$alphabet, $index, 1));
-        @table[@{$alphabet}[0 .. $index]] = (0 .. $index);
-    }
-
-    return \@C;
-}
-
-sub mtf_decode ($encoded, $alphabet = [0 .. 255]) {
-
-    my @S;
-
-    foreach my $p (@$encoded) {
-        push @S, $alphabet->[$p];
-        unshift(@$alphabet, splice(@$alphabet, $p, 1));
-    }
-
-    return \@S;
 }
 
 sub read_bit ($fh, $bitstring) {
@@ -324,26 +296,36 @@ sub decode_huffman_entry ($fh) {
     return [];
 }
 
-sub bwt_lookahead ($s) {    # O(n) space (moderately fast)
-    [
-     sort {
-         my $t = substr($s, $a, LOOKAHEAD_LEN);
-         my $u = substr($s, $b, LOOKAHEAD_LEN);
+sub mtf_encode ($bytes, $alphabet = [0 .. 255]) {
 
-         if (length($t) < LOOKAHEAD_LEN) {
-             $t .= substr($s, 0, ($a < LOOKAHEAD_LEN) ? $a : (LOOKAHEAD_LEN - length($t)));
-         }
+    my @C;
 
-         if (length($u) < LOOKAHEAD_LEN) {
-             $u .= substr($s, 0, ($b < LOOKAHEAD_LEN) ? $b : (LOOKAHEAD_LEN - length($u)));
-         }
+    my @table;
+    @table[@$alphabet] = (0 .. $#{$alphabet});
 
-         ($t cmp $u) || ((substr($s, $a) . substr($s, 0, $a)) cmp(substr($s, $b) . substr($s, 0, $b)))
-       } 0 .. length($s) - 1
-    ];
+    foreach my $c (@$bytes) {
+        push @C, (my $index = $table[$c]);
+        unshift(@$alphabet, splice(@$alphabet, $index, 1));
+        @table[@{$alphabet}[0 .. $index]] = (0 .. $index);
+    }
+
+    return \@C;
+}
+
+sub mtf_decode ($encoded, $alphabet = [0 .. 255]) {
+
+    my @S;
+
+    foreach my $p (@$encoded) {
+        push @S, $alphabet->[$p];
+        unshift(@$alphabet, splice(@$alphabet, $p, 1));
+    }
+
+    return \@S;
 }
 
 sub bwt_balanced ($s) {    # O(n * LOOKAHEAD_LEN) space (fast)
+#<<<
     [
      map { $_->[1] } sort {
               ($a->[0] cmp $b->[0])
@@ -359,11 +341,11 @@ sub bwt_balanced ($s) {    # O(n * LOOKAHEAD_LEN) space (fast)
          [$t, $_]
        } 0 .. length($s) - 1
     ];
+#>>>
 }
 
 sub bwt_encode ($s) {
 
-    ##my $bwt = bwt_lookahead($s);
     my $bwt = bwt_balanced($s);
 
     my $ret    = join('', map { substr($s, $_ - 1, 1) } @$bwt);

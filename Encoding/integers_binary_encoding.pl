@@ -4,7 +4,7 @@
 # Date: 23 March 2023
 # https://github.com/trizen
 
-# Encode and decode a random list of integers into a binary string.
+# Encode and decode a random list of integers into a binary string, using increasing fixed-width segments.
 
 use 5.036;
 
