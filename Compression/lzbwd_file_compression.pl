@@ -214,8 +214,8 @@ sub delta_encode ($integers, $double = 0) {
             $bitstring .= '0';
         }
         elsif ($double) {
-            my $t = sprintf('%b', abs($d));
-            my $l = sprintf('%b', length($t) + 1);
+            my $t = sprintf('%b', abs($d) + 1);
+            my $l = sprintf('%b', length($t));
             $bitstring .= '1' . (($d < 0) ? '0' : '1') . ('1' x (length($l) - 1)) . '0' . substr($l, 1) . substr($t, 1);
         }
         else {
@@ -245,10 +245,10 @@ sub delta_decode ($fh, $double = 0) {
             my $bl = 0;
             ++$bl while (read_bit($fh, \$buffer) eq '1');
 
-            my $bl2 = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. $bl)) - 1;
+            my $bl2 = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. $bl));
             my $int = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. ($bl2 - 1)));
 
-            push @deltas, ($bit eq '1' ? $int : -$int);
+            push @deltas, ($bit eq '1' ? 1 : -1) * ($int - 1);
         }
         else {
             my $bit = read_bit($fh, \$buffer);

@@ -439,8 +439,8 @@ sub elias_encoding ($integers) {
             $bitstring .= '0';
         }
         else {
-            my $t = sprintf('%b', $k);
-            my $l = length($t) + 1;
+            my $t = sprintf('%b', $k + 1);
+            my $l = length($t);
             my $L = sprintf('%b', $l);
             $bitstring .= ('1' x (length($L) - 1)) . '0' . substr($L, 1) . substr($t, 1);
         }
@@ -462,10 +462,10 @@ sub elias_decoding ($fh) {
 
         if ($bl > 0) {
 
-            my $bl2 = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. $bl)) - 1;
+            my $bl2 = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. $bl));
             my $int = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. ($bl2 - 1)));
 
-            push @ints, $int;
+            push @ints, $int - 1;
         }
         else {
             push @ints, 0;
@@ -568,8 +568,8 @@ sub delta_encode ($integers) {
             $bitstring .= '0';
         }
         else {
-            my $t = sprintf('%b', abs($d));
-            my $l = sprintf('%b', length($t) + 1);
+            my $t = sprintf('%b', abs($d) + 1);
+            my $l = sprintf('%b', length($t));
             $bitstring .= '1' . (($d < 0) ? '0' : '1') . ('1' x (length($l) - 1)) . '0' . substr($l, 1) . substr($t, 1);
         }
     }
@@ -595,10 +595,10 @@ sub delta_decode ($fh) {
             my $bl = 0;
             ++$bl while (read_bit($fh, \$buffer) eq '1');
 
-            my $bl2 = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. $bl)) - 1;
+            my $bl2 = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. $bl));
             my $int = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. ($bl2 - 1)));
 
-            push @deltas, ($bit eq '1' ? $int : -$int);
+            push @deltas, ($bit eq '1' ? 1 : -1) * ($int - 1);
         }
 
         if ($k == 0) {

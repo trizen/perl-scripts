@@ -29,8 +29,8 @@ sub elias_encoding ($integers) {
             $bitstring .= '0';
         }
         else {
-            my $t = sprintf('%b', $k);
-            my $l = length($t) + 1;
+            my $t = sprintf('%b', $k + 1);
+            my $l = length($t);
             my $L = sprintf('%b', $l);
             $bitstring .= ('1' x (length($L) - 1)) . '0' . substr($L, 1) . substr($t, 1);
         }
@@ -54,10 +54,10 @@ sub elias_decoding ($str) {
 
         if ($bl > 0) {
 
-            my $bl2 = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. $bl)) - 1;
+            my $bl2 = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. $bl));
             my $int = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. ($bl2 - 1)));
 
-            push @ints, $int;
+            push @ints, $int - 1;
         }
         else {
             push @ints, 0;

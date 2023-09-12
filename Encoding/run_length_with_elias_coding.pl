@@ -58,8 +58,8 @@ sub RLEE_encoding ($integers, $double = 0) {
             $bitstring .= '0';
         }
         elsif ($double) {
-            my $t = sprintf('%b', abs($c));
-            my $l = sprintf('%b', length($t) + 1);
+            my $t = sprintf('%b', abs($c) + 1);
+            my $l = sprintf('%b', length($t));
             $bitstring .= '1' . ('1' x (length($l) - 1)) . '0' . substr($l, 1) . substr($t, 1);
         }
         else {
@@ -97,10 +97,10 @@ sub RLEE_decoding ($bitstring, $double = 0) {
             my $bl = 0;
             ++$bl while (read_bit($fh, \$buffer) eq '1');
 
-            my $bl2 = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. $bl)) - 1;
+            my $bl2 = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. $bl));
             my $int = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. ($bl2 - 1)));
 
-            push @values, $int;
+            push @values, $int - 1;
         }
         else {
             my $n = 0;
