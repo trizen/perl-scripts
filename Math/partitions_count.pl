@@ -16,6 +16,8 @@ use 5.010;
 use strict;
 use warnings;
 
+no warnings 'recursion';
+
 use Memoize qw(memoize);
 use Math::AnyNum qw(:overload floor ceil);
 
