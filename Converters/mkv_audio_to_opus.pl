@@ -15,7 +15,7 @@ sub is_mkv_audio ($file) {
     my $res = `exiftool \Q$file\E`;
     $? == 0       or return;
     defined($res) or return;
-    $res =~ m{^MIME\s+Type\s*:\s*audio/x-matroska}m;
+    $res =~ m{^MIME\s+Type\s*:\s*audio/x-matroska}mi;
 }
 
 sub convert ($file) {

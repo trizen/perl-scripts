@@ -398,6 +398,7 @@ A nice collection of day-to-day Perl scripts.
     * [Qoi encoder](./Image/qoi_encoder.pl)
     * [Qzst decoder](./Image/qzst_decoder.pl)
     * [Qzst encoder](./Image/qzst_encoder.pl)
+    * [Recompress images](./Image/recompress_images.pl)
     * [Remove sensitive exif tags](./Image/remove_sensitive_exif_tags.pl)
     * [Rgb dump](./Image/rgb_dump.pl)
     * [Sharp 2x zoom](./Image/sharp_2x_zoom.pl)

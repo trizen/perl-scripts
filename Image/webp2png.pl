@@ -8,14 +8,13 @@
 
 # The original WEBP files are deleted.
 
-use 5.020;
-use warnings;
-use File::Find qw(find);
-use experimental qw(signatures);
-use File::MimeInfo::Magic qw();
+use 5.036;
+use File::Find   qw(find);
+use Getopt::Long qw(GetOptions);
 
-my $batch_size = 100;                 # how many files to process at once
-my $dwebp_cmd  = "/usr/bin/dwebp";    # `dwebp` command
+my $batch_size   = 100;                 # how many files to process at once
+my $dwebp_cmd    = "/usr/bin/dwebp";    # `dwebp` command
+my $use_exiftool = 0;                   # true to use `exiftool` instead of `File::MimeInfo::Magic`
 
 (-x $dwebp_cmd)
   or die "Error: `dwebp` tool from 'libwebp' is not installed!\n";
@@ -49,6 +48,22 @@ sub convert_WEBPs (@files) {
     }
 }
 
+sub determine_mime_type ($file) {
+
+    if ($use_exiftool) {
+        my $res = `exiftool \Q$file\E`;
+        $? == 0       or return;
+        defined($res) or return;
+        if ($res =~ m{^MIME\s+Type\s*:\s*(\S+)}mi) {
+            return $1;
+        }
+        return;
+    }
+
+    require File::MimeInfo::Magic;
+    File::MimeInfo::Magic::magic($file);
+}
+
 my %types = (
              'image/webp' => {
                               files => [],
@@ -56,8 +71,18 @@ my %types = (
                              },
             );
 
+GetOptions('exiftool!'    => \$use_exiftool,
+           'batch-size=i' => \$batch_size,)
+  or die "Error in command-line arguments!";
+
 @ARGV or die <<"USAGE";
-usage: perl $0 [dirs | files]
+usage: perl $0 [options] [dirs | files]
+
+options:
+
+    --batch=i  : how many files to process at once (default: $batch_size)
+    --exiftool : use `exiftool` to determine the MIME type (default: $use_exiftool)
+
 USAGE
 
 find(
@@ -66,7 +91,7 @@ find(
      wanted   => sub {
 
          (-f $_) || return;
-         my $type = File::MimeInfo::Magic::magic($_) // return;
+         my $type = determine_mime_type($_) // return;
 
          if (exists $types{$type}) {
 

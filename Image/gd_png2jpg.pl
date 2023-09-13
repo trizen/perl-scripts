@@ -8,19 +8,17 @@
 
 # The original PNG files are deleted.
 
-use 5.020;
-use warnings;
-use File::Find qw(find);
-use experimental qw(signatures);
-use Getopt::Long qw(GetOptions);
-use File::MimeInfo::Magic qw();
+use 5.036;
 
 use GD;
+use File::Find   qw(find);
+use Getopt::Long qw(GetOptions);
 
 GD::Image->trueColor(1);
 
-my $batch_size = 100;    # how many files to process at once
-my $quality    = 95;     # default quality value for JPEG (between 0-100)
+my $batch_size   = 100;    # how many files to process at once
+my $quality      = 95;     # default quality value for JPEG (between 0-100)
+my $use_exiftool = 0;      # true to use `exiftool` instead of `File::MimeInfo::Magic`
 
 sub convert_PNGs (@files) {
 
@@ -66,6 +64,22 @@ sub convert_PNGs (@files) {
     }
 }
 
+sub determine_mime_type ($file) {
+
+    if ($use_exiftool) {
+        my $res = `exiftool \Q$file\E`;
+        $? == 0       or return;
+        defined($res) or return;
+        if ($res =~ m{^MIME\s+Type\s*:\s*(\S+)}mi) {
+            return $1;
+        }
+        return;
+    }
+
+    require File::MimeInfo::Magic;
+    File::MimeInfo::Magic::magic($file);
+}
+
 my %types = (
              'image/png' => {
                              files => [],
@@ -73,17 +87,23 @@ my %types = (
                             },
             );
 
+GetOptions(
+           'exiftool!'    => \$use_exiftool,
+           'batch-size=i' => \$batch_size,
+           'q|quality=i'  => \$quality,
+          )
+  or die "Error in command-line arguments!";
+
 @ARGV or die <<"USAGE";
 usage: perl $0 [options] [dirs | files]
 
 options:
 
-    -q INT  : quality level for JPEG (default: $quality)
+    -q INT     : quality level for JPEG (default: $quality)
+    --batch=i  : how many files to process at once (default: $batch_size)
+    --exiftool : use `exiftool` to determine the MIME type (default: $use_exiftool)
 
 USAGE
-
-GetOptions('q|quality=i' => \$quality,)
-  or die "Error in command-line arguments!";
 
 find(
     {
@@ -91,7 +111,7 @@ find(
      wanted   => sub {
 
          (-f $_) || return;
-         my $type = File::MimeInfo::Magic::magic($_) // return;
+         my $type = determine_mime_type($_) // return;
 
          if (exists $types{$type}) {
 

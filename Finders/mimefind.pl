@@ -7,9 +7,8 @@
 # Find files from a given directory (and its subdirectories) that have a specific mimetype.
 
 use 5.036;
-use File::Find            qw(find);
-use File::MimeInfo::Magic qw(mimetype);
-use Getopt::Std           qw(getopts);
+use File::Find  qw(find);
+use Getopt::Std qw(getopts);
 
 sub usage ($exit_code = 0) {
     print <<"EOT";
@@ -20,6 +19,7 @@ options:
     -t TYPE  : display files with this mimetype (regex)
     -n       : display non-matching files
     -f       : display only files
+    -e       : use `exiftool` to determine the MIME types (slow)
     -h       : display this message and exit
 
 examples:
@@ -32,17 +32,37 @@ EOT
     exit($exit_code);
 }
 
-getopts('fhnt:', \my %opts);
+getopts('efhnt:', \my %opts);
 $opts{t} || usage(1);
 $opts{h} && usage(0);
 
 my $type_re = qr/$opts{t}/;
 
+sub determine_mime_type ($file) {
+
+    if (-d $file) {
+        return 'inode/directory';
+    }
+
+    if ($opts{e}) {
+        my $res = `exiftool \Q$file\E`;
+        $? == 0       or return;
+        defined($res) or return;
+        if ($res =~ m{^MIME\s+Type\s*:\s*(\S+)}mi) {
+            return $1;
+        }
+        return;
+    }
+
+    require File::MimeInfo::Magic;
+    File::MimeInfo::Magic::mimetype($file);
+}
+
 find(
     {
      wanted => sub {
 
-         my $mimetype = mimetype($_);
+         my $mimetype = determine_mime_type($_) // return;
          my $ok       = ($mimetype =~ $type_re);
 
          $ok = !$ok if $opts{n};

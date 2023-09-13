@@ -17,7 +17,7 @@ sub is_video ($file) {
     $? == 0       or return;
     defined($res) or return;
 
-    $res =~ m{^MIME\s+Type\s*:\s*video/}m;
+    $res =~ m{^MIME\s+Type\s*:\s*video/}mi;
 }
 
 sub collect_video ($file, $directory) {

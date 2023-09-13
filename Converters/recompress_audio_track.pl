@@ -24,7 +24,7 @@ sub is_video_file ($file) {
     my $res = `exiftool \Q$file\E`;
     $? == 0       or return;
     defined($res) or return;
-    $res =~ m{^MIME\s+Type\s*:\s*video/}m;
+    $res =~ m{^MIME\s+Type\s*:\s*video/}mi;
 }
 
 sub recompress_audio_track ($video_file) {
@@ -42,6 +42,7 @@ sub recompress_audio_track ($video_file) {
     # When the original file is smaller, keep the original file
     if ((-s $orig_audio_file) <= (-s $new_audio_file)) {
         say ":: The original audio track is smaller... Will keep it...";
+        unlink($new_audio_file);
         $new_audio_file = $orig_audio_file;
     }
 
@@ -88,4 +89,3 @@ find(
     },
     @dirs
 );
-
