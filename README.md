@@ -861,6 +861,7 @@ A nice collection of day-to-day Perl scripts.
     * [Polynomial interpolation](./Math/polynomial_interpolation.pl)
     * [Power divisors](./Math/power_divisors.pl)
     * [Power of factorial ramanujan](./Math/power_of_factorial_ramanujan.pl)
+    * [Power unitary divisors](./Math/power_unitary_divisors.pl)
     * [Powerfree divisors](./Math/powerfree_divisors.pl)
     * [Powers of primes in factorial](./Math/powers_of_primes_in_factorial.pl)
     * [Powers of primes modulus in factorial](./Math/powers_of_primes_modulus_in_factorial.pl)
