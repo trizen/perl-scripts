@@ -6,25 +6,21 @@
 
 # Generate all the square divisors of a given number.
 
-use 5.010;
-use strict;
-use warnings;
+use 5.036;
+use ntheory qw(:all);
 
-use ntheory qw(factor_exp);
-
-sub square_divisors {
-    my ($n) = @_;
+sub square_divisors($n) {
 
     my @d = (1);
     my @pp = grep { $_->[1] > 1 } factor_exp($n);
 
     foreach my $pp (@pp) {
-        my $p = $pp->[0];
-        my $e = $pp->[1];
+        my ($p, $e) = @$pp;
 
         my @t;
         for (my $i = 2 ; $i <= $e ; $i += 2) {
-            push @t, map { $_ * $p**$i } @d;
+            my $u = powint($p, $i);
+            push @t, map { mulint($_, $u) } @d;
         }
 
         push @d, @t;

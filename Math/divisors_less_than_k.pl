@@ -20,8 +20,7 @@ sub divisors_le {
 
     foreach my $pp (@pp) {
 
-        my $p = $pp->[0];
-        my $e = $pp->[1];
+        my ($p, $e) = @$pp;
 
         my @t;
         my $r = 1;

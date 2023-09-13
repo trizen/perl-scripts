@@ -9,20 +9,16 @@
 # See also:
 #   https://oeis.org/A048250
 
-use 5.010;
-use strict;
-use warnings;
+use 5.036;
+use ntheory qw(:all);
 
-use ntheory qw(factor_exp);
-
-sub squarefree_divisors {
-    my ($n) = @_;
+sub squarefree_divisors($n) {
 
     my @d = (1);
     my @pp = map { $_->[0] } factor_exp($n);
 
     foreach my $p (@pp) {
-        push @d, map { $_ * $p } @d;
+        push @d, map { mulint($_, $p) } @d;
     }
 
     return sort { $a <=> $b } @d;

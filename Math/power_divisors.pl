@@ -6,12 +6,8 @@
 
 # Generate all the k-th power divisors of a given number.
 
-use 5.020;
-use strict;
-use warnings;
-
+use 5.036;
 use ntheory qw(:all);
-use experimental qw(signatures);
 
 sub power_divisors ($n, $k=1) {
 
@@ -19,12 +15,12 @@ sub power_divisors ($n, $k=1) {
     my @pp = grep { $_->[1] >= $k } factor_exp($n);
 
     foreach my $pp (@pp) {
-        my $p = $pp->[0];
-        my $e = $pp->[1];
+        my ($p, $e) = @$pp;
 
         my @t;
         for (my $i = $k ; $i <= $e ; $i += $k) {
-            push @t, map { mulint($_, powint($p, $i)) } @d;
+            my $u = powint($p, $i);
+            push @t, map { mulint($_, $u) } @d;
         }
 
         push @d, @t;
