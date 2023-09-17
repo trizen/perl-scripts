@@ -6,7 +6,7 @@
 
 # Recompress a given list of images, using either PNG or JPEG (whichever results in a smaller file size).
 
-# WARNING: the original files are deleted.
+# WARNING: the original files are deleted!
 # WARNING: the program does LOSSY compression of images!
 
 # If the file is a PNG image:
@@ -44,7 +44,7 @@ my $quality         = 85;    # default quality value for JPEG (between 0-100)
 my $png_compression = 0;     # default PNG compression level for GD (between 0-9)
 
 my $use_exiftool  = 0;       # true to use `exiftool` instead of `File::MimeInfo::Magic`
-my $use_jpegoptim = 0;       # true to use `jpegoptim` insteat of `recomp-jpg`
+my $use_jpegoptim = 0;       # true to use `jpegoptim` instead of `recomp-jpg`
 
 sub png2jpeg ($orig_file, $jpeg_file) {
 

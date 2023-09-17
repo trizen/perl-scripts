@@ -30,7 +30,6 @@ GetOptions("d|dir=s" => \$backup_dir,
 
 my %timestamps = (
                   "1h"  => 1 / 24,
-                  "12h" => 12 / 24,
                   "1d"  => 1,
                   "3d"  => 3,
                   "30d" => 30,

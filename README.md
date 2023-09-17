@@ -110,6 +110,7 @@ A nice collection of day-to-day Perl scripts.
     * [Binary variable length run encoding](./Encoding/binary_variable_length_run_encoding.pl)
     * [Binradix arithmetic coding](./Encoding/binradix_arithmetic_coding.pl)
     * [Binradix arithmetic coding anynum](./Encoding/binradix_arithmetic_coding_anynum.pl)
+    * [Burrows-wheeler file transform](./Encoding/burrows-wheeler_file_transform.pl)
     * [Burrows-wheeler transform](./Encoding/burrows-wheeler_transform.pl)
     * [Delta encoding with double-elias coding](./Encoding/delta_encoding_with_double-elias_coding.pl)
     * [Delta encoding with elias coding](./Encoding/delta_encoding_with_elias_coding.pl)
