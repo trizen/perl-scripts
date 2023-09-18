@@ -192,8 +192,8 @@ foreach my $type (keys %types) {
                 next;
             };
 
-            optimize_png($temp_png);
             png2jpeg($temp_png, $temp_jpg) or next;
+            optimize_png($temp_png);
             optimize_jpeg($temp_jpg);
 
             my $final_file = $temp_png;
@@ -234,8 +234,8 @@ foreach my $type (keys %types) {
                 next;
             };
 
-            optimize_jpeg($temp_jpg);
             jpeg2png($temp_jpg, $temp_png) or next;
+            optimize_jpeg($temp_jpg);
             optimize_png($temp_png);
 
             my $final_file = $temp_png;
