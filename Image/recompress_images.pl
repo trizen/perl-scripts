@@ -2,6 +2,7 @@
 
 # Author: Trizen
 # Date: 13 September 2023
+# Edit: 18 September 2023
 # https://github.com/trizen
 
 # Recompress a given list of images, using either PNG or JPEG (whichever results in a smaller file size).
@@ -10,20 +11,19 @@
 # WARNING: the program does LOSSY compression of images!
 
 # If the file is a PNG image:
-#   1. we recompress it using `pngquant`
-#   2. we create a JPEG copy
-#   3. we recompress the JPEG copy using `recomp-jpg` from LittleUtils
+#   1. we create a JPEG copy
+#   2. we recompress the PNG image using `pngquant`
+#   3. we recompress the JPEG copy using `jpegoptim`
 #   4. then we keep whichever is smaller: the PNG or the JPEG file
 
 # If the file is a JPEG image:
-#   1. we recompress it using `recomp-jpg` from LittleUtils
-#   2. we create a PNG copy
+#   1. we create a PNG copy
+#   2. we recompress the JPEG image using `jpegoptim`
 #   3. we recompress the PNG copy using `pngquant`
 #   4. then we keep whichever is smaller: the JPEG or the PNG file
 
 # The following tools are required:
-#   * recomp-jpg -- for recompressing JPEG images (from LittleUtils)
-#   * jpegoptim  -- for recompressing JPEG images (with --jpegoptim)
+#   * jpegoptim  -- for recompressing JPEG images
 #   * pngquant   -- for recompressing PNG images
 
 use 5.036;
@@ -43,10 +43,12 @@ my $jpeg_only = 0;    # true to recompress only JPEG images
 my $quality         = 85;    # default quality value for JPEG (between 0-100)
 my $png_compression = 0;     # default PNG compression level for GD (between 0-9)
 
-my $use_exiftool  = 0;       # true to use `exiftool` instead of `File::MimeInfo::Magic`
-my $use_jpegoptim = 0;       # true to use `jpegoptim` instead of `recomp-jpg`
+my $use_exiftool = 0;        # true to use `exiftool` instead of `File::MimeInfo::Magic`
 
-sub png2jpeg ($orig_file, $jpeg_file) {
+sub png2jpeg (%args) {
+
+    my $orig_file = $args{png_file}  // return;
+    my $jpeg_file = $args{jpeg_file} // return;
 
     my $image = eval { GD::Image->new($orig_file) } // do {
         warn "[!] Can't load file <<$orig_file>>. Skipping...\n";
@@ -64,7 +66,10 @@ sub png2jpeg ($orig_file, $jpeg_file) {
     close $fh;
 }
 
-sub jpeg2png ($orig_file, $png_file) {
+sub jpeg2png (%args) {
+
+    my $orig_file = $args{jpeg_file} // return;
+    my $png_file  = $args{png_file}  // return;
 
     my $image = eval { GD::Image->new($orig_file) } // do {
         warn "[!] Can't load file <<$orig_file>>. Skipping...\n";
@@ -100,11 +105,10 @@ sub determine_mime_type ($file) {
 
 sub optimize_jpeg ($jpeg_file) {
 
-    if ($use_jpegoptim) {
-        return system('jpegoptim', '-s', '-m', $quality, $jpeg_file);
-    }
+    # Uncomment the following line to use `recomp-jpg` from LittleUtils
+    # return system('recomp-jpg', '-q', '-t', $quality, $jpeg_file);
 
-    system('recomp-jpg', '-t', $quality, $jpeg_file);
+    system('jpegoptim', '-q', '-s', '--threshold=0.1', '-m', $quality, $jpeg_file);
 }
 
 sub optimize_png ($png_file) {
@@ -120,7 +124,6 @@ options:
     --jpeg      : recompress only JPEG images (default: $jpeg_only)
     --png       : recompress only PNG images (default: $png_only)
     --exiftool  : use `exiftool` to determine the MIME type (default: $use_exiftool)
-    --jpegoptim : use `jpegoptim` instead of `recomp-jpg` (default: $use_jpegoptim)
 
 USAGE
 
@@ -129,7 +132,6 @@ GetOptions(
            'jpeg|jpg!'   => \$jpeg_only,
            'png!'        => \$png_only,
            'exiftool!'   => \$use_exiftool,
-           'jpegoptim!'  => \$use_jpegoptim,
           )
   or die "Error in command-line arguments!";
 
@@ -140,7 +142,7 @@ my %types = (
                             },
              'image/jpeg' => {
                               files  => [],
-                              format => 'jpeg',
+                              format => 'jpg',
                              },
             );
 
@@ -165,6 +167,70 @@ my $total_savings = 0;
 my $temp_png = catfile(tmpdir(), mktemp("tmpfileXXXXX") . '.png');
 my $temp_jpg = catfile(tmpdir(), mktemp("tmpfileXXXXX") . '.jpg');
 
+sub recompress_image ($file, $file_format) {
+
+    my $conversion_func = \&jpeg2png;
+    my $temp_file       = $temp_jpg;
+
+    if ($file_format eq 'png') {
+        $conversion_func = \&png2jpeg;
+        $temp_file       = $temp_png;
+    }
+
+    copy($file, $temp_file) or do {
+        warn "[!] Can't copy <<$file>> to <<$temp_file>>: $!\n";
+        return;
+    };
+
+    $conversion_func->(png_file => $temp_png, jpeg_file => $temp_jpg) or return;
+    optimize_png($temp_png);
+    optimize_jpeg($temp_jpg);
+
+    my $final_file = $temp_png;
+    my $file_ext   = 'png';
+
+    if ((-s $temp_jpg) < (-s $final_file)) {
+        $final_file = $temp_jpg;
+        $file_ext   = 'jpg';
+    }
+
+    my $final_size = (-s $final_file);
+    my $curr_size  = (-s $file);
+
+    $final_size > 0 or return;
+
+    if ($final_size < $curr_size) {
+
+        my $saved = ($curr_size - $final_size) / 1024;
+
+        $total_savings += $saved;
+
+        printf(":: Saved: %.2fKB (%.2fMB -> %.2fMB) (%.2f%%) ($file_format -> $file_ext)\n\n",
+               $saved,
+               $curr_size / 1024**2,
+               $final_size / 1024**2,
+               ($curr_size - $final_size) / $curr_size * 100);
+
+        unlink($file) or return;
+
+        my $new_file = ($file =~ s/\.(?:png|jpe?g)\z//ir) . '.' . $file_ext;
+
+        while (-e $new_file) {    # lazy solution
+            $new_file .= '.' . $file_ext;
+        }
+
+        copy($final_file, $new_file) or do {
+            warn "[!] Can't copy <<$final_file>> to <<$new_file>>: $!\n";
+            return;
+        };
+    }
+    else {
+        printf(":: The image is already very well compressed. Skipping...\n\n");
+    }
+
+    return 1;
+}
+
 foreach my $type (keys %types) {
 
     my $ref = $types{$type};
@@ -173,95 +239,19 @@ foreach my $type (keys %types) {
         next;
     }
 
-    if ($png_only and $ref->{format} eq 'jpeg') {
+    if ($png_only and $ref->{format} eq 'jpg') {
         next;
     }
 
     foreach my $file (@{$ref->{files}}) {
-
         if ($ref->{format} eq 'png') {
             say ":: Processing PNG file: $file";
+            recompress_image($file, 'png');
 
-            # 1. we recompress it using `pngquant`
-            # 2. we create a JPEG copy
-            # 3. we recompress the JPEG copy using `recomp-jpg` from LittleUtils
-            # 4. then we keep whichever is smaller: the PNG or the JPEG file
-
-            copy($file, $temp_png) or do {
-                warn "[!] Can't copy <<$file>> to <<$temp_png>>: $!\n";
-                next;
-            };
-
-            png2jpeg($temp_png, $temp_jpg) or next;
-            optimize_png($temp_png);
-            optimize_jpeg($temp_jpg);
-
-            my $final_file = $temp_png;
-            my $file_ext   = 'png';
-
-            if ((-s $temp_jpg) < (-s $final_file)) {
-                $final_file = $temp_jpg;
-                $file_ext   = 'jpg';
-            }
-
-            (-s $final_file) > 0 or next;
-
-            if ((-s $final_file) < (-s $file)) {
-                my $saved = ((-s $file) - (-s $final_file)) / 1024;
-                $total_savings += $saved;
-                printf(":: Saved: %.2fKB\n\n", $saved);
-                unlink($file);
-                my $new_file = ($file =~ s/\.png\z//ir) . '.' . $file_ext;
-                while (-e $new_file) {    # lazy solution
-                    $new_file .= '.' . $file_ext;
-                }
-                copy($final_file, $new_file);
-            }
-            else {
-                printf(":: The recompressed file is larger by %.2fB. Skipping...\n\n", (-s $final_file) - (-s $file));
-            }
         }
-        elsif ($ref->{format} eq 'jpeg') {
+        elsif ($ref->{format} eq 'jpg') {
             say ":: Processing JPEG file: $file";
-
-            # 1. we recompress it using `recomp-jpg` from LittleUtils
-            # 2. we create a PNG copy
-            # 3. we recompress the PNG copy using `pngquant`
-            # 4. then we keep whichever is smaller: the JPEG or the PNG file
-
-            copy($file, $temp_jpg) or do {
-                warn "[!] Can't copy <<$file>> to <<$temp_jpg>>: $!\n";
-                next;
-            };
-
-            jpeg2png($temp_jpg, $temp_png) or next;
-            optimize_jpeg($temp_jpg);
-            optimize_png($temp_png);
-
-            my $final_file = $temp_png;
-            my $file_ext   = 'png';
-
-            if ((-s $temp_jpg) < (-s $final_file)) {
-                $final_file = $temp_jpg;
-                $file_ext   = 'jpg';
-            }
-
-            (-s $final_file) > 0 or next;
-
-            if ((-s $final_file) < (-s $file)) {
-                my $saved = ((-s $file) - (-s $final_file)) / 1024;
-                $total_savings += $saved;
-                printf(":: Saved: %.2fKB\n\n", $saved);
-                unlink($file);
-                my $new_file = ($file =~ s/\.jpe?g\z//ir) . '.' . $file_ext;
-                while (-e $new_file) {    # lazy solution
-                    $new_file .= '.' . $file_ext;
-                }
-                copy($final_file, $new_file);
-            }
-            else {
-                printf(":: The recompressed file is larger by %.2fB. Skipping...\n\n", (-s $final_file) - (-s $file));
-            }
+            recompress_image($file, 'jpg');
         }
         else {
             say "ERROR: unknown format type for file: $file";
