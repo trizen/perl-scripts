@@ -16,8 +16,11 @@ use Math::GMPz;
 use Math::Prime::Util::GMP;
 
 use constant {
-    HAS_NEW_PRIME_UTIL => defined(&Math::Prime::Util::is_almost_prime),
-};
+              TRIAL_LIMIT        => 1e3,
+              HAS_NEW_PRIME_UTIL => defined(&Math::Prime::Util::is_almost_prime),
+             };
+
+my @SMALL_PRIMES = @{primes(TRIAL_LIMIT)};
 
 sub mpz_is_almost_prime ($n, $k) {
 
@@ -33,11 +36,13 @@ sub mpz_is_almost_prime ($n, $k) {
 
     my $trial_limit = Math::GMPz::Rmpz_get_ui($t);
 
-    if ($trial_limit > 1e3 or !Math::GMPz::Rmpz_fits_ulong_p($t)) {
-        $trial_limit = 1e3;
+    if ($trial_limit > TRIAL_LIMIT or !Math::GMPz::Rmpz_fits_ulong_p($t)) {
+        $trial_limit = TRIAL_LIMIT;
     }
 
-    for (my $p = 2 ; $p <= $trial_limit ; $p = next_prime($p)) {
+    foreach my $p (@SMALL_PRIMES) {
+
+        last if ($p > $trial_limit);
 
         if (Math::GMPz::Rmpz_divisible_ui_p($z, $p)) {
             Math::GMPz::Rmpz_set_ui($t, $p);
