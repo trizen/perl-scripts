@@ -12,11 +12,11 @@ use 5.036;
 use File::Find   qw(find);
 use Getopt::Long qw(GetOptions);
 
-my $batch_size   = 100;                 # how many files to process at once
-my $dwebp_cmd    = "/usr/bin/dwebp";    # `dwebp` command
-my $use_exiftool = 0;                   # true to use `exiftool` instead of `File::MimeInfo::Magic`
+my $batch_size   = 100;        # how many files to process at once
+my $dwebp_cmd    = "dwebp";    # `dwebp` command
+my $use_exiftool = 0;          # true to use `exiftool` instead of `File::MimeInfo::Magic`
 
-(-x $dwebp_cmd)
+`$dwebp_cmd -h`
   or die "Error: `dwebp` tool from 'libwebp' is not installed!\n";
 
 sub convert_WEBPs (@files) {
