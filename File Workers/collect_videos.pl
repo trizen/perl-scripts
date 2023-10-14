@@ -32,6 +32,10 @@ sub collect_video ($file, $directory) {
     move($file, $dest);
 }
 
+my @dirs = @ARGV;
+
+@dirs || die "usage: perl $0 [directory | files]\n";
+
 my $directory = rel2abs("Videos");    # directory where to move the videos
 
 if (not -d $directory) {
@@ -42,9 +46,6 @@ if (not -d $directory) {
 if (not -d $directory) {
     die "<<$directory>> is not a directory!";
 }
-
-my @dirs = @ARGV;
-@dirs = curdir() if not @ARGV;
 
 find(
     {

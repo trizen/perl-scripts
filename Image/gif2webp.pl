@@ -1,43 +1,43 @@
 #!/usr/bin/perl
 
-# Daniel "Trizen" Șuteu
-# Date: 10 April 2021
+# Author: Trizen
+# Date: 14 October 2023
 # https://github.com/trizen
 
-# Convert WEBP images to PNG, using the `dwebp` tool from "libwebp".
+# Convert GIF animations to WEBP animations, using the `gif2webp` tool from "libwebp".
 
-# The original WEBP files are deleted.
+# The original GIF files are deleted.
 
 use 5.036;
 use File::Find   qw(find);
 use Getopt::Long qw(GetOptions);
 
-my $dwebp_cmd    = "dwebp";    # `dwebp` command
-my $use_exiftool = 0;          # true to use `exiftool` instead of `File::MimeInfo::Magic`
+my $gif2webp_cmd = "gif2webp";    # `gif2webp` command
+my $use_exiftool = 0;             # true to use `exiftool` instead of `File::MimeInfo::Magic`
 
-`$dwebp_cmd -h`
-  or die "Error: `$dwebp_cmd` tool from 'libwebp' is not installed!\n";
+`$gif2webp_cmd -h`
+  or die "Error: `$gif2webp_cmd` tool from 'libwebp' is not installed!\n";
 
-sub webp2png ($file) {
+sub gif2webp ($file) {
 
     my $orig_file = $file;
-    my $png_file  = $file;
+    my $webp_file = $file;
 
-    if ($png_file =~ s/\.webp\z/.png/i) {
+    if ($webp_file =~ s/\.gif\z/.webp/i) {
         ## ok
     }
     else {
-        $png_file .= '.png';
+        $webp_file .= '.webp';
     }
 
-    if (-e $png_file) {
-        warn "[!] File <<$png_file>> already exists...\n";
+    if (-e $webp_file) {
+        warn "[!] File <<$webp_file>> already exists...\n";
         next;
     }
 
-    system($dwebp_cmd, $orig_file, '-o', $png_file);
+    system($gif2webp_cmd, '-lossy', $orig_file, '-o', $webp_file);
 
-    if ($? == 0 and (-e $png_file) and ($png_file ne $orig_file)) {
+    if ($? == 0 and (-e $webp_file) and ($webp_file ne $orig_file)) {
         unlink($orig_file);
     }
     else {
@@ -49,8 +49,8 @@ sub webp2png ($file) {
 
 sub determine_mime_type ($file) {
 
-    if ($file =~ /\.webp\z/i) {
-        return "image/webp";
+    if ($file =~ /\.gif\z/i) {
+        return "image/gif";
     }
 
     if ($use_exiftool) {
@@ -68,9 +68,9 @@ sub determine_mime_type ($file) {
 }
 
 my %types = (
-             'image/webp' => {
-                              call => \&webp2png,
-                             }
+             'image/gif' => {
+                             call => \&gif2webp,
+                            },
             );
 
 GetOptions('exiftool!' => \$use_exiftool,)

@@ -52,6 +52,14 @@ sub optimize_GIFs (@files) {
 
 sub determine_mime_type ($file) {
 
+    if ($file =~ /\.jpe?g\z/i) {
+        return "image/jpeg";
+    }
+
+    if ($file =~ /\.png\z/i) {
+        return "image/png";
+    }
+
     if ($use_exiftool) {
         my $res = `exiftool \Q$file\E`;
         $? == 0       or return;

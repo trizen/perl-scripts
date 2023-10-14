@@ -152,6 +152,7 @@ A nice collection of day-to-day Perl scripts.
     * [Tailz](./File%20Readers/tailz)
 * File Workers
     * [Auto extensions](./File%20Workers/auto_extensions.pl)
+    * [Collect gifs](./File%20Workers/collect_gifs.pl)
     * [Collect videos](./File%20Workers/collect_videos.pl)
     * [Delete if exists](./File%20Workers/delete_if_exists.pl)
     * [Dir file updater](./File%20Workers/dir_file_updater.pl)
@@ -369,6 +370,7 @@ A nice collection of day-to-day Perl scripts.
     * [Gd png2jpg](./Image/gd_png2jpg.pl)
     * [Gd similar images](./Image/gd_similar_images.pl)
     * [Gd star trails](./Image/gd_star_trails.pl)
+    * [Gif2webp](./Image/gif2webp.pl)
     * [Image2ascii](./Image/image2ascii.pl)
     * [Image2digits](./Image/image2digits.pl)
     * [Image2html](./Image/image2html.pl)
