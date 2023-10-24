@@ -30,7 +30,7 @@ my @dirs = grep { -d } @ARGV;
 
 binmode(STDOUT, ':utf8');
 
-sub rename_file {
+sub unidec_rename_file {
     my ($filename, $new_filename) = @_;
 
     if (not -e $new_filename) {
@@ -64,7 +64,7 @@ find {
             };
 
             if ($opts{r}) {
-                rename_file($_ => $new_filename);
+                unidec_rename_file($_ => $new_filename);
             }
         }
     },
@@ -76,6 +76,6 @@ if ($opts{r}) {
                            sort { $b->[0] <=> $a->[0] }
                            map  { [scalar(splitdir($_->[0])), $_] } @dirs_for_rename
       ) {
-        rename_file($array_ref->[0], $array_ref->[1]);
+        unidec_rename_file($array_ref->[0], $array_ref->[1]);
     }
 }

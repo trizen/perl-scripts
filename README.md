@@ -161,6 +161,7 @@ A nice collection of day-to-day Perl scripts.
     * [Filename cmp del](./File%20Workers/filename_cmp_del.pl)
     * [Keep this formats](./File%20Workers/keep_this_formats.pl)
     * [Make filenames portable](./File%20Workers/make_filenames_portable.pl)
+    * [Md5 rename](./File%20Workers/md5_rename.pl)
     * [Multiple backups](./File%20Workers/multiple_backups.pl)
     * [Remove eof newlines](./File%20Workers/remove_eof_newlines.pl)
     * [Split to n lines](./File%20Workers/split_to_n_lines.pl)
