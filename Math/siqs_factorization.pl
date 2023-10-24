@@ -671,8 +671,7 @@ sub siqs_factorize ($n, $nf) {
 
             my $sieve_array = siqs_sieve($factor_base, $m);
 
-            $enough_relations =
-              siqs_trial_division($n, $sieve_array, $factor_base_info, $smooth_relations, $g, $h, $m, $required_relations);
+            $enough_relations = siqs_trial_division($n, $sieve_array, $factor_base_info, $smooth_relations, $g, $h, $m, $required_relations);
 
             if (   scalar(@$smooth_relations) >= $required_relations
                 or scalar(@$smooth_relations) > $prev_cnt) {
@@ -759,7 +758,7 @@ sub fast_fibonacci_factor ($n, $upto) {
 
     foreach my $k (2 .. $upto) {
 
-        # my ($U, $V) = lucas_sequence($n, $P, $Q, $k);
+        # my ($U, $V) = Math::Prime::Util::GMP::lucas_sequence($n, $P, $Q, $k);
 
         Math::GMPz::Rmpz_set($g, $U1);
         Math::GMPz::Rmpz_mul_ui($U1, $U1, $P);
@@ -773,13 +772,22 @@ sub fast_fibonacci_factor ($n, $upto) {
         Math::GMPz::Rmpz_mod($V1, $V1, $n);
         Math::GMPz::Rmpz_set($V0, $g);
 
-        foreach my $t ($U1, $V1 - $P, $V1, $V1 - 1, $V1 + 1) {
+        foreach my $param ([$U1, 0], [$V1, -$P, 0]) {
 
-            Math::GMPz::Rmpz_gcd($g, $t, $n);
+            my ($t, @deltas) = @$param;
 
-            if (    Math::GMPz::Rmpz_cmp_ui($g, 1) > 0
-                and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
-                return $g;
+            foreach my $delta (@deltas) {
+
+                ($delta >= 0)
+                  ? Math::GMPz::Rmpz_add_ui($g, $t, $delta)
+                  : Math::GMPz::Rmpz_sub_ui($g, $t, -$delta);
+
+                Math::GMPz::Rmpz_gcd($g, $g, $n);
+
+                if (    Math::GMPz::Rmpz_cmp_ui($g, 1) > 0
+                    and Math::GMPz::Rmpz_cmp($g, $n) < 0) {
+                    return $g;
+                }
             }
         }
     }

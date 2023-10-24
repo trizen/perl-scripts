@@ -3,6 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 26 August 2015
+# Edit: 24 October 2023
 # Website: https://github.com/trizen
 
 # Find images that look similar.
@@ -16,17 +17,18 @@ use warnings;
 
 use experimental 'bitwise';
 
-use GD qw();
-use List::Util qw(sum);
-use File::Find qw(find);
+use GD           qw();
+use List::Util   qw(sum);
+use File::Find   qw(find);
 use Getopt::Long qw(GetOptions);
 
 GD::Image->trueColor(1);
 
-my $width      = 64;
-my $height     = 64;
-my $percentage = 50;
+my $width      = 32;
+my $height     = 32;
+my $percentage = 90;
 
+my $keep_only   = undef;
 my $img_formats = '';
 my $resize_to   = $width . 'x' . $height;
 
@@ -34,7 +36,7 @@ my @img_formats = qw(
   jpeg
   jpg
   png
-  );
+);
 
 sub help {
     my ($code) = @_;
@@ -43,9 +45,12 @@ sub help {
 usage: $0 [options] [dir]
 
 options:
-    -p  --percentage=i  : mark the images as similar based on this percentage
+    -p  --percentage=i  : minimum similarity percentage (default: $percentage)
     -r  --resize-to=s   : resize images to this resolution (default: $resize_to)
     -f  --formats=s,s   : specify more image formats (default: @img_formats)
+    -k  --keep=s        : keep only the 'smallest' or 'largest' image from each group
+
+WARNING: option '-k' permanently removes your images!
 
 example:
     perl $0 -p 75 -r '8x8' ~/Pictures
@@ -58,6 +63,7 @@ GetOptions(
            'p|percentage=i' => \$percentage,
            'r|resize-to=s'  => \$resize_to,
            'f|formats=s'    => \$img_formats,
+           'k|keep=s'       => \$keep_only,
            'h|help'         => sub { help(0) },
           )
   or die("Error in command line arguments");
@@ -116,7 +122,7 @@ sub find_similar_images(&@) {
             push @files,
               {
                 fingerprint => fingerprint($_) // return,
-                filename => $_,
+                filename    => $_,
               };
         }
     } => @_;
@@ -140,7 +146,7 @@ sub find_similar_images(&@) {
     #
     my @alike;
     foreach my $root (
-        map { $_->[0] }
+        map  { $_->[0] }
         sort { ($a->[1] <=> $b->[1]) || ($b->[2] <=> $a->[2]) }
         map {
             my $keys = keys(%{$alike{$_}});
@@ -174,7 +180,30 @@ sub find_similar_images(&@) {
 @ARGV || help(1);
 find_similar_images {
     my ($score, $files) = @_;
-    printf("=> Similarity: %.0f%%\n", $score), say join("\n", sort @{$files});
+
+    printf("=> Similarity: %.0f%%\n", $score);
+    say join("\n", sort @{$files});
     say "-" x 80;
-}
-@ARGV;
+
+    if (defined($keep_only)) {
+
+        my @existent_files = grep { -f $_ } @$files;
+
+        scalar(@existent_files) > 1 or return;
+
+        my @sorted_by_size = map { $_->[0] } sort { $a->[1] <=> $b->[1] } map { [$_, -s $_] } @existent_files;
+        if ($keep_only =~ /large/i) {
+            pop(@sorted_by_size);
+        }
+        elsif ($keep_only =~ /small/i) {
+            shift(@sorted_by_size);
+        }
+        else {
+            die "error: unknown value <<$keep_only>> for option `-k`!\n";
+        }
+        foreach my $file (@sorted_by_size) {
+            say "Removing: $file";
+            unlink($file) or warn "Failed to remove: $!";
+        }
+    }
+} @ARGV;

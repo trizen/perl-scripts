@@ -26,6 +26,7 @@ use File::Find   qw(find);
 use List::Util   qw(first min max);
 use Encode       qw(decode_utf8);
 use Getopt::Long qw(GetOptions :config no_ignore_case);
+use File::Basename qw(basename);
 
 sub help {
     my ($code) = @_;
@@ -42,6 +43,7 @@ Options:
         -C  --nocontains=[s] : ignore files which contain these words
         -i  --insensitive    : make all words case-insensitive
         -s  --size!          : group files by size (default: off)
+        -S  --sort=s         : sort files by: 'name' or 'size'
         -p  --percentage=f   : mark the files as similar based on this percent
         -r  --round-up!      : round up the percentage (default: off)
         -L  --levenshtein!   : use the Levenshtein distance algorithm
@@ -78,6 +80,8 @@ my $levenshtein   = 0;    # bool
 my $jaro_distance = 0;    # bool
 my $percentage;           # float
 
+my $sort_by       = undef;
+
 GetOptions(
            'f|first!'       => \$first,
            'l|last!'        => \$last,
@@ -92,6 +96,7 @@ GetOptions(
            'u|unidecode!'   => \$unidecode,
            'J|jaro!'        => \$jaro_distance,
            's|size!'        => \$group_by_size,
+           'S|sort=s'       => \$sort_by,
            'h|help'         => sub { help(0) },
           )
   or die("Error in command line arguments");
@@ -237,6 +242,27 @@ sub normalize_filename {
     join(' ', split(' ', lc($str =~ s{\.\w{1,5}\z}{}r =~ s/[^\pN\pL]+/ /gr)));
 }
 
+sub sort_files {
+    my (@files) = @_;
+
+        my %seen;
+        @files = grep { !$seen{$_}++ } @files;
+
+        if (defined($sort_by)) {
+            if ($sort_by =~ /size/i) {
+                @files = map { $_->[0] } sort {$a->[1] <=> $b->[1] } map {[$_, -s $_] } @files;
+            }
+            elsif ($sort_by =~ /name/i) {
+                @files = map {$_->[0]} sort { $a->[1] cmp $b->[1] } map { [$_, lc(basename($_))] } @files;
+            }
+        }
+        else {
+            @files = sort @files;
+        }
+
+        return @files;
+    }
+
 sub find_similar_filenames (&@) {
     my $code = shift;
 
@@ -291,15 +317,10 @@ sub find_similar_filenames (&@) {
         }
 
         while (my ($fparent, $fdups) = each %dups) {
-            $code->(sort $fparent, @{$fdups});
+            $code->(sort_files($fparent, @{$fdups}));
         }
 
-        $code->(
-            do {
-                my %seen;
-                sort grep { !$seen{$_}++ } @files;
-            }
-        );
+        $code->(sort_files(@files));
     }
 
     return 1;
