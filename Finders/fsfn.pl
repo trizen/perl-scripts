@@ -22,10 +22,10 @@ use warnings;
 
 use experimental qw(refaliasing);
 
-use File::Find   qw(find);
-use List::Util   qw(first min max);
-use Encode       qw(decode_utf8);
-use Getopt::Long qw(GetOptions :config no_ignore_case);
+use File::Find     qw(find);
+use List::Util     qw(first min max);
+use Encode         qw(decode_utf8);
+use Getopt::Long   qw(GetOptions :config no_ignore_case);
 use File::Basename qw(basename);
 
 sub help {
@@ -80,7 +80,7 @@ my $levenshtein   = 0;    # bool
 my $jaro_distance = 0;    # bool
 my $percentage;           # float
 
-my $sort_by       = undef;
+my $sort_by = undef;
 
 GetOptions(
            'f|first!'       => \$first,
@@ -245,23 +245,23 @@ sub normalize_filename {
 sub sort_files {
     my (@files) = @_;
 
-        my %seen;
-        @files = grep { !$seen{$_}++ } @files;
+    my %seen;
+    @files = grep { !$seen{$_}++ } @files;
 
-        if (defined($sort_by)) {
-            if ($sort_by =~ /size/i) {
-                @files = map { $_->[0] } sort {$a->[1] <=> $b->[1] } map {[$_, -s $_] } @files;
-            }
-            elsif ($sort_by =~ /name/i) {
-                @files = map {$_->[0]} sort { $a->[1] cmp $b->[1] } map { [$_, lc(basename($_))] } @files;
-            }
+    if (defined($sort_by)) {
+        if ($sort_by =~ /size/i) {
+            @files = map { $_->[0] } sort { $a->[1] <=> $b->[1] } map { [$_, -s $_] } @files;
         }
-        else {
-            @files = sort @files;
+        elsif ($sort_by =~ /name/i) {
+            @files = map { $_->[0] } sort { $a->[1] cmp $b->[1] } map { [$_, lc(basename($_))] } @files;
         }
-
-        return @files;
     }
+    else {
+        @files = sort @files;
+    }
+
+    return @files;
+}
 
 sub find_similar_filenames (&@) {
     my $code = shift;

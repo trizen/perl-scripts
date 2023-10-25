@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 26 August 2015
-# Edit: 25 October 2023
+# Edit: 24 October 2023
 # Website: https://github.com/trizen
 
 # Find images that look similar.
@@ -15,20 +15,19 @@ use 5.022;
 use strict;
 use warnings;
 
-use experimental 'bitwise';
+use experimental qw(bitwise);
 
-use Image::Magick qw();
-use List::Util    qw(sum);
-use File::Find    qw(find);
-use Getopt::Long  qw(GetOptions);
+use Imager       qw();
+use List::Util   qw(sum);
+use File::Find   qw(find);
+use Getopt::Long qw(GetOptions);
 
 my $width      = 32;
-my $height     = 32;
+my $height     = 'auto';
 my $percentage = 90;
 
 my $keep_only   = undef;
 my $img_formats = '';
-my $resize_to   = $width . 'x' . $height;
 
 my @img_formats = qw(
   jpeg
@@ -44,7 +43,8 @@ usage: $0 [options] [dir]
 
 options:
     -p  --percentage=i  : minimum similarity percentage (default: $percentage)
-    -r  --resize-to=s   : resize images to this resolution (default: $resize_to)
+    -w  --width=i       : resize images to this width (default: $width)
+    -h  --height=i      : resize images to this height (default: $height)
     -f  --formats=s,s   : specify more image formats (default: @img_formats)
     -k  --keep=s        : keep only the 'smallest' or 'largest' image from each group
 
@@ -59,16 +59,13 @@ EOT
 
 GetOptions(
            'p|percentage=i' => \$percentage,
-           'r|resize-to=s'  => \$resize_to,
+           'w|width=s'      => \$width,
+           'h|height=s'     => \$height,
            'f|formats=s'    => \$img_formats,
            'k|keep=s'       => \$keep_only,
-           'h|help'         => sub { help(0) },
           )
   or die("Error in command line arguments");
 
-($width, $height) = split(/\h*x\h*/i, $resize_to);
-
-my $size = $width * $height;
 push @img_formats, map { quotemeta } split(/\s*,\s*/, $img_formats);
 
 my $img_formats_re = do {
@@ -78,37 +75,38 @@ my $img_formats_re = do {
 
 #<<<
 sub alike_percentage {
-    ((($_[0] ^. $_[1]) =~ tr/\0//) / $size)**2 * 100;
+    ((($_[0] ^. $_[1]) =~ tr/\0//) / $_[2])**2 * 100;
 }
 #>>>
 
 sub fingerprint {
     my ($image) = @_;
 
-    my $img = Image::Magick->new;
-    $img->Read(filename => $image) && return;
+    my $img = Imager->new(file => $image) or do {
+        warn "Failed to load <<$image>>: ", Imager->errstr();
+        return;
+    };
 
-    $img->AdaptiveResize(width => $width, height => $height) && return;   # balanced
-    ## $img->Resize(width => $width, height => $height) && return;        # better, but slower
-    ## $img->Resample(width => $width, height => $height) && return;      # faster, but worse
+    if ($height ne 'auto') {
+        $img = $img->scale(ypixels => $height);
+    }
+    else {
+        $img = $img->scale(xpixels => $width);
+    }
 
-    my @pixels = $img->GetPixels(
-                                 map       => 'RGB',
-                                 x         => 0,
-                                 y         => 0,
-                                 width     => $width,
-                                 height    => $height,
-                                 normalize => 1,
-                                );
+    my ($curr_width, $curr_height) = ($img->getwidth, $img->getheight);
 
     my @averages;
-
-    while (@pixels) {
-        push @averages, sum(splice(@pixels, 0, 3))/3;
+    foreach my $y (0 .. $curr_height - 1) {
+        my @line = $img->getscanline(y => $y);
+        foreach my $pixel (@line) {
+            my ($R, $G, $B) = $pixel->rgba;
+            push @averages, sum($R, $G, $B) / 3;
+        }
     }
 
     my $avg = sum(@averages) / @averages;
-    join('', map { ($_ < $avg) ? 1 : 0 } @averages);
+    [join('', map { ($_ < $avg) ? 1 : 0 } @averages), $curr_width, $curr_height];
 }
 
 sub find_similar_images(&@) {
@@ -134,7 +132,11 @@ sub find_similar_images(&@) {
     my %alike;
     foreach my $i (0 .. $#files - 1) {
         for (my $j = $i + 1 ; $j <= $#files ; $j++) {
-            my $p = alike_percentage($files[$i]{fingerprint}, $files[$j]{fingerprint});
+            my $p = alike_percentage(
+                           $files[$i]{fingerprint}->[0],
+                           $files[$j]{fingerprint}->[0],
+                           sqrt($files[$i]{fingerprint}->[1] * $files[$j]{fingerprint}->[1]) * sqrt($files[$i]{fingerprint}->[2] * $files[$j]{fingerprint}->[2])
+            );
             if ($p >= $percentage) {
                 $alike{$files[$i]{filename}}{$files[$j]{filename}} = $p;
                 $alike{$files[$j]{filename}}{$files[$i]{filename}} = $p;

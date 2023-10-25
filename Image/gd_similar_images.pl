@@ -78,10 +78,6 @@ my $img_formats_re = do {
     qr/\.(@img_formats)\z/i;
 };
 
-sub avg {
-    ($_[0] + $_[1] + $_[2]) / 3;
-}
-
 #<<<
 sub alike_percentage {
     ((($_[0] ^. $_[1]) =~ tr/\0//) / $size)**2 * 100;
@@ -102,12 +98,12 @@ sub fingerprint {
     my @averages;
     foreach my $y (0 .. $height - 1) {
         foreach my $x (0 .. $width - 1) {
-            push @averages, avg($img->rgb($img->getPixel($x, $y)));
+            push @averages, sum($img->rgb($img->getPixel($x, $y)))/3;
         }
     }
 
     my $avg = sum(@averages) / @averages;
-    join('', map { $_ < $avg ? 1 : 0 } @averages);
+    join('', map { ($_ < $avg) ? 1 : 0 } @averages);
 }
 
 sub find_similar_images(&@) {

@@ -10,6 +10,25 @@ use File::Temp            qw(mktemp);
 use File::Copy            qw(move);
 use File::Basename        qw(dirname basename);
 use File::Spec::Functions qw(catfile curdir);
+use Getopt::Long          qw(GetOptions);
+
+my $bitrate = 96;
+
+sub usage ($exit_code = 0) {
+    print <<"EOT";
+usage: $0 [options] [files | directories]
+
+options:
+    -b --bitrate=i  : output bitrate in kbps (default: $bitrate)
+    -h --help       : display this message and exit
+
+EOT
+    exit($exit_code);
+}
+
+GetOptions('b|bitrate=i' => \$bitrate,
+           'h|help'      => sub { usage(0) },)
+  or die("Error in command line arguments");
 
 sub is_mkv_audio ($file) {
     my $res = `exiftool \Q$file\E`;
@@ -22,8 +41,12 @@ sub convert ($file) {
     my $tmpfile = mktemp("tempXXXXXXXXXXX") . '.opus';
     say ":: Temporary file: $tmpfile";
 
-    system("ffmpeg", '-loglevel', 'warning', "-i", $file, $tmpfile);
-    $? == 0 or return;
+    system("ffmpeg", '-loglevel', 'warning', "-i", $file, "-b:a", $bitrate . "K", $tmpfile);
+
+    $? == 0 or do {
+        unlink($tmpfile);
+        return;
+    };
 
     my $dir      = dirname($file);
     my $basename = basename($file) =~ s{\.\w+\z}{.opus}r;
@@ -35,7 +58,8 @@ sub convert ($file) {
 }
 
 my @dirs = @ARGV;
-@dirs = curdir() if not @ARGV;
+
+@dirs || usage(1);
 
 find(
     {

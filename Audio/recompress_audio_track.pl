@@ -32,12 +32,20 @@ sub recompress_audio_track ($video_file) {
     say ":: Extracting audio track...";
     my $orig_audio_file = mktemp("tempXXXXXXXXXXX") . '.mkv';
     system("ffmpeg", "-loglevel", "warning", "-i", $video_file, "-vn", "-acodec", "copy", $orig_audio_file);
-    $? == 0 or return;
+
+    $? == 0 or do {
+        unlink($orig_audio_file);
+        return;
+    };
 
     say ":: Recompressing audio track...";
     my $new_audio_file = mktemp("tempXXXXXXXXXXX") . '.opus';
     system("ffmpeg", "-loglevel", "warning", "-i", $orig_audio_file, "-vn", "-sn", "-dn", "-c:a", "libopus", "-b:a", "40K", $new_audio_file);
-    $? == 0 or return;
+
+    $? == 0 or do {
+        unlink($new_audio_file);
+        return;
+    };
 
     # When the original file is smaller, keep the original file
     if ((-s $orig_audio_file) <= (-s $new_audio_file)) {
@@ -50,7 +58,12 @@ sub recompress_audio_track ($video_file) {
     my $new_video_file = mktemp("tempXXXXXXXXXXX") . '.mkv';
     system("ffmpeg", "-loglevel", "warning", "-i", $video_file, "-i", $new_audio_file,
            "-map_metadata", "0", "-map", "0:v", "-map", "1:a", "-map", "0:s?", "-c", "copy", $new_video_file);
-    $? == 0 or return;
+
+    $? == 0 or do {
+        unlink($new_audio_file);
+        unlink($new_video_file);
+        return;
+    };
 
     my $dir              = dirname($video_file);
     my $basename         = basename($video_file) =~ s{\.\w+\z}{.mkv}r;

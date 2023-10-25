@@ -379,6 +379,7 @@ A nice collection of day-to-day Perl scripts.
     * [Image2mozaic](./Image/image2mozaic.pl)
     * [Image2png](./Image/image2png.pl)
     * [Image2prime](./Image/image2prime.pl)
+    * [Imager similar images](./Image/imager_similar_images.pl)
     * [Img-autocrop](./Image/img-autocrop.pl)
     * [Img-autocrop-avg](./Image/img-autocrop-avg.pl)
     * [Img-autocrop-whitebg](./Image/img-autocrop-whitebg.pl)

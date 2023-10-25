@@ -46,7 +46,7 @@ my @dirs = @ARGV;
 
 @dirs || die "usage: perl $0 [directory | files]\n";
 
-my $directory = rel2abs("GIF images");    # directory where to move the videos
+my $directory = rel2abs("GIF images");    # directory where to move the files
 
 if (not -d $directory) {
     make_path($directory)
