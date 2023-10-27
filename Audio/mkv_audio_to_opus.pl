@@ -9,7 +9,7 @@ use File::Find            qw(find);
 use File::Temp            qw(mktemp);
 use File::Copy            qw(move);
 use File::Basename        qw(dirname basename);
-use File::Spec::Functions qw(catfile curdir);
+use File::Spec::Functions qw(catfile);
 use Getopt::Long          qw(GetOptions);
 
 my $bitrate = 96;

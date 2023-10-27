@@ -40,20 +40,19 @@ sub encode_decode ($$) {
                 next LOOP_1;
             }
         }
-        $output .= chr;
+        $output .= chr($c);
         $i = 1;
     }
 
     return $output;
 }
 
-my $enc = encode_decode(1, q{test});
+my $enc = encode_decode(1, "test");
 my $dec = encode_decode(0, $enc);
 
 say "Enc: ", $enc;
 say "Dec: ", $dec;
 
-__END__
 # Encoding
 my $encoded = encode_decode(1, "Just another ")
             . encode_decode(1, "Perl hacker,");
@@ -63,13 +62,3 @@ my $decoded = encode_decode(0, $encoded);
 
 say $encoded;
 say $decoded;
-
-__END__
-
-my $text = "Just another Perl hacker,";
-
-# Encoding
-my $encoded = encode_decode(1, $text );
-
-# Decoding
-my $decoded = encode_decode(0, $encoded);
