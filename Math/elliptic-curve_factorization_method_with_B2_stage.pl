@@ -22,16 +22,6 @@ package Point {
               }, $class;
     }
 
-    sub eq ($self, $other) {
-
-        # Two points are equal if X/Z of both points are equal
-        if (($self->{a_24} != $other->{a_24}) || ($self->{$self->{mod}} != $other->{$self->{mod}})) {
-            return 0;
-        }
-
-        divmod($self->{x_cord}, $self->{z_cord}, $self->{mod}) == divmod($other->{x_cord}, $other->{z_cord}, $self->{mod});
-    }
-
     sub add ($self, $Q, $diff) {
         my $u = mulmod(submod($self->{x_cord}, $self->{z_cord}, $self->{mod}), addmod($Q->{x_cord}, $Q->{z_cord}, $self->{mod}), $self->{mod});
         my $v = mulmod(addmod($self->{x_cord}, $self->{z_cord}, $self->{mod}), submod($Q->{x_cord}, $Q->{z_cord}, $self->{mod}), $self->{mod});
@@ -137,7 +127,6 @@ sub ecm_one_factor ($n, $B1 = 10_000, $B2 = 100_000, $max_curves = 200) {
             foreach my $q (sieve_primes($r + 2, 2 * $D + $r)) {
                 my $delta = ($q - $r) >> 1;
 
-                # XXX: In the SymPy code (v1.11.1), there is a mistake, using `S[d]` instead of `S[delta]`.
                 $g = mulmod(
                             $g,
                             addmod(
