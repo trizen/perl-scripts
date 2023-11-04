@@ -32,7 +32,7 @@ sub findQ ($n) {
 
 sub BPSW_primality_test ($n) {
 
-    $n = Math::GMPz->new("$n");
+    $n = Math::GMPz::Rmpz_init_set_str($n, 10) if ref($n) ne 'Math::GMPz';
 
     return 0 if Math::GMPz::Rmpz_cmp_ui($n, 1) <= 0;
     return 1 if Math::GMPz::Rmpz_cmp_ui($n, 2) == 0;
@@ -40,14 +40,17 @@ sub BPSW_primality_test ($n) {
     return 0 if Math::GMPz::Rmpz_even_p($n);
     return 0 if Math::GMPz::Rmpz_perfect_power_p($n);
 
-    my $d = Math::GMPz::Rmpz_init();
-    my $t = Math::GMPz::Rmpz_init_set_ui(2);
+    state $d = Math::GMPz::Rmpz_init_nobless();
+    state $t = Math::GMPz::Rmpz_init_nobless();
+
+    Math::GMPz::Rmpz_set_ui($t, 2);
 
     # Fermat base-2 test (a strong Miller-Rabin test should be preferred instead)
     Math::GMPz::Rmpz_sub_ui($d, $n, 1);
     Math::GMPz::Rmpz_powm($t, $t, $d, $n);
     Math::GMPz::Rmpz_cmp_ui($t, 1) and return 0;
 
+    my $P = 1;
     my $Q = findQ($n);
 
     Math::GMPz::Rmpz_add_ui($d, $d, 2);                 # d = n+1
@@ -55,7 +58,7 @@ sub BPSW_primality_test ($n) {
     Math::GMPz::Rmpz_div_2exp($t, $d, $s+1);            # t = d >> (s+1)
 
     my $U1 = Math::GMPz::Rmpz_init_set_ui(1);
-    my ($V1, $V2) = (Math::GMPz::Rmpz_init_set_ui(2), Math::GMPz::Rmpz_init_set_ui(1));
+    my ($V1, $V2) = (Math::GMPz::Rmpz_init_set_ui(2), Math::GMPz::Rmpz_init_set_ui($P));
     my ($Q1, $Q2) = (Math::GMPz::Rmpz_init_set_ui(1), Math::GMPz::Rmpz_init_set_ui(1));
 
     foreach my $bit (split(//, Math::GMPz::Rmpz_get_str($t, 2))) {
