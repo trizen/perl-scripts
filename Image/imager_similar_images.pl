@@ -88,10 +88,10 @@ sub fingerprint {
     };
 
     if ($height ne 'auto') {
-        $img = $img->scale(ypixels => $height);
+        $img = $img->scale(ypixels => $height, qtype => 'preview');
     }
     else {
-        $img = $img->scale(xpixels => $width);
+        $img = $img->scale(xpixels => $width, qtype => 'preview');
     }
 
     my ($curr_width, $curr_height) = ($img->getwidth, $img->getheight);
