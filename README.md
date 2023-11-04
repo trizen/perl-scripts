@@ -405,6 +405,7 @@ A nice collection of day-to-day Perl scripts.
     * [Qzst encoder](./Image/qzst_encoder.pl)
     * [Recompress images](./Image/recompress_images.pl)
     * [Remove sensitive exif tags](./Image/remove_sensitive_exif_tags.pl)
+    * [Resize images](./Image/resize_images.pl)
     * [Rgb dump](./Image/rgb_dump.pl)
     * [Sharp 2x zoom](./Image/sharp_2x_zoom.pl)
     * [Visualize binary](./Image/visualize_binary.pl)
