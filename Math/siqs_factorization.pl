@@ -772,7 +772,7 @@ sub fast_fibonacci_factor ($n, $upto) {
         Math::GMPz::Rmpz_mod($V1, $V1, $n);
         Math::GMPz::Rmpz_set($V0, $g);
 
-        foreach my $param ([$U1, 0], [$V1, -$P, -2*$Q, 0]) {
+        foreach my $param ([$U1, 0], [$V1, -$P, -2 * $Q, 0]) {
 
             my ($t, @deltas) = @$param;
 
@@ -927,12 +927,12 @@ sub chebyshev_factorization ($n, $B, $A = 127) {
 
     Math::GMPz::Rmpz_invert($i, $i, $n);
 
-    my sub chebyshevTmod ($A, $x) {
+    my $chebyshevTmod = sub ($A, $x) {
         Math::GMPz::Rmpz_mul_2exp($x, $x, 1);
         Math::GMPz::Rmpz_set($x, fast_lucasVmod($x, $A, $n));
         Math::GMPz::Rmpz_mul($x, $x, $i);
         Math::GMPz::Rmpz_mod($x, $x, $n);
-    }
+    };
 
     my $g   = Math::GMPz::Rmpz_init();
     my $lnB = 2 * log($B);
@@ -940,14 +940,14 @@ sub chebyshev_factorization ($n, $B, $A = 127) {
 
     foreach my $p (@{primes(2, $s)}) {
         for (1 .. int($lnB / log($p))) {
-            chebyshevTmod($p, $x);    # T_k(x) (mod n)
+            $chebyshevTmod->($p, $x);    # T_k(x) (mod n)
         }
     }
 
     my $it = prime_iterator($s + 1);
     for (my $p = $it->() ; $p <= $B ; $p = $it->()) {
 
-        chebyshevTmod($p, $x);    # T_k(x) (mod n)
+        $chebyshevTmod->($p, $x);    # T_k(x) (mod n)
 
         Math::GMPz::Rmpz_sub_ui($g, $x, 1);
         Math::GMPz::Rmpz_gcd($g, $g, $n);
@@ -1413,6 +1413,80 @@ sub FLT_find_factor ($n, $base = 2, $reps = 1e4) {
     return undef;
 }
 
+sub sophie_germain_factor ($n) {
+
+    # A simple factorization method, based on Sophie Germain's identity:
+    #   x^4 + 4y^4 = (x^2 + 2xy + 2y^2) * (x^2 - 2xy + 2y^2)
+
+    # This method is also effective for numbers of the form: n^4 + 4^(2k+1).
+
+    state $w = Math::GMPz::Rmpz_init_nobless();
+    state $z = Math::GMPz::Rmpz_init_nobless();
+
+    my $sophie_germain_decomposition = sub ($n) {
+
+        state $t = Math::GMPz::Rmpz_init();
+        state $u = Math::GMPz::Rmpz_init();
+
+        Math::GMPz::Rmpz_root($t, $n, 4);
+        Math::GMPz::Rmpz_pow_ui($w, $t, 4);
+        Math::GMPz::Rmpz_sub($u, $n, $w);
+        Math::GMPz::Rmpz_div_2exp($u, $u, 2);
+
+        if (Math::GMPz::Rmpz_root($u, $u, 4)) {
+
+            # n = t^4 + 4*u^4
+            Math::GMPz::Rmpz_pow_ui($z, $u, 4);
+            Math::GMPz::Rmpz_mul_2exp($z, $z, 2);
+            Math::GMPz::Rmpz_add($w, $w, $z);
+
+            if (Math::GMPz::Rmpz_cmp($w, $n) == 0) {
+                say "[*] Sophie Germain form detected: $t^4 + 4*$u^4";
+                return ($t, $u);
+            }
+        }
+
+        Math::GMPz::Rmpz_mul_2exp($t, $n, 2);
+        Math::GMPz::Rmpz_root($t, $t, 4);
+        Math::GMPz::Rmpz_div_2exp($t, $t, 1);
+        Math::GMPz::Rmpz_pow_ui($z, $t, 4);
+        Math::GMPz::Rmpz_mul_2exp($z, $z, 2);
+        Math::GMPz::Rmpz_sub($u, $n, $z);
+
+        if (Math::GMPz::Rmpz_root($u, $u, 4)) {
+
+            # n = u^4 + 4*t^4
+            Math::GMPz::Rmpz_pow_ui($w, $u, 4);
+            Math::GMPz::Rmpz_add($w, $w, $z);
+
+            if (Math::GMPz::Rmpz_cmp($w, $n) == 0) {
+                say "[*] Sophie Germain form detected: $u^4 + 4*$t^4";
+                return ($u, $t);
+            }
+        }
+
+        return;
+    };
+
+    my ($x, $y) = $sophie_germain_decomposition->($n);
+
+    if (!defined($x) or !defined($y)) {
+        return undef;
+    }
+
+    my $p = Math::GMPz::Rmpz_init();
+
+    Math::GMPz::Rmpz_mul($w, $x, $y);
+    Math::GMPz::Rmpz_mul_2exp($w, $w, 1);
+    Math::GMPz::Rmpz_mul($z, $x, $x);
+    Math::GMPz::Rmpz_sub($p, $z, $w);
+    Math::GMPz::Rmpz_mul($w, $y, $y);
+    Math::GMPz::Rmpz_mul_2exp($w, $w, 1);
+    Math::GMPz::Rmpz_add($p, $p, $w);
+
+    return $p;
+}
+
 {
     state $state = Math::GMPz::zgmp_randinit_mt_nobless();
     Math::GMPz::zgmp_randseed_ui($state, scalar srand());
@@ -1758,6 +1832,12 @@ sub find_small_factors ($rem, $factors) {
     my $len = length($rem);
 
     my @factorization_methods = (
+
+        sub {
+            say "=> Sophie Germain method...";
+            sophie_germain_factor($rem);
+        },
+
         sub {
             say "=> Miller-Rabin method...";
             miller_rabin_factor($rem, ($len > 1000) ? 15 : MILLER_RABIN_ITERATIONS);
@@ -2542,7 +2622,13 @@ sub factorize ($n) {
 
     my @divisors;
 
-    push @divisors, (($n > ~0) ? special_form_factorization($n) : ());
+    if (defined(my $g = sophie_germain_factor($n))) {
+        push @divisors, $g;
+    }
+
+    if (!@divisors) {
+        push @divisors, (($n > ~0) ? special_form_factorization($n) : ());
+    }
 
     if (!@divisors) {
         push @divisors, fast_trial_factor($n);
