@@ -517,6 +517,7 @@ A nice collection of day-to-day Perl scripts.
     * [Carmichael numbers from multiple mpz](./Math/carmichael_numbers_from_multiple_mpz.pl)
     * [Carmichael numbers from multiple recursive mpz](./Math/carmichael_numbers_from_multiple_recursive_mpz.pl)
     * [Carmichael numbers generation erdos method](./Math/carmichael_numbers_generation_erdos_method.pl)
+    * [Carmichael numbers generation erdos method dynamic programming](./Math/carmichael_numbers_generation_erdos_method_dynamic_programming.pl)
     * [Carmichael numbers in range](./Math/carmichael_numbers_in_range.pl)
     * [Carmichael numbers in range from prime factors](./Math/carmichael_numbers_in_range_from_prime_factors.pl)
     * [Carmichael numbers in range mpz](./Math/carmichael_numbers_in_range_mpz.pl)
