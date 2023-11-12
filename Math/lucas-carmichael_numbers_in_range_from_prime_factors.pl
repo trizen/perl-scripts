@@ -15,32 +15,36 @@ use warnings;
 
 use ntheory      qw(:all);
 use experimental qw(signatures);
+use List::Util   qw(uniq);
 
 sub divceil ($x, $y) {    # ceil(x/y)
-    my $q = divint($x, $y);
-    ($q * $y == $x) ? $q : ($q + 1);
+    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
 }
 
 sub lucas_carmichael_numbers_in_range ($A, $B, $k, $primes, $callback) {
 
     $A = vecmax($A, pn_primorial($k));
 
-    my $end = $#{$primes};
+    # Largest possisble prime factor for Lucas-Carmichael numbers <= B
+    my $max_p = sqrtint($B);
+
+    my @P   = sort { $a <=> $b } grep { $_ <= $max_p } uniq(@$primes);
+    my $end = $#P;
 
     sub ($m, $lambda, $j, $k) {
 
-        my $y = rootint(divint($B, $m), $k);
+        my $y = vecmin($max_p, rootint(divint($B, $m), $k));
 
         if ($k == 1) {
 
             my $x = divceil($A, $m);
 
-            if ($primes->[-1] < $x) {
+            if ($P[-1] < $x) {
                 return;
             }
 
             foreach my $i ($j .. $end) {
-                my $p = $primes->[$i];
+                my $p = $P[$i];
 
                 last if ($p > $y);
                 next if ($p < $x);
@@ -56,7 +60,7 @@ sub lucas_carmichael_numbers_in_range ($A, $B, $k, $primes, $callback) {
         }
 
         foreach my $i ($j .. $end) {
-            my $p = $primes->[$i];
+            my $p = $P[$i];
             last if ($p > $y);
 
             gcd($m, $p + 1) == 1 or next;

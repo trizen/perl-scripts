@@ -23,17 +23,19 @@ use ntheory      qw(:all);
 use experimental qw(signatures);
 
 sub divceil ($x, $y) {    # ceil(x/y)
-    my $q = divint($x, $y);
-    ($q * $y == $x) ? $q : ($q + 1);
+    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
 }
 
 sub lucas_carmichael_numbers_in_range ($A, $B, $k, $callback) {
 
     $A = vecmax($A, pn_primorial($k));
 
+    # Largest possisble prime factor for Lucas-Carmichael numbers <= B
+    my $max_p = sqrtint($B);
+
     sub ($m, $L, $lo, $k) {
 
-        my $hi = rootint(divint($B, $m), $k);
+        my $hi = vecmin($max_p, rootint(divint($B, $m), $k));
 
         if ($lo > $hi) {
             return;

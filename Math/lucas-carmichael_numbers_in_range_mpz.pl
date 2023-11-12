@@ -30,12 +30,23 @@ sub lucas_carmichael_numbers_in_range ($A, $B, $k, $callback) {
     my $u = Math::GMPz::Rmpz_init();
     my $v = Math::GMPz::Rmpz_init();
 
+    # max_p = floor(sqrt(B))
+    my $max_p = Math::GMPz::Rmpz_init();
+    Math::GMPz::Rmpz_sqrt($max_p, $B);
+    $max_p = Math::GMPz::Rmpz_get_ui($max_p) if Math::GMPz::Rmpz_fits_ulong_p($max_p);
+
     sub ($m, $L, $lo, $k) {
 
         Math::GMPz::Rmpz_tdiv_q($u, $B, $m);
         Math::GMPz::Rmpz_root($u, $u, $k);
 
+        Math::GMPz::Rmpz_fits_ulong_p($u) || die "Too large value!";
+
         my $hi = Math::GMPz::Rmpz_get_ui($u);
+
+        if ($k == 1 and $max_p < $hi) {
+            $hi = $max_p;
+        }
 
         if ($lo > $hi) {
             return;

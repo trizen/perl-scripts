@@ -13,13 +13,12 @@ use ntheory      qw(:all);
 use experimental qw(signatures);
 
 sub divceil ($x, $y) {    # ceil(x/y)
-    my $q = divint($x, $y);
-    ($q * $y == $x) ? $q : ($q + 1);
+    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
 }
 
 sub lucas_carmichael_from_multiple ($A, $B, $m, $L, $lo, $k, $callback) {
 
-    my $hi = rootint(divint($B, $m), $k);
+    my $hi = vecmin(rootint(divint($B, $m), $k), sqrtint($B));
 
     if ($lo > $hi) {
         return;

@@ -24,8 +24,7 @@ use ntheory      qw(:all);
 use experimental qw(signatures);
 
 sub divceil ($x, $y) {    # ceil(x/y)
-    my $q = divint($x, $y);
-    ($q * $y == $x) ? $q : ($q + 1);
+    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
 }
 
 sub carmichael_strong_fermat_in_range ($A, $B, $k, $base, $callback) {
@@ -36,9 +35,12 @@ sub carmichael_strong_fermat_in_range ($A, $B, $k, $base, $callback) {
         return;
     }
 
+    # Largest possisble prime factor for Carmichael numbers <= B
+    my $max_p = (1 + sqrtint(8*$B + 1))>>2;
+
     my $generator = sub ($m, $L, $lo, $k, $k_exp, $congr) {
 
-        my $hi = rootint(divint($B, $m), $k);
+        my $hi = vecmin($max_p, rootint(divint($B, $m), $k));
 
         if ($lo > $hi) {
             return;

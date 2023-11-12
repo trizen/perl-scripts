@@ -21,8 +21,7 @@ use Memoize      qw(memoize);
 memoize('inverse_znorder_primes');
 
 sub divceil ($x, $y) {    # ceil(x/y)
-    my $q = divint($x, $y);
-    ($q * $y == $x) ? $q : ($q + 1);
+    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
 }
 
 sub inverse_znorder_primes ($base, $lambda) {

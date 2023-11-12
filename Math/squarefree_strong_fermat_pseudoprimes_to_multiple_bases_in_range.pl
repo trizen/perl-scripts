@@ -13,8 +13,7 @@ use 5.036;
 use ntheory qw(:all);
 
 sub divceil ($x, $y) {    # ceil(x/y)
-    my $q = divint($x, $y);
-    ($q * $y == $x) ? $q : ($q + 1);
+    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
 }
 
 sub squarefree_strong_fermat_pseudoprimes_in_range ($A, $B, $k, $bases, $callback) {
