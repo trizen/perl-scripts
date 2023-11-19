@@ -905,6 +905,7 @@ A nice collection of day-to-day Perl scripts.
     * [Quadratic-integer factorization method](./Math/quadratic-integer_factorization_method.pl)
     * [Quadratic-integer factorization method mpz](./Math/quadratic-integer_factorization_method_mpz.pl)
     * [Quadratic frobenius primality test](./Math/quadratic_frobenius_primality_test.pl)
+    * [Quadratic frobenius pseudoprimes generation](./Math/quadratic_frobenius_pseudoprimes_generation.pl)
     * [Quadratic polynomial in terms of its zeros](./Math/quadratic_polynomial_in_terms_of_its_zeros.pl)
     * [Ramanujan sum](./Math/ramanujan_sum.pl)
     * [Ramanujan sum fast](./Math/ramanujan_sum_fast.pl)
