@@ -21,7 +21,7 @@ binmode(STDERR, ':utf8');
 
 sub parse_ASS_subtitle ($file) {
 
-    open my $fh, '<:utf8', $file
+    open my $fh, '<:crlf:utf8', $file
       or die "Can't open file <<$file>> for reading: $!";
 
     my %sections;
