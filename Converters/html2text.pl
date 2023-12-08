@@ -128,4 +128,4 @@ $html // die "error: unable to extract HTML content";
 my $text = html2text($html, $formatter);
 $text // die "error: unable to extract text";
 
-say $text;
+print $text;
