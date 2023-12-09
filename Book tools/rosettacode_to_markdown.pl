@@ -142,6 +142,30 @@ sub extract_tasks ($content, $lang) {
     return \@tasks;
 }
 
+sub extract_all_tasks ($main_url, $path_url, $lang) {
+
+    my $lwp_uc = LWP::UserAgent->new(
+                                     show_progress => 1,
+                                     agent         => '',
+                                     timeout       => 60,
+                                    );
+
+    my $tasks_url = $main_url . $path_url;
+    my $resp      = $lwp_uc->get($tasks_url);
+    $resp->is_success || die $resp->status_line;
+
+    my $content = $resp->decoded_content;
+    my $tasks   = extract_tasks($content, $lang);
+
+    my @all_tasks = @$tasks;
+
+    if ($content =~ m{<a href="([^"]+)" title="[^"]+">next page</a>}) {
+        push @all_tasks, __SUB__->($main_url, $1, $lang);
+    }
+
+    return @all_tasks;
+}
+
 sub extract_lang ($content, $lang, $lang_alias = $lang) {
 
     my $header = sub {
@@ -240,7 +264,7 @@ sub extract_lang ($content, $lang, $lang_alias = $lang) {
                         },
               };
         }
-        elsif ($part =~ m{\G<pre>(.*?)</pre>}sgc) {
+        elsif ($part =~ m{\G<pre\b[^>]*>(.*?)</pre>}sgc) {
             push @data,
               {
                 text => {
@@ -302,7 +326,10 @@ sub to_markdown ($lang_data) {
                 $t =~ s/^(?:\R)+//;
                 $t =~ s/(?:\R)+\z//;
                 $t = join("\n", expand(split(/\R/, $t)));
-                $text .= "\n**Output:**\n";
+
+                $text .= "\n#### Output:\n";
+
+                #$text .= "\n**Output:**\n";
                 $text .= "```\n$t\n```\n";
             }
         }
@@ -435,24 +462,13 @@ my $lwp = LWP::UserAgent::Cached->new(
     $lwp->conn_cache($cache);
 }
 
-my $lwp_uc = LWP::UserAgent->new(
-                                 show_progress => 1,
-                                 agent         => '',
-                                 timeout       => 60,
-                                );
-
-my $start_url = $main_url . '/wiki/' . escape_lang($lang);
-my $resp      = $lwp_uc->get($start_url);
-$resp->is_success || die $resp->status_line;
-
-my $content = $resp->decoded_content;
-my $tasks   = extract_tasks($content, $lang);
+my @tasks = extract_all_tasks($main_url, '/wiki/' . escape_lang($lang), $lang);
 
 sub my_uri_escape ($path) {
     $path =~ s/([?'+])/uri_escape($1)/egr;
 }
 
-foreach my $task (@{$tasks}) {
+foreach my $task (@tasks) {
 
     my $name  = $task->{name};
     my $title = $task->{title};
