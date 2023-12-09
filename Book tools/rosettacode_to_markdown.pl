@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 24 April 2015
-# Edit: 22 July 2018
+# Edit: 09 December 2023
 # Website: https://github.com/trizen
 
 # Extract markdown code from each task for a given programming language.
@@ -16,14 +16,14 @@ use warnings;
 
 use experimental qw(signatures);
 
-use Text::Tabs qw(expand);
-use Encode qw(decode_utf8);
-use Getopt::Long qw(GetOptions);
-use File::Path qw(make_path);
+use Text::Tabs             qw(expand);
+use Encode                 qw(decode_utf8);
+use Getopt::Long           qw(GetOptions);
+use File::Path             qw(make_path);
 use LWP::UserAgent::Cached qw();
-use URI::Escape qw(uri_unescape uri_escape);
-use HTML::Entities qw(decode_entities);
-use File::Spec::Functions qw(catfile catdir);
+use URI::Escape            qw(uri_unescape uri_escape);
+use HTML::Entities         qw(decode_entities);
+use File::Spec::Functions  qw(catfile catdir);
 
 binmode(STDOUT, ':utf8');
 binmode(STDERR, ':utf8');
@@ -83,9 +83,7 @@ sub tags_to_markdown ($t, $escape = 0) {
         }
         elsif ($t =~ m{\G<span><span class="mwe-math-mathml-inline mwe-math-mathml-a11y"}gc) {
             $t =~ m{\G.*?</span>}gsc;
-            if ($t =~
-                m{\G<meta class="mwe-math-fallback-image-inline".*? url\(&#39;(/mw/index\.php\?(?:.*?))&#39;\).*?/></span>}gc)
-            {
+            if ($t =~ m{\G<meta class="mwe-math-fallback-image-inline".*? url\(&#39;(/mw/index\.php\?(?:.*?))&#39;\).*?/></span>}gc) {
                 $out .= '![image](https://rosettacode.org' . decode_entities($1) . ')';
             }
             else {
@@ -206,7 +204,16 @@ sub extract_lang ($content, $lang, $lang_alias = $lang) {
 
     my @data;
     until ($part =~ /\G\z/gc) {
-        if ($part =~ m{\G<pre class="(.+?) highlighted_source">(.+)</pre>}gc) {
+        if ($part =~ m{\G<pre class="(.+?) highlighted_source">(.+)</pre>}gc) {    # old way
+            push @data,
+              {
+                code => {
+                         lang => $1,
+                         data => $2,
+                        }
+              };
+        }
+        elsif ($part =~ m{\G<div class="[^"]*mw-highlight-lang-(\S+)[^"]*" dir="ltr"><pre>(.*?)</pre>}sgc) {    # new way
             push @data,
               {
                 code => {
@@ -303,6 +310,7 @@ sub to_markdown ($lang_data) {
             my $code = decode_entities(strip_tags(tags_to_markdown($item->{code}{data})));
             my $lang = $item->{code}{lang};
             $code =~ s/\[(\w+)\]\(https?:.*?\)/$1/g;
+            $code =~ s{(?:\R)+\z}{};
             $text .= "```$lang\n$code\n```\n";
         }
     }
@@ -423,7 +431,7 @@ my $lwp = LWP::UserAgent::Cached->new(
 
     require LWP::ConnCache;
     my $cache = LWP::ConnCache->new;
-    $cache->total_capacity(undef);                            # no limit
+    $cache->total_capacity(undef);    # no limit
     $lwp->conn_cache($cache);
 }
 
