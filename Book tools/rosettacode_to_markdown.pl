@@ -300,7 +300,9 @@ sub to_html ($lang_data) {
 
 sub to_markdown ($lang_data) {
 
-    my $text = '';
+    my $text       = '';
+    my $has_output = 1;
+
     foreach my $item (@{$lang_data}) {
 
         if (exists $item->{header}) {
@@ -320,15 +322,14 @@ sub to_markdown ($lang_data) {
             if ($tag eq 'p') {
                 my $t = tags_to_markdown(strip_space($data), 1);
                 $text .= "\n\n" . $t . "\n\n";
+                $has_output = 1;
             }
             elsif ($tag eq 'pre') {
                 my $t = decode_entities($data);
                 $t =~ s/^(?:\R)+//;
                 $t =~ s/(?:\R)+\z//;
                 $t = join("\n", expand(split(/\R/, $t)));
-                if ($text !~ /Output:/) {
-                    $text .= "\n#### Output:";
-                }
+                $text .= "\n#### Output:" if !$has_output;
                 $text .= "\n```\n$t\n```\n";
             }
         }
@@ -338,6 +339,7 @@ sub to_markdown ($lang_data) {
             $code =~ s/\[(\w+)\]\(https?:.*?\)/$1/g;
             $code =~ s{(?:\R)+\z}{};
             $text .= "```$lang\n$code\n```\n";
+            $has_output = 0;
         }
     }
 
