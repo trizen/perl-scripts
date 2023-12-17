@@ -990,6 +990,7 @@ A nice collection of day-to-day Perl scripts.
     * [Stern brocot sequence](./Math/stern_brocot_sequence.pl)
     * [Strong fermat pseudoprimes in range](./Math/strong_fermat_pseudoprimes_in_range.pl)
     * [Strong fermat pseudoprimes in range mpz](./Math/strong_fermat_pseudoprimes_in_range_mpz.pl)
+    * [Sub-unit squares](./Math/sub-unit_squares.pl)
     * [Sum factorial](./Math/sum_factorial.pl)
     * [Sum of an even number of positive squares](./Math/sum_of_an_even_number_of_positive_squares.pl)
     * [Sum of digits](./Math/sum_of_digits.pl)
