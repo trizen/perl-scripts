@@ -13,7 +13,7 @@ use Getopt::Long qw(GetOptions);
 
 my $width  = 'auto';
 my $height = 'auto';
-my $qtype  = 'normal';
+my $qtype  = 'mixing';
 
 my $img_formats = '';
 

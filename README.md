@@ -1069,6 +1069,7 @@ A nice collection of day-to-day Perl scripts.
 * Text
     * [Abs string](./Text/abs_string.pl)
     * [All substrings](./Text/all_substrings.pl)
+    * [Change-encoding](./Text/change-encoding.pl)
     * [Group alike words](./Text/group_alike_words.pl)
     * [Jaro-winkler distance](./Text/jaro-winkler_distance.pl)
     * [Levenshtein distance iter](./Text/levenshtein_distance_iter.pl)
