@@ -375,6 +375,7 @@ A nice collection of day-to-day Perl scripts.
     * [Gd star trails](./Image/gd_star_trails.pl)
     * [Gif2webp](./Image/gif2webp.pl)
     * [Image2ascii](./Image/image2ascii.pl)
+    * [Image2audio](./Image/image2audio.pl)
     * [Image2digits](./Image/image2digits.pl)
     * [Image2html](./Image/image2html.pl)
     * [Image2matrix](./Image/image2matrix.pl)
