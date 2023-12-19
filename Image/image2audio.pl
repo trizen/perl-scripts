@@ -25,11 +25,11 @@ my $output_wav = 'output.wav';
 
 sub help ($code) {
     print <<"EOT";
-usage: $0 [options] [image]
+usage: $0 [options] [images]
 
 options:
     -o  --output=s   : output audio file (default: $output_wav)
-    -d  --duration=i : duration in seconds (default: $duration)
+    -d  --duration=i : duration in seconds per image (default: $duration)
     -f  --freq=i     : frequency band in Hz (default: $frequency_band)
     -b  --bits=i     : bits sample (default: $bits_sample)
     -s  --sample=i   : sample rate (default: $sample_rate)
@@ -50,19 +50,10 @@ GetOptions(
           )
   or die("Error in command line arguments");
 
-sub image2spectrogram ($input_file, $output_file) {
+sub image2spectrogram ($input_file, $write) {
 
     my $img = Imager->new(file => $input_file)
       or die "Can't open file <<$input_file>> for reading: $!";
-
-    my $details = {
-                   'bits_sample' => $bits_sample,
-                   'sample_rate' => $sample_rate,
-                   'channels'    => $channels,
-                  };
-
-    my $wav   = Audio::Wav->new;
-    my $write = $wav->write($output_file, $details);
 
     my $width  = $img->getwidth;
     my $height = $img->getheight;
@@ -93,7 +84,7 @@ sub image2spectrogram ($input_file, $output_file) {
 
         foreach my $y (0 .. $height - 1) {
             my $volume = $img[$y][$pixel_x] || next;
-            my $freq = int($C * ($height - $y + 1));
+            my $freq   = int($C * ($height - $y + 1));
             $rez += int($volume * sin($freq * $tau * $x / $sample_rate));
         }
 
@@ -110,9 +101,22 @@ sub image2spectrogram ($input_file, $output_file) {
         $write->write(int($max_no * $val / $maxFreq));
     }
 
-    $write->finish();
     return 1;
 }
 
-my $input_img = $ARGV[0] // help(2);
-image2spectrogram($input_img, $output_wav);
+@ARGV || help(2);
+
+my $details = {
+               'bits_sample' => $bits_sample,
+               'sample_rate' => $sample_rate,
+               'channels'    => $channels,
+              };
+
+my $wav   = Audio::Wav->new;
+my $write = $wav->write($output_wav, $details);
+
+foreach my $input_img (@ARGV) {
+    image2spectrogram($input_img, $write);
+}
+
+$write->finish();
