@@ -16,14 +16,13 @@ use Audio::Wav;
 use List::Util   qw(min max);
 use Getopt::Long qw(GetOptions);
 
-my $max_width  = 300;    # resize images greater than this
-my $max_height = 300;    # resize images greater than this
+my $max_height = 300;    # resize images larger than this
 
-my $sample_rate    = 44100;
-my $bits_sample    = 16;
-my $duration       = 1;                   # in seconds
-my $frequency_band = $sample_rate / 2;    # in Hz
-my $channels       = 1;
+my $sample_rate     = 44100;
+my $bits_sample     = 16;
+my $frequency_band  = $sample_rate / 2;    # in Hz
+my $channels        = 1;
+my $duration_factor = 1;
 
 my $output_wav = 'output.wav';
 
@@ -33,8 +32,8 @@ usage: $0 [options] [images]
 
 options:
     -o  --output=s   : output audio file (default: $output_wav)
-    -d  --duration=i : duration in seconds per image (default: $duration)
     -f  --freq=i     : frequency band in Hz (default: $frequency_band)
+    -d  --duration=f : duration multiplication factor (default: $duration_factor)
     -b  --bits=i     : bits sample (default: $bits_sample)
     -s  --sample=i   : sample rate (default: $sample_rate)
     -c  --channels=i : number of channels (default: $channels)
@@ -44,13 +43,13 @@ EOT
 }
 
 GetOptions(
-           'o|output=s'      => \$output_wav,
-           'd|duration=f'    => \$duration,
-           'f|frequency=i'   => \$frequency_band,
-           'b|bits-sample=i' => \$bits_sample,
-           's|sample-rate=i' => \$sample_rate,
-           'c|channels=i'    => \$channels,
-           'h|help'          => sub { help(0) },
+           'o|output=s'          => \$output_wav,
+           'f|frequency=i'       => \$frequency_band,
+           'd|duration-factor=f' => \$duration_factor,
+           'b|bits-sample=i'     => \$bits_sample,
+           's|sample-rate=i'     => \$sample_rate,
+           'c|channels=i'        => \$channels,
+           'h|help'              => sub { help(0) },
           )
   or die("Error in command line arguments");
 
@@ -68,23 +67,21 @@ sub image2spectrogram ($input_file, $write) {
     my $width  = $img->getwidth;
     my $height = $img->getheight;
 
-    if ($width > $max_width) {
-        $img = $img->scale(xpixels => $max_width, qtype => 'mixing');
-        ($width, $height) = ($img->getwidth, $img->getheight);
-    }
+    my $duration = $duration_factor * ($width / $height);
+    say "-> Duration: $duration seconds";
 
     if ($height > $max_height) {
         $img = $img->scale(ypixels => $max_height, qtype => 'mixing');
         ($width, $height) = ($img->getwidth, $img->getheight);
     }
 
-    if ($width != $height) {
-        my $min_size = min($width, $height);
-        $width  = int($duration * $min_size);
-        $height = $min_size;
-        say "-> Resizing the image to: $width x $height";
-        $img = $img->scale(xpixels => $width, ypixels => $height, qtype => 'mixing', type => 'nonprop');
-    }
+    my $min_size = min($width, $height);
+
+    $width  = int($duration * $min_size);
+    $height = $min_size;
+
+    say "-> Resizing the image to: $width x $height";
+    $img = $img->scale(xpixels => $width, ypixels => $height, qtype => 'mixing', type => 'nonprop');
 
     my @data;
     my $maxFreq = 0;
