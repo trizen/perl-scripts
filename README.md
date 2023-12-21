@@ -126,6 +126,7 @@ A nice collection of day-to-day Perl scripts.
     * [Integers binary encoding](./Encoding/integers_binary_encoding.pl)
     * [Integers binary encoding with delta coding](./Encoding/integers_binary_encoding_with_delta_coding.pl)
     * [Integers binary encoding with huffman coding](./Encoding/integers_binary_encoding_with_huffman_coding.pl)
+    * [Jpeg transform](./Encoding/jpeg_transform.pl)
     * [Length encoder](./Encoding/length_encoder.pl)
     * [Lzt-fast](./Encoding/lzt-fast.pl)
     * [Lzw encoding](./Encoding/lzw_encoding.pl)
