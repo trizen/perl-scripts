@@ -133,6 +133,7 @@ A nice collection of day-to-day Perl scripts.
     * [Math expr encoder](./Encoding/math_expr_encoder.pl)
     * [Move-to-front transform](./Encoding/move-to-front_transform.pl)
     * [Mtf-delta encoding](./Encoding/mtf-delta_encoding.pl)
+    * [Png transform](./Encoding/png_transform.pl)
     * [Ppm encoding](./Encoding/ppm_encoding.pl)
     * [Ppm encoding dynamic](./Encoding/ppm_encoding_dynamic.pl)
     * [Run length with elias coding](./Encoding/run_length_with_elias_coding.pl)
