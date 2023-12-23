@@ -990,6 +990,7 @@ A nice collection of day-to-day Perl scripts.
     * [Squarefree strong fermat pseudoprimes in range](./Math/squarefree_strong_fermat_pseudoprimes_in_range.pl)
     * [Squarefree strong fermat pseudoprimes in range mpz](./Math/squarefree_strong_fermat_pseudoprimes_in_range_mpz.pl)
     * [Squarefree strong fermat pseudoprimes to multiple bases in range](./Math/squarefree_strong_fermat_pseudoprimes_to_multiple_bases_in_range.pl)
+    * [Squarefree strong fermat pseudoprimes to multiple bases in range mpz](./Math/squarefree_strong_fermat_pseudoprimes_to_multiple_bases_in_range_mpz.pl)
     * [Stern brocot encoding](./Math/stern_brocot_encoding.pl)
     * [Stern brocot sequence](./Math/stern_brocot_sequence.pl)
     * [Strong fermat pseudoprimes in range](./Math/strong_fermat_pseudoprimes_in_range.pl)

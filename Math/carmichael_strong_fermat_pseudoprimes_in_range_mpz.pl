@@ -52,16 +52,13 @@ sub carmichael_strong_fermat_in_range ($A, $B, $k, $base, $callback) {
 
         my $hi = Math::GMPz::Rmpz_get_ui($u);
 
-        if ($k == 1 and $max_p < $hi) {
-            $hi = $max_p;
-        }
-
         if ($lo > $hi) {
             return;
         }
 
         if ($k == 1) {
 
+            $hi = $max_p if ($max_p < $hi);
             Math::GMPz::Rmpz_cdiv_q($u, $A, $m);
 
             if (Math::GMPz::Rmpz_fits_ulong_p($u)) {

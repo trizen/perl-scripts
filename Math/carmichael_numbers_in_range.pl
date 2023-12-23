@@ -39,7 +39,7 @@ sub carmichael_numbers_in_range ($A, $B, $k, $callback) {
 
     sub ($m, $L, $lo, $k) {
 
-        my $hi = vecmin($max_p, rootint(divint($B, $m), $k));
+        my $hi = rootint(divint($B, $m), $k);
 
         if ($lo > $hi) {
             return;
@@ -47,6 +47,7 @@ sub carmichael_numbers_in_range ($A, $B, $k, $callback) {
 
         if ($k == 1) {
 
+            $hi = $max_p if ($hi > $max_p);
             $lo = vecmax($lo, divceil($A, $m));
             $lo > $hi && return;
 
