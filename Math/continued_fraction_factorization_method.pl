@@ -21,9 +21,9 @@ use warnings;
 
 use experimental qw(signatures);
 
-use Math::GMPz qw();
-use List::Util qw(first);
-use ntheory qw(is_prime factor_exp forprimes next_prime is_square_free);
+use Math::GMPz             qw();
+use List::Util             qw(first);
+use ntheory                qw(is_prime factor_exp forprimes next_prime is_square_free);
 use Math::Prime::Util::GMP qw(is_power vecprod sqrtint rootint gcd urandomb);
 
 use constant {
@@ -174,7 +174,7 @@ sub cffm ($n, $verbose = 0, $multiplier = 1) {
     my %factor_index;
     @factor_index{@factor_base} = (0 .. $#factor_base);
 
-    my sub exponents_signature (@factors) {
+    my $exponents_signature = sub (@factors) {
         my $sig = Math::GMPz::Rmpz_init_set_ui(0);
 
         foreach my $p (@factors) {
@@ -184,7 +184,7 @@ sub cffm ($n, $verbose = 0, $multiplier = 1) {
         }
 
         return $sig;
-    }
+    };
 
     my $L  = scalar(@factor_base) + 1;                 # maximum number of matrix-rows
     my $FP = Math::GMPz->new(vecprod(@factor_base));
@@ -251,7 +251,7 @@ sub cffm ($n, $verbose = 0, $multiplier = 1) {
             my @factors = factor_exp($abs_z);
 
             if (@factors) {
-                push @A, exponents_signature(@factors);
+                push @A, $exponents_signature->(@factors);
                 push @Q, [map { Math::GMPz::Rmpz_init_set($_) } ($f1, $abs_z)];
             }
 
