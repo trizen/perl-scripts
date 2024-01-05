@@ -4,9 +4,9 @@ use 5.010;
 use strict;
 use warnings;
 
-use PDF::API2 qw();
-use Text::Unidecode qw(unidecode);
-use HTML::Entities qw(decode_entities);
+use PDF::API2             qw();
+use Text::Unidecode       qw(unidecode);
+use HTML::Entities        qw(decode_entities);
 use File::Spec::Functions qw(catfile tmpdir);
 
 my $main_url = 'https://projecteuler.net/problem=%d';
@@ -19,10 +19,8 @@ my $update_p_nums = 1;    # true to retrieve the current number of problems
 if ($update_p_nums) {
 
     require LWP::UserAgent;
-    my $lwp = LWP::UserAgent->new(
-           env_proxy => 1,
-           agent => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.80 Safari/537.36',
-    );
+    my $lwp = LWP::UserAgent->new(env_proxy => 1,
+                                  agent     => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.80 Safari/537.36',);
 
     my $resp = $lwp->get('https://projecteuler.net/archives');
     if ($resp->is_success) {
@@ -58,7 +56,7 @@ for my $i ($p_beg .. $p_end) {
 
     printf("[%3d of %3d] Processing...\n", $i, $p_end);
 
-    my $url = sprintf($main_url, $i);
+    my $url      = sprintf($main_url, $i);
     my $pdf_data = `wkhtmltopdf              \\
         --dump-outline \Q$outline_file\E     \\
         --quiet                              \\

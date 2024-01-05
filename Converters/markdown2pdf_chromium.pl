@@ -2,7 +2,7 @@
 
 # Author: Trizen
 # Date: 29 July 2022
-# Edit: 30 August 2023
+# Edit: 05 January 2024
 # https://github.com/trizen
 
 # Markdown to PDF converter, with syntax highlighting.
@@ -32,6 +32,7 @@ my $syntax_lang = 'text';
 my $style       = 'github';
 my $title       = 'Document';
 my $page_size   = 'A4';         # TODO: this is currently unimplemented
+my $mathjax     = 0;            # true to use MathJax.js
 
 sub usage {
     my ($exit_code) = @_;
@@ -42,10 +43,11 @@ usage: $0 [options] [input.md] [output.pdf]
 
 options:
 
-    --style=s   : style theme for `highlight` (default: $style)
-    --title=s   : title of the PDF file (default: $title)
-    --size=s    : set paper size to: A4, Letter, etc. (default: $page_size)
-    --lang=s    : default syntax highlighting language (default: $syntax_lang)
+    --style=s    : style theme for `highlight` (default: $style)
+    --title=s    : title of the PDF file (default: $title)
+    --size=s     : set paper size to: A4, Letter, etc. (default: $page_size)
+    --lang=s     : default syntax highlighting language (default: $syntax_lang)
+    --mathjax!   : enable support for Tex expressions (default: $mathjax)
 
 EOT
 
@@ -53,11 +55,12 @@ EOT
 }
 
 GetOptions(
-           "lang=s"  => \$syntax_lang,
-           "style=s" => \$style,
-           "title=s" => \$title,
-           "size=s"  => \$page_size,
-           "h|help"  => sub { usage(0) },
+           "lang=s"   => \$syntax_lang,
+           "style=s"  => \$style,
+           "title=s"  => \$title,
+           "size=s"   => \$page_size,
+           "mathjax!" => \$mathjax,
+           "h|help"   => sub { usage(0) },
           )
   or die("Error in command line arguments\n");
 
@@ -156,6 +159,17 @@ my $final_html = <<"HTML";
 <title>$title</title>
 HTML
 
+if ($mathjax) {
+
+    # Reference: https://stackoverflow.com/questions/34347818/using-mathjax-on-a-github-page
+    say ":: Adding MathJax support...";
+    $final_html .= <<'HTML';
+<script type="text/javascript" charset="utf-8"
+src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML,
+https://vincenttam.github.io/javascripts/MathJaxLocal.js"></script>
+HTML
+}
+
 my $css = `highlight --print-style -O html --style \Q$style\E --stdout`;
 
 $final_html .= <<'HTML';
@@ -210,6 +224,8 @@ system(
       --no-pdf-header-footer
       --disable-pdf-tagging
       --enable-local-file-accesses
+      --run-all-compositor-stages-before-draw
+      --virtual-time-budget=10000
     ),
     "--print-to-pdf=$output_pdf_file",
     $tmp_html_file,

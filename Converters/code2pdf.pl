@@ -29,6 +29,7 @@ my $style     = 'github';
 my $title     = 'Document';
 my $lang      = 'perl';
 my $page_size = 'A3';
+my $mathjax   = 0;                       # true to use MathJax
 
 sub usage {
     my ($exit_code) = @_;
@@ -43,6 +44,7 @@ options:
     --title=s   : title of the PDF file (default: $title)
     --lang=s    : language code used for highlighting (default: $lang)
     --size=s    : set paper size to: A4, Letter, etc. (default: $page_size)
+    --mathjax!  : enable support for Tex expressions (default: $mathjax)
 
 EOT
 
@@ -50,11 +52,12 @@ EOT
 }
 
 GetOptions(
-           "style=s" => \$style,
-           "title=s" => \$title,
-           "lang=s"  => \$lang,
-           "size=s"  => \$page_size,
-           "h|help"  => sub { usage(0) },
+           "style=s"  => \$style,
+           "title=s"  => \$title,
+           "lang=s"   => \$lang,
+           "size=s"   => \$page_size,
+           "mathjax!" => \$mathjax,
+           "h|help"   => sub { usage(0) },
           )
   or die("Error in command line arguments\n");
 
@@ -311,7 +314,7 @@ print $fh $markdown_content;
 close $fh;
 
 say ":: Converting Markdown to PDF...";
-system($markdown2pdf, "--style", $style, "--title", $title, "--size", $page_size, $markdown_file, $output_pdf_file);
+system($markdown2pdf, ($mathjax ? "--mathjax" : ()), "--style", $style, "--title", $title, "--size", $page_size, $markdown_file, $output_pdf_file);
 
 unlink($markdown_file);
 
