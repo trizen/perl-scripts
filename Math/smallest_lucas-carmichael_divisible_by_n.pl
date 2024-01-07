@@ -6,11 +6,9 @@
 #   https://oeis.org/A253597
 #   https://oeis.org/A253598
 
-use 5.020;
+use 5.036;
 use warnings;
-
-use ntheory      qw(:all);
-use experimental qw(signatures);
+use ntheory qw(:all);
 
 sub divceil ($x, $y) {    # ceil(x/y)
     (($x % $y == 0) ? 0 : 1) + divint($x, $y);
@@ -31,7 +29,7 @@ sub lucas_carmichael_from_multiple ($A, $B, $m, $L, $lo, $k, $callback) {
 
         my $t = mulmod(invmod($m, $L) // (return), -1, $L);
         $t > $hi && return;
-        $t += $L while ($t < $lo);
+        $t += $L * divceil($lo - $t, $L) if ($t < $lo);
 
         for (my $p = $t ; $p <= $hi ; $p += $L) {
             if ($m % $p != 0 and is_prime($p)) {

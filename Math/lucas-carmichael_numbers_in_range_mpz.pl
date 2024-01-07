@@ -20,7 +20,11 @@ use 5.036;
 use Math::GMPz;
 use ntheory qw(:all);
 
-sub lucas_carmichael_numbers_in_range ($A, $B, $k, $callback) {
+sub divceil ($x, $y) {    # ceil(x/y)
+    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
+}
+
+sub lucas_carmichael_numbers_in_range ($A, $B, $k) {
 
     $A = vecmax($A, pn_primorial($k + 1) >> 1);
 
@@ -34,6 +38,8 @@ sub lucas_carmichael_numbers_in_range ($A, $B, $k, $callback) {
     my $max_p = Math::GMPz::Rmpz_init();
     Math::GMPz::Rmpz_sqrt($max_p, $B);
     $max_p = Math::GMPz::Rmpz_get_ui($max_p) if Math::GMPz::Rmpz_fits_ulong_p($max_p);
+
+    my @list;
 
     sub ($m, $L, $lo, $k) {
 
@@ -80,14 +86,14 @@ sub lucas_carmichael_numbers_in_range ($A, $B, $k, $callback) {
 
             my $t = Math::GMPz::Rmpz_get_ui($v);
             $t > $hi && return;
-            $t += $L while ($t < $lo);
+            $t += $L * divceil($lo - $t, $L) if ($t < $lo);
 
             for (my $p = $t ; $p <= $hi ; $p += $L) {
                 if (is_prime($p)) {
                     Math::GMPz::Rmpz_mul_ui($v, $m, $p);
                     Math::GMPz::Rmpz_add_ui($u, $v, 1);
                     if (Math::GMPz::Rmpz_divisible_ui_p($u, $p + 1)) {
-                        $callback->(Math::GMPz::Rmpz_init_set($v));
+                        push @list, Math::GMPz::Rmpz_init_set($v);
                     }
                 }
             }
@@ -108,6 +114,8 @@ sub lucas_carmichael_numbers_in_range ($A, $B, $k, $callback) {
         }
       }
       ->(Math::GMPz->new(1), Math::GMPz->new(1), 3, $k);
+
+    return sort { $a <=> $b } @list;
 }
 
 # Generate all the Lucas-Carmichael numbers with 5 prime factors in the range [100, 10^8]
@@ -116,10 +124,8 @@ my $k    = 5;
 my $from = 100;
 my $upto = 1e8;
 
-my @arr;
-lucas_carmichael_numbers_in_range($from, $upto, $k, sub ($n) { push @arr, $n });
-
-say join(', ', sort { $a <=> $b } @arr);
+my @arr = lucas_carmichael_numbers_in_range($from, $upto, $k);
+say join(', ', @arr);
 
 __END__
 588455, 1010735, 2276351, 2756159, 4107455, 4874639, 5669279, 6539819, 8421335, 13670855, 16184663, 16868159, 21408695, 23176439, 24685199, 25111295, 26636687, 30071327, 34347599, 34541639, 36149399, 36485015, 38999519, 39715319, 42624911, 43134959, 49412285, 49591919, 54408959, 54958799, 57872555, 57953951, 64456223, 66709019, 73019135, 77350559, 78402815, 82144799, 83618639, 86450399, 93277079, 96080039, 98803439

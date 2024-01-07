@@ -16,13 +16,15 @@ sub divceil ($x, $y) {    # ceil(x/y)
     (($x % $y == 0) ? 0 : 1) + divint($x, $y);
 }
 
-sub squarefree_strong_fermat_pseudoprimes_in_range ($A, $B, $k, $bases, $callback) {
+sub squarefree_strong_fermat_pseudoprimes_in_range ($A, $B, $k, $bases) {
 
     $A = vecmax($A, pn_primorial($k));
     $A > $B and return;
 
     my @bases     = @$bases;
     my $bases_lcm = lcm(@bases);
+
+    my @list;
 
     sub ($m, $L, $lo, $k) {
 
@@ -39,13 +41,13 @@ sub squarefree_strong_fermat_pseudoprimes_in_range ($A, $B, $k, $bases, $callbac
 
             my $t = invmod($m, $L) // return;
             $t > $hi && return;
-            $t += $L while ($t < $lo);
+            $t += $L * divceil($lo - $t, $L) if ($t < $lo);
 
             for (my $p = $t ; $p <= $hi ; $p += $L) {
                 if (is_prime($p) and $bases_lcm % $p != 0 and $m % $p != 0) {
                     my $v = $m * $p;
                     if (is_strong_pseudoprime($v, @bases)) {
-                        $callback->($v);
+                        push(@list, $v);
                     }
                 }
             }
@@ -64,6 +66,8 @@ sub squarefree_strong_fermat_pseudoprimes_in_range ($A, $B, $k, $bases, $callbac
         }
       }
       ->(1, 1, 2, $k);
+
+    return sort { $a <=> $b } @list;
 }
 
 # Generate all the strong Fermat pseudoprimes to base 2,3 in range [1, 54029741]
@@ -75,7 +79,7 @@ my @bases = (2, 3);
 my @arr;
 foreach my $k (2 .. 100) {
     last if pn_primorial($k) > $upto;
-    squarefree_strong_fermat_pseudoprimes_in_range($from, $upto, $k, \@bases, sub ($n) { push @arr, $n });
+    push @arr, squarefree_strong_fermat_pseudoprimes_in_range($from, $upto, $k, \@bases);
 }
 
 say join(', ', sort { $a <=> $b } @arr);

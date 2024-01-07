@@ -20,7 +20,11 @@ use 5.036;
 use Math::GMPz;
 use ntheory qw(:all);
 
-sub carmichael_numbers_in_range ($A, $B, $k, $callback) {
+sub divceil ($x, $y) {    # ceil(x/y)
+    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
+}
+
+sub carmichael_numbers_in_range ($A, $B, $k) {
 
     $A = vecmax($A, pn_primorial($k + 1) >> 1);
 
@@ -38,6 +42,8 @@ sub carmichael_numbers_in_range ($A, $B, $k, $callback) {
     Math::GMPz::Rmpz_add_ui($max_p, $max_p, 1);
     Math::GMPz::Rmpz_div_2exp($max_p, $max_p, 2);
     $max_p = Math::GMPz::Rmpz_get_ui($max_p) if Math::GMPz::Rmpz_fits_ulong_p($max_p);
+
+    my @list;
 
     sub ($m, $L, $lo, $k) {
 
@@ -83,14 +89,14 @@ sub carmichael_numbers_in_range ($A, $B, $k, $callback) {
 
             my $t = Math::GMPz::Rmpz_get_ui($v);
             $t > $hi && return;
-            $t += $L while ($t < $lo);
+            $t += $L * divceil($lo - $t, $L) if ($t < $lo);
 
             for (my $p = $t ; $p <= $hi ; $p += $L) {
                 if (is_prime($p)) {
                     Math::GMPz::Rmpz_mul_ui($v, $m, $p);
                     Math::GMPz::Rmpz_sub_ui($u, $v, 1);
                     if (Math::GMPz::Rmpz_divisible_ui_p($u, $p - 1)) {
-                        $callback->(Math::GMPz::Rmpz_init_set($v));
+                        push @list, Math::GMPz::Rmpz_init_set($v);
                     }
                 }
             }
@@ -111,6 +117,8 @@ sub carmichael_numbers_in_range ($A, $B, $k, $callback) {
         }
       }
       ->(Math::GMPz->new(1), Math::GMPz->new(1), 3, $k);
+
+    return sort { $a <=> $b } @list;
 }
 
 # Generate all the 5-Carmichael numbers in the range [100, 10^8]
@@ -119,10 +127,8 @@ my $k    = 5;
 my $from = 100;
 my $upto = 1e8;
 
-my @arr;
-carmichael_numbers_in_range($from, $upto, $k, sub ($n) { push @arr, $n });
-
-say join(', ', sort { $a <=> $b } @arr);
+my @arr = carmichael_numbers_in_range($from, $upto, $k);
+say join(', ', @arr);
 
 __END__
 825265, 1050985, 9890881, 10877581, 12945745, 13992265, 16778881, 18162001, 27336673, 28787185, 31146661, 36121345, 37167361, 40280065, 41298985, 41341321, 41471521, 47006785, 67371265, 67994641, 69331969, 74165065, 75151441, 76595761, 88689601, 93614521, 93869665

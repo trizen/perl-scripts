@@ -29,7 +29,11 @@ use warnings;
 use ntheory      qw(:all);
 use experimental qw(signatures);
 
-sub even_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
+sub divceil ($x, $y) {    # ceil(x/y)
+    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
+}
+
+sub even_fermat_pseudoprimes_in_range ($A, $B, $k, $base) {
 
     if ($k <= 1) {
         return;
@@ -38,6 +42,7 @@ sub even_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
     $A = vecmax($A, pn_primorial($k));
 
     my %seen;
+    my @list;
 
     sub ($m, $L, $lo, $j) {
 
@@ -58,7 +63,7 @@ sub even_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
                         $v >= $A or next;
                         $k == 1 and is_prime($v) and next;
                         powmod($base, $v, $v) == $base or next;
-                        $callback->($v) if !$seen{$v}++;
+                        push(@list, $v) if !$seen{$v}++;
                     }
                 }
                 return;
@@ -66,7 +71,7 @@ sub even_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
 
             my $t = invmod($m, $L);
             $t > $hi && return;
-            $t += $L while ($t < $lo);
+            $t += $L * divceil($lo - $t, $L) if ($t < $lo);
 
             for (my $p = $t ; $p <= $hi ; $p += $L) {
                 if (is_prime_power($p) and gcd($m, $p) == 1 and gcd($base, $p) == 1) {
@@ -76,7 +81,7 @@ sub even_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
 
                     #($v - 1) % znorder($base, $p) == 0 or next;
                     powmod($base, $v, $v) == $base or next;
-                    $callback->($v) if !$seen{$v}++;
+                    push(@list, $v) if !$seen{$v}++;
                 }
             }
 
@@ -102,6 +107,8 @@ sub even_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
         }
       }
       ->(2, 1, 3, $k - 1);
+
+    return sort { $a <=> $b } @list;
 }
 
 # Generate all the even Fermat pseudoprimes to base 2 in range [1, 10^5]
@@ -113,7 +120,7 @@ my $base = 2;
 my @arr;
 foreach my $k (1 .. 100) {
     last if pn_primorial($k) > $upto;
-    even_fermat_pseudoprimes_in_range($from, $upto, $k, $base, sub ($n) { push @arr, $n });
+    push @arr, even_fermat_pseudoprimes_in_range($from, $upto, $k, $base);
 }
 
 say join(', ', sort { $a <=> $b } @arr);

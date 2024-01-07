@@ -9,15 +9,16 @@
 # See also:
 #   https://trizenx.blogspot.com/2020/08/pseudoprimes-construction-methods-and.html
 
-use 5.020;
-use strict;
+use 5.036;
 use warnings;
-
 use Math::GMPz;
 use ntheory qw(:all);
-use experimental qw(signatures);
 
-sub k_squarefree_strong_fermat_pseudoprimes_in_range ($A, $B, $k, $bases, $callback) {
+sub divceil ($x, $y) {    # ceil(x/y)
+    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
+}
+
+sub k_squarefree_strong_fermat_pseudoprimes_in_range ($A, $B, $k, $bases) {
 
     $A = vecmax($A, pn_primorial($k));
 
@@ -29,6 +30,8 @@ sub k_squarefree_strong_fermat_pseudoprimes_in_range ($A, $B, $k, $bases, $callb
 
     my $u = Math::GMPz::Rmpz_init();
     my $v = Math::GMPz::Rmpz_init();
+
+    my @list;
 
     my $generator = sub ($m, $L, $lo, $k) {
 
@@ -71,7 +74,7 @@ sub k_squarefree_strong_fermat_pseudoprimes_in_range ($A, $B, $k, $bases, $callb
 
             my $t = Math::GMPz::Rmpz_get_ui($v);
             $t > $hi && return;
-            $t += $L while ($t < $lo);
+            $t += $L * divceil($lo - $t, $L) if ($t < $lo);
 
             for (my $p = $t ; $p <= $hi ; $p += $L) {
 
@@ -81,7 +84,7 @@ sub k_squarefree_strong_fermat_pseudoprimes_in_range ($A, $B, $k, $bases, $callb
                 Math::GMPz::Rmpz_mul_ui($v, $m, $p);
                 Math::GMPz::Rmpz_sub_ui($u, $v, 1);
                 if (vecall { is_strong_pseudoprime($v, $_) } @bases) {
-                    $callback->(Math::GMPz::Rmpz_init_set($v));
+                    push(@list, Math::GMPz::Rmpz_init_set($v));
                 }
             }
 
@@ -102,9 +105,10 @@ sub k_squarefree_strong_fermat_pseudoprimes_in_range ($A, $B, $k, $bases, $callb
 
             __SUB__->($t, $lcm, $p + 1, $k - 1);
         }
-    };
+      }
+      ->(Math::GMPz->new(1), Math::GMPz->new(1), 2, $k);
 
-    $generator->(Math::GMPz->new(1), Math::GMPz->new(1), 2, $k);
+    return sort { $a <=> $b } @list;
 }
 
 sub squarefree_strong_fermat_pseudoprimes_in_range ($from, $upto, $bases) {
@@ -113,11 +117,10 @@ sub squarefree_strong_fermat_pseudoprimes_in_range ($from, $upto, $bases) {
 
     for (my $k = 2 ; ; ++$k) {
         last if pn_primorial($k) > $upto;
-        k_squarefree_strong_fermat_pseudoprimes_in_range($from, $upto, $k, $bases, sub ($n) { push @arr, $n });
+        push @arr, k_squarefree_strong_fermat_pseudoprimes_in_range($from, $upto, $k, $bases);
     }
 
-    @arr = sort { $a <=> $b } @arr;
-    return @arr;
+    return sort { $a <=> $b } @arr;
 }
 
 my @bases = (17, 31);

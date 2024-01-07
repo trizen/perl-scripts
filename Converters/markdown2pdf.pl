@@ -34,6 +34,7 @@ my $title       = 'Document';
 my $page_size   = 'A3';
 my $mathjax     = 0;            # true to use MathJax.js
 my $js_delay    = 3000;         # in ms
+my $keep_html   = 0;
 
 sub usage {
     my ($exit_code) = @_;
@@ -50,6 +51,7 @@ options:
     --lang=s     : default syntax highlighting language (default: $syntax_lang)
     --mathjax!   : enable support for Tex expressions (default: $mathjax)
     --js-delay=i : JavaScript delay in ms (with --mathjax) (default: $js_delay)
+    --html!      : keep the intermediary HTML file (default: $keep_html)
 
 EOT
 
@@ -62,7 +64,8 @@ GetOptions(
            "title=s"    => \$title,
            "size=s"     => \$page_size,
            "mathjax!"   => \$mathjax,
-           'js-delay=i' => \$js_delay,
+           "js-delay=i" => \$js_delay,
+           "html!"      => \$keep_html,
            "h|help"     => sub { usage(0) },
           )
   or die("Error in command line arguments\n");
@@ -236,7 +239,8 @@ system(
     $output_pdf_file,
 );
 
-unlink($tmp_in_file, $tmp_out_file, $tmp_html_file);
+unlink($tmp_in_file, $tmp_out_file);
+unlink($tmp_html_file) if not $keep_html;
 
 if ($? != 0) {
     die "`wkhtmltopdf` failed with code: $?";

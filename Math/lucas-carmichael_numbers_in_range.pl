@@ -30,12 +30,14 @@ sub divceil ($x, $y) {    # ceil(x/y)
     (($x % $y == 0) ? 0 : 1) + divint($x, $y);
 }
 
-sub lucas_carmichael_numbers_in_range ($A, $B, $k, $callback) {
+sub lucas_carmichael_numbers_in_range ($A, $B, $k) {
 
     $A = vecmax($A, pn_primorial($k));
 
     # Largest possisble prime factor for Lucas-Carmichael numbers <= B
     my $max_p = sqrtint($B);
+
+    my @list;
 
     sub ($m, $L, $lo, $k) {
 
@@ -53,14 +55,11 @@ sub lucas_carmichael_numbers_in_range ($A, $B, $k, $callback) {
 
             my $t = $L - invmod($m, $L);
             $t > $hi && return;
-            $t += $L while ($t < $lo);
+            $t += $L * divceil($lo - $t, $L) if ($t < $lo);
 
             for (my $p = $t ; $p <= $hi ; $p += $L) {
-                if (is_prime($p)) {
-                    my $n = $m * $p;
-                    if (($n + 1) % ($p + 1) == 0) {
-                        $callback->($n);
-                    }
+                if (($m * $p + 1) % ($p + 1) == 0 and is_prime($p)) {
+                    push @list, $m * $p;
                 }
             }
 
@@ -68,15 +67,14 @@ sub lucas_carmichael_numbers_in_range ($A, $B, $k, $callback) {
         }
 
         foreach my $p (@{primes($lo, $hi)}) {
-
-            gcd($m, $p + 1) == 1 or next;
-
-            # gcd($m*$p, divisor_sum($m*$p)) == 1 or die "$m*$p: not Lucas-cyclic";
-
-            __SUB__->($m * $p, lcm($L, $p + 1), $p + 1, $k - 1);
+            if (gcd($m, $p + 1) == 1) {
+                __SUB__->($m * $p, lcm($L, $p + 1), $p + 1, $k - 1);
+            }
         }
       }
       ->(1, 1, 3, $k);
+
+    return sort { $a <=> $b } @list;
 }
 
 # Generate all the Lucas-Carmichael numbers with 5 prime factors in the range [100, 10^8]
@@ -85,10 +83,8 @@ my $k    = 5;
 my $from = 100;
 my $upto = 1e8;
 
-my @arr;
-lucas_carmichael_numbers_in_range($from, $upto, $k, sub ($n) { push @arr, $n });
-
-say join(', ', sort { $a <=> $b } @arr);
+my @arr = lucas_carmichael_numbers_in_range($from, $upto, $k);
+say join(', ', @arr);
 
 __END__
 588455, 1010735, 2276351, 2756159, 4107455, 4874639, 5669279, 6539819, 8421335, 13670855, 16184663, 16868159, 21408695, 23176439, 24685199, 25111295, 26636687, 30071327, 34347599, 34541639, 36149399, 36485015, 38999519, 39715319, 42624911, 43134959, 49412285, 49591919, 54408959, 54958799, 57872555, 57953951, 64456223, 66709019, 73019135, 77350559, 78402815, 82144799, 83618639, 86450399, 93277079, 96080039, 98803439

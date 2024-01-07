@@ -31,7 +31,11 @@ use 5.036;
 use Math::GMPz;
 use ntheory qw(:all);
 
-sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
+sub divceil ($x, $y) {    # ceil(x/y)
+    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
+}
+
+sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base) {
 
     $A = vecmax($A, pn_primorial($k));
 
@@ -42,6 +46,7 @@ sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
     my $v = Math::GMPz::Rmpz_init();
 
     my %seen;
+    my @list;
 
     my $generator = sub ($m, $L, $lo, $j, $k_exp, $congr) {
 
@@ -68,7 +73,7 @@ sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
 
             my $t = Math::GMPz::Rmpz_get_ui($v);
             $t > $hi && return;
-            $t += $L while ($t < $lo);
+            $t += $L * divceil($lo - $t, $L) if ($t < $lo);
 
             for (my $p = $t ; $p <= $hi ; $p += $L) {
 
@@ -86,7 +91,7 @@ sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
                     elsif (Math::GMPz::Rmpz_cmp($v, $A) >= 0) {
                         Math::GMPz::Rmpz_sub_ui($u, $v, 1);
                         if (Math::GMPz::Rmpz_divisible_ui_p($u, znorder($base, $p))) {
-                            $callback->(Math::GMPz::Rmpz_init_set($v)) if !$seen{Math::GMPz::Rmpz_get_str($v, 10)}++;
+                            push(@list, Math::GMPz::Rmpz_init_set($v)) if !$seen{Math::GMPz::Rmpz_get_str($v, 10)}++;
                         }
                     }
                 }
@@ -113,9 +118,7 @@ sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
 
             Math::GMPz::Rmpz_set_ui($u, $p);
 
-            for (Math::GMPz::Rmpz_mul_ui($v, $m, $p) ;
-                 Math::GMPz::Rmpz_cmp($v, $B) <= 0 ;
-                 Math::GMPz::Rmpz_mul_ui($v, $v, $p)) {
+            for (Math::GMPz::Rmpz_mul_ui($v, $m, $p) ; Math::GMPz::Rmpz_cmp($v, $B) <= 0 ; Math::GMPz::Rmpz_mul_ui($v, $v, $p)) {
                 __SUB__->($v, $lcm, $p + 1, $j - 1, $k_exp, $congr);
                 Math::GMPz::Rmpz_mul_ui($u, $u, $p);
                 powmod($base, $z, $u) == 1 or last;
@@ -130,9 +133,11 @@ sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
     foreach my $v (0 .. logint($B, 2)) {
         $generator->(Math::GMPz->new(1), Math::GMPz->new(1), 2, $k, $v, -1);
     }
+
+    return sort { $a <=> $b } @list;
 }
 
-# Generate all the Fermat pseudoprimes to base 3 in range [1, 10^5]
+# Generate all the strong Fermat pseudoprimes to base 3 in range [1, 10^5]
 
 my $from = 1;
 my $upto = 1e5;
@@ -141,7 +146,7 @@ my $base = 3;
 my @arr;
 foreach my $k (1 .. 100) {
     last if pn_primorial($k) > $upto;
-    strong_fermat_pseudoprimes_in_range($from, $upto, $k, $base, sub ($n) { push @arr, $n });
+    push @arr, strong_fermat_pseudoprimes_in_range($from, $upto, $k, $base);
 }
 
 say join(', ', sort { $a <=> $b } @arr);
@@ -159,9 +164,7 @@ if (0) {    # true to run some tests
 
         foreach my $base (2 .. 100) {
             my @this = grep { is_strong_pseudoprime($_, $base) and !is_prime($_) } @$omega_primes;
-            my @that;
-            strong_fermat_pseudoprimes_in_range($lo, $hi, $k, $base, sub ($n) { push @that, $n });
-            @that = sort { $a <=> $b } @that;
+            my @that = strong_fermat_pseudoprimes_in_range($lo, $hi, $k, $base);
             join(' ', @this) eq join(' ', @that)
               or die "Error for k = $k and base = $base with hi = $hi\n(@this) != (@that)";
         }

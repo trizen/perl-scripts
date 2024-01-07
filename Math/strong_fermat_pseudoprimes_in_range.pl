@@ -33,12 +33,17 @@ use warnings;
 use ntheory      qw(:all);
 use experimental qw(signatures);
 
-sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
+sub divceil ($x, $y) {    # ceil(x/y)
+    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
+}
+
+sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base) {
 
     $A = vecmax($A, pn_primorial($k));
     $A > $B and return;
 
     my %seen;
+    my @list;
 
     my $generator = sub ($m, $L, $lo, $j, $k_exp, $congr) {
 
@@ -62,7 +67,7 @@ sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
                     for (my $v = (($m == 1) ? ($p * $p) : ($m * $p)) ; $v <= $B ; $v *= $p) {
                         $v >= $A                       or next;
                         powmod($base, $v - 1, $v) == 1 or last;
-                        $callback->($v) if !$seen{$v}++;
+                        push(@list, $v) if !$seen{$v}++;
                     }
                 }
                 return;
@@ -70,7 +75,7 @@ sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
 
             my $t = invmod($m, $L);
             $t > $hi && return;
-            $t += $L while ($t < $lo);
+            $t += $L * divceil($lo - $t, $L) if ($t < $lo);
 
             for (my $p = $t ; $p <= $hi ; $p += $L) {
                 if (is_prime_power($p) and gcd($m, $p) == 1 and gcd($base, $p) == 1) {
@@ -82,7 +87,7 @@ sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
                     my $v = $m * $p;
                     $v >= $A                           or next;
                     ($v - 1) % znorder($base, $p) == 0 or next;
-                    $callback->($v) if !$seen{$v}++;
+                    push(@list, $v) if !$seen{$v}++;
                 }
             }
 
@@ -118,6 +123,8 @@ sub strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
     foreach my $v (0 .. logint($B, 2)) {
         $generator->(1, 1, 2, $k, $v, -1);
     }
+
+    return sort { $a <=> $b } @list;
 }
 
 # Generate all the Fermat pseudoprimes to base 3 in range [1, 10^5]
@@ -129,7 +136,7 @@ my $base = 3;
 my @arr;
 foreach my $k (1 .. 100) {
     last if pn_primorial($k) > $upto;
-    strong_fermat_pseudoprimes_in_range($from, $upto, $k, $base, sub ($n) { push @arr, $n });
+    push @arr, strong_fermat_pseudoprimes_in_range($from, $upto, $k, $base);
 }
 
 say join(', ', sort { $a <=> $b } @arr);
@@ -147,9 +154,7 @@ if (0) {    # true to run some tests
 
         foreach my $base (2 .. 100) {
             my @this = grep { is_strong_pseudoprime($_, $base) and !is_prime($_) } @$omega_primes;
-            my @that;
-            strong_fermat_pseudoprimes_in_range($lo, $hi, $k, $base, sub ($n) { push @that, $n });
-            @that = sort { $a <=> $b } @that;
+            my @that = strong_fermat_pseudoprimes_in_range($lo, $hi, $k, $base);
             join(' ', @this) eq join(' ', @that)
               or die "Error for k = $k and base = $base with hi = $hi\n(@this) != (@that)";
         }

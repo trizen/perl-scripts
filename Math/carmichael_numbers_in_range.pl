@@ -30,12 +30,14 @@ sub divceil ($x, $y) {    # ceil(x/y)
     (($x % $y == 0) ? 0 : 1) + divint($x, $y);
 }
 
-sub carmichael_numbers_in_range ($A, $B, $k, $callback) {
+sub carmichael_numbers_in_range ($A, $B, $k) {
 
     $A = vecmax($A, pn_primorial($k + 1) >> 1);
 
     # Largest possisble prime factor for Carmichael numbers <= B
-    my $max_p = (1 + sqrtint(8*$B + 1))>>2;
+    my $max_p = (1 + sqrtint(8 * $B + 1)) >> 2;
+
+    my @list;
 
     sub ($m, $L, $lo, $k) {
 
@@ -53,14 +55,11 @@ sub carmichael_numbers_in_range ($A, $B, $k, $callback) {
 
             my $t = invmod($m, $L);
             $t > $hi && return;
-            $t += $L while ($t < $lo);
+            $t += $L * divceil($lo - $t, $L) if ($t < $lo);
 
             for (my $p = $t ; $p <= $hi ; $p += $L) {
-                if (is_prime($p)) {
-                    my $n = $m * $p;
-                    if (($n - 1) % ($p - 1) == 0) {
-                        $callback->($n);
-                    }
+                if (($m * $p - 1) % ($p - 1) == 0 and is_prime($p)) {
+                    push @list, $m * $p;
                 }
             }
 
@@ -68,15 +67,14 @@ sub carmichael_numbers_in_range ($A, $B, $k, $callback) {
         }
 
         foreach my $p (@{primes($lo, $hi)}) {
-
-            gcd($m, $p - 1) == 1 or next;
-
-            # gcd($m*$p, euler_phi($m*$p)) == 1 or die "$m*$p: not cyclic";
-
-            __SUB__->($m * $p, lcm($L, $p - 1), $p + 1, $k - 1);
+            if (gcd($m, $p >> 1) == 1) {
+                __SUB__->($m * $p, lcm($L, $p - 1), $p + 1, $k - 1);
+            }
         }
       }
       ->(1, 1, 3, $k);
+
+    return sort { $a <=> $b } @list;
 }
 
 # Generate all the 5-Carmichael numbers in the range [100, 10^8]
@@ -85,10 +83,8 @@ my $k    = 5;
 my $from = 100;
 my $upto = 1e8;
 
-my @arr;
-carmichael_numbers_in_range($from, $upto, $k, sub ($n) { push @arr, $n });
-
-say join(', ', sort { $a <=> $b } @arr);
+my @arr = carmichael_numbers_in_range($from, $upto, $k);
+say join(', ', @arr);
 
 __END__
 825265, 1050985, 9890881, 10877581, 12945745, 13992265, 16778881, 18162001, 27336673, 28787185, 31146661, 36121345, 37167361, 40280065, 41298985, 41341321, 41471521, 47006785, 67371265, 67994641, 69331969, 74165065, 75151441, 76595761, 88689601, 93614521, 93869665

@@ -11,11 +11,9 @@
 #   https://en.wikipedia.org/wiki/Lucas_sequence
 #   https://trizenx.blogspot.com/2020/08/pseudoprimes-construction-methods-and.html
 
-use 5.020;
+use 5.036;
 use warnings;
-
-use ntheory      qw(:all);
-use experimental qw(signatures);
+use ntheory qw(:all);
 
 sub divceil ($x, $y) {    # ceil(x/y)
     (($x % $y == 0) ? 0 : 1) + divint($x, $y);
@@ -33,10 +31,12 @@ sub lucas_znorder ($P, $Q, $D, $n) {
     return undef;
 }
 
-sub squarefree_lucas_U_pseudoprimes_in_range ($A, $B, $k, $P, $Q, $callback) {
+sub squarefree_lucas_U_pseudoprimes_in_range ($A, $B, $k, $P, $Q) {
 
     $A = vecmax($A, pn_primorial($k));
     my $D = $P * $P - 4 * $Q;
+
+    my @list;
 
     sub ($m, $L, $lo, $k) {
 
@@ -55,14 +55,14 @@ sub squarefree_lucas_U_pseudoprimes_in_range ($A, $B, $k, $P, $Q, $callback) {
 
                 my $t = mulmod(invmod($m, $L), $j, $L);
                 $t > $hi && next;
-                $t += $L while ($t < $lo);
+                $t += $L * divceil($lo - $t, $L) if ($t < $lo);
 
                 for (my $p = $t ; $p <= $hi ; $p += $L) {
                     if (is_prime($p)) {
                         my $n = $m * $p;
                         my $w = $n - kronecker($D, $n);
                         if ($w % $L == 0 and $w % lucas_znorder($P, $Q, $D, $p) == 0) {
-                            $callback->($n);
+                            push(@list, $n);
                         }
                     }
                 }
@@ -82,6 +82,8 @@ sub squarefree_lucas_U_pseudoprimes_in_range ($A, $B, $k, $P, $Q, $callback) {
         }
       }
       ->(1, 1, 2, $k);
+
+    return sort { $a <=> $b } @list;
 }
 
 # Generate all the squarefree Fibonacci pseudoprimes in the range [1, 64681]
@@ -93,7 +95,7 @@ my ($P, $Q) = (1, -1);
 my @arr;
 foreach my $k (2 .. 100) {
     last if pn_primorial($k) > $upto;
-    squarefree_lucas_U_pseudoprimes_in_range($from, $upto, $k, $P, $Q, sub ($n) { push @arr, $n });
+    push @arr, squarefree_lucas_U_pseudoprimes_in_range($from, $upto, $k, $P, $Q);
 }
 
 say join(', ', sort { $a <=> $b } @arr);

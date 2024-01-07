@@ -18,23 +18,23 @@
 
 # FIXME: it may not generate all the terms for bases > 2.
 
-use 5.020;
+use 5.036;
 use warnings;
-
 use ntheory qw(:all);
-use experimental qw(signatures);
 
 sub divceil ($x, $y) {    # ceil(x/y)
     (($x % $y == 0) ? 0 : 1) + divint($x, $y);
 }
 
-sub even_squarefree_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
+sub even_squarefree_fermat_pseudoprimes_in_range ($A, $B, $k, $base) {
 
     $A = vecmax($A, pn_primorial($k));
 
     if ($k <= 1) {
         return;
     }
+
+    my @list;
 
     sub ($m, $L, $lo, $k) {
 
@@ -51,12 +51,12 @@ sub even_squarefree_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) 
 
             my $t = invmod($m, $L);
             $t > $hi && return;
-            $t += $L while ($t < $lo);
+            $t += $L * divceil($lo - $t, $L) if ($t < $lo);
 
             for (my $p = $t ; $p <= $hi ; $p += $L) {
                 if (is_prime($p) and $base % $p != 0) {
-                    if (($m*$p - 1) % znorder($base, $p) == 0) {
-                        $callback->($m*$p);
+                    if (($m * $p - 1) % znorder($base, $p) == 0) {
+                        push(@list, $m * $p);
                     }
                 }
             }
@@ -74,7 +74,9 @@ sub even_squarefree_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) 
             __SUB__->($m * $p, lcm($L, $z), $p + 1, $k - 1);
         }
       }
-      ->(2, 1, 3, $k-1);
+      ->(2, 1, 3, $k - 1);
+
+    return sort { $a <=> $b } @list;
 }
 
 # Generate all the even squarefree Fermat pseudoprimes to base 2 with 5 prime factors in the range [100, 10^10]
@@ -84,9 +86,8 @@ my $base = 2;
 my $from = 100;
 my $upto = 1e11;
 
-my @arr; even_squarefree_fermat_pseudoprimes_in_range($from, $upto, $k, $base, sub ($n) { push @arr, $n });
-
-say join(', ', sort { $a <=> $b } @arr);
+my @arr = even_squarefree_fermat_pseudoprimes_in_range($from, $upto, $k, $base);
+say join(', ', @arr);
 
 __END__
 209665666, 213388066, 377994926, 1066079026, 1105826338, 1423998226, 1451887438, 2952654706, 3220041826, 6182224786, 6381449614, 9548385826, 14184805006, 14965276226, 14973142786, 15369282226, 16732427362, 18411253246, 18661908574, 30789370162, 30910262626, 37130195614, 43487454286, 44849716066, 74562118786, 79204064626, 82284719986, 83720640862, 85898088046, 98730252226

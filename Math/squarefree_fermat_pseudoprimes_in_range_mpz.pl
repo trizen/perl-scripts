@@ -20,7 +20,11 @@ use 5.036;
 use Math::GMPz;
 use ntheory qw(:all);
 
-sub squarefree_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
+sub divceil ($x, $y) {    # ceil(x/y)
+    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
+}
+
+sub squarefree_fermat_pseudoprimes_in_range ($A, $B, $k, $base) {
 
     $A = vecmax($A, pn_primorial($k));
 
@@ -29,6 +33,8 @@ sub squarefree_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
 
     my $u = Math::GMPz::Rmpz_init();
     my $v = Math::GMPz::Rmpz_init();
+
+    my @list;
 
     sub ($m, $L, $lo, $k) {
 
@@ -71,14 +77,14 @@ sub squarefree_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
 
             my $t = Math::GMPz::Rmpz_get_ui($v);
             $t > $hi && return;
-            $t += $L while ($t < $lo);
+            $t += $L * divceil($lo - $t, $L) if ($t < $lo);
 
             for (my $p = $t ; $p <= $hi ; $p += $L) {
                 if (is_prime($p) and $base % $p != 0) {
                     Math::GMPz::Rmpz_mul_ui($v, $m, $p);
                     Math::GMPz::Rmpz_sub_ui($u, $v, 1);
                     if (Math::GMPz::Rmpz_divisible_ui_p($u, znorder($base, $p))) {
-                        $callback->(Math::GMPz::Rmpz_init_set($v));
+                        push(@list, Math::GMPz::Rmpz_init_set($v));
                     }
                 }
             }
@@ -101,6 +107,8 @@ sub squarefree_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
         }
       }
       ->(Math::GMPz->new(1), Math::GMPz->new(1), 2, $k);
+
+    return sort { $a <=> $b } @list;
 }
 
 # Generate all the squarefree Fermat pseudoprimes to base 2 with 5 prime factors in the range [100, 10^8]
@@ -110,10 +118,8 @@ my $base = 3;
 my $from = 100;
 my $upto = 1e8;
 
-my @arr;
-squarefree_fermat_pseudoprimes_in_range($from, $upto, $k, $base, sub ($n) { push @arr, $n });
-
-say join(', ', sort { $a <=> $b } @arr);
+my @arr = squarefree_fermat_pseudoprimes_in_range($from, $upto, $k, $base);
+say join(', ', @arr);
 
 __END__
 825265, 1050985, 1275681, 2113665, 2503501, 2615977, 2882265, 3370641, 3755521, 4670029, 4698001, 4895065, 5034601, 6242685, 6973057, 7428421, 8322945, 9223401, 9224391, 9890881, 10877581, 12067705, 12945745, 13757653, 13823601, 13992265, 16778881, 17698241, 18007345, 18162001, 18779761, 19092921, 22203181, 22269745, 23386441, 25266745, 25831585, 26553241, 27218269, 27336673, 27736345, 28175001, 28787185, 31146661, 32368609, 32428045, 32756581, 34111441, 34386121, 35428141, 36121345, 36168265, 36507801, 37167361, 37695505, 37938901, 38790753, 40280065, 40886241, 41298985, 41341321, 41424801, 41471521, 42689305, 43136821, 46282405, 47006785, 49084321, 49430305, 51396865, 52018341, 52452905, 53661945, 54177949, 54215161, 54651961, 55035001, 55329985, 58708761, 59586241, 60761701, 61679905, 63337393, 63560685, 64567405, 64685545, 67371265, 67994641, 68830021, 69331969, 71804161, 72135505, 72192021, 72348409, 73346365, 73988641, 74165065, 75151441, 76595761, 77442905, 78397705, 80787421, 83058481, 84028407, 84234745, 85875361, 86968981, 88407361, 88466521, 88689601, 89816545, 89915365, 92027001, 92343745, 92974921, 93614521, 93839201, 93869665, 96259681, 96386865, 96653985, 98124481, 98756281, 99551881

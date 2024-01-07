@@ -16,19 +16,19 @@
 # PARI/GP program (in range) (faster):
 #   squarefree_fermat(A, B, k, base=2) = A=max(A, vecprod(primes(k))); (f(m, l, lo, k) = my(list=List()); my(hi=sqrtnint(B\m, k)); if(lo > hi, return(list)); if(k==1, lo=max(lo, ceil(A/m)); my(t=lift(1/Mod(m,l))); while(t < lo, t += l); forstep(p=t, hi, l, if(isprime(p), my(n=m*p); if((n-1)%znorder(Mod(base, p)) == 0, listput(list, n)))), forprime(p=lo, hi, if (base%p != 0, my(z=znorder(Mod(base, p))); if(gcd(m, z) == 1, list=concat(list, f(m*p, lcm(l,z), p+1, k-1)))))); list); vecsort(Vec(f(1, 1, 2, k)));
 
-use 5.020;
+use 5.036;
 use warnings;
-
 use ntheory qw(:all);
-use experimental qw(signatures);
 
 sub divceil ($x, $y) {    # ceil(x/y)
     (($x % $y == 0) ? 0 : 1) + divint($x, $y);
 }
 
-sub squarefree_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
+sub squarefree_fermat_pseudoprimes_in_range ($A, $B, $k, $base) {
 
     $A = vecmax($A, pn_primorial($k));
+
+    my @list;
 
     sub ($m, $L, $lo, $k) {
 
@@ -45,13 +45,12 @@ sub squarefree_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
 
             my $t = invmod($m, $L);
             $t > $hi && return;
-            $t += $L while ($t < $lo);
+            $t += $L * divceil($lo - $t, $L) if ($t < $lo);
 
             for (my $p = $t ; $p <= $hi ; $p += $L) {
                 if (is_prime($p) and $base % $p != 0) {
-                    my $n = $m * $p;
-                    if (($n - 1) % znorder($base, $p) == 0) {
-                        $callback->($n);
+                    if (($m * $p - 1) % znorder($base, $p) == 0) {
+                        push(@list, $m * $p);
                     }
                 }
             }
@@ -69,6 +68,8 @@ sub squarefree_fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
         }
       }
       ->(1, 1, 2, $k);
+
+    return sort { $a <=> $b } @list;
 }
 
 # Generate all the squarefree Fermat pseudoprimes to base 2 with 5 prime factors in the range [100, 10^8]
@@ -78,13 +79,13 @@ my $base = 2;
 my $from = 100;
 my $upto = 1e8;
 
-my @arr; squarefree_fermat_pseudoprimes_in_range($from, $upto, $k, $base, sub ($n) { push @arr, $n });
+my @arr = squarefree_fermat_pseudoprimes_in_range($from, $upto, $k, $base);
 
 say join(', ', sort { $a <=> $b } @arr);
 
 # Run some tests
 
-if (0) {    # true to run some tests
+if (1) {    # true to run some tests
     foreach my $k (2 .. 6) {
 
         my $lo           = pn_primorial($k);
@@ -93,9 +94,7 @@ if (0) {    # true to run some tests
 
         foreach my $base (2 .. 100) {
             my @this = grep { is_pseudoprime($_, $base) } @omega_primes;
-            my @that;
-            squarefree_fermat_pseudoprimes_in_range($lo, $hi, $k, $base, sub ($n) { push @that, $n });
-            @that = sort { $a <=> $b } @that;
+            my @that = squarefree_fermat_pseudoprimes_in_range($lo, $hi, $k, $base);
             join(' ', @this) eq join(' ', @that)
               or die "Error for k = $k and base = $base with hi = $hi\n(@this) != (@that)";
         }

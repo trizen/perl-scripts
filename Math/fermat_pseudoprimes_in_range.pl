@@ -20,17 +20,20 @@
 # PARI/GP program (fast):
 #   fermat_psp(A, B, k, base) = A=max(A, vecprod(primes(k))); (f(m, l, lo, k) = my(list=List()); my(hi=sqrtnint(B\m, k)); if(lo > hi, return(list)); if(k==1, forstep(p=lift(1/Mod(m, l)), hi, l, if(isprimepower(p) && gcd(m*base, p) == 1, my(n=m*p); if(n >= A && (n-1) % znorder(Mod(base, p)) == 0, listput(list, n)))), forprime(p=lo, hi, base%p == 0 && next; my(z=znorder(Mod(base, p))); gcd(m,z) == 1 || next; my(q=p, v=m*p); while(v <= B, list=concat(list, f(v, lcm(l, z), p+1, k-1)); q *= p; Mod(base, q)^z == 1 || break; v *= p))); list); vecsort(Set(f(1, 1, 2, k)));
 
-use 5.020;
+use 5.036;
 use warnings;
+use ntheory qw(:all);
 
-use ntheory      qw(:all);
-use experimental qw(signatures);
+sub divceil ($x, $y) {    # ceil(x/y)
+    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
+}
 
-sub fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
+sub fermat_pseudoprimes_in_range ($A, $B, $k, $base) {
 
     $A = vecmax($A, pn_primorial($k));
 
     my %seen;
+    my @list;
 
     sub ($m, $L, $lo, $j) {
 
@@ -50,7 +53,7 @@ sub fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
                     for (my $v = (($m == 1) ? ($p * $p) : ($m * $p)) ; $v <= $B ; $v *= $p) {
                         $v >= $A                       or next;
                         powmod($base, $v - 1, $v) == 1 or last;
-                        $callback->($v) if !$seen{$v}++;
+                        push(@list, $v) if !$seen{$v}++;
                     }
                 }
                 return;
@@ -58,7 +61,7 @@ sub fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
 
             my $t = invmod($m, $L);
             $t > $hi && return;
-            $t += $L while ($t < $lo);
+            $t += $L * divceil($lo - $t, $L) if ($t < $lo);
 
             for (my $p = $t ; $p <= $hi ; $p += $L) {
                 if (is_prime_power($p) and gcd($m, $p) == 1 and gcd($base, $p) == 1) {
@@ -68,7 +71,7 @@ sub fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
                     ($v - 1) % znorder($base, $p) == 0 or next;
 
                     #powmod($base, $v-1, $v) == 1 or next;
-                    $callback->($v) if !$seen{$v}++;
+                    push(@list, $v) if !$seen{$v}++;
                 }
             }
 
@@ -93,6 +96,8 @@ sub fermat_pseudoprimes_in_range ($A, $B, $k, $base, $callback) {
         }
       }
       ->(1, 1, 2, $k);
+
+    return sort { $a <=> $b } @list;
 }
 
 # Generate all the Fermat pseudoprimes to base 3 in range [1, 10^5]
@@ -104,7 +109,7 @@ my $base = 3;
 my @arr;
 foreach my $k (1 .. 100) {
     last if pn_primorial($k) > $upto;
-    fermat_pseudoprimes_in_range($from, $upto, $k, $base, sub ($n) { push @arr, $n });
+    push @arr, fermat_pseudoprimes_in_range($from, $upto, $k, $base);
 }
 
 say join(', ', sort { $a <=> $b } @arr);
@@ -122,9 +127,7 @@ if (0) {    # true to run some tests
 
         foreach my $base (2 .. 100) {
             my @this = grep { is_pseudoprime($_, $base) and !is_prime($_) } @$omega_primes;
-            my @that;
-            fermat_pseudoprimes_in_range($lo, $hi, $k, $base, sub ($n) { push @that, $n });
-            @that = sort { $a <=> $b } @that;
+            my @that = fermat_pseudoprimes_in_range($lo, $hi, $k, $base);
             join(' ', @this) eq join(' ', @that)
               or die "Error for k = $k and base = $base with hi = $hi\n(@this) != (@that)";
         }

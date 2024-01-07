@@ -22,7 +22,11 @@ use 5.036;
 use Math::GMPz;
 use ntheory qw(:all);
 
-sub carmichael_strong_fermat_in_range ($A, $B, $k, $base, $callback) {
+sub divceil ($x, $y) {    # ceil(x/y)
+    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
+}
+
+sub carmichael_strong_fermat_in_range ($A, $B, $k, $base) {
 
     $A = vecmax($A, Math::GMPz->new(pn_primorial($k)));
 
@@ -42,6 +46,8 @@ sub carmichael_strong_fermat_in_range ($A, $B, $k, $base, $callback) {
     Math::GMPz::Rmpz_add_ui($max_p, $max_p, 1);
     Math::GMPz::Rmpz_div_2exp($max_p, $max_p, 2);
     $max_p = Math::GMPz::Rmpz_get_ui($max_p) if Math::GMPz::Rmpz_fits_ulong_p($max_p);
+
+    my @list;
 
     my $generator = sub ($m, $L, $lo, $k, $k_exp, $congr) {
 
@@ -87,7 +93,7 @@ sub carmichael_strong_fermat_in_range ($A, $B, $k, $base, $callback) {
 
             my $t = Math::GMPz::Rmpz_get_ui($v);
             $t > $hi && return;
-            $t += $L while ($t < $lo);
+            $t += $L * divceil($lo - $t, $L) if ($t < $lo);
 
             for (my $p = $t ; $p <= $hi ; $p += $L) {
                 if (is_prime($p)) {
@@ -96,8 +102,7 @@ sub carmichael_strong_fermat_in_range ($A, $B, $k, $base, $callback) {
                         Math::GMPz::Rmpz_mul_ui($v, $m, $p);
                         Math::GMPz::Rmpz_sub_ui($u, $v, 1);
                         if (Math::GMPz::Rmpz_divisible_ui_p($u, $p - 1)) {
-                            my $value = Math::GMPz::Rmpz_init_set($v);
-                            $callback->($value);
+                            push(@list, Math::GMPz::Rmpz_init_set($v));
                         }
                     }
                 }
@@ -132,6 +137,8 @@ sub carmichael_strong_fermat_in_range ($A, $B, $k, $base, $callback) {
 
     # Case where 2^d == 1 (mod p), where d is the odd part of p-1.
     $generator->(Math::GMPz->new(1), Math::GMPz->new(1), 2, $k, 0, 1);
+
+    return sort { $a <=> $b } @list;
 }
 
 # Generate all the 3-Carmichael numbers in the range [1, 10^8] that are also strong pseudoprimes to base 2.
@@ -141,10 +148,8 @@ my $base = 2;
 my $from = 1;
 my $upto = 1e8;
 
-my @arr;
-carmichael_strong_fermat_in_range($from, $upto, $k, $base, sub ($n) { push @arr, $n });
-
-say join(', ', sort { $a <=> $b } @arr);
+my @arr = carmichael_strong_fermat_in_range($from, $upto, $k, $base);
+say join(', ', @arr);
 
 __END__
 15841, 29341, 52633, 252601, 314821, 1909001, 3581761, 4335241, 5049001, 5444489, 15247621, 29111881, 35703361, 36765901, 53711113, 68154001, 99036001

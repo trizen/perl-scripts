@@ -17,17 +17,15 @@ carmichael_strong_psp(A, B, k, base) = A=max(A, vecprod(primes(k+1))\2); (f(m, l
 
 =cut
 
-use 5.020;
+use 5.036;
 use warnings;
-
-use ntheory      qw(:all);
-use experimental qw(signatures);
+use ntheory qw(:all);
 
 sub divceil ($x, $y) {    # ceil(x/y)
     (($x % $y == 0) ? 0 : 1) + divint($x, $y);
 }
 
-sub carmichael_strong_fermat_in_range ($A, $B, $k, $base, $callback) {
+sub carmichael_strong_fermat_in_range ($A, $B, $k, $base) {
 
     $A = vecmax($A, pn_primorial($k + 1) >> 1);
 
@@ -36,7 +34,9 @@ sub carmichael_strong_fermat_in_range ($A, $B, $k, $base, $callback) {
     }
 
     # Largest possisble prime factor for Carmichael numbers <= B
-    my $max_p = (1 + sqrtint(8*$B + 1))>>2;
+    my $max_p = (1 + sqrtint(8 * $B + 1)) >> 2;
+
+    my @list;
 
     my $generator = sub ($m, $L, $lo, $k, $k_exp, $congr) {
 
@@ -53,16 +53,13 @@ sub carmichael_strong_fermat_in_range ($A, $B, $k, $base, $callback) {
 
             my $t = invmod($m, $L);
             $t > $hi && return;
-            $t += $L while ($t < $lo);
+            $t += $L * divceil($lo - $t, $L) if ($t < $lo);
 
             for (my $p = $t ; $p <= $hi ; $p += $L) {
-                if (is_prime($p) and $base % $p != 0) {
-                    my $n = $m * $p;
-                    if (($n - 1) % ($p - 1) == 0) {
-                        my $val = valuation($p - 1, 2);
-                        if ($val > $k_exp and powmod($base, ($p - 1) >> ($val - $k_exp), $p) == ($congr % $p)) {
-                            $callback->($n);
-                        }
+                if (($m * $p - 1) % ($p - 1) == 0 and is_prime($p) and $base % $p != 0) {
+                    my $val = valuation($p - 1, 2);
+                    if ($val > $k_exp and powmod($base, ($p - 1) >> ($val - $k_exp), $p) == ($congr % $p)) {
+                        push @list, $m * $p;
                     }
                 }
             }
@@ -92,6 +89,8 @@ sub carmichael_strong_fermat_in_range ($A, $B, $k, $base, $callback) {
     foreach my $v (0 .. logint($B, 2)) {
         $generator->(1, 1, 3, $k, $v, -1);
     }
+
+    return sort { $a <=> $b } @list;
 }
 
 # Generate all the 3-Carmichael numbers in the range [1, 10^8] that are also strong pseudoprimes to base 2.
@@ -101,10 +100,8 @@ my $base = 2;
 my $from = 1;
 my $upto = 1e8;
 
-my @arr;
-carmichael_strong_fermat_in_range($from, $upto, $k, $base, sub ($n) { push @arr, $n });
-
-say join(', ', sort { $a <=> $b } @arr);
+my @arr = carmichael_strong_fermat_in_range($from, $upto, $k, $base);
+say join(', ', @arr);
 
 __END__
 15841, 29341, 52633, 252601, 314821, 1909001, 3581761, 4335241, 5049001, 5444489, 15247621, 29111881, 35703361, 36765901, 53711113, 68154001, 99036001

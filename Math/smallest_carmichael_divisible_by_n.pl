@@ -6,11 +6,9 @@
 #   https://oeis.org/A135721
 #   https://oeis.org/A253595
 
-use 5.020;
+use 5.036;
 use warnings;
-
-use ntheory      qw(:all);
-use experimental qw(signatures);
+use ntheory qw(:all);
 
 sub divceil ($x, $y) {    # ceil(x/y)
     (($x % $y == 0) ? 0 : 1) + divint($x, $y);
@@ -19,7 +17,7 @@ sub divceil ($x, $y) {    # ceil(x/y)
 sub carmichael_from_multiple ($A, $B, $m, $L, $lo, $k, $callback) {
 
     # Largest possisble prime factor for Carmichael numbers <= B
-    my $max_p = (1 + sqrtint(8*$B + 1))>>2;
+    my $max_p = (1 + sqrtint(8 * $B + 1)) >> 2;
 
     my $hi = vecmin($max_p, rootint(divint($B, $m), $k));
 
@@ -34,7 +32,7 @@ sub carmichael_from_multiple ($A, $B, $m, $L, $lo, $k, $callback) {
 
         my $t = invmod($m, $L) // return;
         $t > $hi && return;
-        $t += $L while ($t < $lo);
+        $t += $L * divceil($lo - $t, $L) if ($t < $lo);
 
         for (my $p = $t ; $p <= $hi ; $p += $L) {
             if ($m % $p != 0 and is_prime($p)) {
