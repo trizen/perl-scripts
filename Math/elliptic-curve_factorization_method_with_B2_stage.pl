@@ -268,6 +268,14 @@ sub ecm ($n, $B1 = undef, $B2 = undef, $max_curves = undef) {
     return sort { $a <=> $b } @final_factors;
 }
 
+# Support for numbers provided as command-line arguments
+if (@ARGV) {
+    foreach my $n (@ARGV) {
+        say "rad($n) = ", join ' * ', ecm($n);
+    }
+    exit;
+}
+
 say join ' * ', ecm('314159265358979323');                #=> 317213509 * 990371647
 say join ' * ', ecm('14304849576137459');                 #=> 16100431 * 888476189
 say join ' * ', ecm('9804659461513846513');               #=> 4641991 * 2112166839943
@@ -278,3 +286,8 @@ say join ' * ', ecm('195905123644566489241411490581');    #=> 259719190596553 * 
 say join ' * ', ecm(addint(powint(2, 64), 1));            #=> 274177 * 67280421310721
 say join ' * ', ecm(subint(powint(2, 128), 1));           #=> 3 * 5 * 17 * 257 * 641 * 65537 * 274177 * 6700417 * 67280421310721
 say join ' * ', ecm(addint(powint(2, 128), 1));           #=> 59649589127497217 * 5704689200685129054721
+
+# Run some tests when no argument is provided
+foreach my $n (map { addint(urandomb($_), 2) } 2 .. 100) {
+    say "rad($n) = ", join(' * ', map { is_prime($_) ? $_ : "$_ (composite)" } ecm($n));
+}
