@@ -5,8 +5,8 @@
 # Date: 08 June 2016
 # Website: https://github.com/trizen
 
-# See: http://rosettacode.org/wiki/Pythagoras_tree
-#      http://en.wikipedia.org/wiki/Pythagoras_tree_(fractal)
+# See: https://rosettacode.org/wiki/Pythagoras_tree
+#      https://en.wikipedia.org/wiki/Pythagoras_tree_(fractal)
 
 use Imager;
 

@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 13th October 2013
-# http://trizenx.blogspot.com
+# https://trizenx.blogspot.com
 
 # This script generates sums of consecutive numbers for factorial numbers.
 

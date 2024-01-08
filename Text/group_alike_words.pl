@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 20 July 2014
-# Website: http://github.com/trizen
+# Website: https://github.com/trizen
 
 # Group in distinct paragraphs all the words that look pretty much the same to one another
 

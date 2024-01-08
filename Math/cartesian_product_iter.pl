@@ -7,7 +7,7 @@
 # Iterative algorithm for computing the Cartesian product.
 
 # Algorithm from:
-#   http://stackoverflow.com/a/10947389
+#   https://stackoverflow.com/a/10947389
 
 use 5.016;
 use warnings;

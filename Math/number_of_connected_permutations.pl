@@ -7,7 +7,7 @@
 # A new algorithm for computing number of connected permutations of [1..n].
 
 # See also:
-#   http://oeis.org/A003319
+#   https://oeis.org/A003319
 
 use 5.010;
 use strict;

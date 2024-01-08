@@ -4,12 +4,12 @@
 # License: GPLv3
 # Date: 22 March 2015
 # Edit: 04 September 2015
-# Website: http://github.com/trizen
+# Website: https://github.com/trizen
 
 # Find similar audio files by comparing their waveforms.
 
 # Review:
-#   http://trizenx.blogspot.ro/2015/03/similar-audio-files.html
+#   https://trizenx.blogspot.com/2015/03/similar-audio-files.html
 
 # Requirements:
 #   - ffmpeg: https://ffmpeg.org
@@ -85,7 +85,7 @@ GetOptions(
 
 my $size = $width * $height;
 
-# Source: http://en.wikipedia.org/wiki/Audio_file_format#List_of_formats
+# Source: https://en.wikipedia.org/wiki/Audio_file_format#List_of_formats
 my @audio_formats = qw(
   3gp
   act

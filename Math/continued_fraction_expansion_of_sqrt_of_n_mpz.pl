@@ -7,11 +7,11 @@
 # Compute the simple continued fraction expansion for the square root of a given number.
 
 # Algorithm from:
-#   http://web.math.princeton.edu/mathlab/jr02fall/Periodicity/mariusjp.pdf
+#   https://web.math.princeton.edu/mathlab/jr02fall/Periodicity/mariusjp.pdf
 
 # See also:
 #   https://en.wikipedia.org/wiki/Continued_fraction
-#   http://mathworld.wolfram.com/PeriodicContinuedFraction.html
+#   https://mathworld.wolfram.com/PeriodicContinuedFraction.html
 
 use 5.010;
 use strict;

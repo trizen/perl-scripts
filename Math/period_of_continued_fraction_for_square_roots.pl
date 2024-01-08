@@ -6,14 +6,14 @@
 # https://github.com/trizen
 
 # Algorithm from:
-#   http://web.math.princeton.edu/mathlab/jr02fall/Periodicity/mariusjp.pdf
+#   https://web.math.princeton.edu/mathlab/jr02fall/Periodicity/mariusjp.pdf
 
 # See also:
 #   https://oeis.org/A003285
 #   https://oeis.org/A067280
 #   https://projecteuler.net/problem=64
 #   https://en.wikipedia.org/wiki/Continued_fraction
-#   http://mathworld.wolfram.com/PeriodicContinuedFraction.html
+#   https://mathworld.wolfram.com/PeriodicContinuedFraction.html
 
 use 5.010;
 use strict;

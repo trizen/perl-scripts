@@ -11,7 +11,7 @@
 # See also:
 #   https://en.wikipedia.org/wiki/Cellular_automaton
 #   https://en.wikipedia.org/wiki/Elementary_cellular_automaton
-#   http://rosettacode.org/wiki/Elementary_cellular_automaton
+#   https://rosettacode.org/wiki/Elementary_cellular_automaton
 
 # YouTube lectures:
 #   https://www.youtube.com/watch?v=S3tYzCPuVsA

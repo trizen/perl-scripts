@@ -7,7 +7,7 @@
 # Determine if a given number can be written as the sum of two squares.
 
 # See also:
-#   http://wstein.org/edu/Fall2001/124/lectures/lecture21/lecture21/node2.html
+#   https://wstein.org/edu/Fall2001/124/lectures/lecture21/lecture21/node2.html
 
 use 5.010;
 use strict;

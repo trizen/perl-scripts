@@ -8,7 +8,7 @@
 # First smallest numbers with 2^n divisors.
 
 # See also:
-#    http://oeis.org/A037992
+#    https://oeis.org/A037992
 #    https://projecteuler.net/problem=500
 
 use 5.010;

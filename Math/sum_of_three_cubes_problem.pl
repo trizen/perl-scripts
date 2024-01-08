@@ -97,7 +97,7 @@
 #      https://www.youtube.com/watch?v=wymmCdLdPvM
 
 # See also:
-#   http://mathoverflow.net/questions/138886/which-integers-can-be-expressed-as-a-sum-of-three-cubes-in-infinitely-many-ways
+#   https://mathoverflow.net/questions/138886/which-integers-can-be-expressed-as-a-sum-of-three-cubes-in-infinitely-many-ways
 
 use 5.014;
 use strict;
@@ -180,7 +180,7 @@ sub get_partitions {
 # First solution for n=33 was found by Andrew Booker
 # See also:
 #   https://people.maths.bris.ac.uk/~maarb/papers/cubesv1.pdf
-#   http://www.bradyharanblog.com/blog/33-and-the-sum-of-three-cubes
+#   https://www.bradyharanblog.com/blog/33-and-the-sum-of-three-cubes
 
 my $n = 33;
 my $x = 8866128975287528;

@@ -3,14 +3,14 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 04 January 2015
-# Website: http://github.com/trizen
+# Website: https://github.com/trizen
 
 #
 ## Analyze your Perl code and see whether you are or not a true Perl hacker!
 #
 
 # More info about this script:
-# http://trizenx.blogspot.com/2015/01/perl-code-analyzer.html
+# https://trizenx.blogspot.com/2015/01/perl-code-analyzer.html
 
 use utf8;
 use 5.010;

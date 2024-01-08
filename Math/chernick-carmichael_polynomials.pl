@@ -11,7 +11,7 @@
 
 # See also:
 #   https://oeis.org/wiki/Carmichael_numbers
-#   http://www.ams.org/journals/bull/1939-45-04/S0002-9904-1939-06953-X/home.html
+#   https://www.ams.org/journals/bull/1939-45-04/S0002-9904-1939-06953-X/home.html
 
 # The ratios sum([C(n+1)]) / sum([C(n)]), are given by the OEIS sequence A083705,
 #   https://oeis.org/A083705

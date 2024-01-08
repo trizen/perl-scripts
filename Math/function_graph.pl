@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 02 July 2014
-# http://github.com/trizen
+# https://github.com/trizen
 
 # Map a mathematical function on the xOy axis.
 

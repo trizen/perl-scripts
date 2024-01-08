@@ -11,7 +11,7 @@
 #   https://oeis.org/A322714 -- denominator of the Riemann prime counting function for 10^n.
 
 # See also:
-#   http://mathworld.wolfram.com/RiemannPrimeCountingFunction.html
+#   https://mathworld.wolfram.com/RiemannPrimeCountingFunction.html
 #   https://en.wikipedia.org/wiki/Arithmetic_function#%CF%80(x),_%CE%A0(x),_%CE%B8(x),_%CF%88(x)_%E2%80%93_prime_count_functions
 
 # PARI program:

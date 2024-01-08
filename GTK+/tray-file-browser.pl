@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 15 May 2014
-# http://github.com/trizen
+# https://github.com/trizen
 
 # A simple Gtk2 tray applet file browser - first release.
 

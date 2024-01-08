@@ -3,7 +3,7 @@
 # Author: Trizen
 # License: GPLv3
 # Date: 07 June 2014
-# Website: http://github.com/trizen
+# Website: https://github.com/trizen
 
 # Triangle sub-string finder (concept only)
 # - search a substring using a triangle like pattern,

@@ -3,7 +3,7 @@
 # Daniel "Trizen" Șuteu
 # Date: 27 September 2014
 # Edit: 15 May 2021
-# http://github.com/trizen
+# https://github.com/trizen
 
 # See also:
 #   https://en.wikipedia.org/wiki/Wilson's_theorem

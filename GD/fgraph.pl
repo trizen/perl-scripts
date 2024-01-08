@@ -4,7 +4,7 @@
 # License: GPLv3
 # Date: 02 July 2014
 # Edit: 15 July 2014
-# http://github.com/trizen
+# https://github.com/trizen
 
 # Map a mathematical function on the xOy axis.
 # usage: perl fgraph.pl 'function' 'graph-size' 'from' 'to'

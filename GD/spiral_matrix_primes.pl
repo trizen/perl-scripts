@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 13 April 2015
-# http://github.com/trizen
+# https://github.com/trizen
 
 # A number spiral matrix, with the primes highlighted in blue
 # (there are some lines that have more primes than others)

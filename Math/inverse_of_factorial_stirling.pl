@@ -8,7 +8,7 @@
 # The inverse of n factorial, based on the inverse of Stirling approximation.
 
 # Formula from:
-#   http://math.stackexchange.com/questions/430167/is-there-an-inverse-to-stirlings-approximation
+#   https://math.stackexchange.com/questions/430167/is-there-an-inverse-to-stirlings-approximation
 
 use 5.010;
 use strict;

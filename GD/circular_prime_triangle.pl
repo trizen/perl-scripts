@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 02 April 2016
-# http://github.com/trizen
+# https://github.com/trizen
 
 # Generate a triangle with highlighted numbers in the form of: floor(sqrt(prime(i)^2 + i^2))
 

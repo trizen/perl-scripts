@@ -8,8 +8,8 @@
 # Calculate PI by computing the numerator and the denominator fraction that approaches the value of PI.
 # It's based on the continued fraction: n^2 / (2n+1)
 
-# See: http://oeis.org/A054766
-#      http://oeis.org/A054765
+# See: https://oeis.org/A054766
+#      https://oeis.org/A054765
 
 use 5.010;
 use strict;

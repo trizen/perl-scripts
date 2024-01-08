@@ -8,7 +8,7 @@
 # CNP info
 
 # See also:
-#   http://ro.wikipedia.org/wiki/Cod_numeric_personal
+#   https://ro.wikipedia.org/wiki/Cod_numeric_personal
 
 use 5.010;
 use strict;

@@ -9,7 +9,7 @@
 # See also:
 #    https://en.wikipedia.org/wiki/Pell%27s_equation#Solutions
 #    https://en.wikipedia.org/wiki/Continued_fraction#Infinite_continued_fractions
-#    http://www.wolframalpha.com/input/?i=Convergents%5BSqrt%5B61%5D%5D
+#    https://www.wolframalpha.com/input/?i=Convergents%5BSqrt%5B61%5D%5D
 
 use 5.020;
 use strict;

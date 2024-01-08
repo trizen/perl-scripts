@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 26 May 2015
-# http://github.com/trizen
+# https://github.com/trizen
 
 #
 ## Generate a random pattern triangle

@@ -9,7 +9,7 @@
 # Formula: f(z) = z^2 + c
 
 # See also: https://en.wikipedia.org/wiki/Julia_set
-#           http://rosettacode.org/wiki/Julia_set
+#           https://rosettacode.org/wiki/Julia_set
 
 use strict;
 use warnings;

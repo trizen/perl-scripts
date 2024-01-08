@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 11th September 2014
-# http://github.com/trizen
+# https://github.com/trizen
 
 # Find the minimum word derivations for a list of words
 

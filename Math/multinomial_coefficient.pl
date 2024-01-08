@@ -8,7 +8,7 @@
 # Simple algorithm for computing the multinomial coefficient, using prime powers.
 
 # See also:
-#   http://mathworld.wolfram.com/MultinomialCoefficient.html
+#   https://mathworld.wolfram.com/MultinomialCoefficient.html
 
 use 5.020;
 use strict;

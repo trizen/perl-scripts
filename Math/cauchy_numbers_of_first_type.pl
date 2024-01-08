@@ -7,8 +7,8 @@
 # A new algorithm for computing the Cauchy numbers of first type.
 
 # See also:
-#   http://oeis.org/A006232    (numerators)
-#   http://oeis.org/A006233    (denominators)
+#   https://oeis.org/A006232    (numerators)
+#   https://oeis.org/A006233    (denominators)
 
 use 5.010;
 use strict;

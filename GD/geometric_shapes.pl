@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 02th December 2013
-# Website: http://trizenx.blgospot.com
+# Website: https://trizenx.blgospot.com
 
 # This script tries to generate geometric shapes with a consistent internal angle size
 

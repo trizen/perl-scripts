@@ -12,7 +12,7 @@
 #   https://www.youtube.com/watch?v=lMrz7ISoDGs
 
 # See also:
-#   http://oeis.org/A002329
+#   https://oeis.org/A002329
 
 use 5.010;
 use strict;

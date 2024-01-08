@@ -11,7 +11,7 @@
 # the same name in a given path (+Levenshtein distance).
 
 # Review:
-#    http://trizenx.blogspot.com/2013/06/finding-similar-file-names.html
+#    https://trizenx.blogspot.com/2013/06/finding-similar-file-names.html
 
 # To move files into another directory, please see:
 #    https://github.com/trizen/perl-scripts/blob/master/File%20Workers/file-mover.pl

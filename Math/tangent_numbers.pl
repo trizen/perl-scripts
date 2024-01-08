@@ -13,7 +13,7 @@
 
 # See also:
 #   https://oeis.org/A000182
-#   http://mathworld.wolfram.com/TangentNumber.html
+#   https://mathworld.wolfram.com/TangentNumber.html
 #   https://en.wikipedia.org/wiki/Alternating_permutation
 
 use 5.010;

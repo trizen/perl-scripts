@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 14 April 2014
-# Website: http://github.com/trizen
+# Website: https://github.com/trizen
 
 # Get the pair factors for a number (using a regex)
 

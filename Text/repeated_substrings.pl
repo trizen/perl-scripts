@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 27 April 2015
-# website: http://github.com/trizen
+# website: https://github.com/trizen
 
 # Find repeated substrings of a string. (fast solution)
 

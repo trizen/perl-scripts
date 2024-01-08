@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 07 August 2016
-# http://github.com/trizen
+# https://github.com/trizen
 
 # A number triangle, where each number is highlighted with
 # a different color based on the number of its prime factors.

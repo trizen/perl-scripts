@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # Date: 14 May 2014
 # License: GPLv3
-# Website: http://github.com/trizen
+# Website: https://github.com/trizen
 
 # A variant of LZ77 compression, with minimum and maximum boundaries control.
 

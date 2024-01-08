@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 08 April 2014
-# Website: http://github.com/trizen
+# Website: https://github.com/trizen
 
 # Voice control - take actions based on vocal commands
 # Configuration, grammar and .voca files: https://github.com/trizen/config-files/tree/master/.voxforge/julius

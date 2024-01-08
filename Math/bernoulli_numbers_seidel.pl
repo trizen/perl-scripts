@@ -6,7 +6,7 @@
 # Website: https://github.com/trizen
 
 # Algorithm from:
-#   http://oeis.org/wiki/User:Peter_Luschny/ComputationAndAsymptoticsOfBernoulliNumbers#Seidel
+#   https://oeis.org/wiki/User:Peter_Luschny/ComputationAndAsymptoticsOfBernoulliNumbers#Seidel
 
 use 5.010;
 use strict;

@@ -4,7 +4,7 @@
 # License: GPLv3
 # Date: 14 June 2015
 # Edit: 19 March 2017
-# http://github.com/trizen
+# https://github.com/trizen
 
 # A generic image auto-cropper which adapt itself to any background color.
 

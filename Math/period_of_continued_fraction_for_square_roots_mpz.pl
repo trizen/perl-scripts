@@ -8,7 +8,7 @@
 # Compute the period length of the continued fraction for square root of a given number.
 
 # Algorithm from:
-#   http://web.math.princeton.edu/mathlab/jr02fall/Periodicity/mariusjp.pdf
+#   https://web.math.princeton.edu/mathlab/jr02fall/Periodicity/mariusjp.pdf
 
 # OEIS sequences:
 #   https://oeis.org/A003285 -- Period of continued fraction for square root of n (or 0 if n is a square).
@@ -20,7 +20,7 @@
 
 # See also:
 #   https://en.wikipedia.org/wiki/Continued_fraction
-#   http://mathworld.wolfram.com/PeriodicContinuedFraction.html
+#   https://mathworld.wolfram.com/PeriodicContinuedFraction.html
 
 # A064486 = {1, 2, 2, 2, 2, 4, 2, 36, 38, 244, 244, 1830, 3422, 10626, 3828, 20970, 580384, 4197850, 18395762, 76749396, 166966158, ...}
 # A064025 = {1, 2, 2, 2, 4, 2, 16, 48, 8, 4, 56, 180, 44, 156, 300, 7936, 10388, 11516, 9104, 13469268, 2684084, 2418800, 28468692, 143007944, 85509116, 402570696, ...}

@@ -8,7 +8,7 @@
 
 # See also:
 #   https://en.wikipedia.org/wiki/Julia_set
-#   https://trizenx.blogspot.ro/2016/05/julia-set.html
+#   https://trizenx.blogspot.com/2016/05/julia-set.html
 
 use 5.010;
 use strict;

@@ -8,7 +8,7 @@
 # The Bareiss algorithm for computing the determinant of a (square) matrix.
 
 # Algorithm from:
-#   http://apidock.com/ruby/v1_9_3_125/Matrix/determinant_bareiss
+#   https://apidock.com/ruby/v1_9_3_125/Matrix/determinant_bareiss
 
 # See also:
 #   https://en.wikipedia.org/wiki/Bareiss_algorithm

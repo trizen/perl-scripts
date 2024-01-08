@@ -3,10 +3,10 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 21 December 2014
-# Website: http://github.com/trizen
+# Website: https://github.com/trizen
 
 # Find the minimum sentence(s) that satisfies a regular expression
-# See also: http://www.perlmonks.org/?node_id=284513
+# See also: https://www.perlmonks.org/?node_id=284513
 
 # WARNING: this script is just an idea in development
 

@@ -3,7 +3,7 @@
 # Author: Trizen
 # License: GPLv3
 # Date: 08th October 2013
-# http://trizenx.blogspot.com
+# https://trizenx.blogspot.com
 
 # Map an amount of numbers in a given interval
 

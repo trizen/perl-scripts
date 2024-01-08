@@ -4,8 +4,8 @@
 # This short tutorial explains the basics behind the base64 decoding
 # Written by Trizen under the GPL.
 #
-# See also: http://en.wikipedia.org/wiki/Uuencoding
-#           http://en.wikipedia.org/wiki/Base64
+# See also: https://en.wikipedia.org/wiki/Uuencoding
+#           https://en.wikipedia.org/wiki/Base64
 
 my $base64 = 'SnVzdCBhbm90aGVyIFBlcmwgaGFja2VyLAo=';    # base64
 
@@ -36,7 +36,7 @@ print unpack 'u', pack('C', 32 + int(length($1) * 3 / 4)) . $1 while $base64 =~ 
 #       print unpack('u', ':2G5S="!A;F]T:&5R(%!E<FP@:&%C:V5R+ H');
 
 # Compact code 1 (with substitution)
-# Code from http://en.wikipedia.org/wiki/Uuencoding
+# Code from https://en.wikipedia.org/wiki/Uuencoding
 sub base64_decode_1 {
     my ($base64) = @_;
     $base64 =~ tr|A-Za-z0-9+=/||cd;    # remove non-base64 chars
@@ -89,7 +89,7 @@ sub base64_decode_3 {
 
 # Faster still :)
 # Coded by Gisle Aas
-# http://search.cpan.org/~gaas/MIME-Base64-Perl-1.00/lib/MIME/Base64/Perl.pm
+# https://metacpan.org/release/GAAS/MIME-Base64-Perl-1.00/source/lib/MIME/Base64/Perl.pm
 sub base64_decode_4 {
     my ($str) = @_;
     $str =~ tr|A-Za-z0-9+=/||cd;    # remove non-base64 chars

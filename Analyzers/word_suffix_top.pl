@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 05 April 2015
-# http://github.com/trizen
+# https://github.com/trizen
 
 # Word suffix top
 

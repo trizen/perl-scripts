@@ -3,7 +3,7 @@
 # Author: Șuteu "Trizen" Daniel
 # License: GPLv3
 # Date: 18 August 2013
-# http://trizenx.blogspot.com
+# https://trizenx.blogspot.com
 
 # Get all the shortest possible combinations of byte values for a large integer.
 

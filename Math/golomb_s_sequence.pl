@@ -7,7 +7,7 @@
 # A recursive function that represents the Golomb's sequence.
 
 # See also:
-#   http://oeis.org/A001462
+#   https://oeis.org/A001462
 #   https://projecteuler.net/problem=341
 #   https://en.wikipedia.org/wiki/Golomb_sequence
 

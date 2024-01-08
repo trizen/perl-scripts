@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # Date: 21 May 2014
 # License: GPLv3
-# Website: http://github.com/trizen
+# Website: https://github.com/trizen
 
 # A visual variant of the LZ compression.
 

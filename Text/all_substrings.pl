@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 26 April 2015
-# website: http://github.com/trizen
+# website: https://github.com/trizen
 
 # Find all the possible substrings of a string. (creative solution)
 

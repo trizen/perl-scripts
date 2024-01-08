@@ -9,7 +9,7 @@
 # See also:
 #   https://en.wikipedia.org/wiki/Pocklington_primality_test
 #   https://en.wikipedia.org/wiki/Primality_certificate
-#   http://mathworld.wolfram.com/PrattCertificate.html
+#   https://mathworld.wolfram.com/PrattCertificate.html
 #   https://math.stackexchange.com/questions/663341/n1-primality-proving-is-slow
 
 use 5.020;

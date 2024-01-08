@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 04 April 2014
-# http://trizenx.blogspot.com
+# https://trizenx.blogspot.com
 
 # Inspired from: Cosmos.A.Space.Time.Odyssey.S01E01
 #                            by Neil deGrasse Tyson

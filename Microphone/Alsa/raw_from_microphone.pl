@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 07 April 2014
-# Website: http://github.com/trizen
+# Website: https://github.com/trizen
 
 # Read raw data from microphone (via ALSA/arecord)
 

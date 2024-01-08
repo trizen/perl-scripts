@@ -7,7 +7,7 @@
 # Identity for computing the multinomial coefficient using binomial coefficients.
 
 # See also:
-#   http://mathworld.wolfram.com/MultinomialCoefficient.html
+#   https://mathworld.wolfram.com/MultinomialCoefficient.html
 #   https://en.wikipedia.org/wiki/Multinomial_theorem
 
 use 5.020;

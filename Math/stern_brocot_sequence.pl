@@ -2,13 +2,13 @@
 
 # Coded by Trizen
 # Date: 14 May 2015
-# http://github.com/trizen
+# https://github.com/trizen
 
 use 5.010;
 use strict;
 use warnings;
 
-# Inspired from: http://www.youtube.com/watch?v=DpwUVExX27E
+# Inspired from: https://www.youtube.com/watch?v=DpwUVExX27E
 
 #
 ## Create and return the sequence as an array

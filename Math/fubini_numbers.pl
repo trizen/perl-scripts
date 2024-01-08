@@ -7,7 +7,7 @@
 # A new algorithm for computing the Fubini numbers.
 
 # See also:
-#   http://oeis.org/A000670
+#   https://oeis.org/A000670
 
 use 5.010;
 use strict;

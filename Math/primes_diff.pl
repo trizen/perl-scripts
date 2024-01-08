@@ -3,7 +3,7 @@
 # Author: Trizen
 # License: GPLv3
 # Date: 20th November 2013
-# http://trizenx.blogspot.com
+# https://trizenx.blogspot.com
 
 # Prime numbers with difference of two
 # are grouped together if have a given difference

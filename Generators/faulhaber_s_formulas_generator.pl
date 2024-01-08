@@ -14,7 +14,7 @@
 #   https://en.wikipedia.org/wiki/Faulhaber%27s_formula
 
 # For simplifying the formulas, we can use Wolfram|Alpha:
-#   http://www.wolframalpha.com/
+#   https://www.wolframalpha.com/
 
 use 5.010;
 use strict;

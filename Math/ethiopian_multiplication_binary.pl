@@ -11,7 +11,7 @@
 # a*b = sum((floor(a * 2^(-k)) mod 2) * b*2^k, {k = 0, floor(log(a)/log(2))})
 
 # See also:
-#   http://mathworld.wolfram.com/RussianMultiplication.html
+#   https://mathworld.wolfram.com/RussianMultiplication.html
 
 use 5.010;
 use strict;

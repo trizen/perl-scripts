@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 25 May 2015
-# http://github.com/trizen
+# https://github.com/trizen
 
 #
 ## Generate a magic triangle using a simple series of numbers

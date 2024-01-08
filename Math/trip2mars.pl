@@ -3,10 +3,10 @@
 # Author: Trizen
 # License: GPLv3
 # Date: 15 October 2013
-# http://trizenx.blogspot.com
+# https://trizenx.blogspot.com
 
 # This program solves the "Trip to Mars" problem
-# See: http://www.youtube.com/watch?v=k-zrgRv9tFU
+# See: https://www.youtube.com/watch?v=k-zrgRv9tFU
 
 use 5.010;
 use strict;

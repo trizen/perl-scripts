@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 23 July 2015
-# http://github.com/trizen
+# https://github.com/trizen
 
 # Find files which have almost the same content (at least, mathematically).
 

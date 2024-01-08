@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 07 June 2015
-# http://github.com/trizen
+# https://github.com/trizen
 
 #
 ## Generate a complex shape using basic mathematics.

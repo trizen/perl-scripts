@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 11 April 2015
-# http://github.com/trizen
+# https://github.com/trizen
 
 # A number triangle, with the primes highlighted in blue
 # (there are some lines that have more primes than others)

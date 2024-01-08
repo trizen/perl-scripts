@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 04 May 2015
-# Website: http://github.com/trizen
+# Website: https://github.com/trizen
 
 # A very basic length encoder
 

@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 26 May 2015
-# http://github.com/trizen
+# https://github.com/trizen
 
 #
 ## Generate a wavy triangle using the power of 2.5 (scaled down by a trivial constant)

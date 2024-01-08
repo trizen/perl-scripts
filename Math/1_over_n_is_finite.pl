@@ -7,7 +7,7 @@
 
 # Checks if 1/n is finite or infinite.
 
-# See also: http://perlmonks.org/index.pl?node_id=1006283
+# See also: https://perlmonks.org/index.pl?node_id=1006283
 
 use 5.010;
 use strict;

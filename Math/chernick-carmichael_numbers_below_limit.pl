@@ -12,7 +12,7 @@
 
 # See also:
 #   https://oeis.org/wiki/Carmichael_numbers
-#   http://www.ams.org/journals/bull/1939-45-04/S0002-9904-1939-06953-X/home.html
+#   https://www.ams.org/journals/bull/1939-45-04/S0002-9904-1939-06953-X/home.html
 
 use 5.020;
 use warnings;

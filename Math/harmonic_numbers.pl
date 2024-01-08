@@ -22,7 +22,7 @@ sub harmfrac {
     $ui < 0 and return Math::AnyNum->nan;
 
     # Use binary splitting for large values of n. (by Fredrik Johansson)
-    # http://fredrik-j.blogspot.ro/2009/02/how-not-to-compute-harmonic-numbers.html
+    # https://fredrik-j.blogspot.com/2009/02/how-not-to-compute-harmonic-numbers.html
     if ($ui > 7000) {
         my $num  = Math::GMPz::Rmpz_init_set_ui(1);
         my $den  = Math::GMPz::Rmpz_init_set_ui($ui + 1);

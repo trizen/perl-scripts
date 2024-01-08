@@ -2,7 +2,7 @@
 
 # One-Roll Yahtzee Fever
 
-# http://www.youtube.com/watch?v=dXGhzY2p2ug
+# https://www.youtube.com/watch?v=dXGhzY2p2ug
 
 my (@list) = (0) x 5;
 my $count = 0;

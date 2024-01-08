@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 14 June 2015
-# http://github.com/trizen
+# https://github.com/trizen
 
 # Auto-crop a list of images that have a white background.
 

@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 09 August 2016
-# http://github.com/trizen
+# https://github.com/trizen
 
 #
 ## Generates a number triangle, highlighting the number of

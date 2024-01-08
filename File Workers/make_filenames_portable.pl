@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 16 June 2014
-# Website: http://github.com/trizen
+# Website: https://github.com/trizen
 
 # Replace unsafe characters with safe characters in filenames
 # making the files portable to another FS (like FAT32)

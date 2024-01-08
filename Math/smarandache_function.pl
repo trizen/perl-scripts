@@ -9,7 +9,7 @@
 
 # See also: https://projecteuler.net/problem=549
 #           https://en.wikipedia.org/wiki/Kempner_function
-#           http://mathworld.wolfram.com/SmarandacheFunction.html
+#           https://mathworld.wolfram.com/SmarandacheFunction.html
 
 # ∑S(i) for 2 ≤ i ≤ 10^2 == 2012
 # ∑S(i) for 2 ≤ i ≤ 10^6 == 64938007616

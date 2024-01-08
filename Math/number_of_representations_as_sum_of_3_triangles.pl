@@ -7,7 +7,7 @@
 # Compute the number of ordered ways of writing `n` as the sum of 3 triangular numbers.
 
 # See also:
-#   http://oeis.org/A008443
+#   https://oeis.org/A008443
 #   https://projecteuler.net/problem=621
 
 use 5.020;

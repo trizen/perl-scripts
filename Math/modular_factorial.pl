@@ -46,7 +46,7 @@ sub facmod2 ($n, $mod) {
 # is larger than `n`, but no more than twice as large.
 
 # Algorithm from:
-#   http://stackoverflow.com/questions/9727962/fast-way-to-calculate-n-mod-m-where-m-is-prime
+#   https://stackoverflow.com/questions/9727962/fast-way-to-calculate-n-mod-m-where-m-is-prime
 
 sub facmod1 ($n, $mod) {
 

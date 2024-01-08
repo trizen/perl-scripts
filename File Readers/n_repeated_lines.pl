@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 25 April 2014
-# Website: http://github.com/trizen
+# Website: https://github.com/trizen
 
 # Print only the lines that repeat n times in one or more files.
 # usage: perl n_repeated_lines.pl [n] [file1.txt] [...]

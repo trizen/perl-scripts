@@ -3,12 +3,12 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 10 April 2015
-# http://github.com/trizen
+# https://github.com/trizen
 
 # The prime41() function.
 # Inspired from: https://www.youtube.com/watch?v=3K-12i0jclM
 
-# See more about this on: http://en.wikipedia.org/wiki/Formula_for_primes
+# See more about this on: https://en.wikipedia.org/wiki/Formula_for_primes
 
 use 5.010;
 use strict;

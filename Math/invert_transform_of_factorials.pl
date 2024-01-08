@@ -7,7 +7,7 @@
 # A new algorithm for computing the invert transform of factorial numbers.
 
 # See also:
-#   http://oeis.org/A051296
+#   https://oeis.org/A051296
 
 use 5.010;
 use strict;

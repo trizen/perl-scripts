@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 13 April 2015
-# Website: http://github.com/trizen
+# Website: https://github.com/trizen
 
 #
 ## A recursive-random text finder with potential support for parallelization

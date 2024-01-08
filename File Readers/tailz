@@ -4,7 +4,7 @@
 # Reads from the end of the file for efficiency.
 
 # Originally coded by zentara on 06 September 2002:
-#   http://www.perlmonks.org/index.pl?node_id=195768
+#   https://www.perlmonks.org/index.pl?node_id=195768
 
 # Improved by Trizen on 11 February 2012
 

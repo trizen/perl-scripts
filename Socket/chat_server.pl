@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #
-## Translation of: http://rosettacode.org/wiki/Chat_server#Python
+## Translation of: https://rosettacode.org/wiki/Chat_server#Python
 #
 
 # Create server:

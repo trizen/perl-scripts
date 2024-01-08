@@ -3,12 +3,12 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 12 April 2015
-# http://github.com/trizen
+# https://github.com/trizen
 
 # A program that finds quadratic polynomials which will generate primes (with some gaps)
 # -- algorithm complexity: O(n) --
 
-# See also: http://en.wikipedia.org/wiki/Formula_for_primes
+# See also: https://en.wikipedia.org/wiki/Formula_for_primes
 
 use 5.010;
 use strict;

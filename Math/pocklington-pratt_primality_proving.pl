@@ -9,7 +9,7 @@
 # See also:
 #   https://en.wikipedia.org/wiki/Pocklington_primality_test
 #   https://en.wikipedia.org/wiki/Primality_certificate
-#   http://mathworld.wolfram.com/PrattCertificate.html
+#   https://mathworld.wolfram.com/PrattCertificate.html
 
 use 5.020;
 use strict;

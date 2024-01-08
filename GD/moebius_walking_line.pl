@@ -3,7 +3,7 @@
 # Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 13 November 2016
-# Website: http://github.com/trizen
+# Website: https://github.com/trizen
 
 # Draw a line using the values of the Möbius function: μ(n)
 

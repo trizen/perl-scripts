@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 11 April 2015
-# http://github.com/trizen
+# https://github.com/trizen
 
 # A zig-zag matrix with the primes highlighted in blue
 
@@ -18,7 +18,7 @@ sub zig_zag {
     my ($w, $h) = @_;
 
     #
-    ## Code from: http://rosettacode.org/wiki/Zig-zag_matrix#Perl
+    ## Code from: https://rosettacode.org/wiki/Zig-zag_matrix#Perl
     #
 
     my (@r, $n);

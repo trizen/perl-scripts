@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 21 July 2015
-# http://github.com/trizen
+# https://github.com/trizen
 
 #
 ## Generate a complex machine-like art based on simple mathematics.

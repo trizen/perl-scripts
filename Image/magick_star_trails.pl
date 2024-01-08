@@ -23,16 +23,16 @@ my $brightness_f  = 'avg';
 
 my %brightness = (
 
-    # I: http://en.wikipedia.org/wiki/HSL_and_HSV#Lightness
+    # I: https://en.wikipedia.org/wiki/HSL_and_HSV#Lightness
     avg => sub { ($_[0] + $_[1] + $_[2]) / 3 },
 
-    # L: http://en.wikipedia.org/wiki/HSL_and_HSV#Lightness
+    # L: https://en.wikipedia.org/wiki/HSL_and_HSV#Lightness
     hsl => sub { 0.5 * max(@_) + 0.5 * min(@_) },
 
     # https://en.wikipedia.org/wiki/Relative_luminance
     rl => sub { (0.2126 * $_[0] + 0.7152 * $_[1] + 0.0722 * $_[2]) },
 
-    # http://en.wikipedia.org/wiki/Luma_(video)#Rec._601_luma_versus_Rec._709_luma_coefficients
+    # https://en.wikipedia.org/wiki/Luma_(video)#Rec._601_luma_versus_Rec._709_luma_coefficients
     luma => sub { (0.299 * $_[0] + 0.587 * $_[1] + 0.114 * $_[2]) },
 
     # http://alienryderflex.com/hsp.html

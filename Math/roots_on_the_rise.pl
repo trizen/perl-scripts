@@ -21,7 +21,7 @@ use Math::AnyNum qw(:overload);
 sub roots ($k) {
 
     # Formulas from Wolfram|Alpha
-    # http://www.wolframalpha.com/input/?i=1%2Fx+%3D+(k%2Fx)%5E2+*+(k%2Bx%5E2)++-+k*x
+    # https://www.wolframalpha.com/input/?i=1%2Fx+%3D+(k%2Fx)%5E2+*+(k%2Bx%5E2)++-+k*x
 
 #<<<
     my $x1 = (2*$k**6 + 27 * $k**5 - 9*$k**3 + 3 * sqrt(3) * sqrt(4 * $k**11 + 27 * $k**10 -

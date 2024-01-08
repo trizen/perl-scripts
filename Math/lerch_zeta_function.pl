@@ -9,7 +9,7 @@
 # Formula due to Guillera and Sondow (2005).
 
 # See also:
-#   http://mathworld.wolfram.com/LerchTranscendent.html
+#   https://mathworld.wolfram.com/LerchTranscendent.html
 #   https://en.wikipedia.org/wiki/Lerch_zeta_function
 
 use 5.020;

@@ -3,7 +3,7 @@
 # An efficient algorithm for computing n! using trinomial coefficients.
 
 # See also:
-#   http://oeis.org/A056040
+#   https://oeis.org/A056040
 #   https://oeis.org/A000142/a000142.pdf
 
 use 5.020;

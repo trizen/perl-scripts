@@ -137,7 +137,7 @@ say "$moves moves tried";
 __END__
 // This program solves the (English) peg solitaire
 // board game.  See also:
-//   http://en.wikipedia.org/wiki/Peg_solitaire
+//   https://en.wikipedia.org/wiki/Peg_solitaire
 
 package main
 
@@ -255,4 +255,3 @@ func main() {
     }
     fmt.Println(moves, "moves tried")
 }
-

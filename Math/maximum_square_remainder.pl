@@ -14,7 +14,7 @@
 # In turns out that 42 is the maximum remainder when a=7.
 
 # See also:
-#   http://oeis.org/A159469
+#   https://oeis.org/A159469
 #   https://projecteuler.net/problem=120
 
 use 5.020;

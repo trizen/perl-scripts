@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 30 April 2014
-# Website: http://github.com/trizen
+# Website: https://github.com/trizen
 
 # Generate mathematical shapes
 # -- feel free to play with the numbers --

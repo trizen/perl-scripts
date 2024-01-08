@@ -8,7 +8,7 @@
 # Compute the period length of the continued fraction for square root of a given number.
 
 # Algorithm from:
-#   http://web.math.princeton.edu/mathlab/jr02fall/Periodicity/mariusjp.pdf
+#   https://web.math.princeton.edu/mathlab/jr02fall/Periodicity/mariusjp.pdf
 
 # OEIS sequences:
 #   https://oeis.org/A003285 -- Period of continued fraction for square root of n (or 0 if n is a square).
@@ -18,7 +18,7 @@
 
 # See also:
 #   https://en.wikipedia.org/wiki/Continued_fraction
-#   http://mathworld.wolfram.com/PeriodicContinuedFraction.html
+#   https://mathworld.wolfram.com/PeriodicContinuedFraction.html
 
 # This program was used in computing the a(15)-a(19) terms of the OEIS sequence A064932.
 #   A064932(15) = 15924930

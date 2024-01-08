@@ -9,7 +9,7 @@
 # See also:
 #   https://oeis.org/A025426 -- Number of partitions of n into 2 nonzero squares.
 #   https://oeis.org/A000161 -- Number of partitions of n into 2 squares.
-#   http://mathworld.wolfram.com/SumofSquaresFunction.html
+#   https://mathworld.wolfram.com/SumofSquaresFunction.html
 #   https://en.wikipedia.org/wiki/Fermat%27s_theorem_on_sums_of_two_squares
 
 use 5.020;

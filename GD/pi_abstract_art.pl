@@ -2,7 +2,7 @@
 
 # Author: Trizen
 # Date: 02 February 2022
-# http://github.com/trizen
+# https://github.com/trizen
 
 # Generate a random art, using the digits of Pi in a given base.
 

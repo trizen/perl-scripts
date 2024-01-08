@@ -5,7 +5,7 @@
 # See also:
 #   https://oeis.org/A020649 -- Least nonresidue of n.
 #   https://oeis.org/A307809 -- Smallest "non-residue" pseudoprime to base prime(n).
-#   http://mathworld.wolfram.com/QuadraticNonresidue.html
+#   https://mathworld.wolfram.com/QuadraticNonresidue.html
 
 use 5.020;
 use ntheory qw(:all);

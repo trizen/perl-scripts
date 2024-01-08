@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 28 September 2014
-# Website: http://github.com/trizen
+# Website: https://github.com/trizen
 
 # Find the unique prefixes for an array of arrays of strings
 

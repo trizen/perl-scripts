@@ -3,13 +3,13 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 01 May 2015
-# Website: http://github.com/trizen
+# Website: https://github.com/trizen
 
 #
 ## The arithmetic coding algorithm.
 #
 
-# See: http://en.wikipedia.org/wiki/Arithmetic_coding#Arithmetic_coding_as_a_generalized_change_of_radix
+# See: https://en.wikipedia.org/wiki/Arithmetic_coding#Arithmetic_coding_as_a_generalized_change_of_radix
 
 use 5.010;
 use strict;

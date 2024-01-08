@@ -3,10 +3,10 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 02 April 2016
-# http://github.com/trizen
+# https://github.com/trizen
 
 # Generate a triangle with highlighted numbers that satisfy: (isqrt(n)-1)! = isqrt(n)-1 (mod isqrt(n)).
-# See also: http://oeis.org/A267016
+# See also: https://oeis.org/A267016
 
 use 5.010;
 use strict;

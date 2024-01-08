@@ -3,7 +3,7 @@
 # Author: Trizen
 # License: GPLv3
 # Date: 09 October 2013
-# http://trizenx.blogspot.com
+# https://trizenx.blogspot.com
 
 # Prints bits and bytes (or byte values) from a binary file.
 

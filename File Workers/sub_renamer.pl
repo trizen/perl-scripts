@@ -47,7 +47,7 @@ Usage example:
     $0 -s -p=75 ~/Videos
 
 Copyright (C) 2014 Daniel "Trizen" Șuteu <trizenx\@gmail\.com>
-License: GPLv3 or later, at your choice. See <http://www.gnu.org/licenses/gpl>
+License: GPLv3 or later, at your choice. See <https://www.gnu.org/licenses/gpl>
 HELP
 
     exit($code // 0);
@@ -64,7 +64,7 @@ GetOptions(
 my @dirs = grep { -d } @ARGV;
 @dirs || help(2);
 
-# Source: http://en.wikipedia.org/wiki/Video_file_format
+# Source: https://en.wikipedia.org/wiki/Video_file_format
 my @video_formats = qw(
   avi
   mp4
@@ -97,7 +97,7 @@ my @video_formats = qw(
   yuv
   );
 
-# Source: http://en.wikipedia.org/wiki/Subtitle_%28captioning%29#Subtitle_formats
+# Source: https://en.wikipedia.org/wiki/Subtitle_%28captioning%29#Subtitle_formats
 my @subtitle_formats = qw(
   aqt
   gsub

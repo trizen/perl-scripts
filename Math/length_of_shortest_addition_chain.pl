@@ -8,7 +8,7 @@
 # Length of shortest addition chain for n.
 # Equivalently, the minimal number of multiplications required to compute n-th power.
 
-# See also: http://oeis.org/A003313
+# See also: https://oeis.org/A003313
 #           https://projecteuler.net/problem=122
 
 # (this algorithm is not efficient for n >= 35)

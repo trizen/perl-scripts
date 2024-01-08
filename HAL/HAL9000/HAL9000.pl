@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 18 April 2014
-# Website: http://github.com/trizen
+# Website: https://github.com/trizen
 
 # A basic A.I. concept, inspired by the fictional HAL9000.
 

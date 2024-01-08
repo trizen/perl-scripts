@@ -8,7 +8,7 @@
 # Encode the first n prime numbers into a large integer.
 
 # See also:
-#    http://oeis.org/A135482
+#    https://oeis.org/A135482
 
 use 5.010;
 use strict;

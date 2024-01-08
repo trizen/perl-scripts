@@ -3,10 +3,10 @@
 # Author: Trizen
 # License: GPLv3
 # Date: 15 December 2013
-# Website: http://trizenx.blgospot.com
+# Website: https://trizenx.blgospot.com
 
-# Variation of: http://rosettacode.org/wiki/Langton%27s_ant#Perl
-# More info about Langton's ant: http://en.wikipedia.org/wiki/Langton%27s_ant
+# Variation of: https://rosettacode.org/wiki/Langton%27s_ant#Perl
+# More info about Langton's ant: https://en.wikipedia.org/wiki/Langton%27s_ant
 
 use 5.010;
 use strict;

@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 13 August 2015
-# http://github.com/trizen
+# https://github.com/trizen
 
 # Generate a spiral tree with branches
 # Inspired from: https://www.youtube.com/watch?v=RWAcbV4X7C8

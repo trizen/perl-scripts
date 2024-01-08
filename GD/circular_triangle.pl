@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 08 June 2015
-# http://github.com/trizen
+# https://github.com/trizen
 
 #
 ## Generate a circular triangle based on triangular numbers.

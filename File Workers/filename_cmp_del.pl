@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 16 June 2014
-# Website: http://github.com/trizen
+# Website: https://github.com/trizen
 
 # Delete files from [del dir] which does NOT exists in [cmp dir]
 # NOTE: Only the base names are compared, without their extensions!

@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 10 January 2014
-# http://trizenx.blogspot.com
+# https://trizenx.blogspot.com
 # List the available categories and mime-types from .desktop files
 
 # usage: perl mime_types.pl [Category]

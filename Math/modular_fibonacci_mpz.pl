@@ -7,7 +7,7 @@
 # An efficient algorithm for computing large Fibonacci numbers, modulo some n.
 
 # Algorithm from:
-#   http://codeforces.com/blog/entry/14516
+#   https://codeforces.com/blog/entry/14516
 
 use 5.020;
 use strict;

@@ -3,7 +3,7 @@
 # Author: Trizen
 # License: GPLv3
 # Date: 15 April 2014
-# Website: http://github.com/trizen
+# Website: https://github.com/trizen
 
 # usage: ./en_phoneme.pl [word] [word] [...]
 

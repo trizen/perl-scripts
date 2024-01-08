@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 11 December 2013
-# http://trizenx.blogspot.com
+# https://trizenx.blogspot.com
 
 # Find the longest duplicated sub-strings inside a string/file (based on a given minimum length).
 

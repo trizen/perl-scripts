@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 21 March 2014
-# http://trizenx.blogspot.com
+# https://trizenx.blogspot.com
 
 # Realign the columns of a space-delimited file (with support for comments and empty lines)
 

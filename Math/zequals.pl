@@ -6,7 +6,7 @@
 # https://github.com/trizen
 
 # Zequals and estimations
-# http://www.youtube.com/watch?v=aOJOfh2_4PE
+# https://www.youtube.com/watch?v=aOJOfh2_4PE
 
 # Example: 722 * 49 ~~ 700 * 50
 

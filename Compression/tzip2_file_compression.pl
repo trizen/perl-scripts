@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 12 August 2013
-# Website: http://trizenx.blogspot.com
+# Website: https://trizenx.blogspot.com
 
 #
 ## A very simple file compressor.

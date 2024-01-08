@@ -3,7 +3,7 @@
 # Finding the longest repeated substring
 
 # Java code from:
-#   http://stackoverflow.com/questions/10355103/finding-the-longest-repeated-substring
+#   https://stackoverflow.com/questions/10355103/finding-the-longest-repeated-substring
 
 use 5.010;
 use strict;

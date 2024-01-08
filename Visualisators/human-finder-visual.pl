@@ -3,7 +3,7 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 20 April 2014
-# Website: http://github.com/trizen
+# Website: https://github.com/trizen
 
 # A smart human-like substring finder
 # Steps:
