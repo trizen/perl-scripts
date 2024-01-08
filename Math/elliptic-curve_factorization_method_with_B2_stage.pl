@@ -4,13 +4,22 @@
 
 # Code translated from the SymPy file "ntheory/ecm.py" (version 1.11.1).
 
-# This implementation requires the latest GitHub version of Math::Prime::Util::GMP.
-
 package Point {
 
     use 5.036;
-    use ntheory                qw(todigitstring);
     use Math::Prime::Util::GMP qw(:all);
+
+    if (!defined(&submod)) {
+        *submod = sub ($x, $y, $m) {
+            addmod($x, "-$y", $m);
+        };
+    }
+
+    if (!defined(&muladdmod)) {
+        *muladdmod = sub ($x, $y, $z, $m) {
+            addmod(mulmod($x, $y, $m), $z, $m);
+        };
+    }
 
     sub new {
         my ($class, $x_cord, $z_cord, $a_24, $mod) = @_;
@@ -45,7 +54,10 @@ package Point {
         my $Q = $self;
         my $R = $self->double();
 
-        foreach my $i (split(//, substr(todigitstring($k, 2), 1))) {
+        my @bits = todigits($k, 2);
+        shift @bits;
+
+        foreach my $i (@bits) {
             if ($i eq '1') {
                 $Q = $R->add($Q, $self);
                 $R = $R->double();
@@ -61,8 +73,26 @@ package Point {
 }
 
 use 5.036;
-use Math::Prime::Util::GMP qw(:all);
 use List::Util             qw(uniq);
+use Math::Prime::Util::GMP qw(:all);
+
+if (!defined(&submod)) {
+    *submod = sub ($x, $y, $m) {
+        addmod($x, "-$y", $m);
+    };
+}
+
+if (!defined(&mulsubmod)) {
+    *mulsubmod = sub ($x, $y, $z, $m) {
+        addmod(mulmod($x, "-$y", $m), $z, $m);
+    };
+}
+
+if (!defined(&muladdmod)) {
+    *muladdmod = sub ($x, $y, $z, $m) {
+        addmod(mulmod($x, $y, $m), $z, $m);
+    };
+}
 
 sub ecm_one_factor ($n, $B1 = 10_000, $B2 = 100_000, $max_curves = 200) {
 
@@ -236,6 +266,6 @@ say join ' * ', ecm('25645121643901801');                 #=> 5394769 * 47537015
 say join ' * ', ecm('17177619065692036843');              #=> 2957613037 * 5807933239
 say join ' * ', ecm('195905123644566489241411490581');    #=> 259719190596553 * 754295911652077
 
-say join ' * ', ecm(addint(powint(2, 64), 1));             #=> 274177 * 67280421310721
-say join ' * ', ecm(subint(powint(2, 128), 1));            #=> 3 * 5 * 17 * 257 * 641 * 65537 * 274177 * 6700417 * 67280421310721
-say join ' * ', ecm(addint(powint(2, 128), 1));            #=> 59649589127497217 * 5704689200685129054721
+say join ' * ', ecm(addint(powint(2, 64), 1));            #=> 274177 * 67280421310721
+say join ' * ', ecm(subint(powint(2, 128), 1));           #=> 3 * 5 * 17 * 257 * 641 * 65537 * 274177 * 6700417 * 67280421310721
+say join ' * ', ecm(addint(powint(2, 128), 1));           #=> 59649589127497217 * 5704689200685129054721
