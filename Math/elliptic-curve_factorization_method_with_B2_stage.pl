@@ -2,7 +2,7 @@
 
 # The elliptic-curve factorization method (ECM), due to Hendrik Lenstra, with B2 stage.
 
-# Code translated from the SymPy file "ntheory/ecm.py" (version 1.11.1).
+# Code translated from the SymPy file "ntheory/ecm.py".
 
 package Point {
 
@@ -41,8 +41,8 @@ package Point {
     }
 
     sub double ($self) {
-        my ($u, $v) = (addmod($self->{x_cord}, $self->{z_cord}, $self->{mod}), submod($self->{x_cord}, $self->{z_cord}, $self->{mod}));
-        ($u, $v) = (mulmod($u, $u, $self->{mod}), mulmod($v, $v, $self->{mod}));
+        my $u          = powmod(addmod($self->{x_cord}, $self->{z_cord}, $self->{mod}), 2, $self->{mod});
+        my $v          = powmod(submod($self->{x_cord}, $self->{z_cord}, $self->{mod}), 2, $self->{mod});
         my $diff       = submod($u, $v, $self->{mod});
         my $new_x_cord = mulmod($u,    $v,                                                $self->{mod});
         my $new_z_cord = mulmod($diff, muladdmod($self->{a_24}, $diff, $v, $self->{mod}), $self->{mod});
@@ -73,7 +73,7 @@ package Point {
 }
 
 use 5.036;
-use List::Util             qw(uniq);
+use List::Util             qw(uniq min);
 use Math::Prime::Util::GMP qw(:all);
 
 if (!defined(&submod)) {
@@ -102,26 +102,36 @@ sub ecm_one_factor ($n, $B1 = 10_000, $B2 = 100_000, $max_curves = 200) {
 
     is_prime($n) && return $n;
 
-    my $D    = sqrtint($B2);
-    my @beta = (0) x ($D + 1);
-    my @S    = (0) x ($D + 1);
-
+    my $D = min(sqrtint($B2), ($B1 >> 1) - 1);
     my $k = consecutive_integer_lcm($B1);
+
+    my (@S, @beta);
+    my @deltas_list;
+
+    my $r_min  = $B1 + 2 * $D;
+    my $r_max  = $B2 + 2 * $D;
+    my $r_step = 4 * $D;
+
+    for (my $r = $r_min ; $r <= $r_max ; $r += $r_step) {
+        my @deltas;
+        foreach my $q (sieve_primes($r - 2 * $D, $r + 2 * $D)) {
+            push @deltas, ((abs($q - $r) - 1) >> 1);
+        }
+        push @deltas_list, [uniq(@deltas)];
+    }
 
     for (1 .. $max_curves) {
 
-        # Suyama's paramatrization
+        # Suyama's parametrization
         my $sigma = urandomr(6, subint($n, 1));
         my $u     = mulsubmod($sigma, $sigma, 5, $n);
         my $v     = mulmod($sigma, 4, $n);
-        my $diff  = submod($v, $u, $n);
         my $u_3   = powmod($u, 3, $n);
 
-        my $inv = invmod(mulmod(mulmod($u_3, $v, $n), 4, $n), $n) || return gcd(lcm($u_3, $v), $n);
-        my $C   = mulsubmod(mulmod(powmod($diff, 3, $n), muladdmod(3, $u, $v, $n), $n), $inv, 2, $n);
+        my $inv = invmod(mulmod(mulmod($u_3, $v, $n),              16,                       $n), $n) || return gcd(lcm($u_3, $v), $n);
+        my $a24 = mulmod(mulmod(powmod(submod($v, $u, $n), 3, $n), muladdmod(3, $u, $v, $n), $n), $inv, $n);
 
-        my $a24 = divmod(addmod($C, 2, $n), 4, $n);
-        my $Q   = Point->new($u_3, powmod($v, 3, $n), $a24, $n);
+        my $Q = Point->new($u_3, powmod($v, 3, $n), $a24, $n);
         $Q = $Q->mont_ladder($k);
         my $g = gcd($Q->{z_cord}, $n);
 
@@ -136,27 +146,26 @@ sub ecm_one_factor ($n, $B1 = 10_000, $B2 = 100_000, $max_curves = 200) {
         }
 
         # Stage 2 - Improved Standard Continuation
-        $S[1]    = $Q->double();
-        $S[2]    = $S[1]->double();
+        $S[0] = $Q;
+        my $Q2 = $Q->double();
+        $S[1]    = $Q2->add($Q, $Q);
+        $beta[0] = mulmod($S[0]->{x_cord}, $S[0]->{z_cord}, $n);
         $beta[1] = mulmod($S[1]->{x_cord}, $S[1]->{z_cord}, $n);
-        $beta[2] = mulmod($S[2]->{x_cord}, $S[2]->{z_cord}, $n);
 
-        foreach my $d (3 .. $D) {
-            $S[$d]    = $S[$d - 1]->add($S[1], $S[$d - 2]);
+        foreach my $d (2 .. $D - 1) {
+            $S[$d]    = $S[$d - 1]->add($Q2, $S[$d - 2]);
             $beta[$d] = mulmod($S[$d]->{x_cord}, $S[$d]->{z_cord}, $n);
         }
 
         $g = 1;
-        my $B = $B1 - 1;
-        my $T = $Q->mont_ladder($B - 2 * $D);
-        my $R = $Q->mont_ladder($B);
 
-        for (my $r = $B ; $r <= $B2 ; $r += 2 * $D) {
+        my $W = $Q->mont_ladder(4 * $D);
+        my $T = $Q->mont_ladder($B1 - 2 * $D);
+        my $R = $Q->mont_ladder($B1 + 2 * $D);
+
+        foreach my $deltas (@deltas_list) {
             my $alpha = mulmod($R->{x_cord}, $R->{z_cord}, $n);
-
-            foreach my $q (sieve_primes($r + 2, 2 * $D + $r)) {
-                my $delta = ($q - $r) >> 1;
-
+            foreach my $delta (@$deltas) {
                 $g = mulmod(
                             $g,
                             addmod(
@@ -172,7 +181,7 @@ sub ecm_one_factor ($n, $B1 = 10_000, $B2 = 100_000, $max_curves = 200) {
             }
 
             # Swap
-            ($T, $R) = ($R, $R->add($S[$D], $T));
+            ($T, $R) = ($R, $R->add($W, $T));
         }
 
         $g = gcd($n, $g);
