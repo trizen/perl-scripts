@@ -15,8 +15,10 @@ use warnings;
 use Gtk2 qw(-init);
 use File::Spec::Functions qw(catfile);
 
-my $dir = $ENV{HOME};    # start dir
-my $cmd = 'pcmanfm';     # command to open files with
+my $dir = defined $ARGV[0] && -d $ARGV[0]    # start dir
+    ? $ARGV[0]
+    : $ENV{HOME};
+my $cmd = 'pcmanfm';                         # command to open files with
 
 # Add content of a directory as a submenu for an item
 sub create_submenu {
