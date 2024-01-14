@@ -202,8 +202,10 @@ sub ecm_one_factor ($n, $B1 = 10_000, $B2 = 100_000, $max_curves = 200) {
 my @ECM_PARAMS = (
 
     # d      B1     curves
+    [5,  200,        4],
     [10, 360,        7],
-    [15, 2000,       25],
+    [13, 600,        20],
+    [15, 2000,       10],
     [20, 11000,      90],
     [25, 50000,      300],
     [30, 250000,     700],
@@ -225,7 +227,7 @@ sub ecm ($n, $B1 = undef, $B2 = undef, $max_curves = undef) {
         foreach my $row (@ECM_PARAMS) {
             my ($d, $B1, $curves) = @$row;
             ## say ":: Trying to find a prime factor with $d digits using B1 = $B1 with $curves curves";
-            my @f = eval { __SUB__->($n, $B1, $B1 * 50, $curves) };
+            my @f = eval { __SUB__->($n, $B1, $B1 * 20, $curves) };
             return @f if !$@;
         }
     }

@@ -192,7 +192,7 @@ sub ecm_one_factor ($n, $B1 = 10_000, $B2 = 100_000, $max_curves = 200, $seed = 
         Math::GMPz::Rmpz_invert($inv, $t, $n) || return do {
             Math::GMPz::Rmpz_lcm($g, $u_3, $v);
             Math::GMPz::Rmpz_gcd($g, $g, $n);
-            return Math::GMPz::Rmpz_init_set($g);
+            Math::GMPz::Rmpz_init_set($g);
         };
 
         Math::GMPz::Rmpz_sub($a24, $v, $u);
@@ -281,8 +281,10 @@ sub ecm_one_factor ($n, $B1 = 10_000, $B2 = 100_000, $max_curves = 200, $seed = 
 my @ECM_PARAMS = (
 
     # d      B1     curves
+    [5,  200,        4],
     [10, 360,        7],
-    [15, 2000,       25],
+    [13, 600,        20],
+    [15, 2000,       10],
     [20, 11000,      90],
     [25, 50000,      300],
     [30, 250000,     700],
