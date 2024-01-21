@@ -23,7 +23,7 @@ use List::Util qw(first);
 use ntheory qw(divisors factor_exp);
 use Math::AnyNum qw(:overload kronecker fibmod lcm factorial);
 
-sub prime_power_divisor ($p, $k = 1) {
+sub pisano_period_pp ($p, $k = 1) {
     $p**($k - 1) * first { fibmod($_, $p) == 0 } divisors($p - kronecker($p, 5));
 }
 
@@ -32,7 +32,7 @@ sub pisano_period($n) {
     return 0 if ($n <= 0);
     return 1 if ($n == 1);
 
-    my $d = lcm(map { prime_power_divisor($_->[0], $_->[1]) } factor_exp($n));
+    my $d = lcm(map { pisano_period_pp($_->[0], $_->[1]) } factor_exp($n));
 
     foreach my $k (0 .. 2) {
         my $t = $d << $k;
