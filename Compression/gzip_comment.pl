@@ -76,12 +76,12 @@ sub extract_comment ($input_gz, $output_file) {
     my $has_filename = 0;
 
     if ((ord($FLAGS) & 0b0000_1000) != 0) {
-        say STDERR "Has filename";
+        say STDERR "Has filename.";
         $has_filename = 1;
     }
 
     if ((ord($FLAGS) & 0b0001_0000) != 0) {
-        say STDERR "Has comment";
+        say STDERR "Has comment.";
     }
     else {
         die "No comment was found.\n";
@@ -154,19 +154,19 @@ sub add_comment ($input_gz, $comment_file, $output_gz) {
     my $has_comment  = 0;
 
     if ((ord($FLAGS) & 0b0000_1000) != 0) {
-        say STDERR "Has filename";
+        say STDERR "Has filename.";
         $has_filename = 1;
     }
     else {
-        say "Has no filename";
+        say STDERR "Has no filename.";
     }
 
     if ((ord($FLAGS) & 0b0001_0000) != 0) {
-        say STDERR "Has comment";
+        say STDERR "Has comment.";
         $has_comment = 1;
     }
     else {
-        say "No comment was found.";
+        say STDERR "Has no existing comment.";
     }
 
     if ($has_filename) {
@@ -175,11 +175,11 @@ sub add_comment ($input_gz, $comment_file, $output_gz) {
     }
 
     if ($has_comment) {
-        say STDERR "Replacing existing comment";
+        say STDERR "Replacing existing comment.";
         read_null_terminated($in_fh);                   # remove existing comment
     }
     else {
-        say STDERR "Adding comment from file";
+        say STDERR "Adding comment from file.";
     }
 
     my $comment = do {
@@ -210,8 +210,8 @@ my $input_gz = shift(@ARGV) // usage(2);
 
 if ($opts{e}) {
     extract_comment($input_gz, $opts{o});
-    exit;
 }
-
-my $comment_file = shift(@ARGV) // usage(2);
-add_comment($input_gz, $comment_file, $opts{o});
+else {
+    my $comment_file = shift(@ARGV) // usage(2);
+    add_comment($input_gz, $comment_file, $opts{o});
+}

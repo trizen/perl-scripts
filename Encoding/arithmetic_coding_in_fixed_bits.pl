@@ -2,23 +2,25 @@
 
 # Author: Trizen
 # Date: 12 July 2023
+# Edit: 05 February 2024
 # https://github.com/trizen
 
 # The Arithmetic Coding algorithm, implemented using native integers.
 
-# Reference:
+# References:
 #   Data Compression (Summer 2023) - Lecture 15 - Infinite Precision in Finite Bits
 #   https://youtube.com/watch?v=EqKbT3QdtOI
+#
+#   Basic arithmetic coder in C++
+#   https://github.com/billbird/arith32
 
 use 5.036;
 
 use List::Util qw(max);
-use constant {BITS => 31};
 
 use constant {
-              MAX  => (1 << BITS) - 1,
-              MSB  => (1 << (BITS - 1)),
-              SMSB => (1 << (BITS - 2)),
+              BITS => 32,
+              MAX  => 0xffffffff,
              };
 
 sub create_cfreq ($freq) {
@@ -42,15 +44,11 @@ sub encode ($string) {
     my $enc   = '';
     my @bytes = unpack('C*', $string);
 
-    push @bytes, max(@bytes) + 1;
+    my $EOF_SYMBOL = max(@bytes) + 1;
+    push @bytes, $EOF_SYMBOL;
 
     my %freq;
     ++$freq{$_} for @bytes;
-
-    # Workaround for low frequencies
-    foreach my $k (keys %freq) {
-        $freq{$k} += 256;
-    }
 
     my ($cf_low, $cf_high, $T) = create_cfreq(\%freq);
 
@@ -66,8 +64,8 @@ sub encode ($string) {
 
         my $w = $high - $low + 1;
 
-        $high = ($low + int(($w * $cf_high->{$c}) / $T));
-        $low  = ($low + int(($w * $cf_low->{$c}) / $T));
+        $high = ($low + int(($w * $cf_high->{$c}) / $T) - 1) & MAX;
+        $low  = ($low + int(($w * $cf_low->{$c}) / $T)) & MAX;
 
         if ($high > MAX) {
             die "high > MAX: $high > ${\MAX}";
@@ -77,10 +75,9 @@ sub encode ($string) {
 
         while (1) {
 
-            if (($low & MSB) == ($high & MSB)) {
+            if (($high >> 31) == ($low >> 31)) {
 
-                my $bit = ($low & MSB) >> (BITS - 1);
-
+                my $bit = ($high >> 31);
                 $enc .= $bit;
 
                 if ($uf_count > 0) {
@@ -88,47 +85,31 @@ sub encode ($string) {
                     $uf_count = 0;
                 }
 
-                if ($bit == 1) {
-                    $low  ^= MSB;
-                    $high ^= MSB;
-                }
-
-                $low  <<= 1;
-                $high <<= 1;
-                $high |= 1;
+                $low <<= 1;
+                ($high <<= 1) |= 1;
             }
-            elsif ((($low & SMSB) == SMSB) and (($high & SMSB) == 0)) {
-
-                $low ^= SMSB;
-                ##$low = (($low & MSB) >> 1) | ($low & (SMSB - 1));
-
-                $high -= SMSB if ($high >= SMSB);
-                ##$high = (($high & MSB) >> 1) | ($high & (SMSB - 1));
-
-                $low  <<= 1;
-                $high <<= 1;
+            elsif (((($low >> 30) & 0x1) == 1) && ((($high >> 30) & 0x1) == 0)) {
+                ($high <<= 1) |= (1 << 31);
                 $high |= 1;
-
-                $uf_count += 1;
+                $low <<= 1;
+                $low &= ((1 << 31) - 1);
+                ++$uf_count;
             }
             else {
                 last;
             }
+
+            $low  &= MAX;
+            $high &= MAX;
         }
     }
 
-    if ($enc eq '') {
-        my $bit = ($low & MSB) >> (BITS - 1);
-
-        $enc .= $bit;
-
-        if ($uf_count > 0) {
-            $enc .= join('', (1 - $bit) x ($uf_count));
-            $uf_count = 0;
-        }
-    }
-
+    $enc .= '0';
     $enc .= '1';
+
+    while (length($enc) % 8 != 0) {
+        $enc .= '1';
+    }
 
     return ($enc, \%freq);
 }
@@ -141,7 +122,7 @@ sub decode ($bits, $freq) {
     my $dec  = '';
     my $low  = 0;
     my $high = MAX;
-    my $enc  = oct('0b' . join '', map { getc($fh) // 0 } 1 .. BITS);
+    my $enc  = oct('0b' . join '', map { getc($fh) // 1 } 1 .. BITS);
 
     my @table;
     foreach my $i (sort { $a <=> $b } keys %$freq) {
@@ -150,20 +131,20 @@ sub decode ($bits, $freq) {
         }
     }
 
-    my $eof = max(keys %$freq);
+    my $EOF_SYMBOL = max(keys %$freq);
 
     while (1) {
 
         my $w  = $high - $low + 1;
-        my $ss = int((($T * ($enc - $low + 1)) - 1) / $w);    # FIXME: sometimes this value is incorrect
+        my $ss = int((($T * ($enc - $low + 1)) - 1) / $w);
 
-        my $i = $table[$ss];
-        last if ($i == $eof);
+        my $i = $table[$ss] // last;
+        last if ($i == $EOF_SYMBOL);
 
         $dec .= chr($i);
 
-        $high = $low + int(($w * $cf_high->{$i}) / $T);
-        $low  = $low + int(($w * $cf_low->{$i}) / $T);
+        $high = ($low + int(($w * $cf_high->{$i}) / $T) - 1) & MAX;
+        $low  = ($low + int(($w * $cf_low->{$i}) / $T)) & MAX;
 
         if ($high > MAX) {
             die "error";
@@ -173,45 +154,29 @@ sub decode ($bits, $freq) {
 
         while (1) {
 
-            if (($low & MSB) == ($high & MSB)) {
-
-                if (($low & MSB) == MSB) {
-                    $low  ^= MSB;
-                    $high ^= MSB;
-                }
-
-                $low  <<= 1;
-                $high <<= 1;
-                $high |= 1;
-
-                if (($enc & MSB) == MSB) {
-                    $enc ^= MSB;
-                }
-
-                $enc <<= 1;
-                $enc |= getc($fh) // 0;
+            if (($high >> 31) == ($low >> 31)) {
+                ($high <<= 1) |= 1;
+                $low <<= 1;
+                ($enc <<= 1) |= (getc($fh) // 1);
             }
-            elsif ((($low & SMSB) == SMSB) and (($high & SMSB) == 0)) {
+            elsif (((($low >> 30) & 0x1) == 1) && ((($high >> 30) & 0x1) == 0)) {
 
-                $low ^= SMSB;
-                ##$low = (($low & MSB) >> 1) | ($low & (SMSB - 1));
-
-                $high -= SMSB;
-                ##$high = (($high & MSB) >> 1) | ($high & (SMSB - 1));
-
-                $enc -= SMSB if ($enc >= SMSB);
-                ##$enc = (($enc & MSB) >> 1) | ($enc & (SMSB - 1));
-
-                $low  <<= 1;
-                $high <<= 1;
-                $enc  <<= 1;
-
+                ($high <<= 1) |= (1 << 31);
                 $high |= 1;
-                $enc  |= getc($fh) // 0;
+                $low <<= 1;
+                $low &= ((1 << 31) - 1);
+
+                my $msb  = $enc >> 31;
+                my $rest = $enc & 0x3fffffff;
+                $enc = ($msb << 31) | ($rest << 1) | (getc($fh) // 1);
             }
             else {
                 last;
             }
+
+            $low  &= MAX;
+            $high &= MAX;
+            $enc  &= MAX;
         }
     }
 
@@ -243,6 +208,6 @@ say $dec;
 $str eq $dec or die "Decoding error: ", length($str), ' <=> ', length($dec);
 
 __END__
-0001100000000111000010011001111111110100110001100010000111011000000001110000111110100011110111001011010111010110110000011
-Encoded bytes length: 15.125
+0100110110111110100000000100000111110000110110011111000010110011011001000101100011011101001110000000010001111111
+Encoded bytes length: 14
 ABRACADABRA AND A VERY SAD SALAD
