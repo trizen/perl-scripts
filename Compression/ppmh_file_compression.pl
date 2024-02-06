@@ -32,7 +32,8 @@ use constant {
     HUFFMAN_MODE => chr(2),
 };
 
-use constant {SIGNATURE => uc(FORMAT) . chr(1)};
+# Container signature
+use constant SIGNATURE => uc(FORMAT) . chr(1);
 
 sub usage {
     my ($code) = @_;

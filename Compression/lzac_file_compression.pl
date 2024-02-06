@@ -2,23 +2,29 @@
 
 # Author: Trizen
 # Date: 15 December 2022
-# Edit: 12 August 2023
+# Edit: 06 February 2024
 # https://github.com/trizen
 
-# Compress/decompress files using LZ77 compression + Arithmetic Coding.
+# Compress/decompress files using LZ77 compression + Arithmetic Coding (in fixed bits).
 
 # Encoding the distances/indices using a DEFLATE-like approach.
+
+# References:
+#   Data Compression (Summer 2023) - Lecture 11 - DEFLATE (gzip)
+#   https://youtube.com/watch?v=SJPvNi4HrWQ
+#
+#   Basic arithmetic coder in C++
+#   https://github.com/billbird/arith32
 
 use 5.036;
 
 use Getopt::Std    qw(getopts);
 use File::Basename qw(basename);
 use List::Util     qw(max sum);
-use Math::GMPz;
 
 use constant {
     PKGNAME => 'LZAC',
-    VERSION => '0.01',
+    VERSION => '0.02',
     FORMAT  => 'lzac',
 
     COMPRESSED_BYTE   => chr(1),
@@ -26,7 +32,12 @@ use constant {
     CHUNK_SIZE        => 1 << 16,    # higher value = better compression
 };
 
-use constant {SIGNATURE => uc(FORMAT) . chr(1)};
+# Arithmetic Coding settings
+use constant BITS => 32;
+use constant MAX  => oct('0b' . ('1' x BITS));
+
+# Container signature
+use constant SIGNATURE => uc(FORMAT) . chr(2);
 
 # [distance value, offset bits]
 my @DISTANCE_SYMBOLS = map { [$_, 0] } (0 .. 4);
@@ -262,118 +273,152 @@ sub delta_decode ($fh) {
     return \@acc;
 }
 
-sub cumulative_freq ($freq) {
+sub create_cfreq ($freq) {
 
-    my %cf;
-    my $total = 0;
-    foreach my $c (sort { $a <=> $b } keys %$freq) {
-        $cf{$c} = $total;
-        $total += $freq->{$c};
+    my %cf_low;
+    my %cf_high;
+    my $T = 0;
+
+    foreach my $i (sort { $a <=> $b } keys %$freq) {
+        $freq->{$i} // next;
+        $cf_low{$i} = $T;
+        $T += $freq->{$i};
+        $cf_high{$i} = $T;
     }
 
-    return %cf;
+    return (\%cf_low, \%cf_high, $T);
 }
 
 sub ac_encode ($bytes_arr) {
 
-    my @chars = @$bytes_arr;
+    my $enc        = '';
+    my $EOF_SYMBOL = (max(@$bytes_arr) // 0) + 1;
+    my @bytes      = (@$bytes_arr, $EOF_SYMBOL);
 
-    # The frequency characters
     my %freq;
-    ++$freq{$_} for @chars;
+    ++$freq{$_} for @bytes;
 
-    # Create the cumulative frequency table
-    my %cf = cumulative_freq(\%freq);
+    my ($cf_low, $cf_high, $T) = create_cfreq(\%freq);
 
-    # Limit and base
-    my $base = Math::GMPz->new(scalar @chars);
-
-    # Lower bound
-    my $L = Math::GMPz->new(0);
-
-    # Product of all frequencies
-    my $pf = Math::GMPz->new(1);
-
-    # Each term is multiplied by the product of the
-    # frequencies of all previously occurring symbols
-    foreach my $c (@chars) {
-        Math::GMPz::Rmpz_mul($L, $L, $base);
-        Math::GMPz::Rmpz_addmul_ui($L, $pf, $cf{$c});
-        Math::GMPz::Rmpz_mul_ui($pf, $pf, $freq{$c});
+    if ($T > MAX) {
+        die "Too few bits: $T > ${\MAX}";
     }
 
-    # Upper bound
-    Math::GMPz::Rmpz_add($L, $L, $pf);
+    my $low      = 0;
+    my $high     = MAX;
+    my $uf_count = 0;
 
-    # Compute the power for left shift
-    my $pow = Math::GMPz::Rmpz_sizeinbase($pf, 2) - 1;
+    foreach my $c (@bytes) {
 
-    # Set $enc to (U-1) divided by 2^pow
-    Math::GMPz::Rmpz_sub_ui($L, $L, 1);
-    Math::GMPz::Rmpz_div_2exp($L, $L, $pow);
+        my $w = $high - $low + 1;
 
-    # Remove any divisibility by 2
-    if ($L > 0 and Math::GMPz::Rmpz_even_p($L)) {
-        $pow += Math::GMPz::Rmpz_remove($L, $L, Math::GMPz->new(2));
+        $high = ($low + int(($w * $cf_high->{$c}) / $T) - 1) & MAX;
+        $low  = ($low + int(($w * $cf_low->{$c}) / $T)) & MAX;
+
+        if ($high > MAX) {
+            die "high > MAX: $high > ${\MAX}";
+        }
+
+        if ($low >= $high) { die "$low >= $high" }
+
+        while (1) {
+
+            if (($high >> (BITS - 1)) == ($low >> (BITS - 1))) {
+
+                my $bit = $high >> (BITS - 1);
+                $enc .= $bit;
+
+                if ($uf_count > 0) {
+                    $enc .= join('', 1 - $bit) x $uf_count;
+                    $uf_count = 0;
+                }
+
+                $low <<= 1;
+                ($high <<= 1) |= 1;
+            }
+            elsif (((($low >> (BITS - 2)) & 0x1) == 1) && ((($high >> (BITS - 2)) & 0x1) == 0)) {
+                ($high <<= 1) |= (1 << (BITS - 1));
+                $high |= 1;
+                ($low <<= 1) &= ((1 << (BITS - 1)) - 1);
+                ++$uf_count;
+            }
+            else {
+                last;
+            }
+
+            $low  &= MAX;
+            $high &= MAX;
+        }
     }
 
-    my $bin = Math::GMPz::Rmpz_get_str($L, 2);
+    $enc .= '0';
+    $enc .= '1';
 
-    return ($bin, $pow, \%freq);
+    while (length($enc) % 8 != 0) {
+        $enc .= '1';
+    }
+
+    return ($enc, \%freq);
 }
 
-sub ac_decode ($bits, $pow2, $freq) {
+sub ac_decode ($fh, $freq) {
 
-    # Decode the bits into an integer
-    my $enc = Math::GMPz->new($bits, 2);
-    Math::GMPz::Rmpz_mul_2exp($enc, $enc, $pow2);
-
-    my $base = sum(values %$freq) // 0;
-
-    if ($base == 0) {
-        return [];
-    }
-    elsif ($base == 1) {
-        return [keys %$freq];
-    }
-
-    # Create the cumulative frequency table
-    my %cf = cumulative_freq($freq);
-
-    # Create the dictionary
-    my %dict;
-    while (my ($k, $v) = each %cf) {
-        $dict{$v} = $k;
-    }
-
-    # Fill the gaps in the dictionary
-    my $lchar;
-    foreach my $i (0 .. $base - 1) {
-        if (exists $dict{$i}) {
-            $lchar = $dict{$i};
-        }
-        elsif (defined $lchar) {
-            $dict{$i} = $lchar;
-        }
-    }
-
-    my $div = Math::GMPz::Rmpz_init();
+    my ($cf_low, $cf_high, $T) = create_cfreq($freq);
 
     my @dec;
+    my $low  = 0;
+    my $high = MAX;
+    my $enc  = oct('0b' . join '', map { getc($fh) // 1 } 1 .. BITS);
 
-    # Decode the input number
-    for (my $pow = Math::GMPz->new($base)**($base - 1) ; Math::GMPz::Rmpz_sgn($pow) > 0 ; Math::GMPz::Rmpz_tdiv_q_ui($pow, $pow, $base)) {
+    my @table;
+    foreach my $i (sort { $a <=> $b } keys %$freq) {
+        foreach my $j ($cf_low->{$i} .. $cf_high->{$i} - 1) {
+            $table[$j] = $i;
+        }
+    }
 
-        Math::GMPz::Rmpz_tdiv_q($div, $enc, $pow);
+    my $EOF_SYMBOL = max(keys %$freq) // 0;
 
-        my $c  = $dict{$div};
-        my $fv = $freq->{$c};
-        my $cv = $cf{$c};
+    while (1) {
 
-        Math::GMPz::Rmpz_submul_ui($enc, $pow, $cv);
-        Math::GMPz::Rmpz_tdiv_q_ui($enc, $enc, $fv);
+        my $w  = $high - $low + 1;
+        my $ss = int((($T * ($enc - $low + 1)) - 1) / $w);
 
-        push @dec, $c;
+        my $i = $table[$ss] // last;
+        last if ($i == $EOF_SYMBOL);
+
+        push @dec, $i;
+
+        $high = ($low + int(($w * $cf_high->{$i}) / $T) - 1) & MAX;
+        $low  = ($low + int(($w * $cf_low->{$i}) / $T)) & MAX;
+
+        if ($high > MAX) {
+            die "error";
+        }
+
+        if ($low >= $high) { die "$low >= $high" }
+
+        while (1) {
+
+            if (($high >> (BITS - 1)) == ($low >> (BITS - 1))) {
+                ($high <<= 1) |= 1;
+                $low <<= 1;
+                ($enc <<= 1) |= (getc($fh) // 1);
+            }
+            elsif (((($low >> (BITS - 2)) & 0x1) == 1) && ((($high >> (BITS - 2)) & 0x1) == 0)) {
+                ($high <<= 1) |= (1 << (BITS - 1));
+                $high |= 1;
+                ($low <<= 1) &= ((1 << (BITS - 1)) - 1);
+                $enc = (($enc >> (BITS - 1)) << (BITS - 1)) | (($enc & ((1 << (BITS - 2)) - 1)) << 1) | (getc($fh) // 1);
+            }
+            else {
+                last;
+            }
+
+            $low  &= MAX;
+            $high &= MAX;
+            $enc  &= MAX;
+        }
     }
 
     return \@dec;
@@ -381,17 +426,15 @@ sub ac_decode ($bits, $pow2, $freq) {
 
 sub create_ac_entry ($bytes, $out_fh) {
 
-    my ($enc, $pow, $freq) = ac_encode($bytes);
-
-    my @freqs;
+    my ($enc, $freq) = ac_encode($bytes);
     my $max_symbol = max(keys %$freq) // 0;
 
+    my @freqs;
     foreach my $k (0 .. $max_symbol) {
         push @freqs, $freq->{$k} // 0;
     }
 
-    push @freqs, $pow;
-    push @freqs, length($enc);
+    push @freqs, length($enc) >> 3;
 
     print $out_fh delta_encode(\@freqs);
     print $out_fh pack("B*", $enc);
@@ -401,7 +444,6 @@ sub decode_ac_entry ($fh) {
 
     my @freqs    = @{delta_decode($fh)};
     my $bits_len = pop(@freqs);
-    my $pow2     = pop(@freqs);
 
     my %freq;
     foreach my $i (0 .. $#freqs) {
@@ -410,10 +452,12 @@ sub decode_ac_entry ($fh) {
         }
     }
 
-    my $bits = read_bits($fh, $bits_len);
+    say "Encoded length: $bits_len";
+    my $bits = read_bits($fh, $bits_len << 3);
 
     if ($bits_len > 0) {
-        return ac_decode($bits, $pow2, \%freq);
+        open my $bits_fh, '<:raw', \$bits;
+        return ac_decode($bits_fh, \%freq);
     }
 
     return [];

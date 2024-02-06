@@ -28,7 +28,8 @@ use constant {
     RANDOM_DATA_THRESHOLD => 0.85,       # in ratio
 };
 
-use constant {SIGNATURE => uc(FORMAT) . chr(1)};
+# Container signature
+use constant SIGNATURE => uc(FORMAT) . chr(1);
 
 sub usage {
     my ($code) = @_;

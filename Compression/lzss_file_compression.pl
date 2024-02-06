@@ -27,7 +27,8 @@ use constant {
     CHUNK_SIZE => 1 << 16,    # higher value = better compression
 };
 
-use constant {SIGNATURE => uc(FORMAT) . chr(1)};
+# Container signature
+use constant SIGNATURE => uc(FORMAT) . chr(1);
 
 # [distance value, offset bits]
 my @DISTANCE_SYMBOLS = map { [$_, 0] } (0 .. 4);

@@ -27,7 +27,8 @@ use constant {
     CHUNK_SIZE        => 1 << 16,    # higher value = better compression
 };
 
-use constant {SIGNATURE => uc(FORMAT) . chr(4)};
+# Container signature
+use constant SIGNATURE => uc(FORMAT) . chr(4);
 
 sub usage {
     my ($code) = @_;

@@ -22,7 +22,8 @@ use constant {
               CHUNK_SIZE => 1 << 16,
              };
 
-use constant {SIGNATURE => uc(FORMAT) . chr(2)};
+# Container signature
+use constant SIGNATURE => uc(FORMAT) . chr(2);
 
 sub usage {
     my ($code) = @_;

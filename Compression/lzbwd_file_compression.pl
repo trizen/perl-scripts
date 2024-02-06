@@ -29,10 +29,11 @@ use constant {
     CHUNK_SIZE            => 1 << 17,                              # higher value = better compression
     LOOKAHEAD_LEN         => 128,
     RANDOM_DATA_THRESHOLD => 0.85,                                 # in ratio
-    MAX_INT               => 0b11111111111111111111111111111111,
+    MAX_INT               => oct('0b' . ('1' x 32)),
 };
 
-use constant {SIGNATURE => uc(FORMAT) . chr(1)};
+# Container signature
+use constant SIGNATURE => uc(FORMAT) . chr(1);
 
 # [distance value, offset bits]
 my @DISTANCE_SYMBOLS = (map { [$_, 0] } 0 .. 4);

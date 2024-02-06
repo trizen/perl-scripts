@@ -26,7 +26,8 @@ use constant {
               FORMAT  => 'tac',
              };
 
-use constant {SIGNATURE => uc(FORMAT) . chr(1)};
+# Container signature
+use constant SIGNATURE => uc(FORMAT) . chr(1);
 
 sub usage {
     my ($code) = @_;

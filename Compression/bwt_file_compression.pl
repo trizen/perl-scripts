@@ -26,7 +26,8 @@ use constant {
     LOOKAHEAD_LEN => 128,
 };
 
-use constant {SIGNATURE => uc(FORMAT) . chr(2)};
+# Container signature
+use constant SIGNATURE => uc(FORMAT) . chr(2);
 
 sub usage {
     my ($code) = @_;

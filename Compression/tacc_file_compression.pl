@@ -28,7 +28,8 @@ use constant {
               FORMAT  => 'tacc',
              };
 
-use constant {SIGNATURE => uc(FORMAT) . chr(4)};
+# Container signature
+use constant SIGNATURE => uc(FORMAT) . chr(4);
 
 sub usage ($code = 0) {
     print <<"EOH";

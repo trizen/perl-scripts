@@ -18,10 +18,8 @@ use 5.036;
 
 use List::Util qw(max);
 
-use constant {
-              BITS => 32,
-              MAX  => 0xffffffff,
-             };
+use constant BITS => 32;
+use constant MAX  => oct('0b' . ('1' x BITS));
 
 sub create_cfreq ($freq) {
 
@@ -44,7 +42,7 @@ sub encode ($string) {
     my $enc   = '';
     my @bytes = unpack('C*', $string);
 
-    my $EOF_SYMBOL = max(@bytes) + 1;
+    my $EOF_SYMBOL = (max(@bytes) // 0) + 1;
     push @bytes, $EOF_SYMBOL;
 
     my %freq;
@@ -75,24 +73,23 @@ sub encode ($string) {
 
         while (1) {
 
-            if (($high >> 31) == ($low >> 31)) {
+            if (($high >> (BITS - 1)) == ($low >> (BITS - 1))) {
 
-                my $bit = ($high >> 31);
+                my $bit = $high >> (BITS - 1);
                 $enc .= $bit;
 
                 if ($uf_count > 0) {
-                    $enc .= join('', (1 - $bit) x $uf_count);
+                    $enc .= join('', 1 - $bit) x $uf_count;
                     $uf_count = 0;
                 }
 
                 $low <<= 1;
                 ($high <<= 1) |= 1;
             }
-            elsif (((($low >> 30) & 0x1) == 1) && ((($high >> 30) & 0x1) == 0)) {
-                ($high <<= 1) |= (1 << 31);
+            elsif (((($low >> (BITS - 2)) & 0x1) == 1) && ((($high >> (BITS - 2)) & 0x1) == 0)) {
+                ($high <<= 1) |= (1 << (BITS - 1));
                 $high |= 1;
-                $low <<= 1;
-                $low &= ((1 << 31) - 1);
+                ($low <<= 1) &= ((1 << (BITS - 1)) - 1);
                 ++$uf_count;
             }
             else {
@@ -131,7 +128,7 @@ sub decode ($bits, $freq) {
         }
     }
 
-    my $EOF_SYMBOL = max(keys %$freq);
+    my $EOF_SYMBOL = max(keys %$freq) // 0;
 
     while (1) {
 
@@ -154,21 +151,16 @@ sub decode ($bits, $freq) {
 
         while (1) {
 
-            if (($high >> 31) == ($low >> 31)) {
+            if (($high >> (BITS - 1)) == ($low >> (BITS - 1))) {
                 ($high <<= 1) |= 1;
                 $low <<= 1;
                 ($enc <<= 1) |= (getc($fh) // 1);
             }
-            elsif (((($low >> 30) & 0x1) == 1) && ((($high >> 30) & 0x1) == 0)) {
-
-                ($high <<= 1) |= (1 << 31);
+            elsif (((($low >> (BITS - 2)) & 0x1) == 1) && ((($high >> (BITS - 2)) & 0x1) == 0)) {
+                ($high <<= 1) |= (1 << (BITS - 1));
                 $high |= 1;
-                $low <<= 1;
-                $low &= ((1 << 31) - 1);
-
-                my $msb  = $enc >> 31;
-                my $rest = $enc & 0x3fffffff;
-                $enc = ($msb << 31) | ($rest << 1) | (getc($fh) // 1);
+                ($low <<= 1) &= ((1 << (BITS - 1)) - 1);
+                $enc = (($enc >> (BITS - 1)) << (BITS - 1)) | (($enc & ((1 << (BITS - 2)) - 1)) << 1) | (getc($fh) // 1);
             }
             else {
                 last;

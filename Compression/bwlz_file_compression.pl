@@ -31,7 +31,8 @@ use constant {
     LOOKAHEAD_LEN => 128,
 };
 
-use constant {SIGNATURE => uc(FORMAT) . chr(4)};
+# Container signature
+use constant SIGNATURE => uc(FORMAT) . chr(4);
 
 # [distance value, offset bits]
 my @DISTANCE_SYMBOLS = map { [$_, 0] } (0 .. 4);
