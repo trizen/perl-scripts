@@ -23,18 +23,17 @@ use constant MAX  => oct('0b' . ('1' x BITS));
 
 sub create_cfreq ($freq) {
 
-    my %cf_low;
-    my %cf_high;
+    my @cf;
     my $T = 0;
 
     foreach my $i (sort { $a <=> $b } keys %$freq) {
         $freq->{$i} // next;
-        $cf_low{$i} = $T;
+        $cf[$i] = $T;
         $T += $freq->{$i};
-        $cf_high{$i} = $T;
+        $cf[$i + 1] = $T;
     }
 
-    return (\%cf_low, \%cf_high, $T);
+    return (\@cf, $T);
 }
 
 sub encode ($string) {
@@ -48,7 +47,7 @@ sub encode ($string) {
     my %freq;
     ++$freq{$_} for @bytes;
 
-    my ($cf_low, $cf_high, $T) = create_cfreq(\%freq);
+    my ($cf, $T) = create_cfreq(\%freq);
 
     if ($T > MAX) {
         die "Too few bits: $T > ${\MAX}";
@@ -62,8 +61,8 @@ sub encode ($string) {
 
         my $w = $high - $low + 1;
 
-        $high = ($low + int(($w * $cf_high->{$c}) / $T) - 1) & MAX;
-        $low  = ($low + int(($w * $cf_low->{$c}) / $T)) & MAX;
+        $high = ($low + int(($w * $cf->[$c + 1]) / $T) - 1) & MAX;
+        $low  = ($low + int(($w * $cf->[$c]) / $T)) & MAX;
 
         if ($high > MAX) {
             die "high > MAX: $high > ${\MAX}";
@@ -114,7 +113,7 @@ sub encode ($string) {
 sub decode ($bits, $freq) {
     open my $fh, '<:raw', \$bits;
 
-    my ($cf_low, $cf_high, $T) = create_cfreq($freq);
+    my ($cf, $T) = create_cfreq($freq);
 
     my $dec  = '';
     my $low  = 0;
@@ -123,7 +122,7 @@ sub decode ($bits, $freq) {
 
     my @table;
     foreach my $i (sort { $a <=> $b } keys %$freq) {
-        foreach my $j ($cf_low->{$i} .. $cf_high->{$i} - 1) {
+        foreach my $j ($cf->[$i] .. $cf->[$i + 1] - 1) {
             $table[$j] = $i;
         }
     }
@@ -140,8 +139,8 @@ sub decode ($bits, $freq) {
 
         $dec .= chr($i);
 
-        $high = ($low + int(($w * $cf_high->{$i}) / $T) - 1) & MAX;
-        $low  = ($low + int(($w * $cf_low->{$i}) / $T)) & MAX;
+        $high = ($low + int(($w * $cf->[$i + 1]) / $T) - 1) & MAX;
+        $low  = ($low + int(($w * $cf->[$i]) / $T)) & MAX;
 
         if ($high > MAX) {
             die "error";

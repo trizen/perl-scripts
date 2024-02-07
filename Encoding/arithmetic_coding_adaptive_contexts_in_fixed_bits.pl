@@ -26,22 +26,19 @@ use constant MAX  => oct('0b' . ('1' x BITS));
 
 sub create_cfreq ($table) {
 
-    my %cf_low;
-    my %cf_high;
     my $T = 0;
-
-    my %freq;
+    my (@cf, @freq);
 
     foreach my $pair (@$table) {
         my ($i, $v) = @$pair;
         $v ||= 1;    # FIXME: make it work with v = 0
-        $freq{$i}   = $v;
-        $cf_low{$i} = $T;
+        $freq[$i] = $v;
+        $cf[$i]   = $T;
         $T += $v;
-        $cf_high{$i} = $T;
+        $cf[$i + 1] = $T;
     }
 
-    return (\%freq, \%cf_low, \%cf_high, $T);
+    return (\@freq, \@cf, $T);
 }
 
 sub create_contexts {
@@ -50,7 +47,7 @@ sub create_contexts {
 
     foreach my $i (0 .. 1) {
 
-        my ($freq, $cf_low, $cf_high, $T) =
+        my ($freq, $cf, $T) =
           create_cfreq(
                        [(map { [$_, 1 - $i] } 0 .. 255),
                         (
@@ -66,8 +63,7 @@ sub create_contexts {
             low      => 0,
             high     => MAX,
             freq     => $freq,
-            cf_low   => $cf_low,
-            cf_high  => $cf_high,
+            cf       => $cf,
             T        => $T,
             uf_count => 0,
           };
@@ -76,18 +72,18 @@ sub create_contexts {
     return @C;
 }
 
-sub increment_freq ($c, $freq, $cf_low, $cf_high) {
+sub increment_freq ($c, $freq, $cf) {
 
     if ($c <= 255) {
-        ++$freq->{$c};
+        ++$freq->[$c];
     }
 
-    my $T = $cf_low->{$c};
+    my $T = $cf->[$c];
 
     foreach my $i ($c .. 257) {
-        $cf_low->{$i} = $T;
-        $T += $freq->{$i};
-        $cf_high->{$i} = $T;
+        $cf->[$i] = $T;
+        $T += $freq->[$i];
+        $cf->[$i + 1] = $T;
     }
 
     return $T;
@@ -107,11 +103,11 @@ sub encode ($string) {
     my sub encode_symbol ($c, $context) {
 
         my $w = $C[$context]{high} - $C[$context]{low} + 1;
-        $C[$context]{high} = ($C[$context]{low} + int(($w * $C[$context]{cf_high}->{$c}) / $C[$context]{T}) - 1) & MAX;
-        $C[$context]{low}  = ($C[$context]{low} + int(($w * $C[$context]{cf_low}->{$c}) / $C[$context]{T})) & MAX;
+        $C[$context]{high} = ($C[$context]{low} + int(($w * $C[$context]{cf}[$c + 1]) / $C[$context]{T}) - 1) & MAX;
+        $C[$context]{low}  = ($C[$context]{low} + int(($w * $C[$context]{cf}[$c]) / $C[$context]{T})) & MAX;
 
         foreach my $context (1) {
-            $C[$context]{T} = increment_freq($c, $C[$context]{freq}, $C[$context]{cf_low}, $C[$context]{cf_high});
+            $C[$context]{T} = increment_freq($c, $C[$context]{freq}, $C[$context]{cf});
         }
 
         if ($C[$context]{high} > MAX) {
@@ -153,7 +149,7 @@ sub encode ($string) {
     }
 
     foreach my $c (@$bytes) {
-        if ($C[1]{freq}{$c} == 0) {
+        if ($C[1]{freq}[$c] == 0) {
             encode_symbol(ESCAPE, 1);
             encode_symbol($c,     0);
         }
@@ -187,10 +183,13 @@ sub decode ($bits) {
         my $w  = $C[$context]{high} - $C[$context]{low} + 1;
         my $ss = int((($C[$context]{T} * ($enc - $C[$context]{low} + 1)) - 1) / $w);
 
-        my $i = undef;
+        my $i    = undef;
+        my $cf   = $C[$context]{cf};
+        my $freq = $C[$context]{freq};
+
         foreach my $j (0 .. 257) {
-            $C[$context]{freq}{$j} > 0 or next;
-            if ($C[$context]{cf_low}->{$j} <= $ss and $ss < $C[$context]{cf_high}->{$j}) {
+            $freq->[$j] > 0 or next;
+            if ($cf->[$j] <= $ss and $ss < $cf->[$j + 1]) {
                 $i = $j;
                 last;
             }
@@ -204,11 +203,11 @@ sub decode ($bits) {
             $dec .= chr($i);
         }
 
-        $C[$context]{high} = ($C[$context]{low} + int(($w * $C[$context]{cf_high}->{$i}) / $C[$context]{T}) - 1) & MAX;
-        $C[$context]{low}  = ($C[$context]{low} + int(($w * $C[$context]{cf_low}->{$i}) / $C[$context]{T})) & MAX;
+        $C[$context]{high} = ($C[$context]{low} + int(($w * $C[$context]{cf}[$i + 1]) / $C[$context]{T}) - 1) & MAX;
+        $C[$context]{low}  = ($C[$context]{low} + int(($w * $C[$context]{cf}[$i]) / $C[$context]{T})) & MAX;
 
         foreach my $context (1) {
-            $C[$context]{T} = increment_freq($i, $C[$context]{freq}, $C[$context]{cf_low}, $C[$context]{cf_high});
+            $C[$context]{T} = increment_freq($i, $C[$context]{freq}, $C[$context]{cf});
         }
 
         if ($C[$context]{high} > MAX) {

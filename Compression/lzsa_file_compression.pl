@@ -354,18 +354,17 @@ sub delta_decode ($fh) {
 
 sub create_cfreq ($freq) {
 
-    my %cf_low;
-    my %cf_high;
+    my @cf;
     my $T = 0;
 
     foreach my $i (sort { $a <=> $b } keys %$freq) {
         $freq->{$i} // next;
-        $cf_low{$i} = $T;
+        $cf[$i] = $T;
         $T += $freq->{$i};
-        $cf_high{$i} = $T;
+        $cf[$i + 1] = $T;
     }
 
-    return (\%cf_low, \%cf_high, $T);
+    return (\@cf, $T);
 }
 
 sub ac_encode ($bytes_arr) {
@@ -377,7 +376,7 @@ sub ac_encode ($bytes_arr) {
     my %freq;
     ++$freq{$_} for @bytes;
 
-    my ($cf_low, $cf_high, $T) = create_cfreq(\%freq);
+    my ($cf, $T) = create_cfreq(\%freq);
 
     if ($T > MAX) {
         die "Too few bits: $T > ${\MAX}";
@@ -391,8 +390,8 @@ sub ac_encode ($bytes_arr) {
 
         my $w = $high - $low + 1;
 
-        $high = ($low + int(($w * $cf_high->{$c}) / $T) - 1) & MAX;
-        $low  = ($low + int(($w * $cf_low->{$c}) / $T)) & MAX;
+        $high = ($low + int(($w * $cf->[$c + 1]) / $T) - 1) & MAX;
+        $low  = ($low + int(($w * $cf->[$c]) / $T)) & MAX;
 
         if ($high > MAX) {
             die "high > MAX: $high > ${\MAX}";
@@ -442,7 +441,7 @@ sub ac_encode ($bytes_arr) {
 
 sub ac_decode ($fh, $freq) {
 
-    my ($cf_low, $cf_high, $T) = create_cfreq($freq);
+    my ($cf, $T) = create_cfreq($freq);
 
     my @dec;
     my $low  = 0;
@@ -451,7 +450,7 @@ sub ac_decode ($fh, $freq) {
 
     my @table;
     foreach my $i (sort { $a <=> $b } keys %$freq) {
-        foreach my $j ($cf_low->{$i} .. $cf_high->{$i} - 1) {
+        foreach my $j ($cf->[$i] .. $cf->[$i + 1] - 1) {
             $table[$j] = $i;
         }
     }
@@ -468,8 +467,8 @@ sub ac_decode ($fh, $freq) {
 
         push @dec, $i;
 
-        $high = ($low + int(($w * $cf_high->{$i}) / $T) - 1) & MAX;
-        $low  = ($low + int(($w * $cf_low->{$i}) / $T)) & MAX;
+        $high = ($low + int(($w * $cf->[$i + 1]) / $T) - 1) & MAX;
+        $low  = ($low + int(($w * $cf->[$i]) / $T)) & MAX;
 
         if ($high > MAX) {
             die "error";

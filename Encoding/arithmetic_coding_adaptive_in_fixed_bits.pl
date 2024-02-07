@@ -27,31 +27,28 @@ use constant MAX        => oct('0b' . ('1' x BITS));
 
 sub create_cfreq ($freq_value) {
 
-    my %cf_low;
-    my %cf_high;
     my $T = 0;
-
-    my %freq;
+    my (@cf, @freq);
 
     foreach my $i (0 .. EOF_SYMBOL) {
-        $freq{$i}   = $freq_value;
-        $cf_low{$i} = $T;
+        $freq[$i] = $freq_value;
+        $cf[$i] = $T;
         $T += $freq_value;
-        $cf_high{$i} = $T;
+        $cf[$i + 1] = $T;
     }
 
-    return (\%freq, \%cf_low, \%cf_high, $T);
+    return (\@freq, \@cf, $T);
 }
 
-sub increment_freq ($c, $freq, $cf_low, $cf_high) {
+sub increment_freq ($c, $freq, $cf) {
 
-    $freq->{$c}++;
-    my $T = $cf_low->{$c};
+    ++$freq->[$c];
+    my $T = $cf->[$c];
 
     foreach my $i ($c .. EOF_SYMBOL) {
-        $cf_low->{$i} = $T;
-        $T += $freq->{$i};
-        $cf_high->{$i} = $T;
+        $cf->[$i] = $T;
+        $T += $freq->[$i];
+        $cf->[$i + 1] = $T;
     }
 
     return $T;
@@ -62,7 +59,7 @@ sub encode ($string) {
     my $enc   = '';
     my $bytes = [unpack('C*', $string), EOF_SYMBOL];
 
-    my ($freq, $cf_low, $cf_high, $T) = create_cfreq(1);
+    my ($freq, $cf, $T) = create_cfreq(1);
 
     if ($T > MAX) {
         die "Too few bits: $T > ${\MAX}";
@@ -76,10 +73,10 @@ sub encode ($string) {
 
         my $w = $high - $low + 1;
 
-        $high = ($low + int(($w * $cf_high->{$c}) / $T) - 1) & MAX;
-        $low  = ($low + int(($w * $cf_low->{$c}) / $T)) & MAX;
+        $high = ($low + int(($w * $cf->[$c + 1]) / $T) - 1) & MAX;
+        $low  = ($low + int(($w * $cf->[$c]) / $T)) & MAX;
 
-        $T = increment_freq($c, $freq, $cf_low, $cf_high);
+        $T = increment_freq($c, $freq, $cf);
 
         if ($high > MAX) {
             die "high > MAX: $high > ${\MAX}";
@@ -130,7 +127,7 @@ sub encode ($string) {
 sub decode ($bits) {
     open my $fh, '<:raw', \$bits;
 
-    my ($freq, $cf_low, $cf_high, $T) = create_cfreq(1);
+    my ($freq, $cf, $T) = create_cfreq(1);
 
     my $dec  = '';
     my $low  = 0;
@@ -144,7 +141,7 @@ sub decode ($bits) {
 
         my $i = 0;
         foreach my $j (0 .. EOF_SYMBOL) {
-            if ($cf_low->{$j} <= $ss and $ss < $cf_high->{$j}) {
+            if ($cf->[$j] <= $ss and $ss < $cf->[$j + 1]) {
                 $i = $j;
                 last;
             }
@@ -154,10 +151,10 @@ sub decode ($bits) {
 
         $dec .= chr($i);
 
-        $high = ($low + int(($w * $cf_high->{$i}) / $T) - 1) & MAX;
-        $low  = ($low + int(($w * $cf_low->{$i}) / $T)) & MAX;
+        $high = ($low + int(($w * $cf->[$i + 1]) / $T) - 1) & MAX;
+        $low  = ($low + int(($w * $cf->[$i]) / $T)) & MAX;
 
-        $T = increment_freq($i, $freq, $cf_low, $cf_high);
+        $T = increment_freq($i, $freq, $cf);
 
         if ($high > MAX) {
             die "error";

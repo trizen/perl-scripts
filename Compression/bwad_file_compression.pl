@@ -248,31 +248,28 @@ sub delta_decode ($fh, $double = 0) {
 
 sub create_cfreq ($freq_value, $max_symbol) {
 
-    my %cf_low;
-    my %cf_high;
     my $T = 0;
-
-    my %freq;
+    my (@cf, @freq);
 
     foreach my $i (0 .. $max_symbol) {
-        $freq{$i}   = $freq_value;
-        $cf_low{$i} = $T;
+        $freq[$i] = $freq_value;
+        $cf[$i]   = $T;
         $T += $freq_value;
-        $cf_high{$i} = $T;
+        $cf[$i + 1] = $T;
     }
 
-    return (\%freq, \%cf_low, \%cf_high, $T);
+    return (\@freq, \@cf, $T);
 }
 
-sub increment_freq ($c, $max_symbol, $freq, $cf_low, $cf_high) {
+sub increment_freq ($c, $max_symbol, $freq, $cf) {
 
-    $freq->{$c}++;
-    my $T = $cf_low->{$c};
+    ++$freq->[$c];
+    my $T = $cf->[$c];
 
     foreach my $i ($c .. $max_symbol) {
-        $cf_low->{$i} = $T;
-        $T += $freq->{$i};
-        $cf_high->{$i} = $T;
+        $cf->[$i] = $T;
+        $T += $freq->[$i];
+        $cf->[$i + 1] = $T;
     }
 
     return $T;
@@ -284,7 +281,7 @@ sub ac_encode ($bytes_arr) {
     my @bytes = (@$bytes_arr, (max(@$bytes_arr) // 0) + 1);
 
     my $max_symbol = max(@bytes) // 0;
-    my ($freq, $cf_low, $cf_high, $T) = create_cfreq(INITIAL_FREQ, $max_symbol);
+    my ($freq, $cf, $T) = create_cfreq(INITIAL_FREQ, $max_symbol);
 
     if ($T > MAX) {
         die "Too few bits: $T > ${\MAX}";
@@ -298,10 +295,10 @@ sub ac_encode ($bytes_arr) {
 
         my $w = $high - $low + 1;
 
-        $high = ($low + int(($w * $cf_high->{$c}) / $T) - 1) & MAX;
-        $low  = ($low + int(($w * $cf_low->{$c}) / $T)) & MAX;
+        $high = ($low + int(($w * $cf->[$c + 1]) / $T) - 1) & MAX;
+        $low  = ($low + int(($w * $cf->[$c]) / $T)) & MAX;
 
-        $T = increment_freq($c, $max_symbol, $freq, $cf_low, $cf_high);
+        $T = increment_freq($c, $max_symbol, $freq, $cf);
 
         if ($high > MAX) {
             die "high > MAX: $high > ${\MAX}";
@@ -351,7 +348,7 @@ sub ac_encode ($bytes_arr) {
 
 sub ac_decode ($fh, $max_symbol) {
 
-    my ($freq, $cf_low, $cf_high, $T) = create_cfreq(INITIAL_FREQ, $max_symbol);
+    my ($freq, $cf, $T) = create_cfreq(INITIAL_FREQ, $max_symbol);
 
     my @dec;
     my $low  = 0;
@@ -365,7 +362,7 @@ sub ac_decode ($fh, $max_symbol) {
 
         my $i = 0;
         foreach my $j (0 .. $max_symbol) {
-            if ($cf_low->{$j} <= $ss and $ss < $cf_high->{$j}) {
+            if ($cf->[$j] <= $ss and $ss < $cf->[$j + 1]) {
                 $i = $j;
                 last;
             }
@@ -374,10 +371,10 @@ sub ac_decode ($fh, $max_symbol) {
         last if ($i == $max_symbol);
         push @dec, $i;
 
-        $high = ($low + int(($w * $cf_high->{$i}) / $T) - 1) & MAX;
-        $low  = ($low + int(($w * $cf_low->{$i}) / $T)) & MAX;
+        $high = ($low + int(($w * $cf->[$i + 1]) / $T) - 1) & MAX;
+        $low  = ($low + int(($w * $cf->[$i]) / $T)) & MAX;
 
-        $T = increment_freq($i, $max_symbol, $freq, $cf_low, $cf_high);
+        $T = increment_freq($i, $max_symbol, $freq, $cf);
 
         if ($high > MAX) {
             die "high > MAX: ($high > ${\MAX})";
