@@ -106,30 +106,26 @@ sub solve_sudoku ($board) {
         }
 
         my (@rows, @cols);
-        foreach my $i (0 .. $#stats) {
-            $stats[$i] // next;
-            foreach my $j (0 .. $#{$stats[$i]}) {
-                foreach my $v (@{$stats[$i][$j] // []}) {
-                    ++$cols[$j][$v];
-                    ++$rows[$i][$v];
-                }
+        foreach my $ij (@empty_locations) {
+            my ($i, $j) = @$ij;
+            foreach my $v (@{$stats[$i][$j]}) {
+                ++$cols[$j][$v];
+                ++$rows[$i][$v];
             }
         }
 
         $found = 0;
 
-        foreach my $i (0 .. $#stats) {
-            $stats[$i] // next;
-            foreach my $j (0 .. $#{$stats[$i]}) {
-                foreach my $v (@{$stats[$i][$j] // []}) {
-                    if ($cols[$j][$v] == 1) {
-                        $board->[$i][$j] = $v;
-                        $found ||= 1;
-                    }
-                    elsif ($rows[$i][$v] == 1) {
-                        $board->[$i][$j] = $v;
-                        $found ||= 1;
-                    }
+        foreach my $ij (@empty_locations) {
+            my ($i, $j) = @$ij;
+            foreach my $v (@{$stats[$i][$j]}) {
+                if ($cols[$j][$v] == 1) {
+                    $board->[$i][$j] = $v;
+                    $found ||= 1;
+                }
+                elsif ($rows[$i][$v] == 1) {
+                    $board->[$i][$j] = $v;
+                    $found ||= 1;
                 }
             }
         }
