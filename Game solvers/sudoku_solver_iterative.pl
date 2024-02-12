@@ -4,7 +4,7 @@
 # Date: 12 February 2024
 # https://github.com/trizen
 
-# Solve Sudoku puzzle (iterative solution), if it has a unique solution.
+# Fast algorithm to solve the Sudoku puzzle (iterative solution).
 
 use 5.036;
 
@@ -47,49 +47,41 @@ sub find_empty_locations ($board) {
     return @locations;
 }
 
-sub solve_sudoku_backtracking ($board) {    # used as fallback
+sub solve_sudoku_fallback ($board) {    # fallback method
 
-    my @empty_locations = find_empty_locations($board);
+    my @stack = ($board);
 
-    if (not @empty_locations) {
-        return 1;    # Puzzle is solved
-    }
+    while (@stack) {
 
-    my ($row, $col) = @{shift(@empty_locations)};
+        my $current_board   = pop @stack;
+        my @empty_locations = find_empty_locations($current_board);
 
-    foreach my $num (1 .. 9) {
-        if (is_valid($board, $row, $col, $num)) {
+        if (not @empty_locations) {
+            return $current_board;
+        }
 
-            # Try placing the number
-            $board->[$row][$col] = $num;
+        my ($row, $col) = @{shift(@empty_locations)};
 
-            # Recursively try to solve the rest of the puzzle
-            if (__SUB__->($board)) {
-                return 1;
+        foreach my $num (1 .. 9) {
+            if (is_valid($current_board, $row, $col, $num)) {
+                my @new_board = map { [@$_] } @$current_board;
+                $new_board[$row][$col] = $num;
+                push @stack, \@new_board;
             }
-
-            # If placing the current number doesn't lead to a solution, backtrack
-            $board->[$row][$col] = 0;
         }
     }
 
-    return 0;    # No solution found
+    return undef;
 }
 
 sub solve_sudoku ($board) {
 
-    my $prev_len = 0;
-
     while (1) {
         (my @empty_locations = find_empty_locations($board)) || last;
 
-        if (scalar(@empty_locations) == $prev_len) {
-            if (solve_sudoku_backtracking($board)) {
-                return $board;
-            }
-            return undef;
-        }
+        my $found = 0;
 
+        # Solve easy cases
         foreach my $ij (@empty_locations) {
             my ($i,     $j)     = @$ij;
             my ($count, $value) = (0, 0);
@@ -98,10 +90,53 @@ sub solve_sudoku ($board) {
                 last if (++$count > 1);
                 $value = $n;
             }
-            $board->[$i][$j] = $value if ($count == 1);
+            if ($count == 1) {
+                $board->[$i][$j] = $value;
+                $found ||= 1;
+            }
         }
 
-        $prev_len = scalar(@empty_locations);
+        next if $found;
+
+        # Solve more complex cases
+        my @stats;
+        foreach my $ij (@empty_locations) {
+            my ($i, $j) = @$ij;
+            $stats[$i][$j] = [grep { is_valid($board, $i, $j, $_) } 1 .. 9];
+        }
+
+        my (@rows, @cols);
+        foreach my $i (0 .. $#stats) {
+            $stats[$i] // next;
+            foreach my $j (0 .. $#{$stats[$i]}) {
+                foreach my $v (@{$stats[$i][$j] // []}) {
+                    ++$cols[$j][$v];
+                    ++$rows[$i][$v];
+                }
+            }
+        }
+
+        $found = 0;
+
+        foreach my $i (0 .. $#stats) {
+            $stats[$i] // next;
+            foreach my $j (0 .. $#{$stats[$i]}) {
+                foreach my $v (@{$stats[$i][$j] // []}) {
+                    if ($cols[$j][$v] == 1) {
+                        $board->[$i][$j] = $v;
+                        $found ||= 1;
+                    }
+                    elsif ($rows[$i][$v] == 1) {
+                        $board->[$i][$j] = $v;
+                        $found ||= 1;
+                    }
+                }
+            }
+        }
+
+        next if $found;
+
+        return solve_sudoku_fallback($board);
     }
 
     return $board;
