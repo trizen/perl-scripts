@@ -55,7 +55,7 @@ sub solve_sudoku ($board) {
             $board->[$row][$col] = $num;
 
             # Recursively try to solve the rest of the puzzle
-            if (solve_sudoku($board)) {
+            if (__SUB__->($board)) {
                 return 1;
             }
 

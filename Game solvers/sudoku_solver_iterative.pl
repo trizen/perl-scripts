@@ -47,31 +47,45 @@ sub find_empty_locations ($board) {
     return @locations;
 }
 
-sub solve_sudoku_fallback ($board) {    # fallback method
+sub find_empty_location ($board) {
 
-    my @stack = ($board);
-
-    while (@stack) {
-
-        my $current_board   = pop @stack;
-        my @empty_locations = find_empty_locations($current_board);
-
-        if (not @empty_locations) {
-            return $current_board;
-        }
-
-        my ($row, $col) = @{shift(@empty_locations)};
-
-        foreach my $num (1 .. 9) {
-            if (is_valid($current_board, $row, $col, $num)) {
-                my @new_board = map { [@$_] } @$current_board;
-                $new_board[$row][$col] = $num;
-                push @stack, \@new_board;
+    # Find an empty position (cell with 0)
+    foreach my $i (0 .. 8) {
+        foreach my $j (0 .. 8) {
+            if ($board->[$i][$j] == 0) {
+                return ($i, $j);
             }
         }
     }
 
-    return undef;
+    return (undef, undef);    # If the board is filled
+}
+
+sub solve_sudoku_fallback ($board) {
+
+    my ($row, $col) = find_empty_location($board);
+
+    if (!defined($row) && !defined($col)) {
+        return 1;    # Puzzle is solved
+    }
+
+    foreach my $num (1 .. 9) {
+        if (is_valid($board, $row, $col, $num)) {
+
+            # Try placing the number
+            $board->[$row][$col] = $num;
+
+            # Recursively try to solve the rest of the puzzle
+            if (__SUB__->($board)) {
+                return 1;
+            }
+
+            # If placing the current number doesn't lead to a solution, backtrack
+            $board->[$row][$col] = 0;
+        }
+    }
+
+    return 0;    # No solution found
 }
 
 sub solve_sudoku ($board) {
@@ -132,7 +146,9 @@ sub solve_sudoku ($board) {
 
         next if $found;
 
-        return solve_sudoku_fallback($board);
+        # Give up and try brute-force
+        solve_sudoku_fallback($board);
+        return $board;
     }
 
     return $board;
