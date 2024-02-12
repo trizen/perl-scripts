@@ -47,6 +47,35 @@ sub find_empty_locations ($board) {
     return @locations;
 }
 
+sub solve_sudoku_backtracking ($board) {    # used as fallback
+
+    my @empty_locations = find_empty_locations($board);
+
+    if (not @empty_locations) {
+        return 1;    # Puzzle is solved
+    }
+
+    my ($row, $col) = @{shift(@empty_locations)};
+
+    foreach my $num (1 .. 9) {
+        if (is_valid($board, $row, $col, $num)) {
+
+            # Try placing the number
+            $board->[$row][$col] = $num;
+
+            # Recursively try to solve the rest of the puzzle
+            if (__SUB__->($board)) {
+                return 1;
+            }
+
+            # If placing the current number doesn't lead to a solution, backtrack
+            $board->[$row][$col] = 0;
+        }
+    }
+
+    return 0;    # No solution found
+}
+
 sub solve_sudoku ($board) {
 
     my $prev_len = 0;
@@ -55,6 +84,9 @@ sub solve_sudoku ($board) {
         (my @empty_locations = find_empty_locations($board)) || last;
 
         if (scalar(@empty_locations) == $prev_len) {
+            if (solve_sudoku_backtracking($board)) {
+                return $board;
+            }
             return undef;
         }
 
@@ -79,15 +111,15 @@ sub solve_sudoku ($board) {
 # Example usage:
 # Define the Sudoku puzzle as a 9x9 list with 0 representing empty cells
 my $sudoku_board = [
-    [5, 3, 0, 0, 7, 0, 0, 0, 0],
-    [6, 0, 0, 1, 9, 5, 0, 0, 0],
-    [0, 9, 8, 0, 0, 0, 0, 6, 0],
-    [8, 0, 0, 0, 6, 0, 0, 0, 3],
-    [4, 0, 0, 8, 0, 3, 0, 0, 1],
-    [7, 0, 0, 0, 2, 0, 0, 0, 6],
-    [0, 6, 0, 0, 0, 0, 2, 8, 0],
-    [0, 0, 0, 4, 1, 9, 0, 0, 5],
-    [0, 0, 0, 0, 8, 0, 0, 7, 9],
+        [2, 0, 0, 0, 7, 0, 0, 0, 3],
+        [1, 0, 0, 0, 0, 0, 0, 8, 0],
+        [0, 0, 4, 2, 0, 9, 0, 0, 5],
+        [9, 4, 0, 0, 0, 0, 6, 0, 8],
+        [0, 0, 0, 8, 0, 0, 0, 9, 0],
+        [0, 0, 0, 0, 0, 0, 0, 7, 0],
+        [7, 2, 1, 9, 0, 8, 0, 6, 0],
+        [0, 3, 0, 0, 2, 7, 1, 0, 0],
+        [4, 0, 0, 0, 0, 3, 0, 0, 0]
 ];
 #>>>
 

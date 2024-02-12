@@ -208,11 +208,11 @@ A nice collection of day-to-day Perl scripts.
 * Game solvers
     * [Asciiplanes-player](./Game%20solvers/asciiplanes-player.pl)
     * [Dice game solver](./Game%20solvers/dice_game_solver.pl)
-    * [Generate sudoku](./Game%20solvers/generate_sudoku.pl)
     * [Peg-solitaire-solver](./Game%20solvers/peg-solitaire-solver)
     * [Reaction time test](./Game%20solvers/reaction_time_test.pl)
     * [Reflex sheep game](./Game%20solvers/reflex_sheep_game.pl)
     * [Sudoku dice game solver](./Game%20solvers/sudoku_dice_game_solver.pl)
+    * [Sudoku generator](./Game%20solvers/sudoku_generator.pl)
     * [Sudoku solver](./Game%20solvers/sudoku_solver.pl)
     * [Sudoku solver backtracking](./Game%20solvers/sudoku_solver_backtracking.pl)
     * [Sudoku solver iterative](./Game%20solvers/sudoku_solver_iterative.pl)
