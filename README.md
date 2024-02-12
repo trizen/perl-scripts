@@ -216,6 +216,7 @@ A nice collection of day-to-day Perl scripts.
     * [Sudoku solver](./Game%20solvers/sudoku_solver.pl)
     * [Sudoku solver backtracking](./Game%20solvers/sudoku_solver_backtracking.pl)
     * [Sudoku solver iterative](./Game%20solvers/sudoku_solver_iterative.pl)
+    * [Sudoku solver stack](./Game%20solvers/sudoku_solver_stack.pl)
     * [Visual memory test](./Game%20solvers/visual_memory_test.pl)
 * Games
     * [Arrow-key drawer](./Games/arrow-key_drawer.pl)

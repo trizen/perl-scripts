@@ -1,10 +1,6 @@
 #!/usr/bin/perl
 
-# Author: Trizen
-# Date: 12 February 2024
-# https://github.com/trizen
-
-# Solve Sudoku puzzle (iterative solution), if it has a unique solution.
+# Solve Sudoku puzzle (iterative solution // stack-based).
 
 use 5.036;
 
@@ -31,48 +27,43 @@ sub is_valid ($board, $row, $col, $num) {
     return 1;
 }
 
-sub find_empty_locations ($board) {
+sub find_empty_location ($board) {
 
-    my @locations;
-
-    # Find all empty positions (cells with 0)
+    # Find an empty position (cell with 0)
     foreach my $i (0 .. 8) {
         foreach my $j (0 .. 8) {
             if ($board->[$i][$j] == 0) {
-                push @locations, [$i, $j];
+                return ($i, $j);
             }
         }
     }
 
-    return @locations;
+    return (undef, undef);    # If the board is filled
 }
 
 sub solve_sudoku ($board) {
 
-    my $prev_len = 0;
+    my @stack = ($board);
 
-    while (1) {
-        (my @empty_locations = find_empty_locations($board)) || last;
+    while (@stack) {
 
-        if (scalar(@empty_locations) == $prev_len) {
-            return undef;
+        my $current_board = pop @stack;
+        my ($row, $col) = find_empty_location($current_board);
+
+        if (!defined($row) && !defined($col)) {
+            return $current_board;
         }
 
-        foreach my $ij (@empty_locations) {
-            my ($i,     $j)     = @$ij;
-            my ($count, $value) = (0, 0);
-            foreach my $n (1 .. 9) {
-                is_valid($board, $i, $j, $n) || next;
-                last if (++$count > 1);
-                $value = $n;
+        foreach my $num (1 .. 9) {
+            if (is_valid($current_board, $row, $col, $num)) {
+                my @new_board = map { [@$_] } @$current_board;
+                $new_board[$row][$col] = $num;
+                push @stack, \@new_board;
             }
-            $board->[$i][$j] = $value if ($count == 1);
         }
-
-        $prev_len = scalar(@empty_locations);
     }
 
-    return $board;
+    return undef;
 }
 
 #<<<
@@ -106,5 +97,5 @@ if ($solution) {
     display_grid([map { @$_ } @$solution]);
 }
 else {
-    warn "No unique solution exists!\n";
+    say "No solution exists.";
 }
