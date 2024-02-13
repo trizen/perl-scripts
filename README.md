@@ -158,6 +158,7 @@ A nice collection of day-to-day Perl scripts.
     * [N repeated lines](./File%20Readers/n_repeated_lines.pl)
     * [Tailz](./File%20Readers/tailz)
 * File Workers
+    * [Arxiv pdf renamer](./File%20Workers/arxiv_pdf_renamer.pl)
     * [Auto extensions](./File%20Workers/auto_extensions.pl)
     * [Collect gifs](./File%20Workers/collect_gifs.pl)
     * [Collect videos](./File%20Workers/collect_videos.pl)
