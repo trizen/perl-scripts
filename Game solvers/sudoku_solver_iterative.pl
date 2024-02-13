@@ -61,7 +61,7 @@ sub find_empty_location ($board) {
     return (undef, undef);    # If the board is filled
 }
 
-sub solve_sudoku_fallback ($board) {
+sub solve_sudoku_fallback ($board) {    # fallback method
 
     my ($row, $col) = find_empty_location($board);
 
@@ -119,25 +119,22 @@ sub solve_sudoku ($board) {
             $stats[$i][$j] = [grep { is_valid($board, $i, $j, $_) } 1 .. 9];
         }
 
-        my (@rows, @cols);
+        my (@rows, @cols, @subgrid);
         foreach my $ij (@empty_locations) {
             my ($i, $j) = @$ij;
             foreach my $v (@{$stats[$i][$j]}) {
                 ++$cols[$j][$v];
                 ++$rows[$i][$v];
+                ++$subgrid[3 * int($i / 3)][3 * int($j / 3)][$v];
             }
         }
-
-        $found = 0;
 
         foreach my $ij (@empty_locations) {
             my ($i, $j) = @$ij;
             foreach my $v (@{$stats[$i][$j]}) {
-                if ($cols[$j][$v] == 1) {
-                    $board->[$i][$j] = $v;
-                    $found ||= 1;
-                }
-                elsif ($rows[$i][$v] == 1) {
+                if (   $cols[$j][$v] == 1
+                    or $rows[$i][$v] == 1
+                    or $subgrid[3 * int($i / 3)][3 * int($j / 3)][$v] == 1) {
                     $board->[$i][$j] = $v;
                     $found ||= 1;
                 }
@@ -168,6 +165,30 @@ my $sudoku_board = [
         [0, 3, 0, 0, 2, 7, 1, 0, 0],
         [4, 0, 0, 0, 0, 3, 0, 0, 0]
 ];
+
+$sudoku_board = [
+    [0, 0, 0, 8, 0, 1, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 4, 3],
+    [5, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 7, 0, 8, 0, 0],
+    [0, 0, 0, 0, 0, 0, 1, 0, 0],
+    [0, 2, 0, 0, 3, 0, 0, 0, 0],
+    [6, 0, 0, 0, 0, 0, 0, 7, 5],
+    [0, 0, 3, 4, 0, 0, 0, 0, 0],
+    [0, 0, 0, 2, 0, 0, 6, 0, 0]
+] if 1;
+
+$sudoku_board = [
+    [8, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 3, 6, 0, 0, 0, 0, 0],
+    [0, 7, 0, 0, 9, 0, 2, 0, 0],
+    [0, 5, 0, 0, 0, 7, 0, 0, 0],
+    [0, 0, 0, 0, 4, 5, 7, 0, 0],
+    [0, 0, 0, 1, 0, 0, 0, 3, 0],
+    [0, 0, 1, 0, 0, 0, 0, 6, 8],
+    [0, 0, 8, 5, 0, 0, 0, 1, 0],
+    [0, 9, 0, 0, 0, 0, 4, 0, 0]
+] if 0;
 #>>>
 
 sub display_grid ($grid) {

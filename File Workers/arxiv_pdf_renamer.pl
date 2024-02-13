@@ -31,7 +31,7 @@ foreach my $pdf_file (@ARGV) {
         <$fh>;
     };
 
-    if ($pdf_content =~ m{URI\((https?://arxiv\.org/.*?)\)}) {
+    if ($pdf_content =~ m{\bURI\((https?://arxiv\.org/.*?)\)}) {
 
         my $url = $1;
         $url =~ s{^http://}{https://};
