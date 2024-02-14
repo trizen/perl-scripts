@@ -14,7 +14,7 @@ use File::Basename        qw(dirname basename);
 use File::Spec::Functions qw(catfile);
 
 my $mech = WWW::Mechanize->new(
-                               show_progress => 1,
+                               show_progress => 0,
                                stack_depth   => 10,
                                agent         => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0',
                               );
@@ -31,15 +31,36 @@ foreach my $pdf_file (@ARGV) {
         <$fh>;
     };
 
-    if ($pdf_content =~ m{\bURI\((https?://arxiv\.org/.*?)\)}) {
+    my $url = undef;
 
-        my $url = $1;
+    if ($pdf_content =~ m{\bURI\s*\((https?://arxiv\.org/.*?)\)}) {
+        $url = $1;
         $url =~ s{^http://}{https://};
+    }
+    elsif (basename($pdf_file) =~ /^([12][0-9]{3}\.[0-9]+)\.pdf\z/i) {
+        $url = "https://arxiv.org/abs/$1";
+    }
 
-        my $resp  = $mech->get($url);
-        my $title = $resp->title;
+    my $title = undef;
+
+    if (defined($url)) {
+        my $resp = $mech->get($url);
+
+        if ($resp->is_success) {
+            $title = $resp->title;
+        }
+    }
+
+    if (defined($title)) {
 
         $title =~ s{\[.*?\]\s*}{};
+        $title =~ s/: / - /g;
+        $title =~ tr{:"*/?\\|}{;'+%!%%};    # "
+        $title =~ tr/<>//d;
+
+        $title = join(q{ }, split(q{ }, $title));
+        $title = substr($title, 0, 250);            # make sure the filename is not too long
+
         $title .= ".pdf";
 
         my $basename = basename($pdf_file);
@@ -48,7 +69,7 @@ foreach my $pdf_file (@ARGV) {
         rename($pdf_file, catfile(dirname($pdf_file), $title));
     }
     else {
-        say "Not an arxiv PDF: $pdf_file"
+        say "Not an arxiv PDF: $pdf_file";
     }
 }
 
