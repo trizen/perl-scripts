@@ -37,7 +37,7 @@ foreach my $pdf_file (@ARGV) {
         $url = $1;
         $url =~ s{^http://}{https://};
     }
-    elsif (basename($pdf_file) =~ /^([12][0-9]{3}\.[0-9]+)\.pdf\z/i) {
+    elsif (basename($pdf_file) =~ /^([0-9]+\.[0-9]+)\.pdf\z/i) {
         $url = "https://arxiv.org/abs/$1";
     }
 
@@ -66,7 +66,14 @@ foreach my $pdf_file (@ARGV) {
         my $basename = basename($pdf_file);
         say "Renaming: $basename -> $title";
 
-        rename($pdf_file, catfile(dirname($pdf_file), $title));
+        my $dest = catfile(dirname($pdf_file), $title);
+
+        if (-e $dest) {
+            warn "File <<$dest>> already exists... Skipping...\n";
+        }
+        else {
+            rename($pdf_file, $dest) or warn "Failed to rename: $!\n";
+        }
     }
     else {
         say "Not an arxiv PDF: $pdf_file";
