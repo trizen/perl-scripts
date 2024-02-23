@@ -31,7 +31,7 @@ GetOptions(
            "w|width=i"  => \$width,
            "h|height=i" => \$height,
            "c|colors=i" => \$colors,
-           "h|help"     => \&print_usage,
+           "help"       => \&print_usage,
           )
   or die "Error in arguments";
 

@@ -661,7 +661,7 @@ sub VLR_decoding ($uncompressed, $bits_fh) {
         }
 
         if ($bl > 0) {
-            $decoded .= $c x (oct('0b1' . join('', map { read_bit($bits_fh, \$buffer) } 1 .. $bl)));
+            $decoded .= $c x oct('0b1' . join('', map { read_bit($bits_fh, \$buffer) } 1 .. $bl));
         }
         else {
             $decoded .= $c;
