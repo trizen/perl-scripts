@@ -1,18 +1,15 @@
 #!/usr/bin/perl
 
 # Author: Trizen
-# Date: 07 September 2023
+# Date: 05 September 2023
 # Edit: 23 February 2024
 # https://github.com/trizen
 
-# Compress/decompress files using LZ77 compression + DEFLATE integers encoding + Burrows-Wheeler Transform (BWT) + Arithmetic Coding.
+# Compress/decompress files using LZ77 compression + fixed-width integers encoding + Burrows-Wheeler Transform (BWT) + Arithmetic Coding.
 
 # References:
 #   Data Compression (Summer 2023) - Lecture 13 - BZip2
 #   https://youtube.com/watch?v=cvoZbBZ3M2A
-#
-#   Data Compression (Summer 2023) - Lecture 11 - DEFLATE (gzip)
-#   https://youtube.com/watch?v=SJPvNi4HrWQ
 
 use 5.036;
 use Getopt::Std    qw(getopts);
@@ -27,10 +24,9 @@ use constant {
     COMPRESSED_BYTE   => chr(1),
     UNCOMPRESSED_BYTE => chr(0),
 
-    CHUNK_SIZE            => 1 << 17,                              # higher value = better compression
+    CHUNK_SIZE            => 1 << 16,    # higher value = better compression
     LOOKAHEAD_LEN         => 128,
-    RANDOM_DATA_THRESHOLD => 0.85,                                 # in ratio
-    MAX_INT               => oct('0b' . ('1' x 32)),
+    RANDOM_DATA_THRESHOLD => 0.85,       # in ratio
 };
 
 # Arithmetic Coding settings
@@ -39,14 +35,6 @@ use constant MAX  => oct('0b' . ('1' x BITS));
 
 # Container signature
 use constant SIGNATURE => uc(FORMAT) . chr(1);
-
-# [distance value, offset bits]
-my @DISTANCE_SYMBOLS = (map { [$_, 0] } 0 .. 4);
-
-until ($DISTANCE_SYMBOLS[-1][0] > MAX_INT) {
-    push @DISTANCE_SYMBOLS, [int($DISTANCE_SYMBOLS[-1][0] * (4 / 3)), $DISTANCE_SYMBOLS[-1][1] + 1];
-    push @DISTANCE_SYMBOLS, [int($DISTANCE_SYMBOLS[-1][0] * (3 / 2)), $DISTANCE_SYMBOLS[-1][1]];
-}
 
 sub usage {
     my ($code) = @_;
@@ -282,41 +270,71 @@ sub delta_decode ($fh, $double = 0) {
 
 sub encode_integers ($integers) {
 
-    my @symbols;
-    my $offset_bits = '';
+    my @counts;
+    my $count           = 0;
+    my $bits_width      = 1;
+    my $bits_max_symbol = 1 << $bits_width;
+    my $processed_len   = 0;
 
-    foreach my $dist (@$integers) {
-        foreach my $i (0 .. $#DISTANCE_SYMBOLS) {
-            if ($DISTANCE_SYMBOLS[$i][0] > $dist) {
-                push @symbols, $i - 1;
+    foreach my $k (@$integers) {
+        while ($k >= $bits_max_symbol) {
 
-                if ($DISTANCE_SYMBOLS[$i - 1][1] > 0) {
-                    $offset_bits .= sprintf('%0*b', $DISTANCE_SYMBOLS[$i - 1][1], $dist - $DISTANCE_SYMBOLS[$i - 1][0]);
-                }
-                last;
+            if ($count > 0) {
+                push @counts, [$bits_width, $count];
+                $processed_len += $count;
             }
+
+            $count = 0;
+            $bits_max_symbol *= 2;
+            $bits_width      += 1;
+        }
+        ++$count;
+    }
+
+    push @counts, grep { $_->[1] > 0 } [$bits_width, scalar(@$integers) - $processed_len];
+
+    my $compressed = delta_encode([(map { $_->[0] } @counts), (map { $_->[1] } @counts)]);
+
+    my $bits = '';
+    foreach my $pair (@counts) {
+        my ($blen, $len) = @$pair;
+        foreach my $symbol (splice(@$integers, 0, $len)) {
+            $bits .= sprintf("%0*b", $blen, $symbol);
         }
     }
 
-    return (pack('C*', @symbols), pack('B*', $offset_bits));
+    $compressed .= pack('B*', $bits);
+    return $compressed;
 }
 
-sub decode_integers ($symbols, $fh) {
+sub decode_integers ($fh) {
+
+    my $ints = delta_decode($fh);
+    my $half = scalar(@$ints) >> 1;
+
+    my @counts;
+    foreach my $i (0 .. ($half - 1)) {
+        push @counts, [$ints->[$i], $ints->[$half + $i]];
+    }
 
     my $bits_len = 0;
 
-    foreach my $i (@$symbols) {
-        $bits_len += $DISTANCE_SYMBOLS[$i][1];
+    foreach my $pair (@counts) {
+        my ($blen, $len) = @$pair;
+        $bits_len += $blen * $len;
     }
 
     my $bits = read_bits($fh, $bits_len);
 
-    my @distances;
-    foreach my $i (@$symbols) {
-        push @distances, $DISTANCE_SYMBOLS[$i][0] + oct('0b' . substr($bits, 0, $DISTANCE_SYMBOLS[$i][1], ''));
+    my @integers;
+    foreach my $pair (@counts) {
+        my ($blen, $len) = @$pair;
+        foreach my $chunk (unpack(sprintf('(a%d)*', $blen), substr($bits, 0, $blen * $len, ''))) {
+            push @integers, oct('0b' . $chunk);
+        }
     }
 
-    return \@distances;
+    return \@integers;
 }
 
 sub create_cfreq ($freq) {
@@ -849,12 +867,11 @@ sub compress_file ($input, $output) {
         print $out_fh COMPRESSED_BYTE;
         print $out_fh delta_encode(\@sizes, 1);
 
-        my ($symbols, $offset_bits) = encode_integers(\@indices_block);
+        my $indices = encode_integers(\@indices_block);
 
         bz2_compression($uncompressed, $out_fh);
         bz2_compression($lengths,      $out_fh);
-        bz2_compression($symbols,      $out_fh);
-        bz2_compression($offset_bits,  $out_fh);
+        bz2_compression($indices,      $out_fh);
 
         @sizes         = ();
         @indices_block = ();
@@ -882,7 +899,7 @@ sub compress_file ($input, $output) {
             say "Random data detected...";
             $create_bz2_block->();
             print $out_fh UNCOMPRESSED_BYTE;
-            create_huffman_entry([unpack 'C*', $chunk], $out_fh);
+            create_ac_entry([unpack 'C*', $chunk], $out_fh);
         }
 
         if (length($uncompressed) >= CHUNK_SIZE) {
@@ -913,7 +930,7 @@ sub decompress_file ($input, $output) {
 
         if ($compression_byte eq UNCOMPRESSED_BYTE) {
             say "Decoding random data...";
-            print $out_fh pack('C*', @{decode_huffman_entry($fh)});
+            print $out_fh pack('C*', @{decode_ac_entry($fh)});
             next;
         }
         elsif ($compression_byte ne COMPRESSED_BYTE) {
@@ -922,24 +939,21 @@ sub decompress_file ($input, $output) {
 
         my @sizes = @{delta_decode($fh, 1)};
 
+        my $indices      = '';
         my $lengths      = '';
         my $uncompressed = '';
-        my $symbols      = '';
-        my $offset_bits  = '';
 
-        open my $uc_fh,      '>:raw',  \$uncompressed;
-        open my $len_fh,     '>:raw',  \$lengths;
-        open my $sym_fh,     '+>:raw', \$symbols;
-        open my $offbits_fh, '+>:raw', \$offset_bits;
+        open my $uc_fh,  '>:raw',  \$uncompressed;
+        open my $len_fh, '>:raw',  \$lengths;
+        open my $idx_fh, '+>:raw', \$indices;
 
-        bz2_decompression($fh, $uc_fh);         # uncompressed
-        bz2_decompression($fh, $len_fh);        # lengths
-        bz2_decompression($fh, $sym_fh);        # symbols
-        bz2_decompression($fh, $offbits_fh);    # offset bits
+        bz2_decompression($fh, $uc_fh);     # uncompressed
+        bz2_decompression($fh, $len_fh);    # lengths
+        bz2_decompression($fh, $idx_fh);    # indices
 
-        seek($offbits_fh, 0, 0);
+        seek($idx_fh, 0, 0);
 
-        my @indices      = @{decode_integers([unpack('C*', $symbols)], $offbits_fh)};
+        my @indices      = @{decode_integers($idx_fh)};
         my @uncompressed = split(//, $uncompressed);
         my @lengths      = unpack('C*', $lengths);
 
