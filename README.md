@@ -713,6 +713,7 @@ A nice collection of day-to-day Perl scripts.
     * [K-imperfect numbers](./Math/k-imperfect_numbers.pl)
     * [K-odd-powerful numbers](./Math/k-odd-powerful_numbers.pl)
     * [K-powerful numbers](./Math/k-powerful_numbers.pl)
+    * [K-powerful numbers in range](./Math/k-powerful_numbers_in_range.pl)
     * [Karatsuba multiplication](./Math/karatsuba_multiplication.pl)
     * [Kempner binomial numbers](./Math/kempner_binomial_numbers.pl)
     * [Klein J invariant and modular lambda](./Math/klein_J_invariant_and_modular_lambda.pl)
