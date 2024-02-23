@@ -117,6 +117,7 @@ A nice collection of day-to-day Perl scripts.
     * [Binradix arithmetic coding anynum](./Encoding/binradix_arithmetic_coding_anynum.pl)
     * [Burrows-wheeler file transform](./Encoding/burrows-wheeler_file_transform.pl)
     * [Burrows-wheeler transform](./Encoding/burrows-wheeler_transform.pl)
+    * [Burrows-wheeler transform-n-char generalization](./Encoding/burrows-wheeler_transform-n-char_generalization.pl)
     * [Delta encoding with double-elias coding](./Encoding/delta_encoding_with_double-elias_coding.pl)
     * [Delta encoding with elias coding](./Encoding/delta_encoding_with_elias_coding.pl)
     * [Delta encoding with unary coding](./Encoding/delta_encoding_with_unary_coding.pl)

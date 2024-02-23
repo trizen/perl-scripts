@@ -56,7 +56,7 @@ foreach my $pdf_file (@ARGV) {
         $title =~ s{\[.*?\]\s*}{};
         $title =~ s/: / - /g;
         $title =~ tr{:"*/?\\|}{;'+%!%%};    # "
-        $title =~ tr/<>//d;
+        $title =~ tr/<>$//d;
 
         $title = join(q{ }, split(q{ }, $title));
         $title = substr($title, 0, 250);            # make sure the filename is not too long

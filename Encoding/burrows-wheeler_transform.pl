@@ -25,7 +25,7 @@ sub bwt_quadratic ($s) {    # O(n^2) space (impractical)
 }
 
 sub bwt_simple ($s) {    # O(n) space (very slow)
-    [sort { (substr($s, $a) . substr($s, 0, $a)) cmp (substr($s, $b) . substr($s, 0, $b)) } 0 .. length($s) - 1];
+    [sort { (substr($s, $a) . substr($s, 0, $a)) cmp(substr($s, $b) . substr($s, 0, $b)) } 0 .. length($s) - 1];
 }
 
 sub bwt_cyclic ($s) {    # O(n) space (slow)
@@ -104,25 +104,11 @@ sub bwt_encode ($s) {
     #my $bwt = bwt_lookahead($s);
     my $bwt = bwt_balanced($s);
 
-    my $ret    = join('', map { substr($s, $_ - 1, 1) } @$bwt);
-    my $prefix = substr($s, 0, LOOKAHEAD_LEN);
-    my $len    = length($prefix);
+    my $ret = join('', map { substr($s, $_ - 1, 1) } @$bwt);
 
     my $idx = 0;
     foreach my $i (@$bwt) {
-
-        my $lookahead = substr($s, $i, $len);
-
-        if (length($lookahead) < $len) {
-            $lookahead .= substr($s, 0, $len - length($lookahead));
-        }
-
-        if ($lookahead eq $prefix) {
-            my $row = substr($s, $i) . substr($s, 0, $i);
-            if ($row eq $s) {
-                last;
-            }
-        }
+        $i || last;
         ++$idx;
     }
 
