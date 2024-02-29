@@ -217,7 +217,7 @@ sub delta_decode ($fh, $double = 0) {
 sub walk ($node, $code, $h, $rev_h) {
 
     my $c = $node->[0] // return ($h, $rev_h);
-    if (ref $c) { walk($c->[$_], $code . $_, $h, $rev_h) for ('0', '1') }
+    if (ref $c) { walk($c->[$_], $code . $_, $h, $rev_h) for (0, 1) }
     else        { $h->{$c} = $code; $rev_h->{$code} = $c }
 
     return ($h, $rev_h);
@@ -287,7 +287,7 @@ sub decode_huffman_entry ($fh) {
 
     my (undef, $rev_dict) = mktree_from_freq(\%freq);
 
-    my $enc_len = unpack('N', join('', map { getc($fh) } 1 .. 4));
+    my $enc_len = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
     say "Encoded length: $enc_len\n";
 
     if ($enc_len > 0) {

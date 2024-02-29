@@ -392,7 +392,7 @@ sub decode_huffman_entry ($fh) {
         $rev_dict->{$k} = chr($rev_dict->{$k});
     }
 
-    my $enc_len = unpack('N', join('', map { getc($fh) } 1 .. 4));
+    my $enc_len = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
 
     if ($enc_len > 0) {
         return huffman_decode(read_bits($fh, $enc_len), $rev_dict);
@@ -457,7 +457,7 @@ sub decompress_file ($input, $output) {
 
     while (!eof($fh)) {
 
-        my $compression_byte = getc($fh);
+        my $compression_byte = getc($fh) // die "decompression error";
 
         if ($compression_byte eq COMPRESSED_BYTE) {
 

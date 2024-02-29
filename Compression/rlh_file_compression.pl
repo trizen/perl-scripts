@@ -276,7 +276,7 @@ sub decode_huffman_entry ($fh) {
 
     my (undef, $rev_dict) = mktree_from_freq(\%freq);
 
-    my $enc_len = unpack('N', join('', map { getc($fh) } 1 .. 4));
+    my $enc_len = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
     say "Encoded length: $enc_len";
 
     if ($enc_len > 0) {

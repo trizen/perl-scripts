@@ -683,8 +683,13 @@ sub compress_file ($input, $output) {
 
         my $enc_bytes = mtf_encode(\@bytes, [@alphabet]);
 
-        if ($alphabet[-1] < 255) {
+        if (max(@$enc_bytes) < 255) {
+            print $out_fh chr(1);
             $enc_bytes = rle_encode($enc_bytes);
+        }
+        else {
+            print $out_fh chr(0);
+            $enc_bytes = rle4_encode($enc_bytes);
         }
 
         my $lzw = compress(pack('C*', @$enc_bytes));
@@ -713,14 +718,18 @@ sub decompress_file ($input, $output) {
 
     while (!eof($fh)) {
 
-        my $idx      = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
-        my $alphabet = decode_alphabet($fh);
-        my $lzw      = decode_integers($fh);
+        my $rle_encoded = ord(getc($fh) // die "error");
+        my $idx         = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
+        my $alphabet    = decode_alphabet($fh);
+        my $lzw         = decode_integers($fh);
 
         my $bytes = [unpack('C*', decompress($lzw))];
 
-        if ($alphabet->[-1] < 255) {
+        if ($rle_encoded) {
             $bytes = rle_decode($bytes);
+        }
+        else {
+            $bytes = rle4_decode($bytes);
         }
 
         $bytes = mtf_decode($bytes, [@$alphabet]);

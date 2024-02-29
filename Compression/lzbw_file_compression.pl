@@ -406,7 +406,7 @@ sub decode_huffman_entry ($fh) {
 
     my (undef, $rev_dict) = mktree_from_freq(\%freq);
 
-    my $enc_len = unpack('N', join('', map { getc($fh) } 1 .. 4));
+    my $enc_len = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
     say "Encoded length: $enc_len\n";
 
     if ($enc_len > 0) {
@@ -814,7 +814,7 @@ sub decompress_file ($input, $output) {
 
     while (!eof($fh)) {
 
-        my $compression_byte = getc($fh);
+        my $compression_byte = getc($fh) // die "decompression error";
 
         if ($compression_byte eq UNCOMPRESSED_BYTE) {
             say "Decoding random data...";

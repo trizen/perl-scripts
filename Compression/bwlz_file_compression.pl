@@ -24,7 +24,7 @@ use POSIX          qw(ceil log2);
 
 use constant {
     PKGNAME => 'BWLZ',
-    VERSION => '0.04',
+    VERSION => '0.05',
     FORMAT  => 'bwlz',
 
     CHUNK_SIZE    => 1 << 17,    # higher value = better compression
@@ -32,7 +32,7 @@ use constant {
 };
 
 # Container signature
-use constant SIGNATURE => uc(FORMAT) . chr(4);
+use constant SIGNATURE => uc(FORMAT) . chr(5);
 
 # [distance value, offset bits]
 my @DISTANCE_SYMBOLS = map { [$_, 0] } (0 .. 4);
@@ -438,7 +438,7 @@ sub decode_huffman_entry ($fh) {
 
     my (undef, $rev_dict) = mktree_from_freq(\%freq);
 
-    my $enc_len = unpack('N', join('', map { getc($fh) } 1 .. 4));
+    my $enc_len = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
 
     if ($enc_len > 0) {
         return [split(' ', huffman_decode(read_bits($fh, $enc_len), $rev_dict))];
@@ -788,7 +788,7 @@ sub encode_alphabet ($alphabet) {
 
 sub decode_alphabet ($fh) {
 
-    my @populated = split(//, sprintf('%08b', ord(getc($fh))));
+    my @populated = split(//, sprintf('%08b', ord(getc($fh) // die "error")));
     my $marked    = delta_decode($fh, 1);
 
     my @alphabet;
@@ -835,8 +835,13 @@ sub compress_file ($input, $output) {
 
         my $enc_bytes = mtf_encode(\@bytes, [@alphabet]);
 
-        if ($alphabet[-1] < 255) {
+        if (max(@$enc_bytes) < 255) {
+            print $out_fh chr(1);
             $enc_bytes = rle_encode($enc_bytes);
+        }
+        else {
+            print $out_fh chr(0);
+            $enc_bytes = rle4_encode($enc_bytes);
         }
 
         $data = pack('C*', @$enc_bytes);
@@ -871,16 +876,20 @@ sub decompress_file ($input, $output) {
 
     while (!eof($fh)) {
 
-        my $idx      = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
-        my $alphabet = decode_alphabet($fh);
+        my $rle_encoded = ord(getc($fh) // die "error");
+        my $idx         = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
+        my $alphabet    = decode_alphabet($fh);
 
         my ($uncompressed, $indices, $lengths) = deflate_decode($fh);
         my $dec = lz77_decompression($uncompressed, $indices, $lengths);
 
         my $bytes = [unpack('C*', $dec)];
 
-        if ($alphabet->[-1] < 255) {
+        if ($rle_encoded) {
             $bytes = rle_decode($bytes);
+        }
+        else {
+            $bytes = rle4_decode($bytes);
         }
 
         $bytes = mtf_decode($bytes, [@$alphabet]);

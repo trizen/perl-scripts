@@ -516,7 +516,7 @@ sub decompress_file ($input, $output) {
 
     while (!eof($fh)) {
 
-        my $compression_byte = getc($fh);
+        my $compression_byte = getc($fh) // die "decompression error";
 
         if ($compression_byte eq COMPRESSED_BYTE) {
 

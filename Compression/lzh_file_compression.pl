@@ -243,7 +243,7 @@ sub decode_huffman_entry ($fh) {
     my $codes_len = 0;
 
     foreach my $c (0 .. 255) {
-        my $l = ord(getc($fh));
+        my $l = ord(getc($fh) // die "error");
         if ($l > 0) {
             $codes_len += $l;
             push @codes, [$c, $l];
@@ -258,7 +258,7 @@ sub decode_huffman_entry ($fh) {
         $rev_dict{$code} = chr($pair->[0]);
     }
 
-    my $enc_len = unpack('N', join('', map { getc($fh) } 1 .. 4));
+    my $enc_len = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
 
     if ($enc_len > 0) {
         return huffman_decode(read_bits($fh, $enc_len), \%rev_dict);

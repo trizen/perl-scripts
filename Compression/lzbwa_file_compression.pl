@@ -781,7 +781,7 @@ sub encode_alphabet ($alphabet) {
 
 sub decode_alphabet ($fh) {
 
-    my @populated = split(//, sprintf('%08b', ord(getc($fh))));
+    my @populated = split(//, sprintf('%08b', ord(getc($fh) // die "error")));
     my $marked    = delta_decode($fh, 1);
 
     my @alphabet;
@@ -926,7 +926,7 @@ sub decompress_file ($input, $output) {
 
     while (!eof($fh)) {
 
-        my $compression_byte = getc($fh);
+        my $compression_byte = getc($fh) // die "decompression error";
 
         if ($compression_byte eq UNCOMPRESSED_BYTE) {
             say "Decoding random data...";

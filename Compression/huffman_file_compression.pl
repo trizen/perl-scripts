@@ -304,7 +304,7 @@ sub decode_huffman_entry ($fh, $out_fh) {
         $rev_dict->{$k} = chr($rev_dict->{$k});
     }
 
-    my $enc_len = unpack('N', join('', map { getc($fh) } 1 .. 4));
+    my $enc_len = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
 
     if ($enc_len > 0) {
         print $out_fh huffman_decode(read_bits($fh, $enc_len), $rev_dict);

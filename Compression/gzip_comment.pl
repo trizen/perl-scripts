@@ -61,17 +61,17 @@ sub extract_comment ($input_gz, $output_file) {
     open my $in_fh, '<:raw', $input_gz
       or die "Can't open file <<$input_gz>> for reading: $!";
 
-    my $MAGIC = getc($in_fh) . getc($in_fh);
+    my $MAGIC = (getc($in_fh) // die "error") . (getc($in_fh) // die "error");
 
     if ($MAGIC ne pack('C*', 0x1f, 0x8b)) {
         die "Not a Gzip file: $input_gz\n";
     }
 
-    my $CM     = getc($in_fh);                             # 0x08 = DEFLATE
-    my $FLAGS  = getc($in_fh);                             # flags
-    my $MTIME  = join('', map { getc($in_fh) } 1 .. 4);    # modification time
-    my $XFLAGS = getc($in_fh);                             # extra flags
-    my $OS     = getc($in_fh);                             # 0x03 = Unix
+    my $CM     = getc($in_fh) // die "error";                             # 0x08 = DEFLATE
+    my $FLAGS  = getc($in_fh) // die "error";                             # flags
+    my $MTIME  = join('', map { getc($in_fh) // die "error" } 1 .. 4);    # modification time
+    my $XFLAGS = getc($in_fh) // die "error";                             # extra flags
+    my $OS     = getc($in_fh) // die "error";                             # 0x03 = Unix
 
     my $has_filename = 0;
 
@@ -133,17 +133,17 @@ sub add_comment ($input_gz, $comment_file, $output_gz) {
     open my $comment_fh, '<:raw', $comment_file
       or die "Can't open file <<$comment_file>> for reading: $!";
 
-    my $MAGIC = getc($in_fh) . getc($in_fh);
+    my $MAGIC = (getc($in_fh) // die "error") . (getc($in_fh) // die "error");
 
     if ($MAGIC ne pack('C*', 0x1f, 0x8b)) {
         die "Not a Gzip file: $input_gz\n";
     }
 
-    my $CM     = getc($in_fh);                             # 0x08 = DEFLATE
-    my $FLAGS  = getc($in_fh);                             # flags
-    my $MTIME  = join('', map { getc($in_fh) } 1 .. 4);    # modification time
-    my $XFLAGS = getc($in_fh);                             # extra flags
-    my $OS     = getc($in_fh);                             # 0x03 = Unix
+    my $CM     = getc($in_fh) // die "error";                             # 0x08 = DEFLATE
+    my $FLAGS  = getc($in_fh) // die "error";                             # flags
+    my $MTIME  = join('', map { getc($in_fh) // die "error" } 1 .. 4);    # modification time
+    my $XFLAGS = getc($in_fh) // die "error";                             # extra flags
+    my $OS     = getc($in_fh) // die "error";                             # 0x03 = Unix
 
     open my $out_fh, '>:raw', $output_gz
       or die "Can't open file <<$output_gz>> for writing: $!";

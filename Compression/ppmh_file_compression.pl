@@ -477,19 +477,19 @@ sub binary_vrl_decoding ($bitstring) {
     open my $fh, '<:raw', \$bitstring;
 
     my $decoded = '';
-    my $bit     = getc($fh);
+    my $bit     = getc($fh) // die "error";
 
     while (!eof($fh)) {
 
         $decoded .= $bit;
 
         my $bl = 0;
-        while (getc($fh) == 1) {
+        while ((getc($fh) // die "error") == 1) {
             ++$bl;
         }
 
         if ($bl > 0) {
-            $decoded .= $bit x oct('0b1' . join('', map { getc($fh) } 1 .. $bl - 1));
+            $decoded .= $bit x oct('0b1' . join('', map { getc($fh) // die "error" } 1 .. $bl - 1));
         }
 
         $bit = ($bit eq '1' ? '0' : '1');
@@ -541,7 +541,7 @@ sub decode_huffman_entry ($fh) {
 
     my (undef, $rev_dict) = mktree_from_freq(\%freq);
 
-    my $enc_len = unpack('N', join('', map { getc($fh) } 1 .. 4));
+    my $enc_len = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
     say "Encoded length: $enc_len\n";
 
     if ($enc_len > 0) {
@@ -591,7 +591,7 @@ sub compression ($chunk, $out_fh) {
 
 sub decompression ($fh, $out_fh) {
 
-    my $mode = getc($fh);
+    my $mode = getc($fh) // die "decompression error";
 
     if ($mode eq HUFFMAN_MODE) {
         say "Decoding Huffman entry...";

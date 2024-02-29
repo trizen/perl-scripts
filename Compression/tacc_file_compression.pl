@@ -292,8 +292,8 @@ sub decompress ($input, $output) {
     open my $fh, '<:raw', $input;
     valid_archive($fh) || die "$0: file `$input' is not a \U${\FORMAT}\E archive!\n";
 
-    my $num_symbols = ord(getc($fh));
-    my $bits_len    = unpack('N', join('', map { getc($fh) } 1 .. 4));
+    my $num_symbols = ord(getc($fh) // die "error");
+    my $bits_len    = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
 
     read($fh, (my $str), 1 + $num_symbols) == 1 + $num_symbols
       or die "Can't read symbols...";
