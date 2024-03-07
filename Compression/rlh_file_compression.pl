@@ -244,7 +244,7 @@ sub huffman_encode ($bytes, $dict) {
 
 sub huffman_decode ($bits, $hash) {
     local $" = '|';
-    $bits =~ s/(@{[sort { length($a) <=> length($b) } keys %{$hash}]})/$hash->{$1} /gr;    # very fast
+    [split(' ', $bits =~ s/(@{[sort { length($a) <=> length($b) } keys %{$hash}]})/$hash->{$1} /gr)];    # very fast
 }
 
 sub create_huffman_entry ($bytes, $out_fh) {
@@ -280,7 +280,7 @@ sub decode_huffman_entry ($fh) {
     say "Encoded length: $enc_len";
 
     if ($enc_len > 0) {
-        return [split(' ', huffman_decode(read_bits($fh, $enc_len), $rev_dict))];
+        return huffman_decode(read_bits($fh, $enc_len), $rev_dict);
     }
 
     return [];
