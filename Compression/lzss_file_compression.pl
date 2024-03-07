@@ -205,7 +205,7 @@ sub lz77_compression ($str, $uncompressed, $indices, $lengths, $has_backreferenc
             }
         }
 
-        if ($n >= $min_len and $enc_bits_len < $literal_bits_len) {
+        if ($n >= $min_len and $enc_bits_len <= $literal_bits_len) {
 
             push @$lengths,           $n;
             push @$indices,           $la - $p;
@@ -219,7 +219,7 @@ sub lz77_compression ($str, $uncompressed, $indices, $lengths, $has_backreferenc
             ++$distance_freq{$dist->[0]};
 
             ++$literal_freq{$LENGTH_INDICES[$n] + 256};
-            ++$literal_freq{ord $chars[$la + $n]};
+            ++$literal_freq{$uncompressed->[-1]};
 
             $literal_count += 2;
             $la            += $n + 1;

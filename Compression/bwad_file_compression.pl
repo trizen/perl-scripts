@@ -5,11 +5,14 @@
 # Edit: 06 February 2024
 # https://github.com/trizen
 
-# Compress/decompress files using Burrows-Wheeler Transform (BWT) + Move-to-Front Transform + Run-length encoding + Adaptive Arithmetic Coding.
+# Compress/decompress files using Burrows-Wheeler Transform (BWT) + Move-to-Front Transform + Run-length encoding + Adaptive Arithmetic Coding (in fixed bits).
 
-# Reference:
+# References:
 #   Data Compression (Summer 2023) - Lecture 13 - BZip2
 #   https://youtube.com/watch?v=cvoZbBZ3M2A
+#
+#   Basic arithmetic coder in C++
+#   https://github.com/billbird/arith32
 
 use 5.036;
 

@@ -223,7 +223,7 @@ sub lz77_compression ($str, $uncompressed, $indices, $lengths, $has_backreferenc
             ++$distance_freq{$dist->[0]};
 
             ++$literal_freq{$LENGTH_INDICES[$n] + 256};
-            ++$literal_freq{ord $chars[$la + $n]};
+            ++$literal_freq{$uncompressed->[-1]};
 
             $literal_count += 2;
             $la            += $n + 1;

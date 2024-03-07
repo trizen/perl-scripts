@@ -2,6 +2,7 @@
 
 # Author: Trizen
 # Date: 10 September 2023
+# Edit: 29 February 2024
 # https://github.com/trizen
 
 # Compress/decompress files using Burrows-Wheeler Transform (BWT) + Run-Length encoding + MTF + ZRLE.

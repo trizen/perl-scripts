@@ -26,9 +26,9 @@ use List::Util     qw(max uniq sum);
 use POSIX          qw(ceil log2);
 
 use constant {
-    PKGNAME => 'BWLA',
+    PKGNAME => 'BWLZA',
     VERSION => '0.03',
-    FORMAT  => 'bwla',
+    FORMAT  => 'bwlza',
 
     CHUNK_SIZE    => 1 << 17,    # higher value = better compression
     LOOKAHEAD_LEN => 128,
@@ -230,7 +230,7 @@ sub lz77_compression ($str, $uncompressed, $indices, $lengths, $has_backreferenc
             ++$distance_freq{$dist->[0]};
 
             ++$literal_freq{$LENGTH_INDICES[$n] + 256};
-            ++$literal_freq{ord $chars[$la + $n]};
+            ++$literal_freq{$uncompressed->[-1]};
 
             $literal_count += 2;
             $la            += $n + 1;

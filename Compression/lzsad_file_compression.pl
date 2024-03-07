@@ -2,10 +2,10 @@
 
 # Author: Trizen
 # Date: 17 June 2023
-# Edit: 12 August 2023
+# Edit: 07 March 2024
 # https://github.com/trizen
 
-# Compress/decompress files using LZ77 compression (LZSS variant) + Arithmetic Coding (in fixed bits).
+# Compress/decompress files using LZ77 compression (LZSS variant) + Adaptive Arithmetic Coding (in fixed bits).
 
 # Encoding the literals and the pointers using a DEFLATE-like approach.
 
@@ -24,19 +24,20 @@ use List::Util     qw(max sum);
 use POSIX          qw(ceil log2);
 
 use constant {
-    PKGNAME => 'LZSA',
-    VERSION => '0.02',
-    FORMAT  => 'lzsa',
+    PKGNAME => 'LZSAD',
+    VERSION => '0.01',
+    FORMAT  => 'lzsad',
 
     CHUNK_SIZE => 1 << 16,    # higher value = better compression
 };
 
 # Arithmetic Coding settings
-use constant BITS => 32;
-use constant MAX  => oct('0b' . ('1' x BITS));
+use constant BITS         => 32;
+use constant MAX          => oct('0b' . ('1' x BITS));
+use constant INITIAL_FREQ => 1;
 
 # Container signature
-use constant SIGNATURE => uc(FORMAT) . chr(2);
+use constant SIGNATURE => uc(FORMAT) . chr(1);
 
 # [distance value, offset bits]
 my @DISTANCE_SYMBOLS = map { [$_, 0] } (0 .. 4);
@@ -213,7 +214,7 @@ sub lz77_compression ($str, $uncompressed, $indices, $lengths, $has_backreferenc
             }
         }
 
-        if ($n >= $min_len and $enc_bits_len < $literal_bits_len) {
+        if ($n >= $min_len and $enc_bits_len <= $literal_bits_len) {
 
             push @$lengths,           $n;
             push @$indices,           $la - $p;
@@ -288,7 +289,7 @@ sub read_bits ($fh, $bits_len) {
     return $data;
 }
 
-sub delta_encode ($integers) {
+sub delta_encode ($integers, $double = 0) {
 
     my @deltas;
     my $prev = 0;
@@ -307,6 +308,11 @@ sub delta_encode ($integers) {
         if ($d == 0) {
             $bitstring .= '0';
         }
+        elsif ($double) {
+            my $t = sprintf('%b', abs($d) + 1);
+            my $l = sprintf('%b', length($t));
+            $bitstring .= '1' . (($d < 0) ? '0' : '1') . ('1' x (length($l) - 1)) . '0' . substr($l, 1) . substr($t, 1);
+        }
         else {
             my $t = sprintf('%b', abs($d));
             $bitstring .= '1' . (($d < 0) ? '0' : '1') . ('1' x (length($t) - 1)) . '0' . substr($t, 1);
@@ -316,7 +322,7 @@ sub delta_encode ($integers) {
     pack('B*', $bitstring);
 }
 
-sub delta_decode ($fh) {
+sub delta_decode ($fh, $double = 0) {
 
     my @deltas;
     my $buffer = '';
@@ -327,6 +333,17 @@ sub delta_decode ($fh) {
 
         if ($bit eq '0') {
             push @deltas, 0;
+        }
+        elsif ($double) {
+            my $bit = read_bit($fh, \$buffer);
+
+            my $bl = 0;
+            ++$bl while (read_bit($fh, \$buffer) eq '1');
+
+            my $bl2 = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. $bl));
+            my $int = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. ($bl2 - 1)));
+
+            push @deltas, ($bit eq '1' ? 1 : -1) * ($int - 1);
         }
         else {
             my $bit = read_bit($fh, \$buffer);
@@ -352,31 +369,42 @@ sub delta_decode ($fh) {
     return \@acc;
 }
 
-sub create_cfreq ($freq) {
+sub create_cfreq ($freq_value, $max_symbol) {
 
-    my @cf;
     my $T = 0;
+    my (@cf, @freq);
 
-    foreach my $i (sort { $a <=> $b } keys %$freq) {
-        $freq->{$i} // next;
-        $cf[$i] = $T;
-        $T += $freq->{$i};
+    foreach my $i (0 .. $max_symbol) {
+        $freq[$i] = $freq_value;
+        $cf[$i]   = $T;
+        $T += $freq_value;
         $cf[$i + 1] = $T;
     }
 
-    return (\@cf, $T);
+    return (\@freq, \@cf, $T);
+}
+
+sub increment_freq ($c, $max_symbol, $freq, $cf) {
+
+    ++$freq->[$c];
+    my $T = $cf->[$c];
+
+    foreach my $i ($c .. $max_symbol) {
+        $cf->[$i] = $T;
+        $T += $freq->[$i];
+        $cf->[$i + 1] = $T;
+    }
+
+    return $T;
 }
 
 sub ac_encode ($bytes_arr) {
 
-    my $enc        = '';
-    my $EOF_SYMBOL = (max(@$bytes_arr) // 0) + 1;
-    my @bytes      = (@$bytes_arr, $EOF_SYMBOL);
+    my $enc   = '';
+    my @bytes = (@$bytes_arr, (max(@$bytes_arr) // 0) + 1);
 
-    my %freq;
-    ++$freq{$_} for @bytes;
-
-    my ($cf, $T) = create_cfreq(\%freq);
+    my $max_symbol = max(@bytes) // 0;
+    my ($freq, $cf, $T) = create_cfreq(INITIAL_FREQ, $max_symbol);
 
     if ($T > MAX) {
         die "Too few bits: $T > ${\MAX}";
@@ -392,6 +420,8 @@ sub ac_encode ($bytes_arr) {
 
         $high = ($low + int(($w * $cf->[$c + 1]) / $T) - 1) & MAX;
         $low  = ($low + int(($w * $cf->[$c]) / $T)) & MAX;
+
+        $T = increment_freq($c, $max_symbol, $freq, $cf);
 
         if ($high > MAX) {
             die "high > MAX: $high > ${\MAX}";
@@ -436,42 +466,41 @@ sub ac_encode ($bytes_arr) {
         $enc .= '1';
     }
 
-    return ($enc, \%freq);
+    return ($enc, $max_symbol);
 }
 
-sub ac_decode ($fh, $freq) {
+sub ac_decode ($fh, $max_symbol) {
 
-    my ($cf, $T) = create_cfreq($freq);
+    my ($freq, $cf, $T) = create_cfreq(INITIAL_FREQ, $max_symbol);
 
     my @dec;
     my $low  = 0;
     my $high = MAX;
-    my $enc  = oct('0b' . join '', map { getc($fh) // 1 } 1 .. BITS);
 
-    my @table;
-    foreach my $i (sort { $a <=> $b } keys %$freq) {
-        foreach my $j ($cf->[$i] .. $cf->[$i + 1] - 1) {
-            $table[$j] = $i;
-        }
-    }
-
-    my $EOF_SYMBOL = max(keys %$freq) // 0;
+    my $enc = oct('0b' . join '', map { getc($fh) // 1 } 1 .. BITS);
 
     while (1) {
-
-        my $w  = $high - $low + 1;
+        my $w  = ($high + 1) - $low;
         my $ss = int((($T * ($enc - $low + 1)) - 1) / $w);
 
-        my $i = $table[$ss] // last;
-        last if ($i == $EOF_SYMBOL);
+        my $i = 0;
+        foreach my $j (0 .. $max_symbol) {
+            if ($cf->[$j] <= $ss and $ss < $cf->[$j + 1]) {
+                $i = $j;
+                last;
+            }
+        }
 
+        last if ($i == $max_symbol);
         push @dec, $i;
 
         $high = ($low + int(($w * $cf->[$i + 1]) / $T) - 1) & MAX;
         $low  = ($low + int(($w * $cf->[$i]) / $T)) & MAX;
 
+        $T = increment_freq($i, $max_symbol, $freq, $cf);
+
         if ($high > MAX) {
-            die "error";
+            die "high > MAX: ($high > ${\MAX})";
         }
 
         if ($low >= $high) { die "$low >= $high" }
@@ -504,38 +533,22 @@ sub ac_decode ($fh, $freq) {
 
 sub create_ac_entry ($bytes, $out_fh) {
 
-    my ($enc, $freq) = ac_encode($bytes);
-    my $max_symbol = max(keys %$freq) // 0;
+    my ($enc, $max_symbol) = ac_encode($bytes);
 
-    my @freqs;
-    foreach my $k (0 .. $max_symbol) {
-        push @freqs, $freq->{$k} // 0;
-    }
-
-    push @freqs, length($enc) >> 3;
-
-    print $out_fh delta_encode(\@freqs);
+    print $out_fh delta_encode([$max_symbol, length($enc)], 1);
     print $out_fh pack("B*", $enc);
 }
 
 sub decode_ac_entry ($fh) {
 
-    my @freqs    = @{delta_decode($fh)};
-    my $bits_len = pop(@freqs);
+    my ($max_symbol, $enc_len) = @{delta_decode($fh, 1)};
 
-    my %freq;
-    foreach my $i (0 .. $#freqs) {
-        if ($freqs[$i]) {
-            $freq{$i} = $freqs[$i];
-        }
-    }
+    say "Encoded length: $enc_len";
 
-    say "Encoded length: $bits_len";
-    my $bits = read_bits($fh, $bits_len << 3);
-
-    if ($bits_len > 0) {
+    if ($enc_len > 0) {
+        my $bits = read_bits($fh, $enc_len);
         open my $bits_fh, '<:raw', \$bits;
-        return ac_decode($bits_fh, \%freq);
+        return ac_decode($bits_fh, $max_symbol);
     }
 
     return [];

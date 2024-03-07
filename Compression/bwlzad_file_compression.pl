@@ -1,11 +1,11 @@
 #!/usr/bin/perl
 
 # Author: Trizen
-# Date: 17 June 2023
-# Edit: 12 August 2023
+# Date: 15 June 2023
+# Edit: 07 March 2024
 # https://github.com/trizen
 
-# Compress/decompress files using LZ77 compression (LZSS variant) + Arithmetic Coding (in fixed bits).
+# Compress/decompress files using Burrows-Wheeler Transform (BWT) + LZ77 compression + Adaptive Arithmetic Coding (in fixed bits).
 
 # Encoding the literals and the pointers using a DEFLATE-like approach.
 
@@ -13,30 +13,34 @@
 #   Data Compression (Summer 2023) - Lecture 11 - DEFLATE (gzip)
 #   https://youtube.com/watch?v=SJPvNi4HrWQ
 #
+#   Data Compression (Summer 2023) - Lecture 13 - BZip2
+#   https://youtube.com/watch?v=cvoZbBZ3M2A
+#
 #   Basic arithmetic coder in C++
 #   https://github.com/billbird/arith32
 
 use 5.036;
-
 use Getopt::Std    qw(getopts);
 use File::Basename qw(basename);
-use List::Util     qw(max sum);
+use List::Util     qw(max uniq sum);
 use POSIX          qw(ceil log2);
 
 use constant {
-    PKGNAME => 'LZSA',
-    VERSION => '0.02',
-    FORMAT  => 'lzsa',
+    PKGNAME => 'BWLZAD',
+    VERSION => '0.01',
+    FORMAT  => 'bwlzad',
 
-    CHUNK_SIZE => 1 << 16,    # higher value = better compression
+    CHUNK_SIZE    => 1 << 17,    # higher value = better compression
+    LOOKAHEAD_LEN => 128,
 };
 
 # Arithmetic Coding settings
-use constant BITS => 32;
-use constant MAX  => oct('0b' . ('1' x BITS));
+use constant BITS         => 32;
+use constant MAX          => oct('0b' . ('1' x BITS));
+use constant INITIAL_FREQ => 1;
 
 # Container signature
-use constant SIGNATURE => uc(FORMAT) . chr(2);
+use constant SIGNATURE => uc(FORMAT) . chr(1);
 
 # [distance value, offset bits]
 my @DISTANCE_SYMBOLS = map { [$_, 0] } (0 .. 4);
@@ -213,7 +217,7 @@ sub lz77_compression ($str, $uncompressed, $indices, $lengths, $has_backreferenc
             }
         }
 
-        if ($n >= $min_len and $enc_bits_len < $literal_bits_len) {
+        if ($n >= $min_len and $enc_bits_len + 8 < $literal_bits_len) {
 
             push @$lengths,           $n;
             push @$indices,           $la - $p;
@@ -288,7 +292,7 @@ sub read_bits ($fh, $bits_len) {
     return $data;
 }
 
-sub delta_encode ($integers) {
+sub delta_encode ($integers, $double = 0) {
 
     my @deltas;
     my $prev = 0;
@@ -307,6 +311,11 @@ sub delta_encode ($integers) {
         if ($d == 0) {
             $bitstring .= '0';
         }
+        elsif ($double) {
+            my $t = sprintf('%b', abs($d) + 1);
+            my $l = sprintf('%b', length($t));
+            $bitstring .= '1' . (($d < 0) ? '0' : '1') . ('1' x (length($l) - 1)) . '0' . substr($l, 1) . substr($t, 1);
+        }
         else {
             my $t = sprintf('%b', abs($d));
             $bitstring .= '1' . (($d < 0) ? '0' : '1') . ('1' x (length($t) - 1)) . '0' . substr($t, 1);
@@ -316,7 +325,7 @@ sub delta_encode ($integers) {
     pack('B*', $bitstring);
 }
 
-sub delta_decode ($fh) {
+sub delta_decode ($fh, $double = 0) {
 
     my @deltas;
     my $buffer = '';
@@ -327,6 +336,17 @@ sub delta_decode ($fh) {
 
         if ($bit eq '0') {
             push @deltas, 0;
+        }
+        elsif ($double) {
+            my $bit = read_bit($fh, \$buffer);
+
+            my $bl = 0;
+            ++$bl while (read_bit($fh, \$buffer) eq '1');
+
+            my $bl2 = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. $bl));
+            my $int = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. ($bl2 - 1)));
+
+            push @deltas, ($bit eq '1' ? 1 : -1) * ($int - 1);
         }
         else {
             my $bit = read_bit($fh, \$buffer);
@@ -352,31 +372,42 @@ sub delta_decode ($fh) {
     return \@acc;
 }
 
-sub create_cfreq ($freq) {
+sub create_cfreq ($freq_value, $max_symbol) {
 
-    my @cf;
     my $T = 0;
+    my (@cf, @freq);
 
-    foreach my $i (sort { $a <=> $b } keys %$freq) {
-        $freq->{$i} // next;
-        $cf[$i] = $T;
-        $T += $freq->{$i};
+    foreach my $i (0 .. $max_symbol) {
+        $freq[$i] = $freq_value;
+        $cf[$i]   = $T;
+        $T += $freq_value;
         $cf[$i + 1] = $T;
     }
 
-    return (\@cf, $T);
+    return (\@freq, \@cf, $T);
+}
+
+sub increment_freq ($c, $max_symbol, $freq, $cf) {
+
+    ++$freq->[$c];
+    my $T = $cf->[$c];
+
+    foreach my $i ($c .. $max_symbol) {
+        $cf->[$i] = $T;
+        $T += $freq->[$i];
+        $cf->[$i + 1] = $T;
+    }
+
+    return $T;
 }
 
 sub ac_encode ($bytes_arr) {
 
-    my $enc        = '';
-    my $EOF_SYMBOL = (max(@$bytes_arr) // 0) + 1;
-    my @bytes      = (@$bytes_arr, $EOF_SYMBOL);
+    my $enc   = '';
+    my @bytes = (@$bytes_arr, (max(@$bytes_arr) // 0) + 1);
 
-    my %freq;
-    ++$freq{$_} for @bytes;
-
-    my ($cf, $T) = create_cfreq(\%freq);
+    my $max_symbol = max(@bytes) // 0;
+    my ($freq, $cf, $T) = create_cfreq(INITIAL_FREQ, $max_symbol);
 
     if ($T > MAX) {
         die "Too few bits: $T > ${\MAX}";
@@ -392,6 +423,8 @@ sub ac_encode ($bytes_arr) {
 
         $high = ($low + int(($w * $cf->[$c + 1]) / $T) - 1) & MAX;
         $low  = ($low + int(($w * $cf->[$c]) / $T)) & MAX;
+
+        $T = increment_freq($c, $max_symbol, $freq, $cf);
 
         if ($high > MAX) {
             die "high > MAX: $high > ${\MAX}";
@@ -436,42 +469,41 @@ sub ac_encode ($bytes_arr) {
         $enc .= '1';
     }
 
-    return ($enc, \%freq);
+    return ($enc, $max_symbol);
 }
 
-sub ac_decode ($fh, $freq) {
+sub ac_decode ($fh, $max_symbol) {
 
-    my ($cf, $T) = create_cfreq($freq);
+    my ($freq, $cf, $T) = create_cfreq(INITIAL_FREQ, $max_symbol);
 
     my @dec;
     my $low  = 0;
     my $high = MAX;
-    my $enc  = oct('0b' . join '', map { getc($fh) // 1 } 1 .. BITS);
 
-    my @table;
-    foreach my $i (sort { $a <=> $b } keys %$freq) {
-        foreach my $j ($cf->[$i] .. $cf->[$i + 1] - 1) {
-            $table[$j] = $i;
-        }
-    }
-
-    my $EOF_SYMBOL = max(keys %$freq) // 0;
+    my $enc = oct('0b' . join '', map { getc($fh) // 1 } 1 .. BITS);
 
     while (1) {
-
-        my $w  = $high - $low + 1;
+        my $w  = ($high + 1) - $low;
         my $ss = int((($T * ($enc - $low + 1)) - 1) / $w);
 
-        my $i = $table[$ss] // last;
-        last if ($i == $EOF_SYMBOL);
+        my $i = 0;
+        foreach my $j (0 .. $max_symbol) {
+            if ($cf->[$j] <= $ss and $ss < $cf->[$j + 1]) {
+                $i = $j;
+                last;
+            }
+        }
 
+        last if ($i == $max_symbol);
         push @dec, $i;
 
         $high = ($low + int(($w * $cf->[$i + 1]) / $T) - 1) & MAX;
         $low  = ($low + int(($w * $cf->[$i]) / $T)) & MAX;
 
+        $T = increment_freq($i, $max_symbol, $freq, $cf);
+
         if ($high > MAX) {
-            die "error";
+            die "high > MAX: ($high > ${\MAX})";
         }
 
         if ($low >= $high) { die "$low >= $high" }
@@ -504,38 +536,22 @@ sub ac_decode ($fh, $freq) {
 
 sub create_ac_entry ($bytes, $out_fh) {
 
-    my ($enc, $freq) = ac_encode($bytes);
-    my $max_symbol = max(keys %$freq) // 0;
+    my ($enc, $max_symbol) = ac_encode($bytes);
 
-    my @freqs;
-    foreach my $k (0 .. $max_symbol) {
-        push @freqs, $freq->{$k} // 0;
-    }
-
-    push @freqs, length($enc) >> 3;
-
-    print $out_fh delta_encode(\@freqs);
+    print $out_fh delta_encode([$max_symbol, length($enc)], 1);
     print $out_fh pack("B*", $enc);
 }
 
 sub decode_ac_entry ($fh) {
 
-    my @freqs    = @{delta_decode($fh)};
-    my $bits_len = pop(@freqs);
+    my ($max_symbol, $enc_len) = @{delta_decode($fh, 1)};
 
-    my %freq;
-    foreach my $i (0 .. $#freqs) {
-        if ($freqs[$i]) {
-            $freq{$i} = $freqs[$i];
-        }
-    }
+    say "Encoded length: $enc_len";
 
-    say "Encoded length: $bits_len";
-    my $bits = read_bits($fh, $bits_len << 3);
-
-    if ($bits_len > 0) {
+    if ($enc_len > 0) {
+        my $bits = read_bits($fh, $enc_len);
         open my $bits_fh, '<:raw', \$bits;
-        return ac_decode($bits_fh, \%freq);
+        return ac_decode($bits_fh, $max_symbol);
     }
 
     return [];
@@ -629,6 +645,278 @@ sub deflate_decode ($fh) {
     return (\@literals, \@distances, \@lengths);
 }
 
+sub mtf_encode ($bytes, $alphabet = [0 .. 255]) {
+
+    my @C;
+
+    my @table;
+    @table[@$alphabet] = (0 .. $#{$alphabet});
+
+    foreach my $c (@$bytes) {
+        push @C, (my $index = $table[$c]);
+        unshift(@$alphabet, splice(@$alphabet, $index, 1));
+        @table[@{$alphabet}[0 .. $index]] = (0 .. $index);
+    }
+
+    return \@C;
+}
+
+sub mtf_decode ($encoded, $alphabet = [0 .. 255]) {
+
+    my @S;
+
+    foreach my $p (@$encoded) {
+        push @S, $alphabet->[$p];
+        unshift(@$alphabet, splice(@$alphabet, $p, 1));
+    }
+
+    return \@S;
+}
+
+sub bwt_balanced ($s) {    # O(n * LOOKAHEAD_LEN) space (fast)
+#<<<
+    [
+     map { $_->[1] } sort {
+              ($a->[0] cmp $b->[0])
+           || ((substr($s, $a->[1]) . substr($s, 0, $a->[1])) cmp(substr($s, $b->[1]) . substr($s, 0, $b->[1])))
+     }
+     map {
+         my $t = substr($s, $_, LOOKAHEAD_LEN);
+
+         if (length($t) < LOOKAHEAD_LEN) {
+             $t .= substr($s, 0, ($_ < LOOKAHEAD_LEN) ? $_ : (LOOKAHEAD_LEN - length($t)));
+         }
+
+         [$t, $_]
+       } 0 .. length($s) - 1
+    ];
+#>>>
+}
+
+sub bwt_encode ($s) {
+
+    my $bwt = bwt_balanced($s);
+    my $ret = join('', map { substr($s, $_ - 1, 1) } @$bwt);
+
+    my $idx = 0;
+    foreach my $i (@$bwt) {
+        $i || last;
+        ++$idx;
+    }
+
+    return ($ret, $idx);
+}
+
+sub bwt_decode ($bwt, $idx) {    # fast inversion
+
+    my @tail = split(//, $bwt);
+    my @head = sort @tail;
+
+    my %indices;
+    foreach my $i (0 .. $#tail) {
+        push @{$indices{$tail[$i]}}, $i;
+    }
+
+    my @table;
+    foreach my $v (@head) {
+        push @table, shift(@{$indices{$v}});
+    }
+
+    my $dec = '';
+    my $i   = $idx;
+
+    for (1 .. scalar(@head)) {
+        $dec .= $head[$i];
+        $i = $table[$i];
+    }
+
+    return $dec;
+}
+
+sub rle4_encode ($bytes) {    # RLE1
+
+    my @rle;
+    my $end  = $#{$bytes};
+    my $prev = -1;
+    my $run  = 0;
+
+    for (my $i = 0 ; $i <= $end ; ++$i) {
+
+        if ($bytes->[$i] == $prev) {
+            ++$run;
+        }
+        else {
+            $run = 1;
+        }
+
+        push @rle, $bytes->[$i];
+        $prev = $bytes->[$i];
+
+        if ($run >= 4) {
+
+            $run = 0;
+            $i += 1;
+
+            while ($run < 254 and $i <= $end and $bytes->[$i] == $prev) {
+                ++$run;
+                ++$i;
+            }
+
+            push @rle, $run;
+            $run = 1;
+
+            if ($i <= $end) {
+                $prev = $bytes->[$i];
+                push @rle, $bytes->[$i];
+            }
+        }
+    }
+
+    return \@rle;
+}
+
+sub rle4_decode ($bytes) {    # RLE1
+
+    my @dec  = $bytes->[0];
+    my $end  = $#{$bytes};
+    my $prev = $bytes->[0];
+    my $run  = 1;
+
+    for (my $i = 1 ; $i <= $end ; ++$i) {
+
+        if ($bytes->[$i] == $prev) {
+            ++$run;
+        }
+        else {
+            $run = 1;
+        }
+
+        push @dec, $bytes->[$i];
+        $prev = $bytes->[$i];
+
+        if ($run >= 4) {
+            if (++$i <= $end) {
+                $run = $bytes->[$i];
+                push @dec, (($prev) x $run);
+            }
+
+            $run = 0;
+        }
+    }
+
+    return \@dec;
+}
+
+sub rle_encode ($bytes) {    # RLE2
+
+    my @rle;
+    my $end = $#{$bytes};
+
+    for (my $i = 0 ; $i <= $end ; ++$i) {
+
+        my $run = 0;
+        while ($i <= $end and $bytes->[$i] == 0) {
+            ++$run;
+            ++$i;
+        }
+
+        if ($run >= 1) {
+            my $t = sprintf('%b', $run + 1);
+            push @rle, split(//, substr($t, 1));
+        }
+
+        if ($i <= $end) {
+            push @rle, $bytes->[$i] + 1;
+        }
+    }
+
+    return \@rle;
+}
+
+sub rle_decode ($rle) {    # RLE2
+
+    my @dec;
+    my $end = $#{$rle};
+
+    for (my $i = 0 ; $i <= $end ; ++$i) {
+        my $k = $rle->[$i];
+
+        if ($k == 0 or $k == 1) {
+            my $run = 1;
+            while (($i <= $end) and ($k == 0 or $k == 1)) {
+                ($run <<= 1) |= $k;
+                $k = $rle->[++$i];
+            }
+            push @dec, (0) x ($run - 1);
+        }
+
+        if ($i <= $end) {
+            push @dec, $k - 1;
+        }
+    }
+
+    return \@dec;
+}
+
+sub encode_alphabet ($alphabet) {
+
+    my %table;
+    @table{@$alphabet} = ();
+
+    my $populated = 0;
+    my @marked;
+
+    for (my $i = 0 ; $i <= 255 ; $i += 32) {
+
+        my $enc = 0;
+        foreach my $j (0 .. 31) {
+            if (exists($table{$i + $j})) {
+                $enc |= 1 << $j;
+            }
+        }
+
+        if ($enc == 0) {
+            $populated <<= 1;
+        }
+        else {
+            ($populated <<= 1) |= 1;
+            push @marked, $enc;
+        }
+    }
+
+    my $delta = delta_encode([@marked], 1);
+
+    say "Populated : ", sprintf('%08b', $populated);
+    say "Marked    : @marked";
+    say "Delta len : ", length($delta);
+
+    my $encoded = '';
+    $encoded .= chr($populated);
+    $encoded .= $delta;
+    return $encoded;
+}
+
+sub decode_alphabet ($fh) {
+
+    my @populated = split(//, sprintf('%08b', ord(getc($fh) // die "error")));
+    my $marked    = delta_decode($fh, 1);
+
+    my @alphabet;
+    for (my $i = 0 ; $i <= 255 ; $i += 32) {
+        if (shift(@populated)) {
+            my $m = shift(@$marked);
+            foreach my $j (0 .. 31) {
+                if ($m & 1) {
+                    push @alphabet, $i + $j;
+                }
+                $m >>= 1;
+            }
+        }
+    }
+
+    return \@alphabet;
+}
+
 # Compress file
 sub compress_file ($input, $output) {
 
@@ -647,16 +935,39 @@ sub compress_file ($input, $output) {
     # Compress data
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
 
+        my @chunk_bytes = unpack('C*', $chunk);
+        my $data        = pack('C*', @{rle4_encode(\@chunk_bytes)});
+
+        my ($bwt, $idx) = bwt_encode($data);
+
+        my @bytes    = unpack('C*', $bwt);
+        my @alphabet = sort { $a <=> $b } uniq(@bytes);
+
+        my $enc_bytes = mtf_encode(\@bytes, [@alphabet]);
+
+        if (max(@$enc_bytes) < 255) {
+            print $out_fh chr(1);
+            $enc_bytes = rle_encode($enc_bytes);
+        }
+        else {
+            print $out_fh chr(0);
+            $enc_bytes = rle4_encode($enc_bytes);
+        }
+
+        $data = pack('C*', @$enc_bytes);
+
         my (@uncompressed, @indices, @lengths, @has_backreference);
-        lz77_compression($chunk, \@uncompressed, \@indices, \@lengths, \@has_backreference);
+        lz77_compression($data, \@uncompressed, \@indices, \@lengths, \@has_backreference);
 
         my $est_ratio = length($chunk) / (scalar(@uncompressed) + scalar(@lengths) + 2 * scalar(@indices));
-        say scalar(@uncompressed), ' -> ', $est_ratio;
+        say "\nEst. ratio: ", $est_ratio, " (", scalar(@uncompressed), " uncompressed bytes)";
 
+        print $out_fh pack('N', $idx);
+        print $out_fh encode_alphabet(\@alphabet);
         deflate_encode(\@uncompressed, \@indices, \@lengths, \@has_backreference, $out_fh);
     }
 
-    # Close the file
+    # Close the output file
     close $out_fh;
 }
 
@@ -674,12 +985,29 @@ sub decompress_file ($input, $output) {
       or die "Can't open file <<$output>> for writing: $!";
 
     while (!eof($fh)) {
+
+        my $rle_encoded = ord(getc($fh) // die "error");
+        my $idx         = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
+        my $alphabet    = decode_alphabet($fh);
+
         my ($uncompressed, $indices, $lengths) = deflate_decode($fh);
-        print $out_fh lz77_decompression($uncompressed, $indices, $lengths);
+        my $dec = lz77_decompression($uncompressed, $indices, $lengths);
+
+        my $bytes = [unpack('C*', $dec)];
+
+        if ($rle_encoded) {
+            $bytes = rle_decode($bytes);
+        }
+        else {
+            $bytes = rle4_decode($bytes);
+        }
+
+        $bytes = mtf_decode($bytes, [@$alphabet]);
+
+        print $out_fh pack('C*', @{rle4_decode([unpack('C*', bwt_decode(pack('C*', @$bytes), $idx))])});
     }
 
-    # Close the file
-    close $fh;
+    # Close the output file
     close $out_fh;
 }
 
