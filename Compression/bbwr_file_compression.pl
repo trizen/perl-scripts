@@ -22,7 +22,7 @@ use List::Util     qw(max uniq);
 
 use constant {
     PKGNAME => 'BBWR',
-    VERSION => '0.01',
+    VERSION => '0.02',
     FORMAT  => 'bbwr',
 
     CHUNK_SIZE    => 1 << 13,    # larger values == better compression
@@ -30,7 +30,7 @@ use constant {
 };
 
 # Container signature
-use constant SIGNATURE => uc(FORMAT) . chr(1);
+use constant SIGNATURE => uc(FORMAT) . chr(2);
 
 sub usage {
     my ($code) = @_;
@@ -266,15 +266,31 @@ sub binary_vrl_decoding ($bitstring) {
 
 sub compression ($chunk, $out_fh) {
 
-    my ($bwt, $idx) = bwt_encode(unpack('B*', $chunk));
-    my $vrle = binary_vrl_encoding($bwt);
+    my $bits  = unpack('B*', $chunk);
+    my $vrle1 = binary_vrl_encoding($bits);
+
+    if (length($vrle1) < length($bits)) {
+        printf "Doing early VLR, saving %s bits\n", length($bits) - length($vrle1);
+        print $out_fh chr(1);
+    }
+    else {
+        print $out_fh chr(0);
+        $vrle1 = $bits;
+    }
+
+    my ($bwt, $idx) = bwt_encode($vrle1);
+    my $vrle2 = binary_vrl_encoding($bwt);
+
+    say "BWT index: $idx";
 
     print $out_fh pack('N',  $idx);
-    print $out_fh pack('N',  length($vrle));
-    print $out_fh pack('B*', $vrle);
+    print $out_fh pack('N',  length($vrle2));
+    print $out_fh pack('B*', $vrle2);
 }
 
 sub decompression ($fh, $out_fh) {
+
+    my $compressed_byte = ord(getc($fh) // die "error");
 
     my $idx      = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
     my $bits_len = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
@@ -283,6 +299,10 @@ sub decompression ($fh, $out_fh) {
 
     my $bwt  = binary_vrl_decoding(read_bits($fh, $bits_len));
     my $data = bwt_decode($bwt, $idx);
+
+    if ($compressed_byte == 1) {
+        $data = binary_vrl_decoding($data);
+    }
 
     print $out_fh pack('B*', $data);
 }

@@ -25,49 +25,12 @@ our $DEBUG = 0;
 
 use constant {
               CHUNK_SIZE => 1024,             # in bytes
-              SIGNATURE  => 'TZP' . chr(1),
-              FORMAT     => 'tzp',
+              SIGNATURE  => 'TZP2' . chr(1),
+              FORMAT     => 'tzp2',
              };
 
-sub main {
-    my %opt;
-    getopts('ei:o:vh', \%opt);
-
-    $opt{h} && help() && exit(0);
-
-    my ($input, $output) = @ARGV;
-    $input  //= $opt{i} // (help() && exit 1);
-    $output //= $opt{o};
-
-    $DEBUG = $opt{v};
-    my $ext = qr{\.${\FORMAT}\z}i;
-    if ($opt{e} || $input =~ $ext) {
-
-        if (not defined $output) {
-            ($output = $input) =~ s{$ext}{}
-              || die "$0: no output file specified!\n";
-        }
-
-        if (-e $output) {
-            print "'$output' already exists! -- Replace? [y/N] ";
-            <STDIN> =~ /^y/i || exit 17;
-        }
-
-        decompress($input, $output)
-          || die "$0: error: decompression failed!\n";
-    }
-    elsif ($input !~ $ext || (defined($output) && $output =~ $ext)) {
-        $output //= basename($input) . '.' . FORMAT;
-        compress($input, $output)
-          || die "$0: error: compression failed!\n";
-    }
-    else {
-        warn "$0: don't know what to do...\n";
-        help() && exit 1;
-    }
-}
-
-sub help {
+sub usage {
+    my ($code) = @_;
     print <<"EOH";
 usage: $0 [options] [input file] [output file]
 
@@ -75,19 +38,58 @@ options:
         -e            : extract
         -i <filename> : input filename
         -o <filename> : output filename
+        -r            : rewrite output
 
-        -v            : verbose mode
+        -v            : version number
         -h            : this message
 
 examples:
          $0 document.txt
-         $0 document.txt archive.tzp
-         $0 archive.tzp document.txt
-         $0 -e -i archive.tzp -o document.txt
+         $0 document.txt archive.${\FORMAT}
+         $0 archive.${\FORMAT} document.txt
+         $0 -e -i archive.${\FORMAT} -o document.txt
 
 EOH
 
-    return 1;
+    exit($code // 0);
+}
+
+sub main {
+    my %opt;
+    getopts('ei:o:vhr', \%opt);
+
+    $opt{h} && usage(0);
+    $opt{v} && version();
+
+    my ($input, $output) = @ARGV;
+    $input  //= $opt{i} // usage(2);
+    $output //= $opt{o};
+
+    my $ext = qr{\.${\FORMAT}\z}io;
+    if ($opt{e} || $input =~ $ext) {
+
+        if (not defined $output) {
+            ($output = basename($input)) =~ s{$ext}{}
+              || die "$0: no output file specified!\n";
+        }
+
+        if (not $opt{r} and -e $output) {
+            print "'$output' already exists! -- Replace? [y/N] ";
+            <STDIN> =~ /^y/i || exit 17;
+        }
+
+        decompress_file($input, $output)
+          || die "$0: error: decompression failed!\n";
+    }
+    elsif ($input !~ $ext || (defined($output) && $output =~ $ext)) {
+        $output //= basename($input) . '.' . FORMAT;
+        compress_file($input, $output)
+          || die "$0: error: compression failed!\n";
+    }
+    else {
+        warn "$0: don't know what to do...\n";
+        usage(1);
+    }
 }
 
 sub _make_map {
@@ -202,7 +204,7 @@ compressing : $info{compress}
 EOT
 }
 
-sub compress {
+sub compress_file {
     my ($input, $output) = @_;
 
     my $fh     = open_file('<:raw', $input);
@@ -246,7 +248,7 @@ sub compress {
     return 1;
 }
 
-sub decompress {
+sub decompress_file {
     my ($input, $output) = @_;
 
     my $fh     = open_file('<:raw', $input);

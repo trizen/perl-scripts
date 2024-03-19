@@ -24,7 +24,7 @@ use Getopt::Std    qw(getopts);
 use File::Basename qw(basename);
 
 use constant {
-              PKGNAME => 'huffman-simple',
+              PKGNAME => 'HFM',
               VERSION => '0.03',
               FORMAT  => 'hfm',
              };

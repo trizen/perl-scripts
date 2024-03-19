@@ -56,7 +56,7 @@ A nice collection of day-to-day Perl scripts.
     * [Compress](./Compression/compress.pl)
     * [Gzip comment](./Compression/gzip_comment.pl)
     * [Gzip store](./Compression/gzip_store.pl)
-    * [Huffman file compression](./Compression/huffman_file_compression.pl)
+    * [Hfm file compression](./Compression/hfm_file_compression.pl)
     * [Lz77 file compression](./Compression/lz77_file_compression.pl)
     * [Lzac file compression](./Compression/lzac_file_compression.pl)
     * [Lzaz file compression](./Compression/lzaz_file_compression.pl)
@@ -83,6 +83,7 @@ A nice collection of day-to-day Perl scripts.
     * [Rlh file compression](./Compression/rlh_file_compression.pl)
     * [Tac file compression](./Compression/tac_file_compression.pl)
     * [Tacc file compression](./Compression/tacc_file_compression.pl)
+    * [Test compressors](./Compression/test_compressors.pl)
     * [Tzip2 file compression](./Compression/tzip2_file_compression.pl)
     * [Tzip file compression](./Compression/tzip_file_compression.pl)
 * Converters
