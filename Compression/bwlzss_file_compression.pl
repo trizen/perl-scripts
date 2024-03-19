@@ -2,10 +2,10 @@
 
 # Author: Trizen
 # Date: 15 June 2023
-# Edit: 20 June 2023
+# Edit: 19 March 2024
 # https://github.com/trizen
 
-# Compress/decompress files using Burrows-Wheeler Transform (BWT) + Move-to-front transform (MTF) + LZ77 compression (LZSS) + Huffman coding.
+# Compress/decompress files using Burrows-Wheeler Transform (BWT) + LZ77 compression (LZSS) + Huffman coding.
 
 # Encoding the literals and the pointers using a DEFLATE-like approach.
 
@@ -23,16 +23,16 @@ use List::Util     qw(max uniq);
 use POSIX          qw(ceil log2);
 
 use constant {
-    PKGNAME => 'BWLZ',
-    VERSION => '0.05',
-    FORMAT  => 'bwlz',
+    PKGNAME => 'BWLZSS',
+    VERSION => '0.01',
+    FORMAT  => 'bwlzss',
 
     CHUNK_SIZE    => 1 << 17,    # higher value = better compression
     LOOKAHEAD_LEN => 128,
 };
 
 # Container signature
-use constant SIGNATURE => uc(FORMAT) . chr(5);
+use constant SIGNATURE => uc(FORMAT) . chr(1);
 
 # [distance value, offset bits]
 my @DISTANCE_SYMBOLS = map { [$_, 0] } (0 .. 4);
@@ -535,34 +535,6 @@ sub deflate_decode ($fh) {
     return (\@literals, \@distances, \@lengths);
 }
 
-sub mtf_encode ($bytes, $alphabet = [0 .. 255]) {
-
-    my @C;
-
-    my @table;
-    @table[@$alphabet] = (0 .. $#{$alphabet});
-
-    foreach my $c (@$bytes) {
-        push @C, (my $index = $table[$c]);
-        unshift(@$alphabet, splice(@$alphabet, $index, 1));
-        @table[@{$alphabet}[0 .. $index]] = (0 .. $index);
-    }
-
-    return \@C;
-}
-
-sub mtf_decode ($encoded, $alphabet = [0 .. 255]) {
-
-    my @S;
-
-    foreach my $p (@$encoded) {
-        push @S, $alphabet->[$p];
-        unshift(@$alphabet, splice(@$alphabet, $p, 1));
-    }
-
-    return \@S;
-}
-
 sub bwt_balanced ($s) {    # O(n * LOOKAHEAD_LEN) space (fast)
 #<<<
     [
@@ -697,116 +669,6 @@ sub rle4_decode ($bytes) {    # RLE1
     return \@dec;
 }
 
-sub rle_encode ($bytes) {    # RLE2
-
-    my @rle;
-    my $end = $#{$bytes};
-
-    for (my $i = 0 ; $i <= $end ; ++$i) {
-
-        my $run = 0;
-        while ($i <= $end and $bytes->[$i] == 0) {
-            ++$run;
-            ++$i;
-        }
-
-        if ($run >= 1) {
-            my $t = sprintf('%b', $run + 1);
-            push @rle, split(//, substr($t, 1));
-        }
-
-        if ($i <= $end) {
-            push @rle, $bytes->[$i] + 1;
-        }
-    }
-
-    return \@rle;
-}
-
-sub rle_decode ($rle) {    # RLE2
-
-    my @dec;
-    my $end = $#{$rle};
-
-    for (my $i = 0 ; $i <= $end ; ++$i) {
-        my $k = $rle->[$i];
-
-        if ($k == 0 or $k == 1) {
-            my $run = 1;
-            while (($i <= $end) and ($k == 0 or $k == 1)) {
-                ($run <<= 1) |= $k;
-                $k = $rle->[++$i];
-            }
-            push @dec, (0) x ($run - 1);
-        }
-
-        if ($i <= $end) {
-            push @dec, $k - 1;
-        }
-    }
-
-    return \@dec;
-}
-
-sub encode_alphabet ($alphabet) {
-
-    my %table;
-    @table{@$alphabet} = ();
-
-    my $populated = 0;
-    my @marked;
-
-    for (my $i = 0 ; $i <= 255 ; $i += 32) {
-
-        my $enc = 0;
-        foreach my $j (0 .. 31) {
-            if (exists($table{$i + $j})) {
-                $enc |= 1 << $j;
-            }
-        }
-
-        if ($enc == 0) {
-            $populated <<= 1;
-        }
-        else {
-            ($populated <<= 1) |= 1;
-            push @marked, $enc;
-        }
-    }
-
-    my $delta = delta_encode([@marked], 1);
-
-    say "Populated : ", sprintf('%08b', $populated);
-    say "Marked    : @marked";
-    say "Delta len : ", length($delta);
-
-    my $encoded = '';
-    $encoded .= chr($populated);
-    $encoded .= $delta;
-    return $encoded;
-}
-
-sub decode_alphabet ($fh) {
-
-    my @populated = split(//, sprintf('%08b', ord(getc($fh) // die "error")));
-    my $marked    = delta_decode($fh, 1);
-
-    my @alphabet;
-    for (my $i = 0 ; $i <= 255 ; $i += 32) {
-        if (shift(@populated)) {
-            my $m = shift(@$marked);
-            foreach my $j (0 .. 31) {
-                if ($m & 1) {
-                    push @alphabet, $i + $j;
-                }
-                $m >>= 1;
-            }
-        }
-    }
-
-    return \@alphabet;
-}
-
 sub lzss_compression ($data, $out_fh) {
     my (@uncompressed, @indices, @lengths, @has_backreference);
     lz77_compression($data, \@uncompressed, \@indices, \@lengths, \@has_backreference);
@@ -824,49 +686,22 @@ sub lzss_decompression ($fh) {
 
 sub compression ($chunk, $out_fh) {
 
-    my @chunk_bytes = unpack('C*', $chunk);
-    my $data        = pack('C*', @{rle4_encode(\@chunk_bytes)});
-
-    my ($bwt, $idx) = bwt_encode($data);
-
-    my @bytes    = unpack('C*', $bwt);
-    my @alphabet = sort { $a <=> $b } uniq(@bytes);
-
-    my $enc_bytes = mtf_encode(\@bytes, [@alphabet]);
-
-    if (max(@$enc_bytes) < 255) {
-        print $out_fh chr(1);
-        $enc_bytes = rle_encode($enc_bytes);
-    }
-    else {
-        print $out_fh chr(0);
-        $enc_bytes = rle4_encode($enc_bytes);
-    }
+    my $rle4 = rle4_encode([unpack('C*', $chunk)]);
+    my ($bwt, $idx) = bwt_encode(pack('C*', @$rle4));
 
     print $out_fh pack('N', $idx);
-    print $out_fh encode_alphabet(\@alphabet);
-    lzss_compression(pack('C*', @$enc_bytes), $out_fh);
+    lzss_compression($bwt, $out_fh);
 }
 
 sub decompression ($fh, $out_fh) {
 
-    my $rle_encoded = ord(getc($fh) // die "error");
-    my $idx         = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
-    my $alphabet    = decode_alphabet($fh);
+    my $idx = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
 
-    my $dec   = lzss_decompression($fh);
-    my $bytes = [unpack('C*', $dec)];
+    my $bwt  = lzss_decompression($fh);
+    my $rle4 = bwt_decode($bwt, $idx);
+    my $data = rle4_decode([unpack('C*', $rle4)]);
 
-    if ($rle_encoded) {
-        $bytes = rle_decode($bytes);
-    }
-    else {
-        $bytes = rle4_decode($bytes);
-    }
-
-    $bytes = mtf_decode($bytes, [@$alphabet]);
-
-    print $out_fh pack('C*', @{rle4_decode([unpack('C*', bwt_decode(pack('C*', @$bytes), $idx))])});
+    print $out_fh pack('C*', @$data);
 }
 
 # Compress file

@@ -5,7 +5,7 @@
 # Edit: 19 March 2024
 # https://github.com/trizen
 
-# Compress/decompress files using Burrows-Wheeler Transform (BWT) + LZ77 compression (LZHD variant) + Adaptive Arithmetic Coding (in fixed bits).
+# Compress/decompress files using Burrows-Wheeler Transform (BWT) + Move-to-front transform (MTF) + LZ77 compression (LZHD variant) + Adaptive Arithmetic Coding (in fixed bits).
 
 # Encoding the distances using a DEFLATE-like approach.
 

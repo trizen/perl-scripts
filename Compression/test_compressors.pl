@@ -29,6 +29,10 @@ my $decompressed_dir = tempdir(CLEANUP => 1);
 
 my @stats = ({format => 'orig', filename => basename($input_file), compression_time => 0, decompression_time => 0, size => -s $input_file});
 
+sub commify ($n) {
+    scalar reverse(reverse($n) =~ s/(\d{3})(?=\d)/$1,/gr);
+}
+
 foreach my $file (glob("*_file_compression.pl")) {
 
     next if $ignored_methods{$file};
@@ -64,10 +68,10 @@ foreach my $file (glob("*_file_compression.pl")) {
 }
 
 say '';
-printf("%7s %6s %6s %6s %s\n", "SIZE", "RATIO", "COMPRE", "DECOMP", "FILENAME");
+printf("%8s %6s %6s %6s %s\n", "SIZE", "RATIO", "COMPRE", "DECOMP", "FILENAME");
 foreach my $entry (sort { $a->{size} <=> $b->{size} } @stats) {
-    printf("%7s %6.3f %6.3f %6.3f %s\n",
-           $entry->{size},
+    printf("%8s %6.3f %6.3f %6.3f %s\n",
+           commify($entry->{size}),
            (-s $input_file) / $entry->{size},
            $entry->{compression_time},
            $entry->{decompression_time},
@@ -89,53 +93,56 @@ say "Top $top slowest decompression methods: ",
   join(', ', map { $_->{format} } (sort { $b->{decompression_time} <=> $a->{decompression_time} } grep { $_->{decompression_time} > 0 } @stats)[0 .. $top - 1]);
 
 __END__
-   SIZE  RATIO COMPRE DECOMP FILENAME
-   2356  6.088  0.150  0.144 perl.bwad
-   2359  6.081  0.187  0.172 perl.bwlzad2
-   2379  6.029  0.202  0.190 perl.bwlzad
-   2413  5.944  0.053  0.039 perl.bwac
-   2414  5.942  0.057  0.054 perl.bwaz
-   2418  5.932  0.087  0.064 perl.bwlza2
-   2426  5.913  0.086  0.068 perl.bwlza
-   2426  5.913  0.050  0.032 perl.bwt
-   2443  5.871  0.082  0.071 perl.bwlz
-   2591  5.536  0.128  0.045 perl.bwrm
-   2626  5.462  0.132  0.049 perl.bwrl2
-   2653  5.407  0.164  0.076 perl.bwrlz
-   2695  5.322  0.164  0.179 perl.lzsad
-   2751  5.214  0.156  0.061 perl.bwrla
-   2760  5.197  0.143  0.063 perl.bwrl
-   2819  5.088  0.064  0.049 perl.lzsa
-   2831  5.067  0.089  0.051 perl.bwt2
-   2835  5.060  0.115  0.067 perl.bwlz2
-   2836  5.058  0.057  0.043 perl.lzss
-   2865  5.007  0.093  0.048 perl.lzsbw
-   2868  5.001  0.043  0.041 perl.lzaz
-   2870  4.998  0.044  0.035 perl.lzac
-   2878  4.984  0.039  0.030 perl.lzhd
-   2905  4.938  0.205  0.102 perl.bwrlz2
-   2980  4.813  0.046  0.027 perl.bww
-   3003  4.777  0.056  0.041 perl.mra
-   3014  4.759  0.130  0.125 perl.lzbwad
-   3025  4.742  0.047  0.038 perl.mrh
-   3027  4.739  0.028  0.023 perl.lzw
-   3028  4.737  0.057  0.036 perl.lzbwd
-   3030  4.734  0.079  0.051 perl.mrlz
-   3072  4.669  0.062  0.037 perl.lzbwh
-   3146  4.559  0.070  0.041 perl.mbwr
-   3176  4.516  0.061  0.041 perl.lzbwa
-   3186  4.502  0.057  0.037 perl.lzbw
-   3214  4.463  0.036  0.029 perl.lzih
-   3230  4.441  0.022  0.029 perl.rlh
-   3321  4.319  0.057  0.040 perl.lza
-   3335  4.301  0.047  0.039 perl.lzh
-   3504  4.094  0.032  0.038 perl.rlac
-   4052  3.540  0.030  0.034 perl.hfm
-   4193  3.421  0.038  0.021 perl.lz77
-  14344  1.000  0.000  0.000 perl
 
-Top 20 fastest compression methods: rlh, lzw, hfm, rlac, lzih, lz77, lzhd, lzaz, lzac, bww, lzh, mrh, bwt, bwac, mra, lzss, lza, lzbwd, lzbw, bwaz
-Top 20 fastest decompression methods: lz77, lzw, bww, rlh, lzih, lzhd, bwt, hfm, lzac, lzbwd, lzbwh, lzbw, rlac, mrh, bwac, lzh, lza, mra, lzaz, lzbwa
+    SIZE  RATIO COMPRE DECOMP FILENAME
+   2,356  6.088  0.148  0.144 perl.bwad
+   2,359  6.081  0.187  0.192 perl.bwlzad2
+   2,379  6.029  0.210  0.193 perl.bwlzad
+   2,413  5.944  0.053  0.037 perl.bwac
+   2,414  5.942  0.056  0.051 perl.bwaz
+   2,418  5.932  0.083  0.067 perl.bwlza2
+   2,426  5.913  0.090  0.065 perl.bwlza
+   2,426  5.913  0.076  0.050 perl.bwt
+   2,443  5.871  0.079  0.061 perl.bwlz
+   2,591  5.536  0.136  0.043 perl.bwrm
+   2,626  5.462  0.134  0.046 perl.bwrl2
+   2,653  5.407  0.153  0.073 perl.bwrlz
+   2,695  5.322  0.179  0.180 perl.lzsad
+   2,751  5.214  0.141  0.052 perl.bwrla
+   2,760  5.197  0.135  0.049 perl.bwrl
+   2,819  5.088  0.079  0.069 perl.lzsa
+   2,831  5.067  0.077  0.041 perl.bwt2
+   2,835  5.060  0.104  0.065 perl.bwlz2
+   2,836  5.058  0.057  0.042 perl.lzss
+   2,865  5.007  0.086  0.048 perl.lzsbw
+   2,868  5.001  0.043  0.041 perl.lzaz
+   2,870  4.998  0.042  0.035 perl.lzac
+   2,877  4.986  0.070  0.059 perl.bwlzss
+   2,878  4.984  0.037  0.030 perl.lzhd
+   2,905  4.938  0.169  0.077 perl.bwrlz2
+   2,980  4.813  0.057  0.028 perl.bww
+   3,003  4.777  0.051  0.042 perl.mra
+   3,005  4.773  0.055  0.046 perl.bwlzhd
+   3,014  4.759  0.135  0.126 perl.lzbwad
+   3,025  4.742  0.065  0.046 perl.mrh
+   3,027  4.739  0.028  0.023 perl.lzw
+   3,028  4.737  0.075  0.040 perl.lzbwd
+   3,030  4.734  0.069  0.050 perl.mrlz
+   3,072  4.669  0.063  0.037 perl.lzbwh
+   3,146  4.559  0.075  0.042 perl.mbwr
+   3,176  4.516  0.062  0.040 perl.lzbwa
+   3,186  4.502  0.057  0.036 perl.lzbw
+   3,214  4.463  0.036  0.031 perl.lzih
+   3,230  4.441  0.022  0.029 perl.rlh
+   3,321  4.319  0.053  0.042 perl.lza
+   3,335  4.301  0.047  0.035 perl.lzh
+   3,504  4.094  0.032  0.037 perl.rlac
+   4,052  3.540  0.030  0.034 perl.hfm
+   4,193  3.421  0.038  0.020 perl.lz77
+  14,344  1.000  0.000  0.000 perl
 
-Top 20 slowest compression methods: bwrlz2, bwlzad, bwlzad2, lzsad, bwrlz, bwrla, bwad, bwrl, bwrl2, lzbwad, bwrm, bwlz2, lzsbw, bwt2, bwlza2, bwlza, bwlz, mrlz, mbwr, lzsa
-Top 20 slowest decompression methods: bwlzad, lzsad, bwlzad2, bwad, lzbwad, bwrlz2, bwrlz, bwlz, bwlza, bwlz2, bwlza2, bwrl, bwrla, bwaz, mrlz, bwt2, bwrl2, lzsa, lzsbw, bwrm
+Top 20 fastest compression methods: rlh, lzw, hfm, rlac, lzih, lzhd, lz77, lzac, lzaz, lzh, mra, lza, bwac, bwlzhd, bwaz, lzss, lzbw, bww, lzbwa, lzbwh
+Top 20 fastest decompression methods: lz77, lzw, bww, rlh, lzhd, lzih, hfm, lzh, lzac, lzbw, lzbwh, bwac, rlac, lzbwa, lzbwd, bwt2, lzaz, lza, mbwr, mra
+
+Top 20 slowest compression methods: bwlzad, bwlzad2, lzsad, bwrlz2, bwrlz, bwad, bwrla, bwrm, bwrl, lzbwad, bwrl2, bwlz2, bwlza, lzsbw, bwlza2, lzsa, bwlz, bwt2, bwt, mbwr
+Top 20 slowest decompression methods: bwlzad, bwlzad2, lzsad, bwad, lzbwad, bwrlz2, bwrlz, lzsa, bwlza2, bwlza, bwlz2, bwlz, bwlzss, bwrla, bwaz, bwt, mrlz, bwrl, lzsbw, bwrl2

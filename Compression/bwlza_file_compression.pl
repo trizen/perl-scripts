@@ -5,7 +5,7 @@
 # Edit: 06 February 2024
 # https://github.com/trizen
 
-# Compress/decompress files using Burrows-Wheeler Transform (BWT) + LZ77 compression + Arithmetic Coding (in fixed bits).
+# Compress/decompress files using Burrows-Wheeler Transform (BWT) + Move-to-front transform (MTF) + LZ77 compression (LZSS) + Arithmetic Coding (in fixed bits).
 
 # Encoding the literals and the pointers using a DEFLATE-like approach.
 
@@ -922,6 +922,66 @@ sub decode_alphabet ($fh) {
     return \@alphabet;
 }
 
+sub lzss_compression ($data, $out_fh) {
+    my (@uncompressed, @indices, @lengths, @has_backreference);
+    lz77_compression($data, \@uncompressed, \@indices, \@lengths, \@has_backreference);
+
+    my $est_ratio = length($data) / (scalar(@uncompressed) + scalar(@lengths) + 2 * scalar(@indices));
+    say "\nEst. ratio: ", $est_ratio, " (", scalar(@uncompressed), " uncompressed bytes)";
+
+    deflate_encode(\@uncompressed, \@indices, \@lengths, \@has_backreference, $out_fh);
+}
+
+sub lzss_decompression ($fh) {
+    my ($uncompressed, $indices, $lengths) = deflate_decode($fh);
+    lz77_decompression($uncompressed, $indices, $lengths);
+}
+
+sub compression ($chunk, $out_fh) {
+    my @chunk_bytes = unpack('C*', $chunk);
+    my $data        = pack('C*', @{rle4_encode(\@chunk_bytes)});
+
+    my ($bwt, $idx) = bwt_encode($data);
+
+    my @bytes    = unpack('C*', $bwt);
+    my @alphabet = sort { $a <=> $b } uniq(@bytes);
+
+    my $enc_bytes = mtf_encode(\@bytes, [@alphabet]);
+
+    if (max(@$enc_bytes) < 255) {
+        print $out_fh chr(1);
+        $enc_bytes = rle_encode($enc_bytes);
+    }
+    else {
+        print $out_fh chr(0);
+        $enc_bytes = rle4_encode($enc_bytes);
+    }
+
+    print $out_fh pack('N', $idx);
+    print $out_fh encode_alphabet(\@alphabet);
+    lzss_compression(pack('C*', @$enc_bytes), $out_fh);
+}
+
+sub decompression ($fh, $out_fh) {
+    my $rle_encoded = ord(getc($fh) // die "error");
+    my $idx         = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
+    my $alphabet    = decode_alphabet($fh);
+
+    my $dec   = lzss_decompression($fh);
+    my $bytes = [unpack('C*', $dec)];
+
+    if ($rle_encoded) {
+        $bytes = rle_decode($bytes);
+    }
+    else {
+        $bytes = rle4_decode($bytes);
+    }
+
+    $bytes = mtf_decode($bytes, [@$alphabet]);
+
+    print $out_fh pack('C*', @{rle4_decode([unpack('C*', bwt_decode(pack('C*', @$bytes), $idx))])});
+}
+
 # Compress file
 sub compress_file ($input, $output) {
 
@@ -939,37 +999,7 @@ sub compress_file ($input, $output) {
 
     # Compress data
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
-
-        my @chunk_bytes = unpack('C*', $chunk);
-        my $data        = pack('C*', @{rle4_encode(\@chunk_bytes)});
-
-        my ($bwt, $idx) = bwt_encode($data);
-
-        my @bytes    = unpack('C*', $bwt);
-        my @alphabet = sort { $a <=> $b } uniq(@bytes);
-
-        my $enc_bytes = mtf_encode(\@bytes, [@alphabet]);
-
-        if (max(@$enc_bytes) < 255) {
-            print $out_fh chr(1);
-            $enc_bytes = rle_encode($enc_bytes);
-        }
-        else {
-            print $out_fh chr(0);
-            $enc_bytes = rle4_encode($enc_bytes);
-        }
-
-        $data = pack('C*', @$enc_bytes);
-
-        my (@uncompressed, @indices, @lengths, @has_backreference);
-        lz77_compression($data, \@uncompressed, \@indices, \@lengths, \@has_backreference);
-
-        my $est_ratio = length($chunk) / (scalar(@uncompressed) + scalar(@lengths) + 2 * scalar(@indices));
-        say "\nEst. ratio: ", $est_ratio, " (", scalar(@uncompressed), " uncompressed bytes)";
-
-        print $out_fh pack('N', $idx);
-        print $out_fh encode_alphabet(\@alphabet);
-        deflate_encode(\@uncompressed, \@indices, \@lengths, \@has_backreference, $out_fh);
+        compression($chunk, $out_fh);
     }
 
     # Close the output file
@@ -990,26 +1020,7 @@ sub decompress_file ($input, $output) {
       or die "Can't open file <<$output>> for writing: $!";
 
     while (!eof($fh)) {
-
-        my $rle_encoded = ord(getc($fh) // die "error");
-        my $idx         = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
-        my $alphabet    = decode_alphabet($fh);
-
-        my ($uncompressed, $indices, $lengths) = deflate_decode($fh);
-        my $dec = lz77_decompression($uncompressed, $indices, $lengths);
-
-        my $bytes = [unpack('C*', $dec)];
-
-        if ($rle_encoded) {
-            $bytes = rle_decode($bytes);
-        }
-        else {
-            $bytes = rle4_decode($bytes);
-        }
-
-        $bytes = mtf_decode($bytes, [@$alphabet]);
-
-        print $out_fh pack('C*', @{rle4_decode([unpack('C*', bwt_decode(pack('C*', @$bytes), $idx))])});
+        decompression($fh, $out_fh);
     }
 
     # Close the output file
