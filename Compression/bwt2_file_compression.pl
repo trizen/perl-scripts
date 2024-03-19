@@ -1,80 +1,33 @@
 #!/usr/bin/perl
 
 # Author: Trizen
-# Date: 15 June 2023
+# Date: 14 June 2023
 # Edit: 19 March 2024
 # https://github.com/trizen
 
-# Compress/decompress files using Burrows-Wheeler Transform (BWT) + LZ77 compression + Symbolic Bzip2.
+# Compress/decompress files using Burrows-Wheeler Transform (BWT) + Move-To-Front transform (MTF) + Run-length encoding (RLE) + Bzip2.
 
-# Encoding the literals and the pointers using a DEFLATE-like approach.
-
-# References:
-#   Data Compression (Summer 2023) - Lecture 11 - DEFLATE (gzip)
-#   https://youtube.com/watch?v=SJPvNi4HrWQ
-#
+# Reference:
 #   Data Compression (Summer 2023) - Lecture 13 - BZip2
 #   https://youtube.com/watch?v=cvoZbBZ3M2A
 
 use 5.036;
+
 use Getopt::Std    qw(getopts);
 use File::Basename qw(basename);
 use List::Util     qw(max uniq);
-use POSIX          qw(ceil log2);
 
 use constant {
-    PKGNAME => 'BWLZ2',
+    PKGNAME => 'BWT2',
     VERSION => '0.01',
-    FORMAT  => 'bwlz2',
+    FORMAT  => 'bwt2',
 
-    CHUNK_SIZE    => 1 << 17,    # higher value = better compression
+    CHUNK_SIZE    => 1 << 17,
     LOOKAHEAD_LEN => 128,
 };
 
 # Container signature
 use constant SIGNATURE => uc(FORMAT) . chr(1);
-
-# [distance value, offset bits]
-my @DISTANCE_SYMBOLS = map { [$_, 0] } (0 .. 4);
-
-until ($DISTANCE_SYMBOLS[-1][0] > CHUNK_SIZE) {
-    push @DISTANCE_SYMBOLS, [int($DISTANCE_SYMBOLS[-1][0] * (4 / 3)), $DISTANCE_SYMBOLS[-1][1] + 1];
-    push @DISTANCE_SYMBOLS, [int($DISTANCE_SYMBOLS[-1][0] * (3 / 2)), $DISTANCE_SYMBOLS[-1][1]];
-}
-
-# [length, offset bits]
-my @LENGTH_SYMBOLS = ((map { [$_, 0] } (4 .. 10)));
-
-{
-    my $delta = 1;
-    until ($LENGTH_SYMBOLS[-1][0] > 163) {
-        push @LENGTH_SYMBOLS, [$LENGTH_SYMBOLS[-1][0] + $delta, $LENGTH_SYMBOLS[-1][1] + 1];
-        $delta *= 2;
-        push @LENGTH_SYMBOLS, [$LENGTH_SYMBOLS[-1][0] + $delta, $LENGTH_SYMBOLS[-1][1]];
-        push @LENGTH_SYMBOLS, [$LENGTH_SYMBOLS[-1][0] + $delta, $LENGTH_SYMBOLS[-1][1]];
-        push @LENGTH_SYMBOLS, [$LENGTH_SYMBOLS[-1][0] + $delta, $LENGTH_SYMBOLS[-1][1]];
-    }
-    push @LENGTH_SYMBOLS, [258, 0];
-}
-
-my @DISTANCE_INDICES;
-
-foreach my $i (0 .. $#DISTANCE_SYMBOLS) {
-    my ($min, $bits) = @{$DISTANCE_SYMBOLS[$i]};
-    foreach my $k ($min .. $min + (1 << $bits) - 1) {
-        last if ($k > CHUNK_SIZE);
-        $DISTANCE_INDICES[$k] = $i;
-    }
-}
-
-my @LENGTH_INDICES;
-
-foreach my $i (0 .. $#LENGTH_SYMBOLS) {
-    my ($min, $bits) = @{$LENGTH_SYMBOLS[$i]};
-    foreach my $k ($min .. $min + (1 << $bits) - 1) {
-        $LENGTH_INDICES[$k] = $i;
-    }
-}
 
 sub usage {
     my ($code) = @_;
@@ -152,110 +105,6 @@ sub main {
         warn "$0: don't know what to do...\n";
         usage(1);
     }
-}
-
-sub lz77_compression ($str, $uncompressed, $indices, $lengths, $has_backreference) {
-
-    my $la = 0;
-
-    my $prefix = '';
-    my @chars  = split(//, $str);
-    my $end    = $#chars;
-
-    my $min_len = $LENGTH_SYMBOLS[0][0];
-    my $max_len = $LENGTH_SYMBOLS[-1][0];
-
-    my %literal_freq;
-    my %distance_freq;
-
-    my $literal_count  = 0;
-    my $distance_count = 0;
-
-    while ($la <= $end) {
-
-        my $n = 1;
-        my $p = length($prefix);
-        my $tmp;
-
-        my $token = $chars[$la];
-
-        while (    $n <= $max_len
-               and $la + $n <= $end
-               and ($tmp = rindex($prefix, $token, $p)) >= 0) {
-            $p = $tmp;
-            $token .= $chars[$la + $n];
-            ++$n;
-        }
-
-        --$n;
-
-        my $enc_bits_len     = 0;
-        my $literal_bits_len = 0;
-
-        if ($n >= $min_len) {
-
-            my $dist = $DISTANCE_SYMBOLS[$DISTANCE_INDICES[$la - $p]];
-            $enc_bits_len += $dist->[1] + ceil(log2((1 + $distance_count) / (1 + ($distance_freq{$dist->[0]} // 0))));
-
-            my $len_idx = $LENGTH_INDICES[$n];
-            my $len     = $LENGTH_SYMBOLS[$len_idx];
-
-            $enc_bits_len += $len->[1] + ceil(log2((1 + $literal_count) / (1 + ($literal_freq{$len_idx + 256} // 0))));
-
-            my %freq;
-            foreach my $c (unpack('C*', substr($prefix, $p, $n))) {
-                ++$freq{$c};
-                $literal_bits_len += ceil(log2(($n + $literal_count) / ($freq{$c} + ($literal_freq{$c} // 0))));
-            }
-        }
-
-        if ($n >= $min_len and $enc_bits_len + 8 < $literal_bits_len) {
-
-            push @$lengths,           $n;
-            push @$indices,           $la - $p;
-            push @$has_backreference, 1;
-            push @$uncompressed,      ord($chars[$la + $n]);
-
-            my $dist_idx = $DISTANCE_INDICES[$la - $p];
-            my $dist     = $DISTANCE_SYMBOLS[$dist_idx];
-
-            ++$distance_count;
-            ++$distance_freq{$dist->[0]};
-
-            ++$literal_freq{$LENGTH_INDICES[$n] + 256};
-            ++$literal_freq{$uncompressed->[-1]};
-
-            $literal_count += 2;
-            $la            += $n + 1;
-            $prefix .= $token;
-        }
-        else {
-            my @bytes = unpack('C*', substr($prefix, $p, $n) . $chars[$la + $n]);
-
-            push @$has_backreference, (0) x ($n + 1);
-            push @$uncompressed, @bytes;
-            ++$literal_freq{$_} for @bytes;
-
-            $literal_count += $n + 1;
-            $la            += $n + 1;
-            $prefix .= $token;
-        }
-    }
-
-    return;
-}
-
-sub lz77_decompression ($uncompressed, $indices, $lengths) {
-
-    my $chunk  = '';
-    my $offset = 0;
-
-    foreach my $i (0 .. $#{$uncompressed}) {
-        $chunk .= substr($chunk, $offset - $indices->[$i], $lengths->[$i]) . chr($uncompressed->[$i]);
-        $offset += $lengths->[$i] + 1;
-    }
-
-    return $chunk;
 }
 
 sub read_bit ($fh, $bitstring) {
@@ -368,7 +217,7 @@ sub delta_decode ($fh, $double = 0) {
 sub walk ($node, $code, $h, $rev_h) {
 
     my $c = $node->[0] // return ($h, $rev_h);
-    if (ref $c) { walk($c->[$_], $code . $_, $h, $rev_h) for ('0', '1') }
+    if (ref $c) { walk($c->[$_], $code . $_, $h, $rev_h) for (0, 1) }
     else        { $h->{$c} = $code; $rev_h->{$code} = $c }
 
     return ($h, $rev_h);
@@ -413,7 +262,7 @@ sub create_huffman_entry ($bytes, $out_fh) {
     my $enc = huffman_encode($bytes, $h);
 
     my $max_symbol = max(keys %freq) // 0;
-    say "Max symbol: $max_symbol";
+    say "Max symbol: $max_symbol\n";
 
     my @freqs;
     foreach my $i (0 .. $max_symbol) {
@@ -439,144 +288,13 @@ sub decode_huffman_entry ($fh) {
     my (undef, $rev_dict) = mktree_from_freq(\%freq);
 
     my $enc_len = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
+    say "Encoded length: $enc_len\n";
 
     if ($enc_len > 0) {
         return huffman_decode(read_bits($fh, $enc_len), $rev_dict);
     }
 
     return [];
-}
-
-sub encode_alphabet_symbolic ($alphabet) {
-
-    # TODO: encode the alphabet more efficiently
-    return delta_encode([reverse @$alphabet]);
-}
-
-sub decode_alphabet_symbolic ($fh) {
-    return [reverse @{delta_decode($fh)}];
-}
-
-sub bz2_compression_symbolic ($symbols, $out_fh) {
-
-    my ($bwt, $idx) = bwt_encode_symbolic($symbols);
-
-    say "BWT index = $idx";
-
-    my @bytes        = @$bwt;
-    my @alphabet     = sort { $a <=> $b } uniq(@bytes);
-    my $alphabet_enc = encode_alphabet_symbolic(\@alphabet);
-
-    my $mtf = mtf_encode(\@bytes, [@alphabet]);
-    my $rle = rle_encode($mtf);
-
-    print $out_fh pack('N', $idx);
-    print $out_fh $alphabet_enc;
-    create_huffman_entry($rle, $out_fh);
-}
-
-sub bz2_decompression_symbolic ($fh) {
-
-    my $idx      = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
-    my $alphabet = decode_alphabet_symbolic($fh);
-
-    say "BWT index = $idx";
-    say "Alphabet size: ", scalar(@$alphabet);
-
-    my $rle  = decode_huffman_entry($fh);
-    my $mtf  = rle_decode($rle);
-    my $bwt  = mtf_decode($mtf, $alphabet);
-    my $data = bwt_decode_symbolic($bwt, $idx);
-
-    return $data;
-}
-
-sub deflate_encode ($literals, $distances, $lengths, $has_backreference, $out_fh) {
-
-    my @len_symbols;
-    my @dist_symbols;
-    my $offset_bits = '';
-
-    my $j = 0;
-    foreach my $k (0 .. $#{$literals}) {
-
-        my $lit = $literals->[$k];
-        push @len_symbols, $lit;
-
-        $has_backreference->[$k] || next;
-
-        my $len  = $lengths->[$j];
-        my $dist = $distances->[$j];
-
-        $j += 1;
-
-        {
-            my $len_idx = $LENGTH_INDICES[$len];
-            my ($min, $bits) = @{$LENGTH_SYMBOLS[$len_idx]};
-
-            push @len_symbols, $len_idx + 256;
-
-            if ($bits > 0) {
-                $offset_bits .= sprintf('%0*b', $bits, $len - $min);
-            }
-        }
-
-        {
-            my $dist_idx = $DISTANCE_INDICES[$dist];
-            my ($min, $bits) = @{$DISTANCE_SYMBOLS[$dist_idx]};
-
-            push @dist_symbols, $dist_idx;
-
-            if ($bits > 0) {
-                $offset_bits .= sprintf('%0*b', $bits, $dist - $min);
-            }
-        }
-    }
-
-    bz2_compression_symbolic(\@len_symbols,  $out_fh);
-    bz2_compression_symbolic(\@dist_symbols, $out_fh);
-    print $out_fh pack('B*', $offset_bits);
-}
-
-sub deflate_decode ($fh) {
-
-    my @len_symbols  = @{bz2_decompression_symbolic($fh)};
-    my @dist_symbols = @{bz2_decompression_symbolic($fh)};
-
-    my $bits_len = 0;
-
-    foreach my $i (@dist_symbols) {
-        $bits_len += $DISTANCE_SYMBOLS[$i][1];
-    }
-
-    foreach my $i (@len_symbols) {
-        if ($i >= 256) {
-            $bits_len += $LENGTH_SYMBOLS[$i - 256][1];
-        }
-    }
-
-    my $bits = read_bits($fh, $bits_len);
-
-    my @literals;
-    my @lengths;
-    my @distances;
-
-    my $j = 0;
-
-    foreach my $i (@len_symbols) {
-        if ($i >= 256) {
-            my $dist = $dist_symbols[$j++];
-            $lengths[-1]   = $LENGTH_SYMBOLS[$i - 256][0] + oct('0b' . substr($bits, 0, $LENGTH_SYMBOLS[$i - 256][1], ''));
-            $distances[-1] = $DISTANCE_SYMBOLS[$dist][0] + oct('0b' . substr($bits, 0, $DISTANCE_SYMBOLS[$dist][1], ''));
-        }
-        else {
-            push @literals,  $i;
-            push @lengths,   0;
-            push @distances, 0;
-        }
-    }
-
-    return (\@literals, \@distances, \@lengths);
 }
 
 sub mtf_encode ($bytes, $alphabet = [0 .. 255]) {
@@ -607,76 +325,7 @@ sub mtf_decode ($encoded, $alphabet = [0 .. 255]) {
     return \@S;
 }
 
-sub bwt_sort_symbolic ($s) {    # O(n) space (slowish)
-
-    my @cyclic = @$s;
-    my $len    = scalar(@cyclic);
-
-    my $rle = 1;
-    foreach my $i (1 .. $len - 1) {
-        if ($cyclic[$i] != $cyclic[$i - 1]) {
-            $rle = 0;
-            last;
-        }
-    }
-
-    $rle && return [0 .. $len - 1];
-
-    [
-     sort {
-         my ($i, $j) = ($a, $b);
-
-         while ($cyclic[$i] == $cyclic[$j]) {
-             $i %= $len if (++$i >= $len);
-             $j %= $len if (++$j >= $len);
-         }
-
-         $cyclic[$i] <=> $cyclic[$j];
-       } 0 .. $len - 1
-    ];
-}
-
-sub bwt_encode_symbolic ($s) {
-
-    my $bwt = bwt_sort_symbolic($s);
-    my @ret = map { $s->[$_ - 1] } @$bwt;
-
-    my $idx = 0;
-    foreach my $i (@$bwt) {
-        $i || last;
-        ++$idx;
-    }
-
-    return (\@ret, $idx);
-}
-
-sub bwt_decode_symbolic ($bwt, $idx) {    # fast inversion
-
-    my @tail = @$bwt;
-    my @head = sort { $a <=> $b } @tail;
-
-    my @indices;
-    foreach my $i (0 .. $#tail) {
-        push @{$indices[$tail[$i]]}, $i;
-    }
-
-    my @table;
-    foreach my $v (@head) {
-        push @table, shift(@{$indices[$v]});
-    }
-
-    my @dec;
-    my $i = $idx;
-
-    for (1 .. scalar(@head)) {
-        push @dec, $head[$i];
-        $i = $table[$i];
-    }
-
-    return \@dec;
-}
-
-sub bwt_sort_balanced ($s) {    # O(n * LOOKAHEAD_LEN) space (fast)
+sub bwt_balanced ($s) {    # O(n * LOOKAHEAD_LEN) space (fast)
 #<<<
     [
      map { $_->[1] } sort {
@@ -698,7 +347,7 @@ sub bwt_sort_balanced ($s) {    # O(n * LOOKAHEAD_LEN) space (fast)
 
 sub bwt_encode ($s) {
 
-    my $bwt = bwt_sort_balanced($s);
+    my $bwt = bwt_balanced($s);
     my $ret = join('', map { substr($s, $_ - 1, 1) } @$bwt);
 
     my $idx = 0;
@@ -760,7 +409,7 @@ sub rle4_encode ($bytes) {    # RLE1
             $run = 0;
             $i += 1;
 
-            while ($run < 254 and $i <= $end and $bytes->[$i] == $prev) {
+            while ($run < 255 and $i <= $end and $bytes->[$i] == $prev) {
                 ++$run;
                 ++$i;
             }
@@ -901,7 +550,7 @@ sub encode_alphabet ($alphabet) {
 
 sub decode_alphabet ($fh) {
 
-    my @populated = split(//, sprintf('%08b', ord(getc($fh) // die "error")));
+    my @populated = split(//, sprintf('%08b', ord(getc($fh))));
     my $marked    = delta_decode($fh, 1);
 
     my @alphabet;
@@ -920,66 +569,154 @@ sub decode_alphabet ($fh) {
     return \@alphabet;
 }
 
-sub lzss_compression ($chunk, $out_fh) {
+sub bwt_sort_symbolic ($s) {    # O(n) space (slowish)
 
-    my (@uncompressed, @indices, @lengths, @has_backreference);
-    lz77_compression($chunk, \@uncompressed, \@indices, \@lengths, \@has_backreference);
+    my @cyclic = @$s;
+    my $len    = scalar(@cyclic);
 
-    my $est_ratio = length($chunk) / (scalar(@uncompressed) + scalar(@lengths) + 2 * scalar(@indices));
-    say "\nEst. ratio: ", $est_ratio, " (", scalar(@uncompressed), " uncompressed bytes)";
+    my $rle = 1;
+    foreach my $i (1 .. $len - 1) {
+        if ($cyclic[$i] != $cyclic[$i - 1]) {
+            $rle = 0;
+            last;
+        }
+    }
 
-    deflate_encode(\@uncompressed, \@indices, \@lengths, \@has_backreference, $out_fh);
+    $rle && return [0 .. $len - 1];
+
+    [
+     sort {
+         my ($i, $j) = ($a, $b);
+
+         while ($cyclic[$i] == $cyclic[$j]) {
+             $i %= $len if (++$i >= $len);
+             $j %= $len if (++$j >= $len);
+         }
+
+         $cyclic[$i] <=> $cyclic[$j];
+       } 0 .. $len - 1
+    ];
 }
 
-sub lzss_decompression ($fh) {
-    my ($uncompressed, $indices, $lengths) = deflate_decode($fh);
-    lz77_decompression($uncompressed, $indices, $lengths);
+sub bwt_encode_symbolic ($s) {
+
+    my $bwt = bwt_sort_symbolic($s);
+    my @ret = map { $s->[$_ - 1] } @$bwt;
+
+    my $idx = 0;
+    foreach my $i (@$bwt) {
+        $i || last;
+        ++$idx;
+    }
+
+    return (\@ret, $idx);
+}
+
+sub bwt_decode_symbolic ($bwt, $idx) {    # fast inversion
+
+    my @tail = @$bwt;
+    my @head = sort { $a <=> $b } @tail;
+
+    my @indices;
+    foreach my $i (0 .. $#tail) {
+        push @{$indices[$tail[$i]]}, $i;
+    }
+
+    my @table;
+    foreach my $v (@head) {
+        push @table, shift(@{$indices[$v]});
+    }
+
+    my @dec;
+    my $i = $idx;
+
+    for (1 .. scalar(@head)) {
+        push @dec, $head[$i];
+        $i = $table[$i];
+    }
+
+    return \@dec;
+}
+
+sub encode_alphabet_symbolic ($alphabet) {
+
+    # TODO: encode the alphabet more efficiently
+    return delta_encode([reverse @$alphabet]);
+}
+
+sub decode_alphabet_symbolic ($fh) {
+    return [reverse @{delta_decode($fh)}];
+}
+
+sub bz2_compression_symbolic ($symbols, $out_fh) {
+
+    my ($bwt, $idx) = bwt_encode_symbolic($symbols);
+
+    my @bytes        = @$bwt;
+    my @alphabet     = sort { $a <=> $b } uniq(@bytes);
+    my $alphabet_enc = encode_alphabet_symbolic(\@alphabet);
+
+    say "BWT index = $idx";
+    say "Max symbol: ", max(@alphabet) // 0;
+
+    my $mtf = mtf_encode(\@bytes, [@alphabet]);
+    my $rle = rle_encode($mtf);
+
+    print $out_fh pack('N', $idx);
+    print $out_fh $alphabet_enc;
+    create_huffman_entry($rle, $out_fh);
+}
+
+sub bz2_decompression_symbolic ($fh) {
+
+    my $idx      = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
+    my $alphabet = decode_alphabet_symbolic($fh);
+
+    say "BWT index = $idx";
+    say "Alphabet size: ", scalar(@$alphabet);
+
+    my $rle  = decode_huffman_entry($fh);
+    my $mtf  = rle_decode($rle);
+    my $bwt  = mtf_decode($mtf, $alphabet);
+    my $data = bwt_decode_symbolic($bwt, $idx);
+
+    return $data;
 }
 
 sub compression ($chunk, $out_fh) {
 
-    my @chunk_bytes = unpack('C*', $chunk);
-    my $data        = pack('C*', @{rle4_encode(\@chunk_bytes)});
+    my $rle4 = rle4_encode([unpack('C*', $chunk)]);
+    my ($bwt, $idx) = bwt_encode(pack('C*', @$rle4));
 
-    my ($bwt, $idx) = bwt_encode($data);
+    say "BWT index = $idx";
 
-    my @bytes    = unpack('C*', $bwt);
-    my @alphabet = sort { $a <=> $b } uniq(@bytes);
+    my @bytes        = unpack('C*', $bwt);
+    my @alphabet     = sort { $a <=> $b } uniq(@bytes);
+    my $alphabet_enc = encode_alphabet(\@alphabet);
 
-    my $enc_bytes = mtf_encode(\@bytes, [@alphabet]);
-
-    if (max(@$enc_bytes) < 255) {
-        print $out_fh chr(1);
-        $enc_bytes = rle_encode($enc_bytes);
-    }
-    else {
-        print $out_fh chr(0);
-        $enc_bytes = rle4_encode($enc_bytes);
-    }
+    my $mtf = mtf_encode(\@bytes, [@alphabet]);
+    my $rle = rle_encode($mtf);
 
     print $out_fh pack('N', $idx);
-    print $out_fh encode_alphabet(\@alphabet);
-    lzss_compression(pack('C*', @$enc_bytes), $out_fh);
+    print $out_fh $alphabet_enc;
+    bz2_compression_symbolic($rle, $out_fh);
 }
 
 sub decompression ($fh, $out_fh) {
 
-    my $rle_encoded = ord(getc($fh) // die "error");
-    my $idx         = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
-    my $alphabet    = decode_alphabet($fh);
+    my $idx      = unpack('N', join('', map { getc($fh) // return undef } 1 .. 4));
+    my $alphabet = decode_alphabet($fh);
 
-    my $bytes = [unpack('C*', lzss_decompression($fh))];
+    say "BWT index = $idx";
+    say "Alphabet size: ", scalar(@$alphabet);
 
-    if ($rle_encoded) {
-        $bytes = rle_decode($bytes);
-    }
-    else {
-        $bytes = rle4_decode($bytes);
-    }
+    my $rle  = bz2_decompression_symbolic($fh);
+    my $mtf  = rle_decode($rle);
+    my $bwt  = mtf_decode($mtf, $alphabet);
+    my $rle4 = bwt_decode(pack('C*', @$bwt), $idx);
+    my $data = rle4_decode([unpack('C*', $rle4)]);
 
-    $bytes = mtf_decode($bytes, [@$alphabet]);
-
-    print $out_fh pack('C*', @{rle4_decode([unpack('C*', bwt_decode(pack('C*', @$bytes), $idx))])});
+    print $out_fh pack('C*', @$data);
 }
 
 # Compress file
@@ -1002,7 +739,7 @@ sub compress_file ($input, $output) {
         compression($chunk, $out_fh);
     }
 
-    # Close the output file
+    # Close the file
     close $out_fh;
 }
 
@@ -1023,7 +760,8 @@ sub decompress_file ($input, $output) {
         decompression($fh, $out_fh);
     }
 
-    # Close the output file
+    # Close the file
+    close $fh;
     close $out_fh;
 }
 

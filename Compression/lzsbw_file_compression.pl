@@ -389,7 +389,7 @@ sub mtf_decode ($encoded, $alphabet = [0 .. 255]) {
     return \@S;
 }
 
-sub bwt_cyclic ($s) {    # O(n) space (slowish)
+sub bwt_sort_symbolic ($s) {    # O(n) space (slowish)
 
     my @cyclic = @$s;
     my $len    = scalar(@cyclic);
@@ -418,9 +418,9 @@ sub bwt_cyclic ($s) {    # O(n) space (slowish)
     ];
 }
 
-sub bwt_encode ($s) {
+sub bwt_encode_symbolic ($s) {
 
-    my $bwt = bwt_cyclic($s);
+    my $bwt = bwt_sort_symbolic($s);
     my @ret = map { $s->[$_ - 1] } @$bwt;
 
     my $idx = 0;
@@ -432,7 +432,7 @@ sub bwt_encode ($s) {
     return (\@ret, $idx);
 }
 
-sub bwt_decode ($bwt, $idx) {    # fast inversion
+sub bwt_decode_symbolic ($bwt, $idx) {    # fast inversion
 
     my @tail = @$bwt;
     my @head = sort { $a <=> $b } @tail;
@@ -509,25 +509,25 @@ sub rle_decode ($rle) {    # RLE2
     return \@dec;
 }
 
-sub encode_alphabet ($alphabet) {
+sub encode_alphabet_symbolic ($alphabet) {
 
     # TODO: encode the alphabet more efficiently
     return delta_encode([reverse @$alphabet]);
 }
 
-sub decode_alphabet ($fh) {
+sub decode_alphabet_symbolic ($fh) {
     return [reverse @{delta_decode($fh)}];
 }
 
-sub bz2_compression ($symbols, $out_fh) {
+sub bz2_compression_symbolic ($symbols, $out_fh) {
 
-    my ($bwt, $idx) = bwt_encode($symbols);
+    my ($bwt, $idx) = bwt_encode_symbolic($symbols);
 
     say "BWT index = $idx";
 
     my @bytes        = @$bwt;
     my @alphabet     = sort { $a <=> $b } uniq(@bytes);
-    my $alphabet_enc = encode_alphabet(\@alphabet);
+    my $alphabet_enc = encode_alphabet_symbolic(\@alphabet);
 
     my $mtf = mtf_encode(\@bytes, [@alphabet]);
     my $rle = rle_encode($mtf);
@@ -537,10 +537,10 @@ sub bz2_compression ($symbols, $out_fh) {
     create_huffman_entry($rle, $out_fh);
 }
 
-sub bz2_decompression ($fh) {
+sub bz2_decompression_symbolic ($fh) {
 
     my $idx      = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
-    my $alphabet = decode_alphabet($fh);
+    my $alphabet = decode_alphabet_symbolic($fh);
 
     say "BWT index = $idx";
     say "Alphabet size: ", scalar(@$alphabet);
@@ -548,7 +548,7 @@ sub bz2_decompression ($fh) {
     my $rle  = decode_huffman_entry($fh);
     my $mtf  = rle_decode($rle);
     my $bwt  = mtf_decode($mtf, $alphabet);
-    my $data = bwt_decode($bwt, $idx);
+    my $data = bwt_decode_symbolic($bwt, $idx);
 
     return $data;
 }
@@ -677,15 +677,15 @@ sub deflate_encode ($literals, $distances, $lengths, $has_backreference, $out_fh
         }
     }
 
-    bz2_compression(\@len_symbols,  $out_fh);
-    bz2_compression(\@dist_symbols, $out_fh);
+    bz2_compression_symbolic(\@len_symbols,  $out_fh);
+    bz2_compression_symbolic(\@dist_symbols, $out_fh);
     print $out_fh pack('B*', $offset_bits);
 }
 
 sub deflate_decode ($fh) {
 
-    my $len_symbols  = bz2_decompression($fh);
-    my $dist_symbols = bz2_decompression($fh);
+    my $len_symbols  = bz2_decompression_symbolic($fh);
+    my $dist_symbols = bz2_decompression_symbolic($fh);
 
     my $bits_len = 0;
 

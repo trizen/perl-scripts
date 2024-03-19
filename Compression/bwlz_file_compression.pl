@@ -154,110 +154,6 @@ sub main {
     }
 }
 
-sub lz77_compression ($str, $uncompressed, $indices, $lengths, $has_backreference) {
-
-    my $la = 0;
-
-    my $prefix = '';
-    my @chars  = split(//, $str);
-    my $end    = $#chars;
-
-    my $min_len = $LENGTH_SYMBOLS[0][0];
-    my $max_len = $LENGTH_SYMBOLS[-1][0];
-
-    my %literal_freq;
-    my %distance_freq;
-
-    my $literal_count  = 0;
-    my $distance_count = 0;
-
-    while ($la <= $end) {
-
-        my $n = 1;
-        my $p = length($prefix);
-        my $tmp;
-
-        my $token = $chars[$la];
-
-        while (    $n <= $max_len
-               and $la + $n <= $end
-               and ($tmp = rindex($prefix, $token, $p)) >= 0) {
-            $p = $tmp;
-            $token .= $chars[$la + $n];
-            ++$n;
-        }
-
-        --$n;
-
-        my $enc_bits_len     = 0;
-        my $literal_bits_len = 0;
-
-        if ($n >= $min_len) {
-
-            my $dist = $DISTANCE_SYMBOLS[$DISTANCE_INDICES[$la - $p]];
-            $enc_bits_len += $dist->[1] + ceil(log2((1 + $distance_count) / (1 + ($distance_freq{$dist->[0]} // 0))));
-
-            my $len_idx = $LENGTH_INDICES[$n];
-            my $len     = $LENGTH_SYMBOLS[$len_idx];
-
-            $enc_bits_len += $len->[1] + ceil(log2((1 + $literal_count) / (1 + ($literal_freq{$len_idx + 256} // 0))));
-
-            my %freq;
-            foreach my $c (unpack('C*', substr($prefix, $p, $n))) {
-                ++$freq{$c};
-                $literal_bits_len += ceil(log2(($n + $literal_count) / ($freq{$c} + ($literal_freq{$c} // 0))));
-            }
-        }
-
-        if ($n >= $min_len and $enc_bits_len + 8 < $literal_bits_len) {
-
-            push @$lengths,           $n;
-            push @$indices,           $la - $p;
-            push @$has_backreference, 1;
-            push @$uncompressed,      ord($chars[$la + $n]);
-
-            my $dist_idx = $DISTANCE_INDICES[$la - $p];
-            my $dist     = $DISTANCE_SYMBOLS[$dist_idx];
-
-            ++$distance_count;
-            ++$distance_freq{$dist->[0]};
-
-            ++$literal_freq{$LENGTH_INDICES[$n] + 256};
-            ++$literal_freq{$uncompressed->[-1]};
-
-            $literal_count += 2;
-            $la            += $n + 1;
-            $prefix .= $token;
-        }
-        else {
-            my @bytes = unpack('C*', substr($prefix, $p, $n) . $chars[$la + $n]);
-
-            push @$has_backreference, (0) x ($n + 1);
-            push @$uncompressed, @bytes;
-            ++$literal_freq{$_} for @bytes;
-
-            $literal_count += $n + 1;
-            $la            += $n + 1;
-            $prefix .= $token;
-        }
-    }
-
-    return;
-}
-
-sub lz77_decompression ($uncompressed, $indices, $lengths) {
-
-    my $chunk  = '';
-    my $offset = 0;
-
-    foreach my $i (0 .. $#{$uncompressed}) {
-        $chunk .= substr($chunk, $offset - $indices->[$i], $lengths->[$i]) . chr($uncompressed->[$i]);
-        $offset += $lengths->[$i] + 1;
-    }
-
-    return $chunk;
-}
-
 sub read_bit ($fh, $bitstring) {
 
     if (($$bitstring // '') eq '') {
@@ -362,6 +258,110 @@ sub delta_decode ($fh, $double = 0) {
     }
 
     return \@acc;
+}
+
+sub lz77_compression ($str, $uncompressed, $indices, $lengths, $has_backreference) {
+
+    my $la = 0;
+
+    my $prefix = '';
+    my @chars  = split(//, $str);
+    my $end    = $#chars;
+
+    my $min_len = $LENGTH_SYMBOLS[0][0];
+    my $max_len = $LENGTH_SYMBOLS[-1][0];
+
+    my %literal_freq;
+    my %distance_freq;
+
+    my $literal_count  = 0;
+    my $distance_count = 0;
+
+    while ($la <= $end) {
+
+        my $n = 1;
+        my $p = length($prefix);
+        my $tmp;
+
+        my $token = $chars[$la];
+
+        while (    $n <= $max_len
+               and $la + $n <= $end
+               and ($tmp = rindex($prefix, $token, $p)) >= 0) {
+            $p = $tmp;
+            $token .= $chars[$la + $n];
+            ++$n;
+        }
+
+        --$n;
+
+        my $enc_bits_len     = 0;
+        my $literal_bits_len = 0;
+
+        if ($n >= $min_len) {
+
+            my $dist = $DISTANCE_SYMBOLS[$DISTANCE_INDICES[$la - $p]];
+            $enc_bits_len += $dist->[1] + ceil(log2((1 + $distance_count) / (1 + ($distance_freq{$dist->[0]} // 0))));
+
+            my $len_idx = $LENGTH_INDICES[$n];
+            my $len     = $LENGTH_SYMBOLS[$len_idx];
+
+            $enc_bits_len += $len->[1] + ceil(log2((1 + $literal_count) / (1 + ($literal_freq{$len_idx + 256} // 0))));
+
+            my %freq;
+            foreach my $c (unpack('C*', substr($prefix, $p, $n))) {
+                ++$freq{$c};
+                $literal_bits_len += ceil(log2(($n + $literal_count) / ($freq{$c} + ($literal_freq{$c} // 0))));
+            }
+        }
+
+        if ($n >= $min_len and $enc_bits_len + 8 < $literal_bits_len) {
+
+            push @$lengths,           $n;
+            push @$indices,           $la - $p;
+            push @$has_backreference, 1;
+            push @$uncompressed,      ord($chars[$la + $n]);
+
+            my $dist_idx = $DISTANCE_INDICES[$la - $p];
+            my $dist     = $DISTANCE_SYMBOLS[$dist_idx];
+
+            ++$distance_count;
+            ++$distance_freq{$dist->[0]};
+
+            ++$literal_freq{$LENGTH_INDICES[$n] + 256};
+            ++$literal_freq{$uncompressed->[-1]};
+
+            $literal_count += 2;
+            $la            += $n + 1;
+            $prefix .= $token;
+        }
+        else {
+            my @bytes = unpack('C*', substr($prefix, $p, $n) . $chars[$la + $n]);
+
+            push @$has_backreference, (0) x ($n + 1);
+            push @$uncompressed, @bytes;
+            ++$literal_freq{$_} for @bytes;
+
+            $literal_count += $n + 1;
+            $la            += $n + 1;
+            $prefix .= $token;
+        }
+    }
+
+    return;
+}
+
+sub lz77_decompression ($uncompressed, $indices, $lengths) {
+
+    my $chunk  = '';
+    my $offset = 0;
+
+    foreach my $i (0 .. $#{$uncompressed}) {
+        $chunk .= substr($chunk, $offset - $indices->[$i], $lengths->[$i]) . chr($uncompressed->[$i]);
+        $offset += $lengths->[$i] + 1;
+    }
+
+    return $chunk;
 }
 
 # produce encode and decode dictionary from a tree
@@ -807,6 +807,68 @@ sub decode_alphabet ($fh) {
     return \@alphabet;
 }
 
+sub lzss_compression ($data, $out_fh) {
+    my (@uncompressed, @indices, @lengths, @has_backreference);
+    lz77_compression($data, \@uncompressed, \@indices, \@lengths, \@has_backreference);
+
+    my $est_ratio = length($data) / (scalar(@uncompressed) + scalar(@lengths) + 2 * scalar(@indices));
+    say "\nEst. ratio: ", $est_ratio, " (", scalar(@uncompressed), " uncompressed bytes)";
+
+    deflate_encode(\@uncompressed, \@indices, \@lengths, \@has_backreference, $out_fh);
+}
+
+sub lzss_decompression ($fh) {
+    my ($uncompressed, $indices, $lengths) = deflate_decode($fh);
+    lz77_decompression($uncompressed, $indices, $lengths);
+}
+
+sub compression ($chunk, $out_fh) {
+
+    my @chunk_bytes = unpack('C*', $chunk);
+    my $data        = pack('C*', @{rle4_encode(\@chunk_bytes)});
+
+    my ($bwt, $idx) = bwt_encode($data);
+
+    my @bytes    = unpack('C*', $bwt);
+    my @alphabet = sort { $a <=> $b } uniq(@bytes);
+
+    my $enc_bytes = mtf_encode(\@bytes, [@alphabet]);
+
+    if (max(@$enc_bytes) < 255) {
+        print $out_fh chr(1);
+        $enc_bytes = rle_encode($enc_bytes);
+    }
+    else {
+        print $out_fh chr(0);
+        $enc_bytes = rle4_encode($enc_bytes);
+    }
+
+    print $out_fh pack('N', $idx);
+    print $out_fh encode_alphabet(\@alphabet);
+    lzss_compression(pack('C*', @$enc_bytes), $out_fh);
+}
+
+sub decompression ($fh, $out_fh) {
+
+    my $rle_encoded = ord(getc($fh) // die "error");
+    my $idx         = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
+    my $alphabet    = decode_alphabet($fh);
+
+    my $dec   = lzss_decompression($fh);
+    my $bytes = [unpack('C*', $dec)];
+
+    if ($rle_encoded) {
+        $bytes = rle_decode($bytes);
+    }
+    else {
+        $bytes = rle4_decode($bytes);
+    }
+
+    $bytes = mtf_decode($bytes, [@$alphabet]);
+
+    print $out_fh pack('C*', @{rle4_decode([unpack('C*', bwt_decode(pack('C*', @$bytes), $idx))])});
+}
+
 # Compress file
 sub compress_file ($input, $output) {
 
@@ -824,40 +886,10 @@ sub compress_file ($input, $output) {
 
     # Compress data
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
-
-        my @chunk_bytes = unpack('C*', $chunk);
-        my $data        = pack('C*', @{rle4_encode(\@chunk_bytes)});
-
-        my ($bwt, $idx) = bwt_encode($data);
-
-        my @bytes    = unpack('C*', $bwt);
-        my @alphabet = sort { $a <=> $b } uniq(@bytes);
-
-        my $enc_bytes = mtf_encode(\@bytes, [@alphabet]);
-
-        if (max(@$enc_bytes) < 255) {
-            print $out_fh chr(1);
-            $enc_bytes = rle_encode($enc_bytes);
-        }
-        else {
-            print $out_fh chr(0);
-            $enc_bytes = rle4_encode($enc_bytes);
-        }
-
-        $data = pack('C*', @$enc_bytes);
-
-        my (@uncompressed, @indices, @lengths, @has_backreference);
-        lz77_compression($data, \@uncompressed, \@indices, \@lengths, \@has_backreference);
-
-        my $est_ratio = length($chunk) / (scalar(@uncompressed) + scalar(@lengths) + 2 * scalar(@indices));
-        say "\nEst. ratio: ", $est_ratio, " (", scalar(@uncompressed), " uncompressed bytes)";
-
-        print $out_fh pack('N', $idx);
-        print $out_fh encode_alphabet(\@alphabet);
-        deflate_encode(\@uncompressed, \@indices, \@lengths, \@has_backreference, $out_fh);
+        compression($chunk, $out_fh);
     }
 
-    # Close the output file
+    # Close the file
     close $out_fh;
 }
 
@@ -875,29 +907,11 @@ sub decompress_file ($input, $output) {
       or die "Can't open file <<$output>> for writing: $!";
 
     while (!eof($fh)) {
-
-        my $rle_encoded = ord(getc($fh) // die "error");
-        my $idx         = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
-        my $alphabet    = decode_alphabet($fh);
-
-        my ($uncompressed, $indices, $lengths) = deflate_decode($fh);
-        my $dec = lz77_decompression($uncompressed, $indices, $lengths);
-
-        my $bytes = [unpack('C*', $dec)];
-
-        if ($rle_encoded) {
-            $bytes = rle_decode($bytes);
-        }
-        else {
-            $bytes = rle4_decode($bytes);
-        }
-
-        $bytes = mtf_decode($bytes, [@$alphabet]);
-
-        print $out_fh pack('C*', @{rle4_decode([unpack('C*', bwt_decode(pack('C*', @$bytes), $idx))])});
+        decompression($fh, $out_fh);
     }
 
-    # Close the output file
+    # Close the file
+    close $fh;
     close $out_fh;
 }
 
