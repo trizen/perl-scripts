@@ -49,6 +49,7 @@ A nice collection of day-to-day Perl scripts.
     * [Bwrl2 file compression](./Compression/bwrl2_file_compression.pl)
     * [Bwrl file compression](./Compression/bwrl_file_compression.pl)
     * [Bwrla file compression](./Compression/bwrla_file_compression.pl)
+    * [Bwrlz2 file compression](./Compression/bwrlz2_file_compression.pl)
     * [Bwrlz file compression](./Compression/bwrlz_file_compression.pl)
     * [Bwrm file compression](./Compression/bwrm_file_compression.pl)
     * [Bwt file compression](./Compression/bwt_file_compression.pl)
