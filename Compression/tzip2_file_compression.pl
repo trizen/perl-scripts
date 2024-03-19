@@ -24,7 +24,7 @@ use File::Basename qw(basename);
 our $DEBUG = 0;
 
 use constant {
-              CHUNK_SIZE => 1024,             # in bytes
+              CHUNK_SIZE => 1024,              # in bytes
               SIGNATURE  => 'TZP2' . chr(1),
               FORMAT     => 'tzp2',
              };

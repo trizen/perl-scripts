@@ -5,7 +5,11 @@
 # Edit: 19 March 2024
 # https://github.com/trizen
 
-# Compress/decompress files using LZ77 compression + Huffman coding.
+# Compress/decompress files using LZ77 compression + Arithmetic Coding (in fixed bits).
+
+# Reference:
+#   Basic arithmetic coder in C++
+#   https://github.com/billbird/arith32
 
 use 5.020;
 use strict;
@@ -18,14 +22,18 @@ use File::Basename qw(basename);
 use List::Util     qw(max);
 
 use constant {
-              PKGNAME    => 'LZH',
-              VERSION    => '0.02',
-              FORMAT     => 'lzh',
+              PKGNAME    => 'LZA',
+              VERSION    => '0.01',
+              FORMAT     => 'lza',
               CHUNK_SIZE => 1 << 16,
              };
 
 # Container signature
-use constant SIGNATURE => uc(FORMAT) . chr(2);
+use constant SIGNATURE => uc(FORMAT) . chr(1);
+
+# Arithmetic Coding settings
+use constant BITS => 32;
+use constant MAX  => oct('0b' . ('1' x BITS));
 
 sub usage {
     my ($code) = @_;
@@ -266,70 +274,176 @@ sub lz77_decompression ($uncompressed, $indices, $lengths) {
     $ret;
 }
 
-# produce encode and decode dictionary from a tree
-sub walk ($node, $code, $h, $rev_h) {
+sub create_cfreq ($freq) {
 
-    my $c = $node->[0] // return ($h, $rev_h);
-    if (ref $c) { walk($c->[$_], $code . $_, $h, $rev_h) for ('0', '1') }
-    else        { $h->{$c} = $code; $rev_h->{$code} = $c }
+    my @cf;
+    my $T = 0;
 
-    return ($h, $rev_h);
-}
-
-# make a tree, and return resulting dictionaries
-sub mktree_from_freq ($freq) {
-
-    my @nodes = map { [$_, $freq->{$_}] } sort { $a <=> $b } keys %$freq;
-
-    do {    # poor man's priority queue
-        @nodes = sort { $a->[1] <=> $b->[1] } @nodes;
-        my ($x, $y) = splice(@nodes, 0, 2);
-        if (defined($x)) {
-            if (defined($y)) {
-                push @nodes, [[$x, $y], $x->[1] + $y->[1]];
-            }
-            else {
-                push @nodes, [[$x], $x->[1]];
-            }
-        }
-    } while (@nodes > 1);
-
-    walk($nodes[0], '', {}, {});
-}
-
-sub huffman_encode ($bytes, $dict) {
-    join('', @{$dict}{@$bytes});
-}
-
-sub huffman_decode ($bits, $hash) {
-    local $" = '|';
-    [split(' ', $bits =~ s/(@{[sort { length($a) <=> length($b) } keys %{$hash}]})/$hash->{$1} /gr)];    # very fast
-}
-
-sub create_huffman_entry ($bytes, $out_fh) {
-
-    my %freq;
-    ++$freq{$_} for @$bytes;
-
-    my ($h, $rev_h) = mktree_from_freq(\%freq);
-    my $enc = huffman_encode($bytes, $h);
-
-    my $max_symbol = max(keys %freq) // 0;
-    say "Max symbol: $max_symbol";
-
-    my @freqs;
-    foreach my $i (0 .. $max_symbol) {
-        push @freqs, $freq{$i} // 0;
+    foreach my $i (sort { $a <=> $b } keys %$freq) {
+        $freq->{$i} // next;
+        $cf[$i] = $T;
+        $T += $freq->{$i};
+        $cf[$i + 1] = $T;
     }
 
+    return (\@cf, $T);
+}
+
+sub ac_encode ($bytes_arr) {
+
+    my $enc        = '';
+    my $EOF_SYMBOL = (max(@$bytes_arr) // 0) + 1;
+    my @bytes      = (@$bytes_arr, $EOF_SYMBOL);
+
+    my %freq;
+    ++$freq{$_} for @bytes;
+
+    my ($cf, $T) = create_cfreq(\%freq);
+
+    if ($T > MAX) {
+        die "Too few bits: $T > ${\MAX}";
+    }
+
+    my $low      = 0;
+    my $high     = MAX;
+    my $uf_count = 0;
+
+    foreach my $c (@bytes) {
+
+        my $w = $high - $low + 1;
+
+        $high = ($low + int(($w * $cf->[$c + 1]) / $T) - 1) & MAX;
+        $low  = ($low + int(($w * $cf->[$c]) / $T)) & MAX;
+
+        if ($high > MAX) {
+            die "high > MAX: $high > ${\MAX}";
+        }
+
+        if ($low >= $high) { die "$low >= $high" }
+
+        while (1) {
+
+            if (($high >> (BITS - 1)) == ($low >> (BITS - 1))) {
+
+                my $bit = $high >> (BITS - 1);
+                $enc .= $bit;
+
+                if ($uf_count > 0) {
+                    $enc .= join('', 1 - $bit) x $uf_count;
+                    $uf_count = 0;
+                }
+
+                $low <<= 1;
+                ($high <<= 1) |= 1;
+            }
+            elsif (((($low >> (BITS - 2)) & 0x1) == 1) && ((($high >> (BITS - 2)) & 0x1) == 0)) {
+                ($high <<= 1) |= (1 << (BITS - 1));
+                $high |= 1;
+                ($low <<= 1) &= ((1 << (BITS - 1)) - 1);
+                ++$uf_count;
+            }
+            else {
+                last;
+            }
+
+            $low  &= MAX;
+            $high &= MAX;
+        }
+    }
+
+    $enc .= '0';
+    $enc .= '1';
+
+    while (length($enc) % 8 != 0) {
+        $enc .= '1';
+    }
+
+    return ($enc, \%freq);
+}
+
+sub ac_decode ($fh, $freq) {
+
+    my ($cf, $T) = create_cfreq($freq);
+
+    my @dec;
+    my $low  = 0;
+    my $high = MAX;
+    my $enc  = oct('0b' . join '', map { getc($fh) // 1 } 1 .. BITS);
+
+    my @table;
+    foreach my $i (sort { $a <=> $b } keys %$freq) {
+        foreach my $j ($cf->[$i] .. $cf->[$i + 1] - 1) {
+            $table[$j] = $i;
+        }
+    }
+
+    my $EOF_SYMBOL = max(keys %$freq) // 0;
+
+    while (1) {
+
+        my $w  = $high - $low + 1;
+        my $ss = int((($T * ($enc - $low + 1)) - 1) / $w);
+
+        my $i = $table[$ss] // last;
+        last if ($i == $EOF_SYMBOL);
+
+        push @dec, $i;
+
+        $high = ($low + int(($w * $cf->[$i + 1]) / $T) - 1) & MAX;
+        $low  = ($low + int(($w * $cf->[$i]) / $T)) & MAX;
+
+        if ($high > MAX) {
+            die "error";
+        }
+
+        if ($low >= $high) { die "$low >= $high" }
+
+        while (1) {
+
+            if (($high >> (BITS - 1)) == ($low >> (BITS - 1))) {
+                ($high <<= 1) |= 1;
+                $low <<= 1;
+                ($enc <<= 1) |= (getc($fh) // 1);
+            }
+            elsif (((($low >> (BITS - 2)) & 0x1) == 1) && ((($high >> (BITS - 2)) & 0x1) == 0)) {
+                ($high <<= 1) |= (1 << (BITS - 1));
+                $high |= 1;
+                ($low <<= 1) &= ((1 << (BITS - 1)) - 1);
+                $enc = (($enc >> (BITS - 1)) << (BITS - 1)) | (($enc & ((1 << (BITS - 2)) - 1)) << 1) | (getc($fh) // 1);
+            }
+            else {
+                last;
+            }
+
+            $low  &= MAX;
+            $high &= MAX;
+            $enc  &= MAX;
+        }
+    }
+
+    return \@dec;
+}
+
+sub create_ac_entry ($bytes, $out_fh) {
+
+    my ($enc, $freq) = ac_encode($bytes);
+    my $max_symbol = max(keys %$freq) // 0;
+
+    my @freqs;
+    foreach my $k (0 .. $max_symbol) {
+        push @freqs, $freq->{$k} // 0;
+    }
+
+    push @freqs, length($enc) >> 3;
+
     print $out_fh delta_encode(\@freqs);
-    print $out_fh pack("N",  length($enc));
     print $out_fh pack("B*", $enc);
 }
 
-sub decode_huffman_entry ($fh) {
+sub decode_ac_entry ($fh) {
 
-    my @freqs = @{delta_decode($fh)};
+    my @freqs    = @{delta_decode($fh)};
+    my $bits_len = pop(@freqs);
 
     my %freq;
     foreach my $i (0 .. $#freqs) {
@@ -338,12 +452,12 @@ sub decode_huffman_entry ($fh) {
         }
     }
 
-    my (undef, $rev_dict) = mktree_from_freq(\%freq);
+    say "Encoded length: $bits_len";
+    my $bits = read_bits($fh, $bits_len << 3);
 
-    my $enc_len = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
-
-    if ($enc_len > 0) {
-        return huffman_decode(read_bits($fh, $enc_len), $rev_dict);
+    if ($bits_len > 0) {
+        open my $bits_fh, '<:raw', \$bits;
+        return ac_decode($bits_fh, \%freq);
     }
 
     return [];
@@ -374,9 +488,9 @@ sub compress_file ($input, $output) {
     @indices      = unpack('C*', pack('S*', @indices));
     @uncompressed = unpack('C*', join('', @uncompressed));
 
-    create_huffman_entry(\@uncompressed, $out_fh);
-    create_huffman_entry(\@indices,      $out_fh);
-    create_huffman_entry(\@lengths,      $out_fh);
+    create_ac_entry(\@uncompressed, $out_fh);
+    create_ac_entry(\@indices,      $out_fh);
+    create_ac_entry(\@lengths,      $out_fh);
 
     # Close the file
     close $out_fh;
@@ -395,9 +509,9 @@ sub decompress_file ($input, $output) {
     open my $out_fh, '>:raw', $output
       or die "Can't open file <<$output>> for writing: $!";
 
-    my $uncompressed = decode_huffman_entry($fh);
-    my @indices      = unpack('S*', pack('C*', @{decode_huffman_entry($fh)}));
-    my $lengths      = decode_huffman_entry($fh);
+    my $uncompressed = decode_ac_entry($fh);
+    my @indices      = unpack('S*', pack('C*', @{decode_ac_entry($fh)}));
+    my $lengths      = decode_ac_entry($fh);
 
     print $out_fh lz77_decompression($uncompressed, \@indices, $lengths);
 

@@ -23,7 +23,9 @@ use constant {
 
     COMPRESSED_BYTE   => chr(1),
     UNCOMPRESSED_BYTE => chr(0),
-    CHUNK_SIZE        => 1 << 16,    # higher value = better compression
+
+    CHUNK_SIZE            => 1 << 16,    # higher value = better compression
+    RANDOM_DATA_THRESHOLD => 1,          # in ratio
 };
 
 # Container signature
@@ -485,7 +487,7 @@ sub compress_file ($input, $output) {
 
         say(scalar(@uncompressed), ' -> ', $est_ratio);
 
-        if ($est_ratio > 0.85) {
+        if ($est_ratio > RANDOM_DATA_THRESHOLD) {
             print $out_fh COMPRESSED_BYTE;
             create_ac_entry(\@uncompressed, $out_fh);
             create_ac_entry(\@lengths,      $out_fh);

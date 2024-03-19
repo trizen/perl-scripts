@@ -28,7 +28,7 @@ use constant {
 
     CHUNK_SIZE            => 1 << 16,                  # higher value = better compression
     LOOKAHEAD_LEN         => 128,
-    RANDOM_DATA_THRESHOLD => 0.85,                     # in ratio
+    RANDOM_DATA_THRESHOLD => 1,                        # in ratio
     MAX_INT               => oct('0b' . ('1' x 32)),
 };
 
