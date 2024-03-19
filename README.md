@@ -38,6 +38,7 @@ A nice collection of day-to-day Perl scripts.
     * [Rosettacode to markdown](./Book%20tools/rosettacode_to_markdown.pl)
     * [Update summary](./Book%20tools/update_summary.pl)
 * Compression
+    * [Bbwr file compression](./Compression/bbwr_file_compression.pl)
     * [Bwac file compression](./Compression/bwac_file_compression.pl)
     * [Bwad file compression](./Compression/bwad_file_compression.pl)
     * [Bwaz file compression](./Compression/bwaz_file_compression.pl)

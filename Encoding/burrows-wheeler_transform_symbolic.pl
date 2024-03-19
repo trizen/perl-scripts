@@ -5,7 +5,7 @@
 # Edit: 18 March 2024
 # https://github.com/trizen
 
-# Implementation of the Burrows–Wheeler transform, generalized to work over any array of numerical symbol.
+# Implementation of the Burrows–Wheeler transform, generalized to work over any array of numerical symbols.
 
 # References:
 #   Data Compression (Summer 2023) - Lecture 12 - The Burrows-Wheeler Transform (BWT)
