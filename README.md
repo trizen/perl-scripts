@@ -136,6 +136,7 @@ A nice collection of day-to-day Perl scripts.
     * [Double-elias gamma encoding](./Encoding/double-elias_gamma_encoding.pl)
     * [Elias gamma encoding](./Encoding/elias_gamma_encoding.pl)
     * [Eyes dropper](./Encoding/eyes_dropper.pl)
+    * [Fibonacci coding](./Encoding/fibonacci_coding.pl)
     * [Huffman coding](./Encoding/huffman_coding.pl)
     * [Int2bytes](./Encoding/int2bytes.pl)
     * [Integers binary encoding](./Encoding/integers_binary_encoding.pl)
