@@ -9,6 +9,7 @@ use File::Temp            qw(tempdir tempfile);
 use File::Compare         qw(compare);
 use File::Basename        qw(basename);
 use File::Spec::Functions qw(catfile);
+use List::Util            qw(min);
 use Time::HiRes           qw(gettimeofday tv_interval);
 
 my %ignored_methods = (
@@ -79,7 +80,7 @@ foreach my $entry (sort { $a->{size} <=> $b->{size} } @stats) {
 }
 
 say '';
-my $top = 20;
+my $top = min(20, scalar(@stats) - 1);
 
 say "Top $top fastest compression methods: ",
   join(', ', map { $_->{format} } (sort { $a->{compression_time} <=> $b->{compression_time} } grep { $_->{compression_time} > 0 } @stats)[0 .. $top - 1]);

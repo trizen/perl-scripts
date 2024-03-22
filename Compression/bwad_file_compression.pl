@@ -249,7 +249,7 @@ sub delta_decode ($fh, $double = 0) {
     return \@acc;
 }
 
-sub create_cfreq ($freq_value, $max_symbol) {
+sub _create_adaptive_cfreq ($freq_value, $max_symbol) {
 
     my $T = 0;
     my (@cf, @freq);
@@ -278,13 +278,13 @@ sub increment_freq ($c, $max_symbol, $freq, $cf) {
     return $T;
 }
 
-sub ac_encode ($bytes_arr) {
+sub adaptive_ac_encode ($bytes_arr) {
 
     my $enc   = '';
     my @bytes = (@$bytes_arr, (max(@$bytes_arr) // 0) + 1);
 
     my $max_symbol = max(@bytes) // 0;
-    my ($freq, $cf, $T) = create_cfreq(INITIAL_FREQ, $max_symbol);
+    my ($freq, $cf, $T) = _create_adaptive_cfreq(INITIAL_FREQ, $max_symbol);
 
     if ($T > MAX) {
         die "Too few bits: $T > ${\MAX}";
@@ -349,9 +349,9 @@ sub ac_encode ($bytes_arr) {
     return ($enc, $max_symbol);
 }
 
-sub ac_decode ($fh, $max_symbol) {
+sub adaptive_ac_decode ($fh, $max_symbol) {
 
-    my ($freq, $cf, $T) = create_cfreq(INITIAL_FREQ, $max_symbol);
+    my ($freq, $cf, $T) = _create_adaptive_cfreq(INITIAL_FREQ, $max_symbol);
 
     my @dec;
     my $low  = 0;
@@ -411,9 +411,9 @@ sub ac_decode ($fh, $max_symbol) {
     return \@dec;
 }
 
-sub create_ac_entry ($bytes, $out_fh) {
+sub create_adaptive_ac_entry ($bytes, $out_fh) {
 
-    my ($enc, $max_symbol) = ac_encode($bytes);
+    my ($enc, $max_symbol) = adaptive_ac_encode($bytes);
 
     say "Max symbol: $max_symbol\n";
 
@@ -421,7 +421,7 @@ sub create_ac_entry ($bytes, $out_fh) {
     print $out_fh pack("B*", $enc);
 }
 
-sub decode_ac_entry ($fh) {
+sub decode_adaptive_ac_entry ($fh) {
 
     my ($max_symbol, $enc_len) = @{delta_decode($fh, 1)};
 
@@ -430,7 +430,7 @@ sub decode_ac_entry ($fh) {
     if ($enc_len > 0) {
         my $bits = read_bits($fh, $enc_len);
         open my $bits_fh, '<:raw', \$bits;
-        return ac_decode($bits_fh, $max_symbol);
+        return adaptive_ac_decode($bits_fh, $max_symbol);
     }
 
     return [];
@@ -696,7 +696,7 @@ sub compression ($chunk, $out_fh) {
 
     print $out_fh pack('N', $idx);
     print $out_fh $alphabet_enc;
-    create_ac_entry($rle, $out_fh);
+    create_adaptive_ac_entry($rle, $out_fh);
 }
 
 sub decompression ($fh, $out_fh) {
@@ -707,7 +707,7 @@ sub decompression ($fh, $out_fh) {
     say "BWT index = $idx";
     say "Alphabet size: ", scalar(@$alphabet);
 
-    my $rle  = decode_ac_entry($fh);
+    my $rle  = decode_adaptive_ac_entry($fh);
     my $mtf  = rle_decode($rle);
     my $bwt  = mtf_decode($mtf, $alphabet);
     my $rle4 = bwt_decode(pack('C*', @$bwt), $idx);
