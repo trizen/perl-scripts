@@ -426,6 +426,7 @@ A nice collection of day-to-day Perl scripts.
     * [Gd similar images](./Image/gd_similar_images.pl)
     * [Gd star trails](./Image/gd_star_trails.pl)
     * [Gif2webp](./Image/gif2webp.pl)
+    * [Horizontal scrambler](./Image/horizontal_scrambler.pl)
     * [Image2ascii](./Image/image2ascii.pl)
     * [Image2audio](./Image/image2audio.pl)
     * [Image2digits](./Image/image2digits.pl)
