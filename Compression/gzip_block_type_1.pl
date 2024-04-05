@@ -5,7 +5,7 @@
 # Edit: 05 April 2024
 # https://github.com/trizen
 
-# Create a valid Gzip container, using DEFLATE's Block Type 1 with fixed-length prefix codes only, without LZ77.
+# Create a valid Gzip container, using DEFLATE's Block Type 1 with LZ77 + fixed-length prefix codes.
 
 # Reference:
 #   Data Compression (Summer 2023) - Lecture 11 - DEFLATE (gzip)
@@ -17,7 +17,7 @@ use File::Basename    qw(basename);
 use Compression::Util qw(:all);
 
 use constant {
-              CHUNK_SIZE => 0xffff,    # 2^16 - 1
+              WINDOW_SIZE => 32_768,    # 2^15
              };
 
 my $MAGIC  = pack('C*', 0x1f, 0x8b);    # magic MIME type
@@ -62,18 +62,57 @@ foreach my $i (280 .. 287) {
     $code_lengths[$i] = 8;
 }
 
-my ($dict) = huffman_from_code_lengths(\@code_lengths);
+my ($dict)      = huffman_from_code_lengths(\@code_lengths);
+my ($dist_dict) = huffman_from_code_lengths([(5) x 32]);
 
-while (read($in_fh, (my $chunk), CHUNK_SIZE)) {
+my ($DISTANCE_SYMBOLS, $LENGTH_SYMBOLS, $LENGTH_INDICES) = make_deflate_tables(WINDOW_SIZE);
+
+while (read($in_fh, (my $chunk), WINDOW_SIZE)) {
 
     my $chunk_len    = length($chunk);
     my $is_last      = eof($in_fh) ? '1' : '0';
     my $block_header = join('', $is_last, $block_type);
 
     $bitstring .= $block_header;
-    $bitstring .= huffman_encode([unpack('C*', $chunk), 256], $dict);
+    my ($literals, $indices, $lengths) = lzss_encode($chunk);
 
-    print $out_fh pack('b*', substr($bitstring, 0, length($bitstring) - (length($bitstring) % 8), ''));
+    foreach my $k (0 .. $#$literals) {
+
+        if ($lengths->[$k]) {
+
+            my $len  = $lengths->[$k];
+            my $dist = $indices->[$k];
+
+            {
+                my $len_idx = $LENGTH_INDICES->[$len];
+                my ($min, $bits) = @{$LENGTH_SYMBOLS->[$len_idx]};
+
+                $bitstring .= $dict->{$len_idx + 257 - 2};
+
+                if ($bits > 0) {
+                    $bitstring .= int2bits($len - $min, $bits);
+                }
+            }
+
+            {
+                my $dist_idx = find_deflate_index($dist, $DISTANCE_SYMBOLS);
+                my ($min, $bits) = @{$DISTANCE_SYMBOLS->[$dist_idx]};
+
+                $bitstring .= $dist_dict->{$dist_idx - 1};
+
+                if ($bits > 0) {
+                    $bitstring .= int2bits($dist - $min, $bits);
+                }
+            }
+        }
+
+        $bitstring .= $dict->{$literals->[$k]};
+    }
+
+    $bitstring .= $dict->{256};    # EOF symbol
+
+    my $bits_len = length($bitstring);
+    print $out_fh pack('b*', substr($bitstring, 0, $bits_len - ($bits_len % 8), ''));
 
     $crc32->add($chunk);
     $total_length += $chunk_len;
