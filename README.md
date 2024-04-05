@@ -464,6 +464,7 @@ A nice collection of day-to-day Perl scripts.
     * [Resize images](./Image/resize_images.pl)
     * [Rgb dump](./Image/rgb_dump.pl)
     * [Sharp 2x zoom](./Image/sharp_2x_zoom.pl)
+    * [Vertical scrambler](./Image/vertical_scrambler.pl)
     * [Visualize binary](./Image/visualize_binary.pl)
     * [Webp2png](./Image/webp2png.pl)
     * [Zuper image decoder](./Image/zuper_image_decoder.pl)
