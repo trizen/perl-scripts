@@ -413,6 +413,8 @@ A nice collection of day-to-day Perl scripts.
     * [2x zoom](./Image/2x_zoom.pl)
     * [Bitmap monochrome encoding decoding](./Image/bitmap_monochrome_encoding_decoding.pl)
     * [Bwt horizontal transform](./Image/bwt_horizontal_transform.pl)
+    * [Bwt rgb horizontal transform](./Image/bwt_rgb_horizontal_transform.pl)
+    * [Bwt rgb vertical transform](./Image/bwt_rgb_vertical_transform.pl)
     * [Bwt vertical transform](./Image/bwt_vertical_transform.pl)
     * [Collage](./Image/collage.pl)
     * [Complex transform](./Image/complex_transform.pl)
