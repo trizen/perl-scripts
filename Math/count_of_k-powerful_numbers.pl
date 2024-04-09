@@ -25,7 +25,7 @@
 use 5.020;
 use warnings;
 
-use ntheory qw(rootint divint gcd is_square_free mulint powint);
+use ntheory      qw(rootint divint gcd is_square_free mulint powint);
 use experimental qw(signatures);
 
 sub powerful_count ($n, $k = 2) {
@@ -46,14 +46,14 @@ sub powerful_count ($n, $k = 2) {
 
             __SUB__->(mulint($m, powint($v, $r)), $r - 1);
         }
-    }->(1, 2 * $k - 1);
+      }
+      ->(1, 2 * $k - 1);
 
     return $count;
 }
 
 foreach my $k (2 .. 10) {
-    printf("Number of %2d-powerful <= 10^j: {%s}\n", $k,
-           join(', ', map { powerful_count(powint(10, $_), $k) } 0 .. ($k + 15)));
+    printf("Number of %2d-powerful <= 10^j: {%s}\n", $k, join(', ', map { powerful_count(powint(10, $_), $k) } 0 .. ($k + 15)));
 }
 
 __END__

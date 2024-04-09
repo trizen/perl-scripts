@@ -22,7 +22,7 @@
 use 5.020;
 use warnings;
 
-use ntheory qw(:all);
+use ntheory      qw(:all);
 use experimental qw(signatures);
 
 sub powerful_numbers ($n, $k = 2) {
@@ -46,7 +46,8 @@ sub powerful_numbers ($n, $k = 2) {
             __SUB__->(mulint($m, powint($v, $r)), $r - 1);
         }
 
-    }->(1, 2 * $k - 1);
+      }
+      ->(1, 2 * $k - 1);
 
     sort { $a <=> $b } @powerful;
 }

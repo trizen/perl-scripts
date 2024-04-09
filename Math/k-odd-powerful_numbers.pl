@@ -41,7 +41,8 @@ sub odd_powerful_numbers ($n, $k = 2) {
 
             __SUB__->(mulint($m, powint($v, $r)), $r - 1);
         }
-    }->(1, 2 * $k - 1);
+      }
+      ->(1, 2 * $k - 1);
 
     sort { $a <=> $b } @odd_powerful;
 }
