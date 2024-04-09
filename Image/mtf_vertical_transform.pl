@@ -1,7 +1,8 @@
 #!/usr/bin/perl
 
 # Author: Trizen
-# Date: 96 April 2024
+# Date: 06 April 2024
+# Edit: 09 April 2024
 # https://github.com/trizen
 
 # Scramble the pixels in each column inside an image, using the Move-to-front transform (MTF).
@@ -23,20 +24,15 @@ sub scramble_image ($file, $function) {
 
     foreach my $x (0 .. $width - 1) {
 
-        my (@R, @G, @B);
+        my @column;
         foreach my $y (0 .. $height - 1) {
-            my ($R, $G, $B) = $image->rgb($image->getPixel($x, $y));
-            push @R, $R;
-            push @G, $G;
-            push @B, $B;
+            push @column, $image->rgb($image->getPixel($x, $y));
         }
 
-        @R = @{$function->(\@R, \@alphabet)};
-        @G = @{$function->(\@G, \@alphabet)};
-        @B = @{$function->(\@B, \@alphabet)};
+        @column = @{$function->(\@column, \@alphabet)};
 
         foreach my $y (0 .. $height - 1) {
-            $new_image->setPixel($x, $y, $new_image->colorAllocate($R[$y], $G[$y], $B[$y]));
+            $new_image->setPixel($x, $y, $new_image->colorAllocate(splice(@column, 0, 3)));
         }
     }
 
