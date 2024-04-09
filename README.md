@@ -62,6 +62,7 @@ A nice collection of day-to-day Perl scripts.
     * [Compress](./Compression/compress.pl)
     * [Gzip block type 1](./Compression/gzip_block_type_1.pl)
     * [Gzip block type 1 huffman only](./Compression/gzip_block_type_1_huffman_only.pl)
+    * [Gzip block type 2](./Compression/gzip_block_type_2.pl)
     * [Gzip block type 2 huffman only](./Compression/gzip_block_type_2_huffman_only.pl)
     * [Gzip comment](./Compression/gzip_comment.pl)
     * [Gzip store](./Compression/gzip_store.pl)

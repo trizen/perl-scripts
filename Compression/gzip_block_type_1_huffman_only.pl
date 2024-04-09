@@ -5,7 +5,7 @@
 # Edit: 05 April 2024
 # https://github.com/trizen
 
-# Create a valid Gzip container, using DEFLATE's Block Type 1 with fixed-length prefix codes only, without LZ77.
+# Create a valid Gzip container, using DEFLATE's Block Type 1 with fixed-length prefix codes only, without LZSS.
 
 # Reference:
 #   Data Compression (Summer 2023) - Lecture 11 - DEFLATE (gzip)
