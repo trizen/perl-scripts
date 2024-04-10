@@ -135,6 +135,8 @@ A nice collection of day-to-day Perl scripts.
     * [Vnt2txt simple](./Converters/vnt2txt_simple.pl)
     * [Xml2hash](./Converters/xml2hash.pl)
     * [Xpm c to perl](./Converters/xpm_c_to_perl.pl)
+    * [Zip2tar](./Converters/zip2tar.pl)
+    * [Zip2tar fast](./Converters/zip2tar_fast.pl)
 * Decoders
     * [Base64 decoding-tutorial](./Decoders/base64_decoding-tutorial.pl)
     * [Cnp info](./Decoders/cnp_info.pl)
