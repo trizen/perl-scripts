@@ -67,6 +67,10 @@ my ($dist_dict) = huffman_from_code_lengths([(5) x 32]);
 
 my ($DISTANCE_SYMBOLS, $LENGTH_SYMBOLS, $LENGTH_INDICES) = make_deflate_tables(WINDOW_SIZE);
 
+if (eof($in_fh)) {    # empty file
+    $bitstring = '1' . '10' . $dict->{256};
+}
+
 while (read($in_fh, (my $chunk), WINDOW_SIZE)) {
 
     my $chunk_len    = length($chunk);

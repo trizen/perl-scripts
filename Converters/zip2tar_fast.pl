@@ -111,7 +111,7 @@ else {
 foreach my $zip_file (@ARGV) {
     if (-f $zip_file) {
 
-        say ":: Processing: $zip_file";
+        say "\n:: Processing: $zip_file";
         my $tar_file = ($zip_file =~ s{\.zip\z}{}ri) . '.tar' . $tar_suffix;
 
         if (-e $tar_file) {

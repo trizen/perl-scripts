@@ -2,7 +2,7 @@
 
 # Author: Trizen
 # Date: 28 February 2021
-# Edit: 23 February 2024
+# Edit: 11 April 2024
 # https://github.com/trizen
 
 # Fast recursive algorithm for counting the number of k-powerful numbers in a given range [A,B].

@@ -64,6 +64,10 @@ foreach my $i (280 .. 287) {
 
 my ($dict) = huffman_from_code_lengths(\@code_lengths);
 
+if (eof($in_fh)) {    # empty file
+    $bitstring = '1' . '10' . $dict->{256};
+}
+
 while (read($in_fh, (my $chunk), CHUNK_SIZE)) {
 
     my $chunk_len    = length($chunk);

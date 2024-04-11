@@ -2,7 +2,7 @@
 
 # Author: Trizen
 # Date: 13 January 2024
-# Edit: 09 April 2024
+# Edit: 11 April 2024
 # https://github.com/trizen
 
 # Create a valid Gzip container, using DEFLATE's Block Type 2: LZSS + dynamic prefix codes.
@@ -15,7 +15,7 @@ use 5.036;
 use Digest::CRC       qw();
 use File::Basename    qw(basename);
 use Compression::Util qw(:all);
-use List::Util        qw(uniq);
+use List::Util        qw(all min max);
 
 use constant {
               WINDOW_SIZE => 32_768,    # 2^15
@@ -35,6 +35,112 @@ sub int2bits ($value, $size = 32) {
     scalar reverse sprintf("%0*b", $size, $value);
 }
 
+sub code_length_encoding ($dict) {
+
+    my @lengths;
+
+    foreach my $symbol (0 .. max(keys %$dict) // 0) {
+        if (exists($dict->{$symbol})) {
+            push @lengths, length($dict->{$symbol});
+        }
+        else {
+            push @lengths, 0;
+        }
+    }
+
+    my $size        = scalar(@lengths);
+    my $rl          = run_length(\@lengths);
+    my $offset_bits = '';
+
+    my @CL_symbols;
+
+    foreach my $pair (@$rl) {
+        my ($v, $run) = @$pair;
+
+        while ($v == 0 and $run >= 3) {
+
+            if ($run >= 11) {
+                push @CL_symbols, 18;
+                $run -= 11;
+                $offset_bits .= int2bits(min($run, 127), 7);
+                $run -= 127;
+            }
+
+            if ($run >= 3 and $run < 11) {
+                push @CL_symbols, 17;
+                $run -= 3;
+                $offset_bits .= int2bits(min($run, 7), 3);
+                $run -= 7;
+            }
+        }
+
+        if ($v == 0) {
+            push(@CL_symbols, (0) x $run) if ($run > 0);
+            next;
+        }
+
+        push @CL_symbols, $v;
+        $run -= 1;
+
+        while ($run >= 3) {
+            push @CL_symbols, 16;
+            $run -= 3;
+            $offset_bits .= int2bits(min($run, 3), 2);
+            $run -= 3;
+        }
+
+        push(@CL_symbols, ($v) x $run) if ($run > 0);
+    }
+
+    return (\@CL_symbols, $size, $offset_bits);
+}
+
+sub cl_encoded_bitstring ($cl_dict, $cl_symbols, $offset_bits) {
+
+    my $bitstring = '';
+    foreach my $cl_symbol (@$cl_symbols) {
+        $bitstring .= $cl_dict->{$cl_symbol};
+        if ($cl_symbol == 16) {
+            $bitstring .= substr($offset_bits, 0, 2, '');
+        }
+        elsif ($cl_symbol == 17) {
+            $bitstring .= substr($offset_bits, 0, 3, '');
+        }
+        elsif ($cl_symbol == 18) {
+            $bitstring .= substr($offset_bits, 0, 7, '');
+        }
+    }
+
+    return $bitstring;
+}
+
+sub create_cl_dictionary (@cl_symbols) {
+
+    my @keys;
+    my $freq = frequencies(\@cl_symbols);
+
+    while (1) {
+        my ($cl_dict) = huffman_from_freq($freq);
+
+        # The CL codes must have at most 7 bits
+        return $cl_dict if all { length($_) <= 7 } values %$cl_dict;
+
+        if (scalar(@keys) == 0) {
+            @keys = sort { $freq->{$b} <=> $freq->{$a} } keys %$freq;
+        }
+
+        # Scale down the frequencies and try again
+        foreach my $k (@keys) {
+            if ($freq->{$k} > 1) {
+                $freq->{$k} >>= 1;
+            }
+            else {
+                last;
+            }
+        }
+    }
+}
+
 open my $in_fh, '<:raw', $input
   or die "Can't open file <<$input>> for reading: $!";
 
@@ -51,6 +157,10 @@ my $block_type = '01';                                                          
 my @CL_order   = (16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15);
 
 my ($DISTANCE_SYMBOLS, $LENGTH_SYMBOLS, $LENGTH_INDICES) = make_deflate_tables(WINDOW_SIZE);
+
+if (eof($in_fh)) {    # empty file
+    $bitstring = '1' . '10' . '0000000';
+}
 
 while (read($in_fh, (my $chunk), WINDOW_SIZE)) {
 
@@ -95,40 +205,10 @@ while (read($in_fh, (my $chunk), WINDOW_SIZE)) {
     my ($dict)      = huffman_from_symbols([map { ref($_) eq 'ARRAY' ? $_->[0] : $_ } @len_symbols]);
     my ($dist_dict) = huffman_from_symbols([map { $_->[0] } @dist_symbols]);
 
-    my @LL_code_lengths;
-    foreach my $symbol (0 .. 285) {
-        if (exists($dict->{$symbol})) {
-            push @LL_code_lengths, length($dict->{$symbol});
-        }
-        else {
-            push @LL_code_lengths, 0;
-        }
-    }
+    my ($LL_code_lengths,       $LL_cl_len,       $LL_offset_bits)       = code_length_encoding($dict);
+    my ($distance_code_lengths, $distance_cl_len, $distance_offset_bits) = code_length_encoding($dist_dict);
 
-    while (scalar(@LL_code_lengths) > 1 and $LL_code_lengths[-1] == 0) {
-        pop @LL_code_lengths;
-    }
-
-    my @distance_code_lengths;
-    foreach my $symbol (0 .. 29) {
-        if (exists($dist_dict->{$symbol})) {
-            push @distance_code_lengths, length($dist_dict->{$symbol});
-        }
-        else {
-            push @distance_code_lengths, 0;
-        }
-    }
-
-    while (scalar(@distance_code_lengths) > 1 and $distance_code_lengths[-1] == 0) {
-        pop @distance_code_lengths;
-    }
-
-    my @CL_code;
-    foreach my $length (uniq(@LL_code_lengths, @distance_code_lengths)) {
-        push @CL_code, $length;
-    }
-
-    my ($cl_dict) = huffman_from_symbols(\@CL_code);
+    my $cl_dict = create_cl_dictionary(@$LL_code_lengths, @$distance_code_lengths);
 
     my @CL_code_lenghts;
     foreach my $symbol (0 .. 18) {
@@ -149,15 +229,14 @@ while (read($in_fh, (my $chunk), WINDOW_SIZE)) {
 
     my $CL_code_lengths_bitstring = join('', map { int2bits($_, 3) } @CL_code_lenghts);
 
-    # TODO: use RLE + offset bits for encoding the code lengths
-    my $LL_code_lengths_bitstring       = join('', @{$cl_dict}{@LL_code_lengths});
-    my $distance_code_lengths_bitstring = join('', @{$cl_dict}{@distance_code_lengths});
+    my $LL_code_lengths_bitstring       = cl_encoded_bitstring($cl_dict, $LL_code_lengths,       $LL_offset_bits);
+    my $distance_code_lengths_bitstring = cl_encoded_bitstring($cl_dict, $distance_code_lengths, $distance_offset_bits);
 
     # (5 bits) HLIT = (number of LL code entries present) - 257
-    my $HLIT = scalar(@LL_code_lengths) - 257;
+    my $HLIT = $LL_cl_len - 257;
 
     # (5 bits) HDIST = (number of distance code entries present) - 1
-    my $HDIST = scalar(@distance_code_lengths) - 1;
+    my $HDIST = $distance_cl_len - 1;
 
     # (4 bits) HCLEN = (number of CL code entries present) - 4
     my $HCLEN = scalar(@CL_code_lenghts) - 4;

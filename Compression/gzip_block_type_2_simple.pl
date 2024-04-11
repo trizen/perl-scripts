@@ -5,7 +5,7 @@
 # Edit: 09 April 2024
 # https://github.com/trizen
 
-# Create a valid Gzip container, using DEFLATE's Block Type 2 with dynamic prefix codes only, without LZSS.
+# Create a valid Gzip container, using DEFLATE's Block Type 2: LZSS + dynamic prefix codes.
 
 # Reference:
 #   Data Compression (Summer 2023) - Lecture 11 - DEFLATE (gzip)
@@ -18,7 +18,7 @@ use Compression::Util qw(:all);
 use List::Util        qw(uniq);
 
 use constant {
-              CHUNK_SIZE => (1 << 15) - 1,    # 2^15 - 1
+              WINDOW_SIZE => 32_768,    # 2^15
              };
 
 my $MAGIC  = pack('C*', 0x1f, 0x8b);    # magic MIME type
@@ -50,18 +50,54 @@ my $bitstring  = '';
 my $block_type = '01';                                                                 # 00 = store; 10 = LZSS + Fixed codes; 01 = LZSS + Dynamic codes
 my @CL_order   = (16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15);
 
+my ($DISTANCE_SYMBOLS, $LENGTH_SYMBOLS, $LENGTH_INDICES) = make_deflate_tables(WINDOW_SIZE);
+
 if (eof($in_fh)) {    # empty file
     $bitstring = '1' . '10' . '0000000';
 }
 
-while (read($in_fh, (my $chunk), CHUNK_SIZE)) {
+while (read($in_fh, (my $chunk), WINDOW_SIZE)) {
 
     my $chunk_len    = length($chunk);
     my $is_last      = eof($in_fh) ? '1' : '0';
     my $block_header = join('', $is_last, $block_type);
 
-    my @symbols = (unpack('C*', $chunk), 256);
-    my ($dict, $rev_dict) = huffman_from_symbols(\@symbols);
+    my ($literals, $distances, $lengths) = lzss_encode($chunk);
+
+    my @len_symbols;
+    my @dist_symbols;
+    my $offset_bits = '';
+
+    foreach my $k (0 .. $#$literals) {
+
+        if ($lengths->[$k]) {
+            my $len  = $lengths->[$k];
+            my $dist = $distances->[$k];
+
+            {
+                my $len_idx = $LENGTH_INDICES->[$len];
+                my ($min, $bits) = @{$LENGTH_SYMBOLS->[$len_idx]};
+
+                push @len_symbols, [$len_idx + 256 - 1, $bits];
+                $offset_bits .= int2bits($len - $min, $bits) if ($bits > 0);
+            }
+
+            {
+                my $dist_idx = find_deflate_index($dist, $DISTANCE_SYMBOLS);
+                my ($min, $bits) = @{$DISTANCE_SYMBOLS->[$dist_idx]};
+
+                push @dist_symbols, [$dist_idx - 1, $bits];
+                $offset_bits .= int2bits($dist - $min, $bits) if ($bits > 0);
+            }
+        }
+
+        push @len_symbols, $literals->[$k];
+    }
+
+    push @len_symbols, 256;    # end-of-block marker
+
+    my ($dict)      = huffman_from_symbols([map { ref($_) eq 'ARRAY' ? $_->[0] : $_ } @len_symbols]);
+    my ($dist_dict) = huffman_from_symbols([map { $_->[0] } @dist_symbols]);
 
     my @LL_code_lengths;
     foreach my $symbol (0 .. 285) {
@@ -79,18 +115,19 @@ while (read($in_fh, (my $chunk), CHUNK_SIZE)) {
 
     my @distance_code_lengths;
     foreach my $symbol (0 .. 29) {
-        push @distance_code_lengths, 0;
+        if (exists($dist_dict->{$symbol})) {
+            push @distance_code_lengths, length($dist_dict->{$symbol});
+        }
+        else {
+            push @distance_code_lengths, 0;
+        }
     }
 
     while (scalar(@distance_code_lengths) > 1 and $distance_code_lengths[-1] == 0) {
         pop @distance_code_lengths;
     }
 
-    my @CL_code;
-    foreach my $length (uniq(@LL_code_lengths, @distance_code_lengths)) {
-        push @CL_code, $length;
-    }
-
+    my @CL_code = uniq(@LL_code_lengths, @distance_code_lengths);
     my ($cl_dict) = huffman_from_symbols(\@CL_code);
 
     my @CL_code_lenghts;
@@ -111,8 +148,8 @@ while (read($in_fh, (my $chunk), CHUNK_SIZE)) {
     }
 
     my $CL_code_lengths_bitstring       = join('', map { int2bits($_, 3) } @CL_code_lenghts);
-    my $LL_code_lengths_bitstring       = join('', map { $cl_dict->{$_} } @LL_code_lengths);
-    my $distance_code_lengths_bitstring = join('', map { $cl_dict->{$_} } @distance_code_lengths);
+    my $LL_code_lengths_bitstring       = join('', @{$cl_dict}{@LL_code_lengths});
+    my $distance_code_lengths_bitstring = join('', @{$cl_dict}{@distance_code_lengths});
 
     # (5 bits) HLIT = (number of LL code entries present) - 257
     my $HLIT = scalar(@LL_code_lengths) - 257;
@@ -132,7 +169,22 @@ while (read($in_fh, (my $chunk), CHUNK_SIZE)) {
     $block_header .= $distance_code_lengths_bitstring;
 
     $bitstring .= $block_header;
-    $bitstring .= huffman_encode(\@symbols, $dict);
+
+    foreach my $symbol (@len_symbols) {
+        if (ref($symbol) eq 'ARRAY') {
+
+            my ($len, $len_offset) = @$symbol;
+            $bitstring .= $dict->{$len};
+            $bitstring .= substr($offset_bits, 0, $len_offset, '') if ($len_offset > 0);
+
+            my ($dist, $dist_offset) = @{shift(@dist_symbols)};
+            $bitstring .= $dist_dict->{$dist};
+            $bitstring .= substr($offset_bits, 0, $dist_offset, '') if ($dist_offset > 0);
+        }
+        else {
+            $bitstring .= $dict->{$symbol};
+        }
+    }
 
     print $out_fh pack('b*', substr($bitstring, 0, length($bitstring) - (length($bitstring) % 8), ''));
 

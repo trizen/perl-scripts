@@ -2,10 +2,10 @@
 
 # Author: Trizen
 # Date: 28 February 2021
-# Edit: 23 February 2024
+# Edit: 11 April 2024
 # https://github.com/trizen
 
-# Fast recursive algorithm for counting the number of k-powerful numbers in a given range [A,B].
+# Fast recursive algorithm for computing the sum of k-powerful numbers in a given range [A,B].
 # A positive integer n is considered k-powerful, if for every prime p that divides n, so does p^k.
 
 # Example:
