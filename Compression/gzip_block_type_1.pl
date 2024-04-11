@@ -30,10 +30,6 @@ my $OS     = chr(0x03);                 # 0x03 = Unix
 my $input  = $ARGV[0] // die "usage: $0 [input] [output.gz]\n";
 my $output = $ARGV[1] // (basename($input) . '.gz');
 
-sub int2bits ($value, $size = 32) {
-    scalar reverse sprintf("%0*b", $size, $value);
-}
-
 open my $in_fh, '<:raw', $input
   or die "Can't open file <<$input>> for reading: $!";
 
@@ -92,7 +88,7 @@ while (read($in_fh, (my $chunk), WINDOW_SIZE)) {
                 my ($min, $bits) = @{$LENGTH_SYMBOLS->[$len_idx]};
 
                 $bitstring .= $dict->{$len_idx + 256 - 1};
-                $bitstring .= int2bits($len - $min, $bits) if ($bits > 0);
+                $bitstring .= int2bits_lsb($len - $min, $bits) if ($bits > 0);
             }
 
             {
@@ -100,7 +96,7 @@ while (read($in_fh, (my $chunk), WINDOW_SIZE)) {
                 my ($min, $bits) = @{$DISTANCE_SYMBOLS->[$dist_idx]};
 
                 $bitstring .= $dist_dict->{$dist_idx - 1};
-                $bitstring .= int2bits($dist - $min, $bits) if ($bits > 0);
+                $bitstring .= int2bits_lsb($dist - $min, $bits) if ($bits > 0);
             }
         }
 
@@ -120,8 +116,8 @@ if ($bitstring ne '') {
     print $out_fh pack('b*', $bitstring);
 }
 
-print $out_fh pack('b*', int2bits($crc32->digest, 32));
-print $out_fh pack('b*', int2bits($total_length,  32));
+print $out_fh pack('b*', int2bits_lsb($crc32->digest, 32));
+print $out_fh pack('b*', int2bits_lsb($total_length,  32));
 
 close $in_fh;
 close $out_fh;

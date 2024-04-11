@@ -31,10 +31,6 @@ my $OS     = chr(0x03);                 # 0x03 = Unix
 my $input  = $ARGV[0] // die "usage: $0 [input] [output.gz]\n";
 my $output = $ARGV[1] // (basename($input) . '.gz');
 
-sub int2bits ($value, $size = 32) {
-    scalar reverse sprintf("%0*b", $size, $value);
-}
-
 open my $in_fh, '<:raw', $input
   or die "Can't open file <<$input>> for reading: $!";
 
@@ -79,7 +75,7 @@ while (read($in_fh, (my $chunk), WINDOW_SIZE)) {
                 my ($min, $bits) = @{$LENGTH_SYMBOLS->[$len_idx]};
 
                 push @len_symbols, [$len_idx + 256 - 1, $bits];
-                $offset_bits .= int2bits($len - $min, $bits) if ($bits > 0);
+                $offset_bits .= int2bits_lsb($len - $min, $bits) if ($bits > 0);
             }
 
             {
@@ -87,7 +83,7 @@ while (read($in_fh, (my $chunk), WINDOW_SIZE)) {
                 my ($min, $bits) = @{$DISTANCE_SYMBOLS->[$dist_idx]};
 
                 push @dist_symbols, [$dist_idx - 1, $bits];
-                $offset_bits .= int2bits($dist - $min, $bits) if ($bits > 0);
+                $offset_bits .= int2bits_lsb($dist - $min, $bits) if ($bits > 0);
             }
         }
 
@@ -147,7 +143,7 @@ while (read($in_fh, (my $chunk), WINDOW_SIZE)) {
         pop @CL_code_lenghts;
     }
 
-    my $CL_code_lengths_bitstring       = join('', map { int2bits($_, 3) } @CL_code_lenghts);
+    my $CL_code_lengths_bitstring       = join('', map { int2bits_lsb($_, 3) } @CL_code_lenghts);
     my $LL_code_lengths_bitstring       = join('', @{$cl_dict}{@LL_code_lengths});
     my $distance_code_lengths_bitstring = join('', @{$cl_dict}{@distance_code_lengths});
 
@@ -160,9 +156,9 @@ while (read($in_fh, (my $chunk), WINDOW_SIZE)) {
     # (4 bits) HCLEN = (number of CL code entries present) - 4
     my $HCLEN = scalar(@CL_code_lenghts) - 4;
 
-    $block_header .= int2bits($HLIT,  5);
-    $block_header .= int2bits($HDIST, 5);
-    $block_header .= int2bits($HCLEN, 4);
+    $block_header .= int2bits_lsb($HLIT,  5);
+    $block_header .= int2bits_lsb($HDIST, 5);
+    $block_header .= int2bits_lsb($HCLEN, 4);
 
     $block_header .= $CL_code_lengths_bitstring;
     $block_header .= $LL_code_lengths_bitstring;
@@ -196,8 +192,8 @@ if ($bitstring ne '') {
     print $out_fh pack('b*', $bitstring);
 }
 
-print $out_fh pack('b*', int2bits($crc32->digest, 32));
-print $out_fh pack('b*', int2bits($total_length,  32));
+print $out_fh pack('b*', int2bits_lsb($crc32->digest, 32));
+print $out_fh pack('b*', int2bits_lsb($total_length,  32));
 
 close $in_fh;
 close $out_fh;
