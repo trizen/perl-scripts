@@ -1,30 +1,37 @@
 #!/usr/bin/perl
 
 # Author: Trizen
-# Date: 15 December 2022
-# Edit: 13 June 2023
+# Date: 05 September 2023
+# Edit: 11 April 2024
 # https://github.com/trizen
 
-# Compress/decompress files using LZ77 compression + fixed-width integers encoding + Huffman coding.
+# Compress/decompress files using LZ77 compression + fixed-width integers encoding + Burrows-Wheeler Transform (BWT) + Huffman coding.
+
+# References:
+#   Data Compression (Summer 2023) - Lecture 13 - BZip2
+#   https://youtube.com/watch?v=cvoZbBZ3M2A
 
 use 5.036;
 use Getopt::Std       qw(getopts);
 use File::Basename    qw(basename);
+use List::Util        qw(uniq);
 use Compression::Util qw(:all);
 
 use constant {
-    PKGNAME => 'LZIH',
-    VERSION => '0.04',
-    FORMAT  => 'lzih',
+    PKGNAME => 'LZBW2',
+    VERSION => '0.01',
+    FORMAT  => 'lzbw2',
 
-    COMPRESSED_BYTE       => chr(1),
-    UNCOMPRESSED_BYTE     => chr(0),
+    COMPRESSED_BYTE   => chr(1),
+    UNCOMPRESSED_BYTE => chr(0),
+
     CHUNK_SIZE            => 1 << 16,    # higher value = better compression
+    LOOKAHEAD_LEN         => 128,
     RANDOM_DATA_THRESHOLD => 1,          # in ratio
 };
 
 # Container signature
-use constant SIGNATURE => uc(FORMAT) . chr(4);
+use constant SIGNATURE => uc(FORMAT) . chr(1);
 
 sub usage {
     my ($code) = @_;
@@ -119,28 +126,70 @@ sub compress_file ($input, $output) {
     # Print the header
     print $out_fh $header;
 
-    # Compress data
-    while (read($fh, (my $chunk), CHUNK_SIZE)) {
+    my $lengths_str      = '';
+    my $uncompressed_str = '';
 
-        my ($uncompressed, $indices, $lengths) = lz77_encode($chunk);
+    my @sizes;
+    my @distances_block;
 
-        my $est_ratio = length($chunk) / (4 * scalar(@$uncompressed));
+    open my $uc_fh,  '>:raw', \$uncompressed_str;
+    open my $len_fh, '>:raw', \$lengths_str;
 
-        say(scalar(@$uncompressed), ' -> ', $est_ratio);
+    my $create_bz2_block = sub {
 
-        if ($est_ratio > RANDOM_DATA_THRESHOLD) {
+        scalar(@sizes) > 0 or return;
+
+        print $out_fh COMPRESSED_BYTE;
+        print $out_fh delta_encode(\@sizes);
+
+        bz2_compress($uncompressed_str, $out_fh);
+        bz2_compress($lengths_str,      $out_fh);
+
+        my $ratio = uniq(@distances_block) / @distances_block * 100;
+
+        if ($ratio < 10) {
             print $out_fh COMPRESSED_BYTE;
-            create_huffman_entry($uncompressed, $out_fh);
-            create_huffman_entry($lengths,      $out_fh);
-            print $out_fh abc_encode($indices);
+            print $out_fh bz2_compress_symbolic(\@distances_block);
         }
         else {
             print $out_fh UNCOMPRESSED_BYTE;
-            create_huffman_entry([unpack('C*', $chunk)], $out_fh);
+            print $out_fh obh_encode(\@distances_block);
+        }
+
+        @sizes           = ();
+        @distances_block = ();
+
+        open $uc_fh,  '>:raw', \$uncompressed_str;
+        open $len_fh, '>:raw', \$lengths_str;
+    };
+
+    # Compress data
+    while (read($fh, (my $chunk), CHUNK_SIZE)) {
+
+        my ($literals, $distances, $lengths) = lz77_encode($chunk);
+
+        my $est_ratio = length($chunk) / (4 * scalar(@$literals));
+        say "Est. ratio: ", $est_ratio, " (", scalar(@$literals), " uncompressed bytes)";
+
+        if ($est_ratio > RANDOM_DATA_THRESHOLD) {
+            push @sizes, scalar(@$literals);
+            print $uc_fh pack('C*', @$literals);
+            print $len_fh pack('C*', @$lengths);
+            push @distances_block, @$distances;
+        }
+        else {
+            say "Random data detected...";
+            $create_bz2_block->();
+            print $out_fh UNCOMPRESSED_BYTE;
+            create_huffman_entry([unpack 'C*', $chunk], $out_fh);
+        }
+
+        if (length($uncompressed_str) >= CHUNK_SIZE) {
+            $create_bz2_block->();
         }
     }
 
-    # Close the file
+    $create_bz2_block->();
     close $out_fh;
 }
 
@@ -161,23 +210,37 @@ sub decompress_file ($input, $output) {
 
         my $compression_byte = getc($fh) // die "decompression error";
 
-        if ($compression_byte eq COMPRESSED_BYTE) {
-
-            my $uncompressed = decode_huffman_entry($fh);
-            my $lengths      = decode_huffman_entry($fh);
-            my $indices      = abc_decode($fh);
-
-            print $out_fh lz77_decode($uncompressed, $indices, $lengths);
-        }
-        elsif ($compression_byte eq UNCOMPRESSED_BYTE) {
+        if ($compression_byte eq UNCOMPRESSED_BYTE) {
+            say "Decoding random data...";
             print $out_fh pack('C*', @{decode_huffman_entry($fh)});
+            next;
         }
-        else {
-            die "Invalid compression...";
+        elsif ($compression_byte ne COMPRESSED_BYTE) {
+            die "decompression error";
+        }
+
+        my @sizes = @{delta_decode($fh)};
+
+        my @uncompressed = unpack('C*', bz2_decompress($fh));
+        my @lengths      = unpack('C*', bz2_decompress($fh));
+        my @distances    = @{(getc($fh) eq COMPRESSED_BYTE) ? bz2_decompress_symbolic($fh) : obh_decode($fh)};
+
+        while (@uncompressed) {
+
+            my $size = shift(@sizes) // die "decompression error";
+
+            my @uncompressed_chunk = splice(@uncompressed, 0, $size);
+            my @lengths_chunk      = splice(@lengths,      0, $size);
+            my @distances_chunk    = splice(@distances,    0, $size);
+
+            scalar(@uncompressed_chunk) == $size or die "decompression error";
+            scalar(@lengths_chunk) == $size      or die "decompression error";
+            scalar(@distances_chunk) == $size    or die "decompression error";
+
+            print $out_fh lz77_decode(\@uncompressed_chunk, \@distances_chunk, \@lengths_chunk);
         }
     }
 
-    # Close the file
     close $fh;
     close $out_fh;
 }

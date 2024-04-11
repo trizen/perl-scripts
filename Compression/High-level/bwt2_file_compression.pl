@@ -12,10 +12,8 @@
 #   https://youtube.com/watch?v=cvoZbBZ3M2A
 
 use 5.036;
-
 use Getopt::Std       qw(getopts);
 use File::Basename    qw(basename);
-use List::Util        qw(max uniq);
 use Compression::Util qw(:all);
 
 use constant {

@@ -14,7 +14,6 @@
 #   https://youtube.com/watch?v=SJPvNi4HrWQ
 
 use 5.036;
-
 use Getopt::Std       qw(getopts);
 use File::Basename    qw(basename);
 use Compression::Util qw(:all);

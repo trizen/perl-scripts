@@ -1,41 +1,26 @@
 #!/usr/bin/perl
 
 # Author: Trizen
-# Date: 15 June 2023
-# Edit: 21 March 2024
+# Date: 15 December 2022
+# Edit: 11 April 2024
 # https://github.com/trizen
 
-# Compress/decompress files using Burrows-Wheeler Transform (BWT) + Move-to-front transform (MTF) + LZ77 compression (LZSS) + Arithmetic Coding (in fixed bits).
-
-# Encoding the literals and the pointers using a DEFLATE-like approach.
-
-# References:
-#   Data Compression (Summer 2023) - Lecture 11 - DEFLATE (gzip)
-#   https://youtube.com/watch?v=SJPvNi4HrWQ
-#
-#   Data Compression (Summer 2023) - Lecture 13 - BZip2
-#   https://youtube.com/watch?v=cvoZbBZ3M2A
-#
-#   Basic arithmetic coder in C++
-#   https://github.com/billbird/arith32
+# Compress/decompress files using LZ77 compression + Huffman coding.
 
 use 5.036;
 use Getopt::Std       qw(getopts);
 use File::Basename    qw(basename);
-use List::Util        qw(max uniq);
 use Compression::Util qw(:all);
 
 use constant {
-    PKGNAME => 'BWLZA',
-    VERSION => '0.03',
-    FORMAT  => 'bwlza',
-
-    CHUNK_SIZE    => 1 << 17,    # higher value = better compression
-    LOOKAHEAD_LEN => 128,
-};
+              PKGNAME    => 'LZH',
+              VERSION    => '0.02',
+              FORMAT     => 'lzh',
+              CHUNK_SIZE => 1 << 16,
+             };
 
 # Container signature
-use constant SIGNATURE => uc(FORMAT) . chr(3);
+use constant SIGNATURE => uc(FORMAT) . chr(2);
 
 sub usage {
     my ($code) = @_;
@@ -115,53 +100,6 @@ sub main {
     }
 }
 
-sub compression ($chunk, $out_fh) {
-
-    my @chunk_bytes = unpack('C*', $chunk);
-    my $data        = pack('C*', @{rle4_encode(\@chunk_bytes, 254)});
-
-    my ($bwt, $idx) = bwt_encode($data);
-
-    my @bytes    = unpack('C*', $bwt);
-    my @alphabet = sort { $a <=> $b } uniq(@bytes);
-
-    my $enc_bytes = mtf_encode(\@bytes, \@alphabet);
-
-    if (max(@$enc_bytes) < 255) {
-        print $out_fh chr(1);
-        $enc_bytes = zrle_encode($enc_bytes);
-    }
-    else {
-        print $out_fh chr(0);
-        $enc_bytes = rle4_encode($enc_bytes);
-    }
-
-    print $out_fh pack('N', $idx);
-    print $out_fh encode_alphabet(\@alphabet);
-    lzss_compress(pack('C*', @$enc_bytes), $out_fh, \&create_ac_entry);
-}
-
-sub decompression ($fh, $out_fh) {
-
-    my $rle_encoded = ord(getc($fh) // die "error");
-    my $idx         = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
-    my $alphabet    = decode_alphabet($fh);
-
-    my $dec   = lzss_decompress($fh, undef, \&decode_ac_entry);
-    my $bytes = [unpack('C*', $dec)];
-
-    if ($rle_encoded) {
-        $bytes = zrle_decode($bytes);
-    }
-    else {
-        $bytes = rle4_decode($bytes);
-    }
-
-    $bytes = mtf_decode($bytes, $alphabet);
-
-    print $out_fh pack('C*', @{rle4_decode([unpack('C*', bwt_decode(pack('C*', @$bytes), $idx))])});
-}
-
 # Compress file
 sub compress_file ($input, $output) {
 
@@ -177,12 +115,23 @@ sub compress_file ($input, $output) {
     # Print the header
     print $out_fh $header;
 
+    my (@uncompressed, @distances, @lengths);
+
     # Compress data
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
-        compression($chunk, $out_fh);
+        my ($lits, $dists, $lens) = lz77_encode($chunk);
+        push @uncompressed, @$lits;
+        push @distances,    @$dists;
+        push @lengths,      @$lens;
     }
 
-    # Close the output file
+    @distances = unpack('C*', pack('S*', @distances));
+
+    create_huffman_entry(\@uncompressed, $out_fh);
+    create_huffman_entry(\@distances,    $out_fh);
+    create_huffman_entry(\@lengths,      $out_fh);
+
+    # Close the file
     close $out_fh;
 }
 
@@ -199,11 +148,14 @@ sub decompress_file ($input, $output) {
     open my $out_fh, '>:raw', $output
       or die "Can't open file <<$output>> for writing: $!";
 
-    while (!eof($fh)) {
-        decompression($fh, $out_fh);
-    }
+    my $uncompressed = decode_huffman_entry($fh);
+    my @distances    = unpack('S*', pack('C*', @{decode_huffman_entry($fh)}));
+    my $lengths      = decode_huffman_entry($fh);
 
-    # Close the output file
+    print $out_fh lz77_decode($uncompressed, \@distances, $lengths);
+
+    # Close the file
+    close $fh;
     close $out_fh;
 }
 
