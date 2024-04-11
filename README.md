@@ -263,6 +263,7 @@ A nice collection of day-to-day Perl scripts.
     * [Js beautify](./Formatters/js_beautify)
     * [Reformat literal perl strings](./Formatters/reformat_literal_perl_strings.pl)
     * [Replace html links](./Formatters/replace_html_links.pl)
+    * [Sort perl subroutines](./Formatters/sort_perl_subroutines.pl)
     * [Word columner](./Formatters/word_columner.pl)
 * Game solvers
     * [Asciiplanes-player](./Game%20solvers/asciiplanes-player.pl)
