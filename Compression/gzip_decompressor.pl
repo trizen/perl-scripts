@@ -34,6 +34,58 @@ sub extract_block_type_0 ($in_fh, $buffer) {
     return $chunk;
 }
 
+sub extract_block_type_1 ($in_fh, $buffer) {
+
+    state $rev_dict;
+
+    if (!defined($rev_dict)) {
+
+        my @code_lengths = (0) x 288;
+        foreach my $i (0 .. 143) {
+            $code_lengths[$i] = 8;
+        }
+        foreach my $i (144 .. 255) {
+            $code_lengths[$i] = 9;
+        }
+        foreach my $i (256 .. 279) {
+            $code_lengths[$i] = 7;
+        }
+        foreach my $i (280 .. 287) {
+            $code_lengths[$i] = 8;
+        }
+
+        (undef, $rev_dict) = huffman_from_code_lengths(\@code_lengths);
+    }
+
+    my $data = '';
+    my $code = '';
+
+    while (1) {
+        $code .= read_bit_lsb($in_fh, $buffer);
+
+        if (length($code) > 15) {
+            die "[!] Something went wrong: size($code) > 15!\n";
+        }
+
+        if (exists($rev_dict->{$code})) {
+            my $symbol = $rev_dict->{$code};
+            if ($symbol <= 255) {
+                $data .= chr($symbol);
+            }
+            elsif ($symbol == 256) {    # end-of-block marker
+                last;
+            }
+            else {  # LZSS decoding
+                say $data;
+                ...;                    # TODO
+            }
+            $code = '';
+        }
+    }
+
+    return $data;
+}
+
 sub extract ($in_fh, $output_file, $defined_output_file) {
 
     my $MAGIC = (getc($in_fh) // die "error") . (getc($in_fh) // die "error");
@@ -90,17 +142,16 @@ sub extract ($in_fh, $output_file, $defined_output_file) {
         my $is_last    = read_bit_lsb($in_fh, \$buffer);
         my $block_type = read_bit_lsb($in_fh, \$buffer) . read_bit_lsb($in_fh, \$buffer);
 
+        my $chunk = '';
+
         if ($block_type eq '00') {
             print STDERR ":: Extracting block of type 0\n";
             read_bit_lsb($in_fh, \$buffer) for (1 .. 5);    # padding
-            my $chunk = extract_block_type_0($in_fh, \$buffer);
-            print $out_fh $chunk;
-            $crc32->add($chunk);
-            $actual_length += length($chunk);
+            $chunk = extract_block_type_0($in_fh, \$buffer);
         }
         elsif ($block_type eq '10') {
             print STDERR ":: Extracting block of type 1\n";
-            ...;                                            # TODO
+            $chunk = extract_block_type_1($in_fh, \$buffer);
         }
         elsif ($block_type eq '01') {
             print STDERR ":: Extracting block of type 2\n";
@@ -110,8 +161,14 @@ sub extract ($in_fh, $output_file, $defined_output_file) {
             die "[!] Unknown block of type: $block_type";
         }
 
+        print $out_fh $chunk;
+        $crc32->add($chunk);
+        $actual_length += length($chunk);
+
         last if $is_last;
     }
+
+    $buffer = '';    # discard any padding bits
 
     my $stored_crc32 = bits2int_lsb($in_fh, 32, \$buffer);
     my $actual_crc32 = $crc32->digest;
