@@ -24,8 +24,7 @@ use constant {
     VERSION => '0.02',
     FORMAT  => 'bwad',
 
-    CHUNK_SIZE    => 1 << 17,
-    LOOKAHEAD_LEN => 128,
+    CHUNK_SIZE => 1 << 17,
 };
 
 # Container signature

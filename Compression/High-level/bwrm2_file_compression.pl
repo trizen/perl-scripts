@@ -1,11 +1,11 @@
 #!/usr/bin/perl
 
 # Author: Trizen
-# Date: 14 June 2023
-# Edit: 21 March 2024
+# Date: 10 September 2023
+# Edit: 13 April 2024
 # https://github.com/trizen
 
-# Compress/decompress files using Burrows-Wheeler Transform (BWT) + Move-to-Front Transform + Run-length encoding + Huffman coding.
+# Compress/decompress files using Burrows-Wheeler Transform (BWT) + Run-Length encoding + MTF + ZRLE + Bzip2 on lengths.
 
 # Reference:
 #   Data Compression (Summer 2023) - Lecture 13 - BZip2
@@ -17,15 +17,15 @@ use File::Basename    qw(basename);
 use Compression::Util qw(:all);
 
 use constant {
-    PKGNAME => 'BWT',
-    VERSION => '0.02',
-    FORMAT  => 'bwt',
+    PKGNAME => 'BWRM2',
+    VERSION => '0.01',
+    FORMAT  => 'bwrm2',
 
-    CHUNK_SIZE => 1 << 17,
+    CHUNK_SIZE => 1 << 17,    # higher value = better compression
 };
 
 # Container signature
-use constant SIGNATURE => uc(FORMAT) . chr(2);
+use constant SIGNATURE => uc(FORMAT) . chr(1);
 
 sub usage {
     my ($code) = @_;
@@ -105,6 +105,42 @@ sub main {
     }
 }
 
+sub VLR_encoding ($bytes) {
+
+    my @lengths;
+    my @uncompressed;
+
+    my $rle = run_length($bytes, 256);
+
+    foreach my $cv (@$rle) {
+        my ($c, $v) = @$cv;
+        push @uncompressed, $c;
+        push @lengths,      $v - 1;
+    }
+
+    return (\@uncompressed, \@lengths);
+}
+
+sub VLR_decoding ($uncompressed, $lengths) {
+
+    my $decoded = '';
+
+    foreach my $i (0 .. $#{$uncompressed}) {
+
+        my $c   = $uncompressed->[$i];
+        my $len = $lengths->[$i];
+
+        if ($len > 0) {
+            $decoded .= chr($c) x ($len + 1);
+        }
+        else {
+            $decoded .= chr($c);
+        }
+    }
+
+    return $decoded;
+}
+
 # Compress file
 sub compress_file ($input, $output) {
 
@@ -122,10 +158,16 @@ sub compress_file ($input, $output) {
 
     # Compress data
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
-        bz2_compress($chunk, $out_fh);
+
+        my ($bwt,          $idx)     = bwt_encode($chunk);
+        my ($uncompressed, $lengths) = VLR_encoding([unpack('C*', $bwt)]);
+
+        print $out_fh pack('N', $idx);
+
+        mrl_compress($uncompressed, $out_fh);
+        bz2_compress(pack('C*', @$lengths), $out_fh);
     }
 
-    # Close the file
     close $out_fh;
 }
 
@@ -143,10 +185,15 @@ sub decompress_file ($input, $output) {
       or die "Can't open file <<$output>> for writing: $!";
 
     while (!eof($fh)) {
-        bz2_decompress($fh, $out_fh);
+
+        my $idx = unpack('N', join('', map { getc($fh) // die "decompression error" } 1 .. 4));
+
+        my $uncompressed = mrl_decompress($fh);
+        my $lengths      = bz2_decompress($fh);
+        my $dec          = VLR_decoding($uncompressed, [unpack('C*', $lengths)]);
+        print $out_fh bwt_decode($dec, $idx);
     }
 
-    # Close the file
     close $fh;
     close $out_fh;
 }

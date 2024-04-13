@@ -30,8 +30,7 @@ use constant {
     VERSION => '0.01',
     FORMAT  => 'bwlzad',
 
-    CHUNK_SIZE    => 1 << 17,    # higher value = better compression
-    LOOKAHEAD_LEN => 128,
+    CHUNK_SIZE => 1 << 17,    # higher value = better compression
 };
 
 # Arithmetic Coding settings

@@ -24,8 +24,7 @@ use constant {
     VERSION => '0.01',
     FORMAT  => 'bwlzss',
 
-    CHUNK_SIZE    => 1 << 17,    # higher value = better compression
-    LOOKAHEAD_LEN => 128,
+    CHUNK_SIZE => 1 << 17,    # higher value = better compression
 };
 
 # Container signature

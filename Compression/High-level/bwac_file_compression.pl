@@ -2,14 +2,17 @@
 
 # Author: Trizen
 # Date: 14 June 2023
-# Edit: 21 March 2024
+# Edit: 13 April 2024
 # https://github.com/trizen
 
-# Compress/decompress files using Burrows-Wheeler Transform (BWT) + Move-to-Front Transform + Run-length encoding + Huffman coding.
+# Compress/decompress files using Burrows-Wheeler Transform (BWT) + Move-to-Front Transform + Run-length encoding + Arithmetic Coding.
 
-# Reference:
+# References:
 #   Data Compression (Summer 2023) - Lecture 13 - BZip2
 #   https://youtube.com/watch?v=cvoZbBZ3M2A
+#
+#   Basic arithmetic coder in C++
+#   https://github.com/billbird/arith32
 
 use 5.036;
 use Getopt::Std       qw(getopts);
@@ -17,11 +20,11 @@ use File::Basename    qw(basename);
 use Compression::Util qw(:all);
 
 use constant {
-    PKGNAME => 'BWT',
+    PKGNAME => 'BWAC',
     VERSION => '0.02',
-    FORMAT  => 'bwt',
+    FORMAT  => 'bwac',
 
-    CHUNK_SIZE => 1 << 17,
+    CHUNK_SIZE => 1 << 17,    # higher value = better compression
 };
 
 # Container signature
@@ -122,7 +125,7 @@ sub compress_file ($input, $output) {
 
     # Compress data
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
-        bz2_compress($chunk, $out_fh);
+        bz2_compress($chunk, $out_fh, \&create_ac_entry);
     }
 
     # Close the file
@@ -143,7 +146,7 @@ sub decompress_file ($input, $output) {
       or die "Can't open file <<$output>> for writing: $!";
 
     while (!eof($fh)) {
-        bz2_decompress($fh, $out_fh);
+        bz2_decompress($fh, $out_fh, \&decode_ac_entry);
     }
 
     # Close the file

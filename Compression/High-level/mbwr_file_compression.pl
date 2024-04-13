@@ -2,10 +2,10 @@
 
 # Author: Trizen
 # Date: 14 June 2023
-# Edit: 21 March 2024
+# Edit: 13 April 2024
 # https://github.com/trizen
 
-# Compress/decompress files using Burrows-Wheeler Transform (BWT) + Move-to-Front Transform + Run-length encoding + Huffman coding.
+# Compress/decompress files using Move-to-Front Transform (MTF) + Burrows-Wheeler Transform (BWT) + Run-length encoding (RLE) + Huffman coding.
 
 # Reference:
 #   Data Compression (Summer 2023) - Lecture 13 - BZip2
@@ -17,15 +17,15 @@ use File::Basename    qw(basename);
 use Compression::Util qw(:all);
 
 use constant {
-    PKGNAME => 'BWT',
-    VERSION => '0.02',
-    FORMAT  => 'bwt',
+    PKGNAME => 'MBWR',
+    VERSION => '0.01',
+    FORMAT  => 'mbwr',
 
     CHUNK_SIZE => 1 << 17,
 };
 
 # Container signature
-use constant SIGNATURE => uc(FORMAT) . chr(2);
+use constant SIGNATURE => uc(FORMAT) . chr(1);
 
 sub usage {
     my ($code) = @_;
@@ -105,6 +105,19 @@ sub main {
     }
 }
 
+sub compression ($chunk, $out_fh) {
+    my ($mtf, $alphabet) = mtf_encode([unpack('C*', $chunk)]);
+    print $out_fh encode_alphabet($alphabet);
+    bz2_compress(pack('C*', @$mtf), $out_fh);
+}
+
+sub decompression ($fh, $out_fh) {
+    my $alphabet = decode_alphabet($fh);
+    my @mtf      = unpack('C*', bz2_decompress($fh));
+    my $data     = mtf_decode(\@mtf, $alphabet);
+    print $out_fh pack('C*', @$data);
+}
+
 # Compress file
 sub compress_file ($input, $output) {
 
@@ -122,7 +135,7 @@ sub compress_file ($input, $output) {
 
     # Compress data
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
-        bz2_compress($chunk, $out_fh);
+        compression($chunk, $out_fh);
     }
 
     # Close the file
@@ -143,7 +156,7 @@ sub decompress_file ($input, $output) {
       or die "Can't open file <<$output>> for writing: $!";
 
     while (!eof($fh)) {
-        bz2_decompress($fh, $out_fh);
+        decompression($fh, $out_fh);
     }
 
     # Close the file

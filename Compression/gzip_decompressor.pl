@@ -37,6 +37,7 @@ sub extract_block_type_0 ($in_fh, $buffer) {
 sub extract_block_type_1 ($in_fh, $buffer) {
 
     state $rev_dict;
+    state $dist_rev_dict;
 
     if (!defined($rev_dict)) {
 
@@ -54,7 +55,8 @@ sub extract_block_type_1 ($in_fh, $buffer) {
             $code_lengths[$i] = 8;
         }
 
-        (undef, $rev_dict) = huffman_from_code_lengths(\@code_lengths);
+        (undef, $rev_dict)      = huffman_from_code_lengths(\@code_lengths);
+        (undef, $dist_rev_dict) = huffman_from_code_lengths([(5) x 32]);
     }
 
     my $data = '';
@@ -63,8 +65,8 @@ sub extract_block_type_1 ($in_fh, $buffer) {
     while (1) {
         $code .= read_bit_lsb($in_fh, $buffer);
 
-        if (length($code) > 15) {
-            die "[!] Something went wrong: size($code) > 15!\n";
+        if (length($code) > 9) {
+            die "[!] Something went wrong: length($code) > 9.\n";
         }
 
         if (exists($rev_dict->{$code})) {
@@ -75,7 +77,7 @@ sub extract_block_type_1 ($in_fh, $buffer) {
             elsif ($symbol == 256) {    # end-of-block marker
                 last;
             }
-            else {  # LZSS decoding
+            else {                      # LZSS decoding
                 say $data;
                 ...;                    # TODO
             }
