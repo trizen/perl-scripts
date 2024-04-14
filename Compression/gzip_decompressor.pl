@@ -7,7 +7,7 @@
 
 # Decompress GZIP files (.gz).
 
-# Work in progress: only block type 0 and block type 1 are supported for now.
+# DEFLATE's block type 0, 1 and 2 are all supported.
 
 # Reference:
 #   Data Compression (Summer 2023) - Lecture 11 - DEFLATE (gzip)
@@ -19,7 +19,7 @@ use List::Util        qw(max);
 use Compression::Util qw(:all);
 
 use constant {
-              MAX_WINDOW_SIZE => 32_768,    # 2^15
+              WINDOW_SIZE => 1 << 15,    # maximum window size in DEFLATE: 2^15
              };
 
 sub extract_block_type_0 ($in_fh, $buffer) {
@@ -39,9 +39,9 @@ sub extract_block_type_0 ($in_fh, $buffer) {
     return $chunk;
 }
 
-my ($DISTANCE_SYMBOLS, $LENGTH_SYMBOLS) = make_deflate_tables(MAX_WINDOW_SIZE);
+my ($DISTANCE_SYMBOLS, $LENGTH_SYMBOLS) = make_deflate_tables(WINDOW_SIZE);
 
-sub decode_huffman($in_fh, $buffer, $rev_dict, $dist_rev_dict) {
+sub decode_huffman($in_fh, $buffer, $rev_dict, $dist_rev_dict, $search_window) {
 
     my $data = '';
     my $code = '';
@@ -61,14 +61,15 @@ sub decode_huffman($in_fh, $buffer, $rev_dict, $dist_rev_dict) {
             my $symbol = $rev_dict->{$code};
 
             if ($symbol <= 255) {
-                $data .= chr($symbol);
+                $data           .= chr($symbol);
+                $$search_window .= chr($symbol);
             }
             elsif ($symbol == 256) {    # end-of-block marker
+                $code = '';
                 last;
             }
             else {                      # LZSS decoding
                 my ($length, $LL_bits) = @{$LENGTH_SYMBOLS->[$symbol - 256 + 1]};
-
                 $length += bits2int_lsb($in_fh, $LL_bits, $buffer) if ($LL_bits > 0);
 
                 my $dist_code = '';
@@ -88,23 +89,25 @@ sub decode_huffman($in_fh, $buffer, $rev_dict, $dist_rev_dict) {
                 my ($dist, $dist_bits) = @{$DISTANCE_SYMBOLS->[$dist_rev_dict->{$dist_code} + 1]};
                 $dist += bits2int_lsb($in_fh, $dist_bits, $buffer) if ($dist_bits > 0);
 
-                if (length($data) >= $length) {
-                    $data .= substr($data, length($data) - $dist, $length);
-                }
-                else {
-                    foreach my $i (1 .. $length) {
-                        $data .= substr($data, length($data) - $dist, 1);
-                    }
+                foreach my $i (1 .. $length) {
+                    my $str = substr($$search_window, length($$search_window) - $dist, 1);
+                    $$search_window .= $str;
+                    $data           .= $str;
                 }
             }
+
             $code = '';
         }
+    }
+
+    if ($code ne '') {
+        die "[!] Something went wrong: code `$code` is not empty!\n";
     }
 
     return $data;
 }
 
-sub extract_block_type_1 ($in_fh, $buffer) {
+sub extract_block_type_1 ($in_fh, $buffer, $search_window) {
 
     state $rev_dict;
     state $dist_rev_dict;
@@ -129,7 +132,89 @@ sub extract_block_type_1 ($in_fh, $buffer) {
         (undef, $dist_rev_dict) = huffman_from_code_lengths([(5) x 32]);
     }
 
-    decode_huffman($in_fh, $buffer, $rev_dict, $dist_rev_dict);
+    decode_huffman($in_fh, $buffer, $rev_dict, $dist_rev_dict, $search_window);
+}
+
+sub decode_CL_lengths($in_fh, $buffer, $CL_rev_dict, $size) {
+
+    my @lengths;
+    my $code = '';
+
+    while (1) {
+        $code .= read_bit_lsb($in_fh, $buffer);
+
+        if (length($code) > 7) {
+            die "[!] Something went wrong: length of CL code `$code` is > 7.\n";
+        }
+
+        if (exists($CL_rev_dict->{$code})) {
+            my $CL_symbol = $CL_rev_dict->{$code};
+
+            if ($CL_symbol <= 15) {
+                push @lengths, $CL_symbol;
+            }
+            elsif ($CL_symbol == 16) {
+                push @lengths, ($lengths[-1]) x (3 + bits2int_lsb($in_fh, 2, $buffer));
+            }
+            elsif ($CL_symbol == 17) {
+                push @lengths, (0) x (3 + bits2int_lsb($in_fh, 3, $buffer));
+            }
+            elsif ($CL_symbol == 18) {
+                push @lengths, (0) x (11 + bits2int_lsb($in_fh, 7, $buffer));
+            }
+            else {
+                die "Unknown CL symbol: $CL_symbol\n";
+            }
+
+            $code = '';
+            last if (scalar(@lengths) >= $size);
+        }
+    }
+
+    if (scalar(@lengths) != $size) {
+        die "Something went wrong: size $size (expected) != ", scalar(@lengths);
+    }
+
+    if ($code ne '') {
+        die "Something went wrong: code `$code` is not empty!";
+    }
+
+    return @lengths;
+}
+
+sub extract_block_type_2 ($in_fh, $buffer, $search_window) {
+
+    # (5 bits) HLIT = (number of LL code entries present) - 257
+    my $HLIT = bits2int_lsb($in_fh, 5, $buffer) + 257;
+
+    # (5 bits) HDIST = (number of distance code entries present) - 1
+    my $HDIST = bits2int_lsb($in_fh, 5, $buffer) + 1;
+
+    # (4 bits) HCLEN = (number of CL code entries present) - 4
+    my $HCLEN = bits2int_lsb($in_fh, 4, $buffer) + 4;
+
+    say STDERR ":: Number of LL codes: $HLIT";
+    say STDERR ":: Number of dist codes: $HDIST";
+    say STDERR ":: Number of CL codes: $HCLEN";
+
+    my @CL_code_lenghts = (0) x 19;
+    my @CL_order        = (16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15);
+
+    foreach my $i (0 .. $HCLEN - 1) {
+        $CL_code_lenghts[$CL_order[$i]] = bits2int_lsb($in_fh, 3, $buffer);
+    }
+
+    say STDERR ":: CL code lengths: @CL_code_lenghts";
+
+    my (undef, $CL_rev_dict) = huffman_from_code_lengths(\@CL_code_lenghts);
+
+    my @LL_CL_lengths   = decode_CL_lengths($in_fh, $buffer, $CL_rev_dict, $HLIT);
+    my @dist_CL_lengths = decode_CL_lengths($in_fh, $buffer, $CL_rev_dict, $HDIST);
+
+    my (undef, $LL_rev_dict)   = huffman_from_code_lengths(\@LL_CL_lengths);
+    my (undef, $dist_rev_dict) = huffman_from_code_lengths(\@dist_CL_lengths);
+
+    decode_huffman($in_fh, $buffer, $LL_rev_dict, $dist_rev_dict, $search_window);
 }
 
 sub extract ($in_fh, $output_file, $defined_output_file) {
@@ -182,6 +267,7 @@ sub extract ($in_fh, $output_file, $defined_output_file) {
     my $crc32         = Digest::CRC->new(type => "crc32");
     my $actual_length = 0;
     my $buffer        = '';
+    my $search_window = '';
 
     while (1) {
 
@@ -191,17 +277,18 @@ sub extract ($in_fh, $output_file, $defined_output_file) {
         my $chunk = '';
 
         if ($block_type eq '00') {
-            print STDERR ":: Extracting block of type 0\n";
-            read_bit_lsb($in_fh, \$buffer) for (1 .. 5);    # padding
+            say STDERR "\n:: Extracting block of type 0";
+            read_bit_lsb($in_fh, \$buffer) for (1 .. (length($buffer) % 8));    # pad to a byte
             $chunk = extract_block_type_0($in_fh, \$buffer);
+            $search_window .= $chunk;
         }
         elsif ($block_type eq '10') {
-            print STDERR ":: Extracting block of type 1\n";
-            $chunk = extract_block_type_1($in_fh, \$buffer);
+            say STDERR "\n:: Extracting block of type 1";
+            $chunk = extract_block_type_1($in_fh, \$buffer, \$search_window);
         }
         elsif ($block_type eq '01') {
-            print STDERR ":: Extracting block of type 2\n";
-            ...;                                            # TODO
+            say STDERR "\n:: Extracting block of type 2";
+            $chunk = extract_block_type_2($in_fh, \$buffer, \$search_window);
         }
         else {
             die "[!] Unknown block of type: $block_type";
@@ -210,6 +297,7 @@ sub extract ($in_fh, $output_file, $defined_output_file) {
         print $out_fh $chunk;
         $crc32->add($chunk);
         $actual_length += length($chunk);
+        $search_window = substr($search_window, -WINDOW_SIZE) if (length($search_window) > WINDOW_SIZE);
 
         last if $is_last;
     }
@@ -218,6 +306,8 @@ sub extract ($in_fh, $output_file, $defined_output_file) {
 
     my $stored_crc32 = bits2int_lsb($in_fh, 32, \$buffer);
     my $actual_crc32 = $crc32->digest;
+
+    say '';
 
     if ($stored_crc32 != $actual_crc32) {
         print STDERR "[!] The CRC32 does not match: $actual_crc32 (actual) != $stored_crc32 (stored)\n";
@@ -236,7 +326,7 @@ sub extract ($in_fh, $output_file, $defined_output_file) {
     }
 
     if (eof($in_fh)) {
-        print STDERR "\n:: Successful extraction.\n";
+        print STDERR "\n:: Reached the end of the file.\n";
     }
     else {
         print STDERR "\n:: There is something else in the container! Trying to recurse!\n\n";
