@@ -2,12 +2,12 @@
 
 # Author: Trizen
 # Date: 13 January 2024
-# Edit: 11 April 2024
+# Edit: 14 April 2024
 # https://github.com/trizen
 
 # Decompress GZIP files (.gz).
 
-# Work in progress: only block type 0 is supported for now.
+# Work in progress: only block type 0 and block type 1 are supported for now.
 
 # Reference:
 #   Data Compression (Summer 2023) - Lecture 11 - DEFLATE (gzip)
@@ -15,7 +15,12 @@
 
 use 5.036;
 use Digest::CRC       qw();
+use List::Util        qw(max);
 use Compression::Util qw(:all);
+
+use constant {
+              MAX_WINDOW_SIZE => 32_768,    # 2^15
+             };
 
 sub extract_block_type_0 ($in_fh, $buffer) {
 
@@ -32,6 +37,71 @@ sub extract_block_type_0 ($in_fh, $buffer) {
 
     read($in_fh, (my $chunk), $len);
     return $chunk;
+}
+
+my ($DISTANCE_SYMBOLS, $LENGTH_SYMBOLS) = make_deflate_tables(MAX_WINDOW_SIZE);
+
+sub decode_huffman($in_fh, $buffer, $rev_dict, $dist_rev_dict) {
+
+    my $data = '';
+    my $code = '';
+
+    my $max_ll_code_len   = max(map { length($_) } keys %$rev_dict);
+    my $max_dist_code_len = max(map { length($_) } keys %$dist_rev_dict);
+
+    while (1) {
+        $code .= read_bit_lsb($in_fh, $buffer);
+
+        if (length($code) > $max_ll_code_len) {
+            die "[!] Something went wrong: length of LL code `$code` is > $max_ll_code_len.\n";
+        }
+
+        if (exists($rev_dict->{$code})) {
+
+            my $symbol = $rev_dict->{$code};
+
+            if ($symbol <= 255) {
+                $data .= chr($symbol);
+            }
+            elsif ($symbol == 256) {    # end-of-block marker
+                last;
+            }
+            else {                      # LZSS decoding
+                my ($length, $LL_bits) = @{$LENGTH_SYMBOLS->[$symbol - 256 + 1]};
+
+                $length += bits2int_lsb($in_fh, $LL_bits, $buffer) if ($LL_bits > 0);
+
+                my $dist_code = '';
+
+                while (1) {
+                    $dist_code .= read_bit_lsb($in_fh, $buffer);
+
+                    if (length($dist_code) > $max_dist_code_len) {
+                        die "[!] Something went wrong: length of distance code `$dist_code` is > $max_dist_code_len.\n";
+                    }
+
+                    if (exists($dist_rev_dict->{$dist_code})) {
+                        last;
+                    }
+                }
+
+                my ($dist, $dist_bits) = @{$DISTANCE_SYMBOLS->[$dist_rev_dict->{$dist_code} + 1]};
+                $dist += bits2int_lsb($in_fh, $dist_bits, $buffer) if ($dist_bits > 0);
+
+                if (length($data) >= $length) {
+                    $data .= substr($data, length($data) - $dist, $length);
+                }
+                else {
+                    foreach my $i (1 .. $length) {
+                        $data .= substr($data, length($data) - $dist, 1);
+                    }
+                }
+            }
+            $code = '';
+        }
+    }
+
+    return $data;
 }
 
 sub extract_block_type_1 ($in_fh, $buffer) {
@@ -59,33 +129,7 @@ sub extract_block_type_1 ($in_fh, $buffer) {
         (undef, $dist_rev_dict) = huffman_from_code_lengths([(5) x 32]);
     }
 
-    my $data = '';
-    my $code = '';
-
-    while (1) {
-        $code .= read_bit_lsb($in_fh, $buffer);
-
-        if (length($code) > 9) {
-            die "[!] Something went wrong: length($code) > 9.\n";
-        }
-
-        if (exists($rev_dict->{$code})) {
-            my $symbol = $rev_dict->{$code};
-            if ($symbol <= 255) {
-                $data .= chr($symbol);
-            }
-            elsif ($symbol == 256) {    # end-of-block marker
-                last;
-            }
-            else {                      # LZSS decoding
-                say $data;
-                ...;                    # TODO
-            }
-            $code = '';
-        }
-    }
-
-    return $data;
+    decode_huffman($in_fh, $buffer, $rev_dict, $dist_rev_dict);
 }
 
 sub extract ($in_fh, $output_file, $defined_output_file) {
@@ -192,7 +236,7 @@ sub extract ($in_fh, $output_file, $defined_output_file) {
     }
 
     if (eof($in_fh)) {
-        print STDERR "\n:: This is the end of the file!\n";
+        print STDERR "\n:: Successful extraction.\n";
     }
     else {
         print STDERR "\n:: There is something else in the container! Trying to recurse!\n\n";
