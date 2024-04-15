@@ -272,21 +272,21 @@ sub extract ($in_fh, $output_file, $defined_output_file) {
     while (1) {
 
         my $is_last    = read_bit_lsb($in_fh, \$buffer);
-        my $block_type = read_bit_lsb($in_fh, \$buffer) . read_bit_lsb($in_fh, \$buffer);
+        my $block_type = bits2int_lsb($in_fh, 2, \$buffer);
 
         my $chunk = '';
 
-        if ($block_type eq '00') {
+        if ($block_type == 0) {
             say STDERR "\n:: Extracting block of type 0";
             read_bit_lsb($in_fh, \$buffer) for (1 .. (length($buffer) % 8));    # pad to a byte
             $chunk = extract_block_type_0($in_fh, \$buffer);
             $search_window .= $chunk;
         }
-        elsif ($block_type eq '10') {
+        elsif ($block_type == 1) {
             say STDERR "\n:: Extracting block of type 1";
             $chunk = extract_block_type_1($in_fh, \$buffer, \$search_window);
         }
-        elsif ($block_type eq '01') {
+        elsif ($block_type == 2) {
             say STDERR "\n:: Extracting block of type 2";
             $chunk = extract_block_type_2($in_fh, \$buffer, \$search_window);
         }
