@@ -307,7 +307,7 @@ sub extract ($in_fh, $output_file, $defined_output_file) {
     my $stored_crc32 = bits2int_lsb($in_fh, 32, \$buffer);
     my $actual_crc32 = $crc32->digest;
 
-    say '';
+    say STDERR '';
 
     if ($stored_crc32 != $actual_crc32) {
         print STDERR "[!] The CRC32 does not match: $actual_crc32 (actual) != $stored_crc32 (stored)\n";
