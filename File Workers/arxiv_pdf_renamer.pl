@@ -56,7 +56,7 @@ foreach my $pdf_file (@ARGV) {
         $title =~ s{\[.*?\]\s*}{};
         $title =~ s/: / - /g;
         $title =~ tr{:"*/?\\|}{;'+%!%%};    # "
-        $title =~ tr/<>$//d;
+        $title =~ tr/<>${}//d;
 
         $title = join(q{ }, split(q{ }, $title));
         $title = substr($title, 0, 250);            # make sure the filename is not too long
@@ -86,6 +86,6 @@ __END__
 
 $ perl arxiv_pdf_renamer.pl *.pdf
 ** GET https://arxiv.org/abs/math/0504119v1 ==> 200 OK (1s)
-Renaming: 0504119.pdf -> The Carmichael numbers up to $10^{17}$.pdf
+Renaming: 0504119.pdf -> The Carmichael numbers up to 10^17.pdf
 ** GET https://arxiv.org/abs/2311.07048v1 ==> 200 OK
 Renaming: 2311.07048.pdf -> Gauss-Euler Primality Test.pdf
