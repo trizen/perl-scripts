@@ -17,6 +17,8 @@ use File::Basename    qw(basename);
 use List::Util        qw(uniq);
 use Compression::Util qw(:all);
 
+$Compression::Util::LZ_THRESHOLD = 1 << 16;
+
 use constant {
     PKGNAME => 'LZBW2',
     VERSION => '0.01',

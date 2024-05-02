@@ -10,6 +10,7 @@
 #   https://github.com/maltaisn/another-notes-app
 
 use 5.036;
+
 use JSON          qw(from_json);
 use File::Slurper qw(read_text);
 

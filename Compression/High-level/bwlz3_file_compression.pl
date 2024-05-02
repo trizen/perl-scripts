@@ -2,10 +2,10 @@
 
 # Author: Trizen
 # Date: 15 June 2023
-# Edit: 21 March 2024
+# Edit: 02 May 2024
 # https://github.com/trizen
 
-# Compress/decompress files using Burrows-Wheeler Transform (BWT) + Move-to-front transform (MTF) + LZ77 compression (LZSS) + Huffman coding.
+# Compress/decompress files using Burrows-Wheeler Transform (BWT) + Move-to-front transform (MTF) + ZRLE + LZHD compression.
 
 # References:
 #   Data Compression (Summer 2023) - Lecture 11 - DEFLATE (gzip)
@@ -21,15 +21,15 @@ use List::Util        qw(max uniq);
 use Compression::Util qw(:all);
 
 use constant {
-    PKGNAME => 'BWLZ',
-    VERSION => '0.05',
-    FORMAT  => 'bwlz',
+    PKGNAME => 'BWLZ3',
+    VERSION => '0.01',
+    FORMAT  => 'bwlz3',
 
     CHUNK_SIZE => 1 << 17,    # higher value = better compression
 };
 
 # Container signature
-use constant SIGNATURE => uc(FORMAT) . chr(5);
+use constant SIGNATURE => uc(FORMAT) . chr(1);
 
 sub usage {
     my ($code) = @_;
@@ -112,48 +112,29 @@ sub main {
 sub compression ($chunk, $out_fh) {
 
     my @chunk_bytes = unpack('C*', $chunk);
-    my $data        = pack('C*', @{rle4_encode(\@chunk_bytes, 254)});
+    my $data        = rle4_encode(\@chunk_bytes, scalar(@chunk_bytes));
 
-    my ($bwt, $idx) = bwt_encode($data);
+    my ($bwt,       $idx)      = bwt_encode_symbolic($data);
+    my ($enc_bytes, $alphabet) = mtf_encode($bwt);
 
-    my @bytes    = unpack('C*', $bwt);
-    my @alphabet = sort { $a <=> $b } uniq(@bytes);
-
-    my $enc_bytes = mtf_encode(\@bytes, \@alphabet);
-
-    if (max(@$enc_bytes) < 255) {
-        print $out_fh chr(1);
-        $enc_bytes = zrle_encode($enc_bytes);
-    }
-    else {
-        print $out_fh chr(0);
-        $enc_bytes = rle4_encode($enc_bytes);
-    }
+    $enc_bytes = zrle_encode($enc_bytes);
 
     print $out_fh pack('N', $idx);
-    print $out_fh encode_alphabet(\@alphabet);
-    lzss_compress(pack('C*', @$enc_bytes), $out_fh);
+    print $out_fh encode_alphabet($alphabet);
+    lzhd_compress_symbolic($enc_bytes, $out_fh);
 }
 
 sub decompression ($fh, $out_fh) {
 
-    my $rle_encoded = ord(getc($fh) // die "error");
-    my $idx         = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
-    my $alphabet    = decode_alphabet($fh);
+    my $idx      = bits2int($fh, 32, \my $buffer);
+    my $alphabet = decode_alphabet($fh);
 
-    my $dec   = lzss_decompress($fh);
-    my $bytes = [unpack('C*', $dec)];
+    my $symbols = lzhd_decompress_symbolic($fh);
 
-    if ($rle_encoded) {
-        $bytes = zrle_decode($bytes);
-    }
-    else {
-        $bytes = rle4_decode($bytes);
-    }
+    $symbols = zrle_decode($symbols);
+    $symbols = mtf_decode($symbols, $alphabet);
 
-    $bytes = mtf_decode($bytes, $alphabet);
-
-    print $out_fh pack('C*', @{rle4_decode([unpack('C*', bwt_decode(pack('C*', @$bytes), $idx))])});
+    print $out_fh pack('C*', @{rle4_decode(bwt_decode_symbolic($symbols, $idx))});
 }
 
 # Compress file

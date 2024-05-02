@@ -199,7 +199,8 @@ sub decompress_file ($input, $output) {
         decompression($fh, $out_fh);
     }
 
-    # Close the output file
+    # Close the files
+    close $fh;
     close $out_fh;
 }
 
