@@ -122,19 +122,18 @@ sub lzad_compression ($chunk, $out_fh) {
     my ($uncompressed, $indices, $lengths) = lz77_encode($chunk);
 
     my $est_ratio = length($chunk) / (4 * scalar(@$uncompressed));
-
     say(scalar(@$uncompressed), ' -> ', $est_ratio);
 
     if ($est_ratio > RANDOM_DATA_THRESHOLD) {
         print $out_fh COMPRESSED_BYTE;
-        create_ac_entry($uncompressed, $out_fh);
-        create_ac_entry($lengths,      $out_fh);
+        print $out_fh create_ac_entry($uncompressed);
+        print $out_fh create_ac_entry($lengths);
         print $out_fh obh_encode($indices, \&create_ac_entry);
     }
     else {
         say "Random data detected...";
         print $out_fh UNCOMPRESSED_BYTE;
-        create_ac_entry([unpack('C*', $chunk)], $out_fh);
+        print $out_fh create_ac_entry(string2symbols($chunk));
     }
 }
 
@@ -189,7 +188,7 @@ sub decompression ($fh, $out_fh) {
     my $idx         = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
     my $alphabet    = decode_alphabet($fh);
 
-    my $bytes = [unpack('C*', lzad_decompression($fh))];
+    my $bytes = string2symbols(lzad_decompression($fh));
 
     if ($rle_encoded) {
         $bytes = zrle_decode($bytes);

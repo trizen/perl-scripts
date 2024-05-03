@@ -38,7 +38,7 @@ until ($DISTANCE_SYMBOLS[-1][0] > CHUNK_SIZE) {
 }
 
 # [length, offset bits]
-my @LENGTH_SYMBOLS = ((map { [$_, 0] } (4 .. 10)));
+my @LENGTH_SYMBOLS = ((map { [$_, 0] } (3 .. 10)));
 
 {
     my $delta = 1;
@@ -149,7 +149,7 @@ sub main {
     }
 }
 
-sub lz77_compression ($str, $uncompressed, $indices, $lengths, $has_backreference) {
+sub lz77_compression ($str, $uncompressed, $indices, $lengths) {
 
     my $la = 0;
 
@@ -182,34 +182,31 @@ sub lz77_compression ($str, $uncompressed, $indices, $lengths, $has_backreferenc
             ++$n;
         }
 
-        --$n;
-
         my $enc_bits_len     = 0;
         my $literal_bits_len = 0;
 
-        if ($n >= $min_len) {
+        if ($n > $min_len) {
 
             my $dist = $DISTANCE_SYMBOLS[$DISTANCE_INDICES[$la - $p]];
             $enc_bits_len += $dist->[1] + ceil(log2((1 + $distance_count) / (1 + ($distance_freq{$dist->[0]} // 0))));
 
-            my $len_idx = $LENGTH_INDICES[$n];
+            my $len_idx = $LENGTH_INDICES[$n - 1];
             my $len     = $LENGTH_SYMBOLS[$len_idx];
 
             $enc_bits_len += $len->[1] + ceil(log2((1 + $literal_count) / (1 + ($literal_freq{$len_idx + 256} // 0))));
 
             my %freq;
-            foreach my $c (unpack('C*', substr($prefix, $p, $n))) {
+            foreach my $c (unpack('C*', substr($prefix, $p, $n - 1) . $chars[$la + $n - 1])) {
                 ++$freq{$c};
                 $literal_bits_len += ceil(log2(($n + $literal_count) / ($freq{$c} + ($literal_freq{$c} // 0))));
             }
         }
 
-        if ($n >= $min_len and $enc_bits_len < $literal_bits_len) {
+        if ($n > $min_len and $enc_bits_len < $literal_bits_len) {
 
-            push @$lengths,           $n;
-            push @$indices,           $la - $p;
-            push @$has_backreference, 1;
-            push @$uncompressed,      ord($chars[$la + $n]);
+            push @$lengths,      $n - 1;
+            push @$indices,      $la - $p;
+            push @$uncompressed, undef;
 
             my $dist_idx = $DISTANCE_INDICES[$la - $p];
             my $dist     = $DISTANCE_SYMBOLS[$dist_idx];
@@ -217,22 +214,23 @@ sub lz77_compression ($str, $uncompressed, $indices, $lengths, $has_backreferenc
             ++$distance_count;
             ++$distance_freq{$dist->[0]};
 
-            ++$literal_freq{$LENGTH_INDICES[$n] + 256};
-            ++$literal_freq{$uncompressed->[-1]};
+            ++$literal_count;
+            ++$literal_freq{$LENGTH_INDICES[$n - 1] + 256};
 
-            $literal_count += 2;
-            $la            += $n + 1;
-            $prefix .= $token;
+            $la += $n - 1;
+            $prefix .= substr($token, 0, -1);
         }
         else {
-            my @bytes = unpack('C*', substr($prefix, $p, $n) . $chars[$la + $n]);
+            my @bytes = unpack('C*', substr($prefix, $p, $n - 1) . $chars[$la + $n - 1]);
 
-            push @$has_backreference, (0) x ($n + 1);
             push @$uncompressed, @bytes;
+            push @$lengths, (0) x scalar(@bytes);
+            push @$indices, (0) x scalar(@bytes);
+
             ++$literal_freq{$_} for @bytes;
 
-            $literal_count += $n + 1;
-            $la            += $n + 1;
+            $literal_count += $n;
+            $la            += $n;
             $prefix .= $token;
         }
     }
@@ -240,37 +238,40 @@ sub lz77_compression ($str, $uncompressed, $indices, $lengths, $has_backreferenc
     return;
 }
 
-sub lz77_decompression ($uncompressed, $indices, $lengths) {
+sub lz77_decompression ($literals, $distances, $lengths) {
 
     my $chunk  = '';
     my $offset = 0;
 
-    foreach my $i (0 .. $#{$uncompressed}) {
-        $chunk .= substr($chunk, $offset - $indices->[$i], $lengths->[$i]) . chr($uncompressed->[$i]);
-        $offset += $lengths->[$i] + 1;
+    foreach my $i (0 .. $#$literals) {
+        if ($lengths->[$i] != 0) {
+            $chunk .= substr($chunk, $offset - $distances->[$i], $lengths->[$i]);
+            $offset += $lengths->[$i];
+        }
+        else {
+            $chunk .= chr($literals->[$i]);
+            $offset += 1;
+        }
     }
 
     return $chunk;
 }
 
-sub deflate_encode ($literals, $distances, $lengths, $has_backreference, $out_fh) {
+sub deflate_encode ($literals, $distances, $lengths, $out_fh) {
 
     my @len_symbols;
     my @dist_symbols;
     my $offset_bits = '';
 
-    my $j = 0;
-    foreach my $k (0 .. $#{$literals}) {
+    foreach my $j (0 .. $#{$literals}) {
 
-        my $lit = $literals->[$k];
-        push @len_symbols, $lit;
-
-        $has_backreference->[$k] || next;
+        if ($lengths->[$j] == 0) {
+            push @len_symbols, $literals->[$j];
+            next;
+        }
 
         my $len  = $lengths->[$j];
         my $dist = $distances->[$j];
-
-        $j += 1;
 
         {
             my $len_idx = $LENGTH_INDICES[$len];
@@ -328,8 +329,9 @@ sub deflate_decode ($fh) {
     foreach my $i (@$len_symbols) {
         if ($i >= 256) {
             my $dist = $dist_symbols->[$j++];
-            $lengths[-1]   = $LENGTH_SYMBOLS[$i - 256][0] + oct('0b' . substr($bits, 0, $LENGTH_SYMBOLS[$i - 256][1], ''));
-            $distances[-1] = $DISTANCE_SYMBOLS[$dist][0] + oct('0b' . substr($bits, 0, $DISTANCE_SYMBOLS[$dist][1], ''));
+            push @literals,  undef;
+            push @lengths,   $LENGTH_SYMBOLS[$i - 256][0] + oct('0b' . substr($bits, 0, $LENGTH_SYMBOLS[$i - 256][1], ''));
+            push @distances, $DISTANCE_SYMBOLS[$dist][0] + oct('0b' . substr($bits, 0, $DISTANCE_SYMBOLS[$dist][1], ''));
         }
         else {
             push @literals,  $i;
@@ -783,13 +785,13 @@ sub bz2_decompression_symbolic ($fh) {
 }
 
 sub lzss_compression ($chunk, $out_fh) {
-    my (@uncompressed, @indices, @lengths, @has_backreference);
-    lz77_compression($chunk, \@uncompressed, \@indices, \@lengths, \@has_backreference);
+    my (@uncompressed, @indices, @lengths);
+    lz77_compression($chunk, \@uncompressed, \@indices, \@lengths);
 
     my $est_ratio = length($chunk) / (scalar(@uncompressed) + scalar(@lengths) + 2 * scalar(@indices));
     say scalar(@uncompressed), ' -> ', $est_ratio;
 
-    deflate_encode(\@uncompressed, \@indices, \@lengths, \@has_backreference, $out_fh);
+    deflate_encode(\@uncompressed, \@indices, \@lengths, $out_fh);
 }
 
 sub lzss_decompression ($fh, $out_fh) {

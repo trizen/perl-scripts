@@ -143,9 +143,9 @@ sub compress_file ($input, $output) {
         print $out_fh COMPRESSED_BYTE;
         print $out_fh delta_encode(\@sizes);
 
-        bz2_compress($uncompressed_str,             $out_fh, \&create_adaptive_ac_entry);
-        bz2_compress($lengths_str,                  $out_fh, \&create_adaptive_ac_entry);
-        bz2_compress(abc_encode(\@distances_block), $out_fh, \&create_adaptive_ac_entry);
+        print $out_fh bz2_compress($uncompressed_str,             \&create_adaptive_ac_entry);
+        print $out_fh bz2_compress($lengths_str,                  \&create_adaptive_ac_entry);
+        print $out_fh bz2_compress(abc_encode(\@distances_block), \&create_adaptive_ac_entry);
 
         @sizes           = ();
         @distances_block = ();
@@ -172,7 +172,7 @@ sub compress_file ($input, $output) {
             say "Random data detected...";
             $create_bz2_block->();
             print $out_fh UNCOMPRESSED_BYTE;
-            create_adaptive_ac_entry([unpack 'C*', $chunk], $out_fh);
+            print $out_fh create_adaptive_ac_entry(string2symbols($chunk));
         }
 
         if (length($uncompressed_str) >= CHUNK_SIZE) {
@@ -203,7 +203,7 @@ sub decompress_file ($input, $output) {
 
         if ($compression_byte eq UNCOMPRESSED_BYTE) {
             say "Decoding random data...";
-            print $out_fh pack('C*', @{decode_adaptive_ac_entry($fh)});
+            print $out_fh symbols2string(decode_adaptive_ac_entry($fh));
             next;
         }
         elsif ($compression_byte ne COMPRESSED_BYTE) {
@@ -212,9 +212,9 @@ sub decompress_file ($input, $output) {
 
         my @sizes = @{delta_decode($fh)};
 
-        my @uncompressed = unpack('C*', bz2_decompress($fh, undef, \&decode_adaptive_ac_entry));
-        my @lengths      = unpack('C*', bz2_decompress($fh, undef, \&decode_adaptive_ac_entry));
-        my @distances    = @{abc_decode(bz2_decompress($fh, undef, \&decode_adaptive_ac_entry))};
+        my @uncompressed = unpack('C*', bz2_decompress($fh, \&decode_adaptive_ac_entry));
+        my @lengths      = unpack('C*', bz2_decompress($fh, \&decode_adaptive_ac_entry));
+        my @distances    = @{abc_decode(bz2_decompress($fh, \&decode_adaptive_ac_entry))};
 
         while (@uncompressed) {
 

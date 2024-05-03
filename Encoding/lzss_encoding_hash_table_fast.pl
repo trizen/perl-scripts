@@ -47,24 +47,21 @@ sub lzss_encode($str) {
             $table{$lookahead} = $la;
         }
 
-        --$best_n;
+        if ($best_n > $min_len) {
 
-        if ($best_n >= $min_len) {
-
-            push @lengths,   $best_n;
+            push @lengths,   $best_n - 1;
             push @distances, $la - $best_p;
-            push @literals,  $symbols[$la + $best_n];
+            push @literals,  undef;
 
-            $la += $best_n + 1;
+            $la += $best_n - 1;
         }
         else {
-            my @bytes = @symbols[$best_p .. $best_p + $best_n];
 
-            push @lengths,   (0) x scalar(@bytes);
-            push @distances, (0) x scalar(@bytes);
-            push @literals, @bytes;
+            push @lengths,   (0) x $best_n;
+            push @distances, (0) x $best_n;
+            push @literals, @symbols[$best_p .. $best_p + $best_n - 1];
 
-            $la += $best_n + 1;
+            $la += $best_n;
         }
     }
 
@@ -78,6 +75,12 @@ sub lzss_decode ($literals, $distances, $lengths) {
 
     foreach my $i (0 .. $#$lengths) {
 
+        if ($lengths->[$i] == 0) {
+            push @data, $literals->[$i];
+            $data_len += 1;
+            next;
+        }
+
         my $length = $lengths->[$i];
         my $dist   = $distances->[$i];
 
@@ -85,8 +88,7 @@ sub lzss_decode ($literals, $distances, $lengths) {
             push @data, $data[$data_len + $j - $dist - 1];
         }
 
-        $data_len += $length + 1;
-        push @data, $literals->[$i];
+        $data_len += $length;
     }
 
     pack('C*', @data);
@@ -100,7 +102,12 @@ my $decoded = lzss_decode($literals, $distances, $lengths);
 $string eq $decoded or die "error: <<$string>> != <<$decoded>>";
 
 foreach my $i (0 .. $#$literals) {
-    say "$literals->[$i] -- [$distances->[$i], $lengths->[$i]]";
+    if ($lengths->[$i] == 0) {
+        say $literals->[$i];
+    }
+    else {
+        say "[$distances->[$i], $lengths->[$i]]";
+    }
 }
 
 foreach my $file (__FILE__, $^X) {    # several tests
@@ -114,5 +121,23 @@ foreach my $file (__FILE__, $^X) {    # several tests
     my ($literals, $distances, $lengths) = lzss_encode($string);
     my $decoded = lzss_decode($literals, $distances, $lengths);
 
+    say "Ratio: ", scalar(@$literals) / scalar(grep { defined($_) } @$literals);
+
     $string eq $decoded or die "error: <<$string>> != <<$decoded>>";
 }
+
+__END__
+97
+98
+98
+97
+[4, 6]
+97
+97
+98
+97
+97
+97
+97
+Ratio: 1.36301369863014
+Ratio: 1.46043165467626

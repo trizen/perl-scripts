@@ -106,16 +106,16 @@ sub main {
 }
 
 sub compression ($chunk, $out_fh) {
-    my ($mtf, $alphabet) = mtf_encode([unpack('C*', $chunk)]);
+    my ($mtf, $alphabet) = mtf_encode($chunk);
     print $out_fh encode_alphabet($alphabet);
-    bz2_compress(pack('C*', @$mtf), $out_fh);
+    print $out_fh bz2_compress(symbols2string($mtf));
 }
 
 sub decompression ($fh, $out_fh) {
     my $alphabet = decode_alphabet($fh);
-    my @mtf      = unpack('C*', bz2_decompress($fh));
-    my $data     = mtf_decode(\@mtf, $alphabet);
-    print $out_fh pack('C*', @$data);
+    my $mtf      = string2symbols(bz2_decompress($fh));
+    my $data     = mtf_decode($mtf, $alphabet);
+    print $out_fh symbols2string($data);
 }
 
 # Compress file

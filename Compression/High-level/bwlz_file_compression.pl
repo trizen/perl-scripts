@@ -132,7 +132,7 @@ sub compression ($chunk, $out_fh) {
 
     print $out_fh pack('N', $idx);
     print $out_fh encode_alphabet(\@alphabet);
-    lzss_compress(pack('C*', @$enc_bytes), $out_fh);
+    print $out_fh lzss_compress(pack('C*', @$enc_bytes));
 }
 
 sub decompression ($fh, $out_fh) {
@@ -153,7 +153,7 @@ sub decompression ($fh, $out_fh) {
 
     $bytes = mtf_decode($bytes, $alphabet);
 
-    print $out_fh pack('C*', @{rle4_decode([unpack('C*', bwt_decode(pack('C*', @$bytes), $idx))])});
+    print $out_fh symbols2string(rle4_decode(string2symbols(bwt_decode(pack('C*', @$bytes), $idx))));
 }
 
 # Compress file

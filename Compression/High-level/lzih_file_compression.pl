@@ -130,13 +130,13 @@ sub compress_file ($input, $output) {
 
         if ($est_ratio > RANDOM_DATA_THRESHOLD) {
             print $out_fh COMPRESSED_BYTE;
-            create_huffman_entry($uncompressed, $out_fh);
-            create_huffman_entry($lengths,      $out_fh);
+            print $out_fh create_huffman_entry($uncompressed);
+            print $out_fh create_huffman_entry($lengths);
             print $out_fh abc_encode($indices);
         }
         else {
             print $out_fh UNCOMPRESSED_BYTE;
-            create_huffman_entry([unpack('C*', $chunk)], $out_fh);
+            print $out_fh create_huffman_entry($chunk);
         }
     }
 

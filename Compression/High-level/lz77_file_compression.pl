@@ -7,20 +7,27 @@
 
 # Compress/decompress files using LZ77 compression + Huffman coding.
 
+# Encoding the distances/indices using a DEFLATE-like approach.
+
 use 5.036;
+
 use Getopt::Std       qw(getopts);
 use File::Basename    qw(basename);
 use Compression::Util qw(:all);
 
 use constant {
-              PKGNAME    => 'LZH',
-              VERSION    => '0.02',
-              FORMAT     => 'lzh',
-              CHUNK_SIZE => 1 << 16,
-             };
+    PKGNAME => 'LZ77',
+    VERSION => '0.01',
+    FORMAT  => 'lz77',
+
+    COMPRESSED_BYTE       => chr(1),
+    UNCOMPRESSED_BYTE     => chr(0),
+    CHUNK_SIZE            => 1 << 16,    # higher value = better compression
+    RANDOM_DATA_THRESHOLD => 1,          # in ratio
+};
 
 # Container signature
-use constant SIGNATURE => uc(FORMAT) . chr(2);
+use constant SIGNATURE => uc(FORMAT) . chr(1);
 
 sub usage {
     my ($code) = @_;
@@ -115,21 +122,10 @@ sub compress_file ($input, $output) {
     # Print the header
     print $out_fh $header;
 
-    my (@uncompressed, @distances, @lengths);
-
     # Compress data
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
-        my ($lits, $dists, $lens) = lz77_encode($chunk);
-        push @uncompressed, @$lits;
-        push @distances,    @$dists;
-        push @lengths,      @$lens;
+        print $out_fh lz77_compress_symbolic(string2symbols($chunk));
     }
-
-    @distances = unpack('C*', pack('S*', @distances));
-
-    create_huffman_entry(\@uncompressed, $out_fh);
-    create_huffman_entry(\@distances,    $out_fh);
-    create_huffman_entry(\@lengths,      $out_fh);
 
     # Close the file
     close $out_fh;
@@ -148,11 +144,9 @@ sub decompress_file ($input, $output) {
     open my $out_fh, '>:raw', $output
       or die "Can't open file <<$output>> for writing: $!";
 
-    my $uncompressed = decode_huffman_entry($fh);
-    my @distances    = unpack('S*', pack('C*', @{decode_huffman_entry($fh)}));
-    my $lengths      = decode_huffman_entry($fh);
-
-    print $out_fh lz77_decode($uncompressed, \@distances, $lengths);
+    while (!eof($fh)) {
+        print $out_fh lz77_decompress($fh);
+    }
 
     # Close the file
     close $fh;

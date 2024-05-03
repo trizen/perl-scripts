@@ -15,7 +15,7 @@ sub lzss_encode ($str) {
     my @chars = split(//, $str);
     my $end   = $#chars;
 
-    my $min_len       = 3;      # minimum match length
+    my $min_len       = 4;      # minimum match length
     my $max_len       = 255;    # maximum match length
     my $max_chain_len = 16;     # how many recent positions to keep track of
 
@@ -60,24 +60,21 @@ sub lzss_encode ($str) {
             $table{$lookahead} = [$la];
         }
 
-        --$best_n;
+        if ($best_n > $min_len) {
 
-        if ($best_n >= $min_len) {
-
-            push @lengths,   $best_n;
+            push @lengths,   $best_n - 1;
             push @distances, $la - $best_p;
-            push @literals,  $chars[$la + $best_n];
+            push @literals,  undef;
 
-            $la += $best_n + 1;
+            $la += $best_n - 1;
         }
         else {
-            my @bytes = @chars[$best_p .. $best_p + $best_n];
 
-            push @lengths,   (0) x scalar(@bytes);
-            push @distances, (0) x scalar(@bytes);
-            push @literals, @bytes;
+            push @lengths,   (0) x $best_n;
+            push @distances, (0) x $best_n;
+            push @literals, @chars[$best_p .. $best_p + $best_n - 1];
 
-            $la += $best_n + 1;
+            $la += $best_n;
         }
     }
 
@@ -91,6 +88,12 @@ sub lzss_decode ($literals, $distances, $lengths) {
 
     foreach my $i (0 .. $#$lengths) {
 
+        if ($lengths->[$i] == 0) {
+            push @data, $literals->[$i];
+            $data_len += 1;
+            next;
+        }
+
         my $length = $lengths->[$i];
         my $dist   = $distances->[$i];
 
@@ -98,8 +101,7 @@ sub lzss_decode ($literals, $distances, $lengths) {
             push @data, $data[$data_len + $j - $dist - 1];
         }
 
-        $data_len += $length + 1;
-        push @data, $literals->[$i];
+        $data_len += $length;
     }
 
     return join('', @data);
@@ -113,7 +115,12 @@ my $decoded = lzss_decode($literals, $distances, $lengths);
 $string eq $decoded or die "error: <<$string>> != <<$decoded>>";
 
 foreach my $i (0 .. $#$literals) {
-    say "$literals->[$i] -- [$distances->[$i], $lengths->[$i]]";
+    if ($lengths->[$i] == 0) {
+        say $literals->[$i];
+    }
+    else {
+        say "[$distances->[$i], $lengths->[$i]]";
+    }
 }
 
 foreach my $file (__FILE__, $^X) {    # several tests
@@ -127,14 +134,19 @@ foreach my $file (__FILE__, $^X) {    # several tests
     my ($literals, $distances, $lengths) = lzss_encode($string);
     my $decoded = lzss_decode($literals, $distances, $lengths);
 
+    say "Ratio: ", scalar(@$literals) / scalar(grep { defined($_) } @$literals);
+
     $string eq $decoded or die "error: <<$string>> != <<$decoded>>";
 }
 
 __END__
-a -- [0, 0]
-b -- [0, 0]
-b -- [0, 0]
-a -- [0, 0]
-a -- [4, 6]
-a -- [3, 4]
-a -- [0, 0]
+a
+b
+b
+a
+[4, 6]
+[3, 5]
+a
+a
+Ratio: 1.35733333333333
+Ratio: 1.44651830581479

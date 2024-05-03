@@ -26,7 +26,7 @@ use constant {
     VERSION => '0.01',
     FORMAT  => 'lzssf',
 
-    CHUNK_SIZE => 1 << 20,    # higher value = better compression
+    CHUNK_SIZE => 1 << 17,    # higher value = better compression
 };
 
 # Container signature
@@ -192,24 +192,21 @@ sub lz77_compression($str) {
             $table{$lookahead} = $la;
         }
 
-        --$best_n;
+        if ($best_n > $min_len) {
 
-        if ($best_n >= $min_len) {
-
-            push @lengths,   $best_n;
+            push @lengths,   $best_n - 1;
             push @distances, $la - $best_p;
-            push @literals,  $symbols[$la + $best_n];
+            push @literals,  undef;
 
-            $la += $best_n + 1;
+            $la += $best_n - 1;
         }
         else {
-            my @bytes = @symbols[$best_p .. $best_p + $best_n];
 
-            push @lengths,   (0) x scalar(@bytes);
-            push @distances, (0) x scalar(@bytes);
-            push @literals, @bytes;
+            push @lengths,   (0) x $best_n;
+            push @distances, (0) x $best_n;
+            push @literals, @symbols[$best_p .. $best_p + $best_n - 1];
 
-            $la += $best_n + 1;
+            $la += $best_n;
         }
     }
 
@@ -223,6 +220,12 @@ sub lz77_decompression ($literals, $distances, $lengths) {
 
     foreach my $i (0 .. $#$lengths) {
 
+        if ($lengths->[$i] == 0) {
+            push @data, $literals->[$i];
+            $data_len += 1;
+            next;
+        }
+
         my $length = $lengths->[$i];
         my $dist   = $distances->[$i];
 
@@ -230,8 +233,7 @@ sub lz77_decompression ($literals, $distances, $lengths) {
             push @data, $data[$data_len + $j - $dist - 1];
         }
 
-        $data_len += $length + 1;
-        push @data, $literals->[$i];
+        $data_len += $length;
     }
 
     pack('C*', @data);
@@ -419,10 +421,12 @@ sub deflate_encode ($size, $literals, $distances, $lengths, $out_fh) {
 
     foreach my $k (0 .. $#{$literals}) {
 
-        my $lit = $literals->[$k];
-        push @len_symbols, $lit;
+        if ($lengths->[$k] == 0) {
+            push @len_symbols, $literals->[$k];
+            next;
+        }
 
-        my $len  = $lengths->[$k] || next;
+        my $len  = $lengths->[$k];
         my $dist = $distances->[$k];
 
         {
@@ -481,12 +485,14 @@ sub deflate_decode ($fh) {
     my @distances;
 
     my $j = 0;
+    my $k = 0;
 
     foreach my $i (@$len_symbols) {
         if ($i >= 256) {
             my $dist = $dist_symbols->[$j++];
-            $lengths[-1]   = $LENGTH_SYMBOLS->[$i - 256][0] + oct('0b' . substr($bits, 0, $LENGTH_SYMBOLS->[$i - 256][1], ''));
-            $distances[-1] = $DISTANCE_SYMBOLS->[$dist][0] + oct('0b' . substr($bits, 0, $DISTANCE_SYMBOLS->[$dist][1], ''));
+            push @literals,  undef;
+            push @lengths,   $LENGTH_SYMBOLS->[$i - 256][0] + oct('0b' . substr($bits, 0, $LENGTH_SYMBOLS->[$i - 256][1], ''));
+            push @distances, $DISTANCE_SYMBOLS->[$dist][0] + oct('0b' . substr($bits, 0, $DISTANCE_SYMBOLS->[$dist][1], ''));
         }
         else {
             push @literals,  $i;

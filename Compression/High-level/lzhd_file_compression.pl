@@ -126,9 +126,7 @@ sub compress_file ($input, $output) {
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
 
         my ($uncompressed, $distances, $lengths) = lz77_encode($chunk);
-
         my $est_ratio = length($chunk) / (4 * scalar(@$uncompressed));
-
         say(scalar(@$uncompressed), ' -> ', $est_ratio);
 
         if ($est_ratio > RANDOM_DATA_THRESHOLD) {

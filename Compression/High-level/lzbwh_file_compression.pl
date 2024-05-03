@@ -143,9 +143,9 @@ sub compress_file ($input, $output) {
         print $out_fh COMPRESSED_BYTE;
         print $out_fh delta_encode(\@sizes);
 
-        bz2_compress($uncompressed_str,             $out_fh);
-        bz2_compress($lengths_str,                  $out_fh);
-        bz2_compress(obh_encode(\@distances_block), $out_fh);
+        print $out_fh bz2_compress($uncompressed_str);
+        print $out_fh bz2_compress($lengths_str);
+        print $out_fh bz2_compress(obh_encode(\@distances_block));
 
         @sizes           = ();
         @distances_block = ();
@@ -172,7 +172,7 @@ sub compress_file ($input, $output) {
             say "Random data detected...";
             $create_bz2_block->();
             print $out_fh UNCOMPRESSED_BYTE;
-            create_huffman_entry([unpack 'C*', $chunk], $out_fh);
+            print $out_fh create_huffman_entry(string2symbols($chunk));
         }
 
         if (length($uncompressed_str) >= CHUNK_SIZE) {

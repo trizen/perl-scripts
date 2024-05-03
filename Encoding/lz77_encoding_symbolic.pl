@@ -1,14 +1,18 @@
 #!/usr/bin/perl
 
 # Author: Trizen
-# Date: 02 May 2024
+# Date: 03 May 2024
 # https://github.com/trizen
 
-# Symbolic implementation of LZSS encoding, using an hash table.
+# Symbolic implementation of LZ77 encoding, using an hash table.
 
 use 5.036;
 
-sub lzss_encode_symbolic ($symbols) {
+sub lz77_encode_symbolic ($symbols) {
+
+    if (ref($symbols) eq '') {
+        return __SUB__->(string2symbols($symbols));
+    }
 
     my $la  = 0;
     my $end = $#$symbols;
@@ -68,48 +72,50 @@ sub lzss_encode_symbolic ($symbols) {
             $table{$lookahead} = [$la];
         }
 
-        if ($best_n > $min_len) {
+        --$best_n;
 
-            push @lengths,   $best_n - 1;
+        if ($best_n >= $min_len) {
+
+            push @lengths,   $best_n;
             push @distances, $la - $best_p;
-            push @literals,  undef;
+            push @literals,  $symbols->[$la + $best_n];
 
-            $la += $best_n - 1;
+            $la += $best_n + 1;
         }
         else {
+            my @bytes = @{$symbols}[$best_p .. $best_p + $best_n];
 
-            push @lengths,   (0) x $best_n;
-            push @distances, (0) x $best_n;
-            push @literals, @$symbols[$best_p .. $best_p + $best_n - 1];
+            push @lengths,   (0) x scalar(@bytes);
+            push @distances, (0) x scalar(@bytes);
+            push @literals, @bytes;
 
-            $la += $best_n;
+            $la += $best_n + 1;
         }
     }
 
     return (\@literals, \@distances, \@lengths);
 }
 
-sub lzss_decode_symbolic ($literals, $distances, $lengths) {
+sub lz77_decode_symbolic ($literals, $distances, $lengths) {
 
     my @data;
     my $data_len = 0;
 
     foreach my $i (0 .. $#$lengths) {
 
-        if ($lengths->[$i] == 0) {
-            push @data, $literals->[$i];
-            $data_len += 1;
-            next;
+        if ($lengths->[$i] != 0) {
+            my $length = $lengths->[$i];
+            my $dist   = $distances->[$i];
+
+            foreach my $j (1 .. $length) {
+                push @data, $data[$data_len + $j - $dist - 1];
+            }
+
+            $data_len += $length;
         }
 
-        my $length = $lengths->[$i];
-        my $dist   = $distances->[$i];
-
-        foreach my $j (1 .. $length) {
-            push @data, $data[$data_len + $j - $dist - 1];
-        }
-
-        $data_len += $length;
+        push @data, $literals->[$i];
+        $data_len += 1;
     }
 
     return \@data;
@@ -117,18 +123,13 @@ sub lzss_decode_symbolic ($literals, $distances, $lengths) {
 
 my $string = "abbaabbaabaabaaaa";
 
-my ($literals, $distances, $lengths) = lzss_encode_symbolic([unpack('C*', $string)]);
-my $decoded = lzss_decode_symbolic($literals, $distances, $lengths);
+my ($literals, $distances, $lengths) = lz77_encode_symbolic([unpack('C*', $string)]);
+my $decoded = lz77_decode_symbolic($literals, $distances, $lengths);
 
 $string eq pack('C*', @$decoded) or die "error: <<$string>> != <<@$decoded>>";
 
 foreach my $i (0 .. $#$literals) {
-    if ($lengths->[$i] == 0) {
-        say $literals->[$i];
-    }
-    else {
-        say "[$distances->[$i], $lengths->[$i]]";
-    }
+    say "$literals->[$i] -- [$distances->[$i], $lengths->[$i]]";
 }
 
 foreach my $file (__FILE__, $^X) {    # several tests
@@ -139,22 +140,8 @@ foreach my $file (__FILE__, $^X) {    # several tests
         <$fh>;
     };
 
-    my ($literals, $distances, $lengths) = lzss_encode_symbolic([unpack('C*', $string)]);
-    my $decoded = lzss_decode_symbolic($literals, $distances, $lengths);
-
-    say "Ratio: ", scalar(@$literals) / scalar(grep { defined($_) } @$literals);
+    my ($literals, $distances, $lengths) = lz77_encode_symbolic([unpack('C*', $string)]);
+    my $decoded = lz77_decode_symbolic($literals, $distances, $lengths);
 
     $string eq pack('C*', @$decoded) or die "error: <<$string>> != <<@$decoded>>";
 }
-
-__END__
-97
-98
-98
-97
-[4, 6]
-[3, 5]
-97
-97
-Ratio: 1.38851802403204
-Ratio: 1.44651830581479

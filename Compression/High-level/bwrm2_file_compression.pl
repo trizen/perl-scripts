@@ -160,12 +160,12 @@ sub compress_file ($input, $output) {
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
 
         my ($bwt,          $idx)     = bwt_encode($chunk);
-        my ($uncompressed, $lengths) = VLR_encoding([unpack('C*', $bwt)]);
+        my ($uncompressed, $lengths) = VLR_encoding(string2symbols($bwt));
 
         print $out_fh pack('N', $idx);
 
-        mrl_compress($uncompressed, $out_fh);
-        bz2_compress(pack('C*', @$lengths), $out_fh);
+        print $out_fh mrl_compress_symbolic($uncompressed);
+        print $out_fh bz2_compress(pack('C*', @$lengths));
     }
 
     close $out_fh;
@@ -188,9 +188,9 @@ sub decompress_file ($input, $output) {
 
         my $idx = unpack('N', join('', map { getc($fh) // die "decompression error" } 1 .. 4));
 
-        my $uncompressed = mrl_decompress($fh);
+        my $uncompressed = mrl_decompress_symbolic($fh);
         my $lengths      = bz2_decompress($fh);
-        my $dec          = VLR_decoding($uncompressed, [unpack('C*', $lengths)]);
+        my $dec          = VLR_decoding($uncompressed, string2symbols($lengths));
         print $out_fh bwt_decode($dec, $idx);
     }
 

@@ -143,9 +143,9 @@ sub compress_file ($input, $output) {
         print $out_fh COMPRESSED_BYTE;
         print $out_fh delta_encode(\@sizes);
 
-        bz2_compress($uncompressed_str,             $out_fh, \&create_ac_entry);
-        bz2_compress($lengths_str,                  $out_fh, \&create_ac_entry);
-        bz2_compress(abc_encode(\@distances_block), $out_fh, \&create_ac_entry);
+        print $out_fh bz2_compress($uncompressed_str,             \&create_ac_entry);
+        print $out_fh bz2_compress($lengths_str,                  \&create_ac_entry);
+        print $out_fh bz2_compress(abc_encode(\@distances_block), \&create_ac_entry);
 
         @sizes           = ();
         @distances_block = ();
@@ -212,9 +212,9 @@ sub decompress_file ($input, $output) {
 
         my @sizes = @{delta_decode($fh)};
 
-        my @uncompressed = unpack('C*', bz2_decompress($fh, undef, \&decode_ac_entry));
-        my @lengths      = unpack('C*', bz2_decompress($fh, undef, \&decode_ac_entry));
-        my @distances    = @{abc_decode(bz2_decompress($fh, undef, \&decode_ac_entry))};
+        my @uncompressed = unpack('C*', bz2_decompress($fh, \&decode_ac_entry));
+        my @lengths      = unpack('C*', bz2_decompress($fh, \&decode_ac_entry));
+        my @distances    = @{abc_decode(bz2_decompress($fh, \&decode_ac_entry))};
 
         while (@uncompressed) {
 

@@ -125,13 +125,13 @@ sub compression ($chunk, $out_fh) {
     if ($est_ratio > RANDOM_DATA_THRESHOLD) {
         print $out_fh COMPRESSED_BYTE;
         print $out_fh pack('N', $idx);
-        create_huffman_entry($uncompressed, $out_fh);
-        create_huffman_entry($lengths,      $out_fh);
+        print $out_fh create_huffman_entry($uncompressed);
+        print $out_fh create_huffman_entry($lengths);
         print $out_fh obh_encode($indices);
     }
     else {
         print $out_fh UNCOMPRESSED_BYTE;
-        create_huffman_entry([unpack('C*', $chunk)], $out_fh);
+        print $out_fh create_huffman_entry(string2symbols($chunk));
     }
 }
 
@@ -146,12 +146,12 @@ sub decompression ($fh, $out_fh) {
         my $indices      = obh_decode($fh);
 
         my $rle4 = lz77_decode($uncompressed, $indices, $lengths);
-        my $bwt  = pack('C*', @{rle4_decode([unpack('C*', $rle4)])});
+        my $bwt  = symbols2string(rle4_decode(string2symbols($rle4)));
         my @rle4 = unpack('C*', bwt_decode($bwt, $idx));
-        print $out_fh pack('C*', @{rle4_decode(\@rle4)});
+        print $out_fh symbols2string(rle4_decode(\@rle4));
     }
     elsif ($compression_byte eq UNCOMPRESSED_BYTE) {
-        print $out_fh pack('C*', @{decode_huffman_entry($fh)});
+        print $out_fh symbols2string(decode_huffman_entry($fh));
     }
     else {
         die "Invalid compression...";

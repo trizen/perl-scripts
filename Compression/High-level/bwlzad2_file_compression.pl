@@ -127,13 +127,13 @@ sub lzhd_compression ($chunk, $out_fh) {
 
     if ($est_ratio > RANDOM_DATA_THRESHOLD) {
         print $out_fh COMPRESSED_BYTE;
-        create_ac_entry($uncompressed, $out_fh);
-        create_ac_entry($lengths,      $out_fh);
+        print $out_fh create_ac_entry($uncompressed);
+        print $out_fh create_ac_entry($lengths);
         print $out_fh abc_encode($indices);
     }
     else {
         print $out_fh UNCOMPRESSED_BYTE;
-        create_ac_entry([unpack('C*', $chunk)], $out_fh);
+        print $out_fh create_ac_entry(string2symbols($chunk));
     }
 }
 
@@ -149,7 +149,7 @@ sub lzhd_decompression ($fh) {
         return lz77_decode($uncompressed, $indices, $lengths);
     }
     elsif ($compression_byte eq UNCOMPRESSED_BYTE) {
-        return pack('C*', @{decode_ac_entry($fh)});
+        return symbols2string(decode_ac_entry($fh));
     }
     else {
         die "Invalid compression...";
@@ -188,7 +188,7 @@ sub decompression ($fh, $out_fh) {
     my $idx         = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
     my $alphabet    = decode_alphabet($fh);
 
-    my $bytes = [unpack('C*', lzhd_decompression($fh))];
+    my $bytes = string2symbols(lzhd_decompression($fh));
 
     if ($rle_encoded) {
         $bytes = zrle_decode($bytes);
@@ -199,7 +199,7 @@ sub decompression ($fh, $out_fh) {
 
     $bytes = mtf_decode($bytes, [@$alphabet]);
 
-    print $out_fh pack('C*', @{rle4_decode([unpack('C*', bwt_decode(pack('C*', @$bytes), $idx))])});
+    print $out_fh symbols2string(rle4_decode(string2symbols(bwt_decode(pack('C*', @$bytes), $idx))));
 }
 
 # Compress file

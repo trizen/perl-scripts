@@ -160,12 +160,11 @@ sub compress_file ($input, $output) {
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
 
         my ($bwt,          $idx)     = bwt_encode($chunk);
-        my ($uncompressed, $lengths) = VLR_encoding([unpack('C*', $bwt)]);
+        my ($uncompressed, $lengths) = VLR_encoding(string2symbols($bwt));
 
         print $out_fh pack('N', $idx);
-
-        mrl_compress($uncompressed, $out_fh);
-        create_huffman_entry(rle4_encode($lengths), $out_fh);
+        print $out_fh mrl_compress_symbolic($uncompressed);
+        print $out_fh create_huffman_entry(rle4_encode($lengths));
     }
 
     close $out_fh;
@@ -188,7 +187,7 @@ sub decompress_file ($input, $output) {
 
         my $idx = unpack('N', join('', map { getc($fh) // die "decompression error" } 1 .. 4));
 
-        my $uncompressed = mrl_decompress($fh);
+        my $uncompressed = mrl_decompress_symbolic($fh);
         my $lengths      = rle4_decode(decode_huffman_entry($fh));
         my $dec          = VLR_decoding($uncompressed, $lengths);
         print $out_fh bwt_decode($dec, $idx);

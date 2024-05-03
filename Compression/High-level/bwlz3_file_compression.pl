@@ -121,7 +121,7 @@ sub compression ($chunk, $out_fh) {
 
     print $out_fh pack('N', $idx);
     print $out_fh encode_alphabet($alphabet);
-    lzhd_compress_symbolic($enc_bytes, $out_fh);
+    print $out_fh lz77_compress_symbolic($enc_bytes);
 }
 
 sub decompression ($fh, $out_fh) {
@@ -129,12 +129,12 @@ sub decompression ($fh, $out_fh) {
     my $idx      = bits2int($fh, 32, \my $buffer);
     my $alphabet = decode_alphabet($fh);
 
-    my $symbols = lzhd_decompress_symbolic($fh);
+    my $symbols = lz77_decompress_symbolic($fh);
 
     $symbols = zrle_decode($symbols);
     $symbols = mtf_decode($symbols, $alphabet);
 
-    print $out_fh pack('C*', @{rle4_decode(bwt_decode_symbolic($symbols, $idx))});
+    print $out_fh symbols2string(rle4_decode(bwt_decode_symbolic($symbols, $idx)));
 }
 
 # Compress file

@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 # Author: Trizen
-# Date: 02 May 2024
+# Date: 03 May 2024
 # https://github.com/trizen
 
 # Simple implementation of LZSS encoding.
@@ -37,25 +37,23 @@ sub lzss_encode ($str) {
             ++$n;
         }
 
-        --$n;
+        if ($n > $min_len) {
 
-        if ($n >= $min_len) {
-
-            push @lengths,   $n;
+            push @lengths,   $n - 1;
             push @distances, $la - $p;
-            push @literals,  $chars[$la + $n];
+            push @literals,  undef;
 
-            $la += $n + 1;
-            $prefix .= $token;
+            $la += $n - 1;
+            $prefix .= substr($token, 0, -1);
         }
         else {
-            my @bytes = split(//, substr($prefix, $p, $n) . $chars[$la + $n]);
+            my @bytes = split(//, substr($prefix, $p, $n - 1) . $chars[$la + $n - 1]);
 
             push @lengths,   (0) x scalar(@bytes);
             push @distances, (0) x scalar(@bytes);
             push @literals, @bytes;
 
-            $la += $n + 1;
+            $la += $n;
             $prefix .= $token;
         }
     }
@@ -69,8 +67,14 @@ sub lzss_decode ($literals, $distances, $lengths) {
     my $offset = 0;
 
     foreach my $i (0 .. $#$literals) {
-        $chunk .= substr($chunk, $offset - $distances->[$i], $lengths->[$i]) . $literals->[$i];
-        $offset += $lengths->[$i] + 1;
+        if ($lengths->[$i] != 0) {
+            $chunk .= substr($chunk, $offset - $distances->[$i], $lengths->[$i]);
+            $offset += $lengths->[$i];
+        }
+        else {
+            $chunk .= $literals->[$i];
+            $offset += 1;
+        }
     }
 
     return $chunk;
@@ -84,7 +88,12 @@ my $decoded = lzss_decode($literals, $distances, $lengths);
 $string eq $decoded or die "error: <<$string>> != <<$decoded>>";
 
 foreach my $i (0 .. $#$literals) {
-    say "$literals->[$i] -- [$distances->[$i], $lengths->[$i]]";
+    if ($lengths->[$i] == 0) {
+        say $literals->[$i];
+    }
+    else {
+        say "[$distances->[$i], $lengths->[$i]]";
+    }
 }
 
 foreach my $file (__FILE__, $^X) {    # several tests
@@ -98,18 +107,23 @@ foreach my $file (__FILE__, $^X) {    # several tests
     my ($literals, $distances, $lengths) = lzss_encode($string);
     my $decoded = lzss_decode($literals, $distances, $lengths);
 
+    say "Ratio: ", scalar(@$literals) / scalar(grep { defined($_) } @$literals);
+
     $string eq $decoded or die "error: <<$string>> != <<$decoded>>";
 }
 
 __END__
-T -- [0, 0]
-O -- [0, 0]
-B -- [0, 0]
-E -- [0, 0]
-O -- [0, 0]
-R -- [0, 0]
-N -- [0, 0]
-O -- [0, 0]
-T -- [0, 0]
-T -- [9, 6]
-T -- [15, 7]
+T
+O
+B
+E
+O
+R
+N
+O
+T
+[9, 6]
+[15, 8]
+T
+Ratio: 1.44887348353553
+Ratio: 1.50565184626978

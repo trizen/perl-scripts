@@ -114,7 +114,7 @@ sub compression ($chunk, $out_fh) {
     my ($bwt, $idx) = bwt_encode(pack('C*', @$rle4));
 
     print $out_fh pack('N', $idx);
-    lzss_compress($bwt, $out_fh);
+    print $out_fh lzss_compress($bwt);
 }
 
 sub decompression ($fh, $out_fh) {

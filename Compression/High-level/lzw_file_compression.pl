@@ -121,7 +121,7 @@ sub compress_file ($input, $output) {
 
     # Compress data
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
-        lzw_compress($chunk, $out_fh);
+        print $out_fh lzw_compress($chunk);
     }
 
     # Close the output file
@@ -142,7 +142,7 @@ sub decompress_file ($input, $output) {
       or die "Can't open file <<$output>> for writing: $!";
 
     while (!eof($fh)) {
-        lzw_decompress($fh, $out_fh);
+        print $out_fh lzw_decompress($fh);
     }
 
     # Close the output file

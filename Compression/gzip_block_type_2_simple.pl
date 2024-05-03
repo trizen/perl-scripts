@@ -66,28 +66,29 @@ while (read($in_fh, (my $chunk), WINDOW_SIZE)) {
 
     foreach my $k (0 .. $#$literals) {
 
-        if ($lengths->[$k]) {
-            my $len  = $lengths->[$k];
-            my $dist = $distances->[$k];
-
-            {
-                my $len_idx = $LENGTH_INDICES->[$len];
-                my ($min, $bits) = @{$LENGTH_SYMBOLS->[$len_idx]};
-
-                push @len_symbols, [$len_idx + 256 - 1, $bits];
-                $offset_bits .= int2bits_lsb($len - $min, $bits) if ($bits > 0);
-            }
-
-            {
-                my $dist_idx = find_deflate_index($dist, $DISTANCE_SYMBOLS);
-                my ($min, $bits) = @{$DISTANCE_SYMBOLS->[$dist_idx]};
-
-                push @dist_symbols, [$dist_idx - 1, $bits];
-                $offset_bits .= int2bits_lsb($dist - $min, $bits) if ($bits > 0);
-            }
+        if ($lengths->[$k] == 0) {
+            push @len_symbols, $literals->[$k];
+            next;
         }
 
-        push @len_symbols, $literals->[$k];
+        my $len  = $lengths->[$k];
+        my $dist = $distances->[$k];
+
+        {
+            my $len_idx = $LENGTH_INDICES->[$len];
+            my ($min, $bits) = @{$LENGTH_SYMBOLS->[$len_idx]};
+
+            push @len_symbols, [$len_idx + 256 - 1, $bits];
+            $offset_bits .= int2bits_lsb($len - $min, $bits) if ($bits > 0);
+        }
+
+        {
+            my $dist_idx = find_deflate_index($dist, $DISTANCE_SYMBOLS);
+            my ($min, $bits) = @{$DISTANCE_SYMBOLS->[$dist_idx]};
+
+            push @dist_symbols, [$dist_idx - 1, $bits];
+            $offset_bits .= int2bits_lsb($dist - $min, $bits) if ($bits > 0);
+        }
     }
 
     push @len_symbols, 256;    # end-of-block marker
