@@ -172,7 +172,7 @@ sub compress_file ($input, $output) {
             say "Random data detected...";
             $create_bz2_block->();
             print $out_fh UNCOMPRESSED_BYTE;
-            create_ac_entry([unpack 'C*', $chunk], $out_fh);
+            print $out_fh create_ac_entry(string2symbols($chunk));
         }
 
         if (length($uncompressed_str) >= CHUNK_SIZE) {
@@ -203,7 +203,7 @@ sub decompress_file ($input, $output) {
 
         if ($compression_byte eq UNCOMPRESSED_BYTE) {
             say "Decoding random data...";
-            print $out_fh pack('C*', @{decode_ac_entry($fh)});
+            print $out_fh symbols2string(decode_ac_entry($fh));
             next;
         }
         elsif ($compression_byte ne COMPRESSED_BYTE) {
