@@ -80,8 +80,7 @@ foreach my $i (0 .. $#LENGTH_SYMBOLS) {
     }
 }
 
-sub usage {
-    my ($code) = @_;
+sub usage ($code) {
     print <<"EOH";
 usage: $0 [options] [input file] [output file]
 
@@ -110,8 +109,7 @@ sub version {
     exit;
 }
 
-sub valid_archive {
-    my ($fh) = @_;
+sub valid_archive ($fh) {
 
     if (read($fh, (my $sig), length(SIGNATURE), 0) == length(SIGNATURE)) {
         $sig eq SIGNATURE || return;

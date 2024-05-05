@@ -330,7 +330,7 @@ sub extract ($in_fh, $output_file, $defined_output_file) {
     }
     else {
         print STDERR "\n:: There is something else in the container! Trying to recurse!\n\n";
-        extract($in_fh, $out_fh, 1);
+        __SUB__->($in_fh, $out_fh, 1);
     }
 }
 
