@@ -16,9 +16,9 @@ use Compression::Util qw(deltas);
 
 sub isrem($m, $p, $n) {
 
-    return if ((6 * $m + 1) % $p == 0);
-    return if ((12 * $m + 1) % $p == 0);
-    return if ((18 * $m + 1) % $p == 0);
+    ( 6 * $m + 1) % $p == 0 and return;
+    (12 * $m + 1) % $p == 0 and return;
+    (18 * $m + 1) % $p == 0 and return;
 
     foreach my $k (2 .. $n - 2) {
         if (((9 * $m << $k) + 1) % $p == 0) {
@@ -59,10 +59,6 @@ sub remainders_for_primes($n, $primes) {
 
 sub is($m, $n) {
 
-    $m > 0                     or return;
-    $m % 2 == 0                or return;
-    valuation($m, 2) >= $n - 4 or return;
-
     is_prime(6 * $m + 1)  || return;
     is_prime(12 * $m + 1) || return;
     is_prime(18 * $m + 1) || return;
@@ -84,12 +80,17 @@ sub chernick_carmichael_with_n_factors($n) {
 
     $maxp = 17 if ($n >= 8);
     $maxp = 29 if ($n >= 10);
+    $maxp = 31 if ($n >= 12);
 
     my @primes = @{primes($maxp)};
 
     my @r = remainders_for_primes($n, \@primes);
     my @d = @{deltas(\@r)};
     my $s = vecprod(@primes);
+
+    while ($d[0] == 0) {
+        shift @d;
+    }
 
     push @d, $r[0] + $s - $r[-1];
 
@@ -98,16 +99,18 @@ sub chernick_carmichael_with_n_factors($n) {
     my $t0     = time;
     my $prev_m = $m;
 
+    my $two_power = vecmax(1 << ($n - 4), 1);
+
     for (my $j = 0 ; ; ++$j) {
 
-        if (is($m, $n)) {
+        if ($m % $two_power == 0 and is($m, $n)) {
             return $m;
         }
 
         if ($j % 1e7 == 0 and $j > 0) {
             my $tdelta = time - $t0;
             say "Searching for a($n) with m = $m";
-            say "Performance: ", (($m - $prev_m) / 1e7) / $tdelta;
+            say "Performance: ", (($m - $prev_m) / 1e9) / $tdelta, " * 10^9 terms per second";
             $t0     = time;
             $prev_m = $m;
         }
