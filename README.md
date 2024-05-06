@@ -630,6 +630,7 @@ A nice collection of day-to-day Perl scripts.
     * [Chernick-carmichael numbers](./Math/chernick-carmichael_numbers.pl)
     * [Chernick-carmichael numbers below limit](./Math/chernick-carmichael_numbers_below_limit.pl)
     * [Chernick-carmichael polynomials](./Math/chernick-carmichael_polynomials.pl)
+    * [Chernick-carmichael with n factors sieve](./Math/chernick-carmichael_with_n_factors_sieve.pl)
     * [Chinese factorization method](./Math/chinese_factorization_method.pl)
     * [Coin change](./Math/coin_change.pl)
     * [Collatz function](./Math/collatz_function.pl)
