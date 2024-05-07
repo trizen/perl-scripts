@@ -150,4 +150,7 @@ foreach my $zip_file (@ARGV) {
             unlink($zip_file) or warn "[!] Can't remove file <<$zip_file>>: $!\n";
         }
     }
+    else {
+        warn ":: Not a file: <<$zip_file>>. Skipping...\n";
+    }
 }

@@ -96,15 +96,15 @@ usage: $0 [options] [zip files]
 options:
 
     -c --compress=s     : compression method (default: $compression_method)
-                          valid: none, xz, gz, bz2
+                          valid: none, gz, bz2, xz
     -k --keep!          : keep the original ZIP files (default: $keep_original)
     -f --force!         : overwrite existing files (default: $overwrite)
     -h --help           : print this message and exit
 
 example:
 
-    # Convert a bunch of zip files to tar.xz
-    perl $0 -c=xz *.zip
+    # Convert a bunch of zip files to tar.gz
+    perl $0 -c=gz *.zip
 EOT
 
     exit($exit_code);
@@ -161,6 +161,11 @@ foreach my $zip_file (@ARGV) {
 
         say "-> Creating TAR file: $tar_file";
         $tar->write($tar_file, (defined($compression_flag) ? $compression_flag : ()));
+
+        my $old_size = -s $zip_file;
+        my $new_size = -s $tar_file;
+
+        say "-> $old_size vs. $new_size";
 
         if (not $keep_original) {
             say "-> Removing the original ZIP file: $zip_file";
