@@ -26,7 +26,7 @@ my @img_formats = qw(
 sub usage ($code) {
     local $" = ",";
     print <<"EOT";
-usage: $0 [options] [dir]
+usage: $0 [options] [dirs | files]
 
 options:
     -w  --width=i       : resize images to this width (default: $width)

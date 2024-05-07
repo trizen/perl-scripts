@@ -43,6 +43,11 @@ sub zip2tar ($zip_file) {
         }
         elsif (ref($member) eq 'Archive::Zip::ZipFileMember') {
 
+            if ($member->isEncrypted) {
+                warn "[!] This archive is encrypted! Skipping...\n";
+                return undef;
+            }
+
             my $fileName = $member->fileName;
             my $size     = $member->uncompressedSize;
 
@@ -160,5 +165,8 @@ foreach my $zip_file (@ARGV) {
             say "-> Removing the original ZIP file: $zip_file";
             unlink($zip_file) or warn "[!] Can't remove file <<$zip_file>>: $!\n";
         }
+    }
+    else {
+        warn ":: Not a file: <<$zip_file>>. Skipping...\n";
     }
 }
