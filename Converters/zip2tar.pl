@@ -14,6 +14,7 @@ use Archive::Tar;
 use Archive::Tar::Constant;
 use Archive::Zip qw(:ERROR_CODES :CONSTANTS);
 use Getopt::Long qw(GetOptions);
+use Encode       qw(encode_utf8);
 
 sub zip2tar ($zip_file) {
 
@@ -29,7 +30,7 @@ sub zip2tar ($zip_file) {
     foreach my $member ($zip->members) {
 
         if (ref($member) eq 'Archive::Zip::DirectoryMember') {
-            my $dirName = $member->fileName;
+            my $dirName = encode_utf8($member->fileName);
             $tar->add_data(
                            $dirName, '',
                            {
@@ -48,7 +49,7 @@ sub zip2tar ($zip_file) {
                 return undef;
             }
 
-            my $fileName = $member->fileName;
+            my $fileName = encode_utf8($member->fileName);
             my $size     = $member->uncompressedSize;
 
             $member->desiredCompressionMethod(COMPRESSION_STORED);
