@@ -124,7 +124,10 @@ foreach my $zip_file (@ARGV) {
         my $out_fh;
         if (defined($compression_class)) {
             $out_fh = $compression_class->new($tar_file)
-              or die "[!] Failed to initialize the compressor\n";
+              or do {
+                warn "[!] Failed to initialize the compressor: $!. Skipping...\n";
+                next;
+              };
         }
         else {
             open $out_fh, '>:raw', $tar_file

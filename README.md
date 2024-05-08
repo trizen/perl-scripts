@@ -146,6 +146,7 @@ A nice collection of day-to-day Perl scripts.
     * [From hex](./Converters/from_hex.pl)
     * [Gdbm to berkeley](./Converters/gdbm_to_berkeley.pl)
     * [Gitbook2pdf](./Converters/gitbook2pdf.pl)
+    * [Gz2xz](./Converters/gz2xz.pl)
     * [Html2pdf](./Converters/html2pdf.pl)
     * [Html2pdf chromium](./Converters/html2pdf_chromium.pl)
     * [Html2text](./Converters/html2text.pl)
