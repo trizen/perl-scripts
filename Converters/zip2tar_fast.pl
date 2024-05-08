@@ -52,7 +52,7 @@ options:
 example:
 
     # Convert a bunch of zip files to tar.xz
-    perl $0 -c=xz *.zip
+    $0 -c=xz *.zip
 EOT
 
     exit($exit_code);

@@ -43,7 +43,7 @@ options:
 example:
 
     # Convert a bunch of Gzip files to XZ format
-    perl $0 *.gz
+    $0 *.gz
 EOT
 
     exit($exit_code);
@@ -63,13 +63,15 @@ foreach my $gz_file (@ARGV) {
     if (-f $gz_file) {
 
         say "\n:: Processing: $gz_file";
-        my $xz_file;
 
-        if ($gz_file =~ /\.tgz\z/i) {
-            $xz_file = ($gz_file =~ s{\.tgz\z}{}ri) . '.txz';
+        my $xz_file = $gz_file;
+
+        if (   $xz_file =~ s{\.tgz\z}{.txz}i
+            or $xz_file =~ s{\.gz\z}{.xz}i) {
+            ## ok
         }
         else {
-            $xz_file = ($gz_file =~ s{\.gz\z}{}ri) . '.xz';
+            $xz_file .= '.xz';
         }
 
         if (-e $xz_file) {

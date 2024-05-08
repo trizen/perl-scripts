@@ -104,7 +104,7 @@ options:
 example:
 
     # Convert a bunch of zip files to tar.gz
-    perl $0 -c=gz *.zip
+    $0 -c=gz *.zip
 EOT
 
     exit($exit_code);

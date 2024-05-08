@@ -77,7 +77,7 @@ GetOptions('exiftool!' => \$use_exiftool,)
   or die "Error in command-line arguments!";
 
 @ARGV or die <<"USAGE";
-usage: perl $0 [options] [dirs | files]
+usage: $0 [options] [dirs | files]
 
 options:
 

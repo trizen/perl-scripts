@@ -126,6 +126,8 @@ sub optimize_png ($png_file) {
 @ARGV or die <<"USAGE";
 usage: perl $0 [options] [dirs | files]
 
+Recompress a given list of images, using either PNG or JPEG (whichever results in a smaller file size).
+
 options:
 
     -q INT      : quality level for JPEG (default: $quality)
@@ -133,6 +135,8 @@ options:
     --png       : recompress only PNG images (default: $png_only)
     --exiftool  : use `exiftool` to determine the MIME type (default: $use_exiftool)
 
+WARNING: the original files are deleted!
+WARNING: the program does LOSSY compression of images!
 USAGE
 
 GetOptions(
