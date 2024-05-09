@@ -5,7 +5,7 @@
 # Edit: 02 May 2024
 # https://github.com/trizen
 
-# Compress/decompress files using LZ77 compression (LZSS variant with hash tables -- faster version) + Huffman coding.
+# Compress/decompress files using LZ77 compression (LZSS variant with hash tables -- fast version) + Huffman coding.
 
 # Encoding the literals and the pointers using a DEFLATE-like approach.
 # This version is memory-friendly, supporting arbitrary large chunk sizes.

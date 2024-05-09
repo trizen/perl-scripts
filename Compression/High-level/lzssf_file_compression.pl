@@ -5,7 +5,7 @@
 # Edit: 21 March 2024
 # https://github.com/trizen
 
-# Compress/decompress files using LZ77 compression (LZSS variant) + Huffman coding.
+# Compress/decompress files using LZ77 compression (LZSS variant with hash tables -- fast version) + Huffman coding.
 
 # Encoding the literals and the pointers using a DEFLATE-like approach.
 
@@ -124,7 +124,7 @@ sub compress_file ($input, $output) {
 
     # Compress data
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
-        print $out_fh lzss_compress($chunk);
+        print $out_fh lzss_compress($chunk, \&create_huffman_entry, \&lzss_encode_fast);
     }
 
     # Close the file

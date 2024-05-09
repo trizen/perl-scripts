@@ -268,59 +268,63 @@ sub block_type_2 ($literals, $distances, $lengths) {
     return $bitstring;
 }
 
-{
-    my @code_lengths = (0) x 288;
-    foreach my $i (0 .. 143) {
-        $code_lengths[$i] = 8;
-    }
-    foreach my $i (144 .. 255) {
-        $code_lengths[$i] = 9;
-    }
-    foreach my $i (256 .. 279) {
-        $code_lengths[$i] = 7;
-    }
-    foreach my $i (280 .. 287) {
-        $code_lengths[$i] = 8;
-    }
+sub block_type_1 ($literals, $distances, $lengths) {
 
-    my ($dict)      = huffman_from_code_lengths(\@code_lengths);
-    my ($dist_dict) = huffman_from_code_lengths([(5) x 32]);
+    state $dict;
+    state $dist_dict;
 
-    sub block_type_1 ($literals, $distances, $lengths) {
+    if (!defined($dict)) {
 
-        my $bitstring = '10';
-
-        foreach my $k (0 .. $#$literals) {
-
-            if ($lengths->[$k] == 0) {
-                $bitstring .= $dict->{$literals->[$k]};
-                next;
-            }
-
-            my $len  = $lengths->[$k];
-            my $dist = $distances->[$k];
-
-            {
-                my $len_idx = $LENGTH_INDICES->[$len];
-                my ($min, $bits) = @{$LENGTH_SYMBOLS->[$len_idx]};
-
-                $bitstring .= $dict->{$len_idx + 256 - 1};
-                $bitstring .= int2bits_lsb($len - $min, $bits) if ($bits > 0);
-            }
-
-            {
-                my $dist_idx = find_deflate_index($dist, $DISTANCE_SYMBOLS);
-                my ($min, $bits) = @{$DISTANCE_SYMBOLS->[$dist_idx]};
-
-                $bitstring .= $dist_dict->{$dist_idx - 1};
-                $bitstring .= int2bits_lsb($dist - $min, $bits) if ($bits > 0);
-            }
+        my @code_lengths = (0) x 288;
+        foreach my $i (0 .. 143) {
+            $code_lengths[$i] = 8;
+        }
+        foreach my $i (144 .. 255) {
+            $code_lengths[$i] = 9;
+        }
+        foreach my $i (256 .. 279) {
+            $code_lengths[$i] = 7;
+        }
+        foreach my $i (280 .. 287) {
+            $code_lengths[$i] = 8;
         }
 
-        $bitstring .= $dict->{256};    # end-of-block symbol
-
-        return $bitstring;
+        ($dict)      = huffman_from_code_lengths(\@code_lengths);
+        ($dist_dict) = huffman_from_code_lengths([(5) x 32]);
     }
+
+    my $bitstring = '10';
+
+    foreach my $k (0 .. $#$literals) {
+
+        if ($lengths->[$k] == 0) {
+            $bitstring .= $dict->{$literals->[$k]};
+            next;
+        }
+
+        my $len  = $lengths->[$k];
+        my $dist = $distances->[$k];
+
+        {
+            my $len_idx = $LENGTH_INDICES->[$len];
+            my ($min, $bits) = @{$LENGTH_SYMBOLS->[$len_idx]};
+
+            $bitstring .= $dict->{$len_idx + 256 - 1};
+            $bitstring .= int2bits_lsb($len - $min, $bits) if ($bits > 0);
+        }
+
+        {
+            my $dist_idx = find_deflate_index($dist, $DISTANCE_SYMBOLS);
+            my ($min, $bits) = @{$DISTANCE_SYMBOLS->[$dist_idx]};
+
+            $bitstring .= $dist_dict->{$dist_idx - 1};
+            $bitstring .= int2bits_lsb($dist - $min, $bits) if ($bits > 0);
+        }
+    }
+
+    $bitstring .= $dict->{256};    # end-of-block symbol
+
+    return $bitstring;
 }
 
 sub block_type_0($chunk) {
@@ -373,7 +377,7 @@ sub gzip_compress ($in_fh, $out_fh) {
 
         my $bt2_bitstring = block_type_2($literals, $distances, $lengths);
 
-        # When block type 2 is greater than block type 1, then we may have very small data
+        # When block type 2 is larger than block type 1, then we may have very small data
         if (length($bt2_bitstring) > length($bt1_bitstring)) {
             say STDERR ":: Using block type: 1";
             $bitstring .= $bt1_bitstring;
@@ -646,8 +650,8 @@ sub gzip_decompress ($in_fh, $out_fh) {
 
         if ($block_type == 0) {
             say STDERR "\n:: Extracting block of type 0";
-            read_bit_lsb($in_fh, \$buffer) for (1 .. (length($buffer) % 8));    # pad to a byte
-            $chunk = extract_block_type_0($in_fh, \$buffer);
+            $buffer = '';                                       # pad to a byte
+            $chunk  = extract_block_type_0($in_fh, \$buffer);
             $search_window .= $chunk;
         }
         elsif ($block_type == 1) {
