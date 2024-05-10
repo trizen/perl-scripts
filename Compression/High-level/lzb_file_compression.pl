@@ -14,7 +14,6 @@ use 5.036;
 use Getopt::Std       qw(getopts);
 use File::Basename    qw(basename);
 use Compression::Util qw(:all);
-use List::Util        qw(min);
 
 use constant {
     PKGNAME => 'LZB',
@@ -126,37 +125,25 @@ sub compression($chunk, $out_fh) {
         my $dist      = $distances->[$i] // 0;
         my $match_len = $lengths->[$i]   // 0;
 
-        my $len_byte = '';
+        my $len_byte = 0;
 
-        if ($literals_length >= 15) {
-            $len_byte .= '1111';
-            $literals_length -= 15;
-        }
-        else {
-            $len_byte .= sprintf('%04b', $literals_length);
-            $literals_length -= 15;
-        }
+        $len_byte |= ($literals_length >= 15 ? 15 : $literals_length) << 4;
+        $len_byte |= ($match_len >= 15       ? 15 : $match_len);
 
-        if ($match_len >= 15) {
-            $len_byte .= '1111';
-            $match_len -= 15;
-        }
-        else {
-            $len_byte .= sprintf('%04b', $match_len);
-            $match_len -= 15;
-        }
+        $literals_length -= 15;
+        $match_len       -= 15;
 
-        print $out_fh chr(oct('0b' . $len_byte));
+        print $out_fh chr($len_byte);
 
         while ($literals_length >= 0) {
-            print $out_fh chr(min($literals_length, 255));
+            print $out_fh chr($literals_length >= 255 ? 255 : $literals_length);
             $literals_length -= 255;
         }
 
         print $out_fh $literals_string;
 
         while ($match_len >= 0) {
-            print $out_fh chr(min($match_len, 255));
+            print $out_fh chr($match_len >= 255 ? 255 : $match_len);
             $match_len -= 255;
         }
 
