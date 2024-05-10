@@ -53,11 +53,12 @@ my $header_checksum = ord(getc($fh));
 
 my $decoded = '';
 
-BLOCK_LOOP: while (1) {
+BLOCK_LOOP: while (!eof($fh)) {
 
     my $block_size = bits2int_lsb($fh, 32, \$buffer);
 
     if ($block_size == 0x00000000) {    # signifies an EndMark
+        say STDERR "Block size == 0";
         last;
     }
 
@@ -80,31 +81,31 @@ BLOCK_LOOP: while (1) {
         while (!eof($block_fh)) {
             my $len_byte = ord(getc($block_fh));
 
-            my $literal_lengths = $len_byte >> 4;
+            my $literals_length = $len_byte >> 4;
             my $match_len       = $len_byte & 0b1111;
 
-            say STDERR "Literal: ",   $literal_lengths;
+            say STDERR "Literal: ",   $literals_length;
             say STDERR "Match len: ", $match_len;
 
-            if ($literal_lengths == 15) {
+            if ($literals_length == 15) {
                 while (1) {
                     my $byte_len = ord(getc($block_fh));
-                    $literal_lengths += $byte_len;
+                    $literals_length += $byte_len;
                     last if $byte_len != 255;
                 }
             }
 
-            say STDERR "Total literals length: ", $literal_lengths;
+            say STDERR "Total literals length: ", $literals_length;
 
             my $literals = '';
 
-            if ($literal_lengths > 0) {
-                read($block_fh, $literals, $literal_lengths);
+            if ($literals_length > 0) {
+                read($block_fh, $literals, $literals_length);
             }
 
             if ($match_len == 0) {    # end of block
                 $decoded .= $literals;
-                last BLOCK_LOOP;
+                next BLOCK_LOOP;      # FIXME: this is not correct
             }
 
             my $offset = bits2int_lsb($block_fh, 16, \$buffer);
@@ -124,8 +125,7 @@ BLOCK_LOOP: while (1) {
             $decoded .= $literals;
 
             foreach my $i (1 .. $match_len + 4) {
-                my $str = substr($decoded, length($decoded) - $offset, 1);
-                $decoded .= $str;
+                $decoded .= substr($decoded, length($decoded) - $offset, 1);
             }
         }
     }
