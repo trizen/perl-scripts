@@ -110,6 +110,8 @@ A nice collection of day-to-day Perl scripts.
     * [Lza file compression](./Compression/lza_file_compression.pl)
     * [Lzac file compression](./Compression/lzac_file_compression.pl)
     * [Lzaz file compression](./Compression/lzaz_file_compression.pl)
+    * [Lzb file compression](./Compression/lzb_file_compression.pl)
+    * [Lzbf file compression](./Compression/lzbf_file_compression.pl)
     * [Lzbw file compression](./Compression/lzbw_file_compression.pl)
     * [Lzbwa file compression](./Compression/lzbwa_file_compression.pl)
     * [Lzbwad file compression](./Compression/lzbwad_file_compression.pl)

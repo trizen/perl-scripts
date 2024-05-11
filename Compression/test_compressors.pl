@@ -24,7 +24,9 @@ my %ignored_methods = (
     'ppmh_file_compression.pl'  => 1,    # slow
                       );
 
-my $input_file       = shift(@ARGV) // die "usage: perl $0 [input file]\n";
+my $input_file       = shift(@ARGV) // die "usage: perl $0 [input file] [regex]\n";
+my $regex = shift(@ARGV) // '';
+
 my $compressed_dir   = tempdir(CLEANUP => 1);
 my $decompressed_dir = tempdir(CLEANUP => 1);
 
@@ -37,6 +39,7 @@ sub commify ($n) {
 foreach my $file (glob("*_file_compression.pl")) {
 
     next if $ignored_methods{$file};
+    $file =~ /$regex/o or next;
 
     say "\n:: Testing: $file";
     my ($format) = $file =~ /^([^_]+)/;

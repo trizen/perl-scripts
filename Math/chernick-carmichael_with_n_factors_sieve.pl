@@ -10,9 +10,8 @@
 #   https://oeis.org/A372238/a372238.gp.txt
 
 use 5.036;
-use ntheory           qw(:all);
-use Time::HiRes       qw (time);
-use Compression::Util qw(deltas);
+use ntheory     qw(:all);
+use Time::HiRes qw (time);
 
 sub isrem($m, $p, $n) {
 
@@ -59,7 +58,7 @@ sub remainders_for_primes($n, $primes) {
 
 sub is($m, $n) {
 
-    is_prime(6 * $m + 1)  || return;
+    is_prime( 6 * $m + 1) || return;
     is_prime(12 * $m + 1) || return;
     is_prime(18 * $m + 1) || return;
 
@@ -68,6 +67,19 @@ sub is($m, $n) {
     }
 
     return 1;
+}
+
+sub deltas ($integers) {
+
+    my @deltas;
+    my $prev = 0;
+
+    foreach my $n (@$integers) {
+        push @deltas, $n - $prev;
+        $prev = $n;
+    }
+
+    return \@deltas;
 }
 
 sub chernick_carmichael_factors($m, $n) {

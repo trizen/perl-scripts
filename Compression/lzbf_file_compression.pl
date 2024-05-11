@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 # Author: Trizen
-# Date: 10 May 2024
+# Date: 11 May 2024
 # https://github.com/trizen
 
 # Compress/decompress files using LZ77 compression (LZSS variant with hash tables), using a byte-aligned encoding, similar to LZ4.
@@ -11,22 +11,19 @@
 #   https://github.com/lz4/lz4/blob/dev/doc/lz4_Block_format.md
 
 use 5.036;
-use Getopt::Std       qw(getopts);
-use File::Basename    qw(basename);
-use Compression::Util qw(:all);
+use Getopt::Std    qw(getopts);
+use File::Basename qw(basename);
 
 use constant {
-    PKGNAME => 'LZB',
+    PKGNAME => 'LZBF',
     VERSION => '0.01',
-    FORMAT  => 'lzb',
+    FORMAT  => 'lzbf',
+
+    MIN_MATCH_LEN => 5,     # minimum match length
+    MAX_MATCH_LEN => ~0,    # maximum match length
 
     CHUNK_SIZE => 1 << 16,
 };
-
-local $Compression::Util::LZ_MAX_CHAIN_LEN = 16;    # higher value = better compression
-
-local $Compression::Util::LZSS_MIN_LEN = 4;         # minimum match length
-local $Compression::Util::LZSS_MAX_LEN = ~0;        # maximum match length
 
 # Container signature
 use constant SIGNATURE => uc(FORMAT) . chr(1);
@@ -109,8 +106,66 @@ sub main {
     }
 }
 
+sub my_lzss_encode_fast($str) {
+
+    my $la = 0;
+
+    my @symbols = unpack('C*', $str);
+    my $end     = $#symbols;
+
+    my $min_len = MIN_MATCH_LEN;    # minimum match length
+    my $max_len = MAX_MATCH_LEN;    # maximum match length
+
+    my (@literals, @distances, @lengths, %table);
+
+    while ($la <= $end) {
+
+        my $best_n = 1;
+        my $best_p = $la;
+
+        my $lookahead = substr($str, $la, $min_len);
+
+        if (exists($table{$lookahead})) {
+
+            my $p = $table{$lookahead};
+            my $n = $min_len;
+
+            while ($n <= $max_len and $la + $n <= $end and $symbols[$la + $n - 1] == $symbols[$p + $n - 1]) {
+                ++$n;
+            }
+
+            $best_p = $p;
+            $best_n = $n;
+
+            $table{$lookahead} = $la;
+        }
+        else {
+            $table{$lookahead} = $la;
+        }
+
+        if ($best_n > $min_len) {
+
+            push @lengths,   $best_n - 1;
+            push @distances, $la - $best_p;
+            push @literals,  undef;
+
+            $la += $best_n - 1;
+        }
+        else {
+
+            push @lengths,   (0) x $best_n;
+            push @distances, (0) x $best_n;
+            push @literals, @symbols[$best_p .. $best_p + $best_n - 1];
+
+            $la += $best_n;
+        }
+    }
+
+    return (\@literals, \@distances, \@lengths);
+}
+
 sub compression($chunk, $out_fh) {
-    my ($literals, $distances, $lengths) = lzss_encode($chunk);
+    my ($literals, $distances, $lengths) = my_lzss_encode_fast($chunk);
 
     my $literals_end = $#{$literals};
 
@@ -154,14 +209,13 @@ sub compression($chunk, $out_fh) {
             die "Too large distance: $dist";
         }
 
-        print $out_fh pack('B*', int2bits($dist, 16));
+        print $out_fh pack('B*', sprintf('%016b', $dist));
     }
 
 }
 
 sub decompression($fh, $out_fh) {
 
-    my $buffer        = '';
     my $search_window = '';
 
     while (!eof($fh)) {
@@ -192,7 +246,7 @@ sub decompression($fh, $out_fh) {
             }
         }
 
-        my $offset = bits2int($fh, 16, \$buffer);
+        my $offset = oct('0b' . unpack('B*', getc($fh) . getc($fh)));
 
         print $out_fh $literals;
         $search_window .= $literals;
