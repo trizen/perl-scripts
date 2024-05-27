@@ -27,6 +27,10 @@ my %ignored_methods = (
 my $input_file       = shift(@ARGV) // die "usage: perl $0 [input file] [regex]\n";
 my $regex = shift(@ARGV) // '';
 
+if (not -f $input_file) {
+    die "Error for input file <<$input_file>>: $!\n";
+}
+
 my $compressed_dir   = tempdir(CLEANUP => 1);
 my $decompressed_dir = tempdir(CLEANUP => 1);
 

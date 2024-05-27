@@ -1,10 +1,10 @@
 #!/usr/bin/perl
 
 # Author: Trizen
-# Date: 10 May 2024
+# Date: 24 May 2024
 # https://github.com/trizen
 
-# Compress/decompress files using LZ77 compression (LZSS variant with hash tables), using a byte-aligned encoding, similar to LZ4.
+# Compress/decompress files using LZ77 compression (LZSS variant with hash tables), using ideas from LZ4, combined with Huffman Coding.
 
 # References:
 #   https://github.com/lz4/lz4/blob/dev/doc/lz4_Frame_format.md
@@ -16,16 +16,20 @@ use File::Basename    qw(basename);
 use Compression::Util qw(:all);
 
 use constant {
-    PKGNAME => 'LZB',
+    PKGNAME => 'LZBH',
     VERSION => '0.01',
-    FORMAT  => 'lzb',
+    FORMAT  => 'lzbh',
 
-    CHUNK_SIZE => 1 << 16,
+    MIN_MATCH_LEN => 4,     # minimum match length
+    MAX_MATCH_LEN => ~0,    # maximum match length
+    MAX_CHAIN_LEN => 32,    # higher value = better compression
+
+    CHUNK_SIZE => 1 << 17,
 };
 
-local $Compression::Util::LZSS_MIN_LEN     = 4;     # minimum match length
-local $Compression::Util::LZSS_MAX_LEN     = ~0;    # maximum match length
-local $Compression::Util::LZ_MAX_CHAIN_LEN = 16;    # higher value = better compression
+local $Compression::Util::LZSS_MIN_LEN     = MIN_MATCH_LEN;
+local $Compression::Util::LZSS_MAX_LEN     = MAX_MATCH_LEN;
+local $Compression::Util::LZ_MAX_CHAIN_LEN = MAX_CHAIN_LEN;
 
 # Container signature
 use constant SIGNATURE => uc(FORMAT) . chr(1);
@@ -112,67 +116,71 @@ sub compression($chunk, $out_fh) {
     my ($literals, $distances, $lengths) = lzss_encode($chunk);
 
     my $literals_end = $#{$literals};
+    my @symbols;
+    my @len_symbols;
+    my @match_symbols;
+    my @dist_symbols;
 
     for (my $i = 0 ; $i <= $literals_end ; ++$i) {
 
-        my @uncompressed;
+        my $j = $i;
         while ($i <= $literals_end and defined($literals->[$i])) {
-            push @uncompressed, $literals->[$i];
             ++$i;
         }
 
-        my $literals_string = pack('C*', @uncompressed);
-        my $literals_length = scalar(@uncompressed);
+        my $literals_length = $i - $j;
 
         my $dist      = $distances->[$i] // 0;
         my $match_len = $lengths->[$i]   // 0;
 
         my $len_byte = 0;
 
-        $len_byte |= ($literals_length >= 15 ? 15 : $literals_length) << 4;
-        $len_byte |= ($match_len >= 15       ? 15 : $match_len);
+        $len_byte |= ($literals_length >= 7 ? 7  : $literals_length) << 5;
+        $len_byte |= ($match_len >= 31      ? 31 : $match_len);
 
-        $literals_length -= 15;
-        $match_len       -= 15;
+        $literals_length -= 7;
+        $match_len       -= 31;
 
-        print $out_fh chr($len_byte);
+        push @match_symbols, $len_byte;
 
         while ($literals_length >= 0) {
-            print $out_fh chr($literals_length >= 255 ? 255 : $literals_length);
+            push @len_symbols, ($literals_length >= 255 ? 255 : $literals_length);
             $literals_length -= 255;
         }
-
-        print $out_fh $literals_string;
+        push @symbols, @{$literals}[$j .. $i - 1];
 
         while ($match_len >= 0) {
-            print $out_fh chr($match_len >= 255 ? 255 : $match_len);
+            push @match_symbols, ($match_len >= 255 ? 255 : $match_len);
             $match_len -= 255;
         }
 
-        if ($dist >= 1 << 16) {
-            die "Too large distance: $dist";
-        }
-
-        print $out_fh pack('B*', int2bits($dist, 16));
+        push @dist_symbols, $dist;
     }
 
+    print $out_fh create_huffman_entry(\@symbols);
+    print $out_fh delta_encode(\@len_symbols);
+    print $out_fh create_huffman_entry(\@match_symbols);
+    print $out_fh obh_encode(\@dist_symbols);
 }
 
 sub decompression($fh, $out_fh) {
 
-    my $buffer        = '';
-    my $search_window = '';
+    my $data          = '';
+    my $symbols       = decode_huffman_entry($fh);
+    my $len_symbols   = delta_decode($fh);
+    my $match_symbols = decode_huffman_entry($fh);
+    my $dist_symbols  = obh_decode($fh);
 
-    while (!eof($fh)) {
+    while (@$symbols) {
 
-        my $len_byte = ord(getc($fh));
+        my $len_byte = shift(@$match_symbols);
 
-        my $literals_length = $len_byte >> 4;
-        my $match_len       = $len_byte & 0b1111;
+        my $literals_length = $len_byte >> 5;
+        my $match_len       = $len_byte & 0b11111;
 
-        if ($literals_length == 15) {
+        if ($literals_length == 7) {
             while (1) {
-                my $byte_len = ord(getc($fh));
+                my $byte_len = shift(@$len_symbols);
                 $literals_length += $byte_len;
                 last if $byte_len != 255;
             }
@@ -180,32 +188,34 @@ sub decompression($fh, $out_fh) {
 
         my $literals = '';
         if ($literals_length > 0) {
-            read($fh, $literals, $literals_length);
+            $literals = pack("C*", splice(@$symbols, 0, $literals_length));
         }
 
-        if ($match_len == 15) {
+        if ($match_len == 31) {
             while (1) {
-                my $byte_len = ord(getc($fh));
+                my $byte_len = shift(@$match_symbols);
                 $match_len += $byte_len;
                 last if $byte_len != 255;
             }
         }
 
-        my $offset = bits2int($fh, 16, \$buffer);
+        my $offset = shift(@$dist_symbols);
 
-        print $out_fh $literals;
-        $search_window .= $literals;
+        $data .= $literals;
 
-        my $data = '';
-        foreach my $i (1 .. $match_len) {
-            my $str = substr($search_window, length($search_window) - $offset, 1);
-            $search_window .= $str;
-            $data          .= $str;
+        if ($offset == 1) {
+            $data .= substr($data, -1) x $match_len;
         }
-
-        print $out_fh $data;
-        $search_window = substr($search_window, -CHUNK_SIZE) if (length($search_window) > CHUNK_SIZE);
+        elsif ($offset >= $match_len) {
+            $data .= substr($data, length($data) - $offset, $match_len);
+        }
+        else {
+            foreach my $i (1 .. $match_len) {
+                $data .= substr($data, length($data) - $offset, 1);
+            }
+        }
     }
+    print $out_fh $data;
 }
 
 # Compress file
