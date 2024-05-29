@@ -20,11 +20,12 @@ use constant {
     VERSION => '0.01',
     FORMAT  => 'lzbf',
 
-    CHUNK_SIZE => 1 << 16,
+    CHUNK_SIZE => 1 << 18,
 };
 
-local $Compression::Util::LZSS_MIN_LEN = 5;     # minimum match length
-local $Compression::Util::LZSS_MAX_LEN = ~0;    # maximum match length
+local $Compression::Util::LZ_MIN_LEN  = 5;                # minimum match length
+local $Compression::Util::LZ_MAX_LEN  = ~0;               # maximum match length
+local $Compression::Util::LZ_MAX_DIST = (1 << 16) - 1;    # maximum distance
 
 # Container signature
 use constant SIGNATURE => uc(FORMAT) . chr(1);

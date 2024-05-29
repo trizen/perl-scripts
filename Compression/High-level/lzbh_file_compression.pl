@@ -20,16 +20,12 @@ use constant {
     VERSION => '0.01',
     FORMAT  => 'lzbh',
 
-    MIN_MATCH_LEN => 4,     # minimum match length
-    MAX_MATCH_LEN => ~0,    # maximum match length
-    MAX_CHAIN_LEN => 32,    # higher value = better compression
-
-    CHUNK_SIZE => 1 << 17,
+    CHUNK_SIZE => 1 << 18,    # higher value = better compression
 };
 
-local $Compression::Util::LZSS_MIN_LEN     = MIN_MATCH_LEN;
-local $Compression::Util::LZSS_MAX_LEN     = MAX_MATCH_LEN;
-local $Compression::Util::LZ_MAX_CHAIN_LEN = MAX_CHAIN_LEN;
+local $Compression::Util::LZ_MIN_LEN       = 4;     # minimum match length
+local $Compression::Util::LZ_MAX_LEN       = ~0;    # maximum match length
+local $Compression::Util::LZ_MAX_CHAIN_LEN = 32;    # higher value = better compression
 
 # Container signature
 use constant SIGNATURE => uc(FORMAT) . chr(1);

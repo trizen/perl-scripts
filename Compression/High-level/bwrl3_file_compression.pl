@@ -171,7 +171,7 @@ sub compress_file ($input, $output) {
         my ($uncompressed, $lengths) = VLR_encoding(string2symbols($bwt));
 
         print $out_fh pack('N', $idx);
-        print $out_fh mrl_compress_symbolic($uncompressed, \&bz2_compress_symbolic);
+        print $out_fh mrl_compress_symbolic($uncompressed, \&bwt_compress_symbolic);
         print $out_fh create_huffman_entry(rle4_encode(string2symbols($lengths)));
     }
 
@@ -195,7 +195,7 @@ sub decompress_file ($input, $output) {
 
         my $idx = unpack('N', join('', map { getc($fh) // die "decompression error" } 1 .. 4));
 
-        my $uncompressed = mrl_decompress_symbolic($fh, \&bz2_decompress_symbolic);    # uncompressed
+        my $uncompressed = mrl_decompress_symbolic($fh, \&bwt_decompress_symbolic);    # uncompressed
 
         open my $len_fh, '+>:raw', \my $lengths;
         print $len_fh symbols2string(rle4_decode(decode_huffman_entry($fh)));

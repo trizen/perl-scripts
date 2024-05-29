@@ -20,10 +20,7 @@ use constant {
     VERSION => '0.01',
     FORMAT  => 'lz77',
 
-    COMPRESSED_BYTE       => chr(1),
-    UNCOMPRESSED_BYTE     => chr(0),
-    CHUNK_SIZE            => 1 << 16,    # higher value = better compression
-    RANDOM_DATA_THRESHOLD => 1,          # in ratio
+    CHUNK_SIZE => 1 << 18,    # higher value = better compression
 };
 
 # Container signature
@@ -124,7 +121,7 @@ sub compress_file ($input, $output) {
 
     # Compress data
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
-        print $out_fh lz77_compress_symbolic(string2symbols($chunk));
+        print $out_fh lz77_compress($chunk);
     }
 
     # Close the file

@@ -119,17 +119,18 @@ sub main {
 }
 
 sub lzhd_compression ($chunk, $out_fh) {
-    my ($uncompressed, $indices, $lengths) = lz77_encode($chunk);
+
+    my ($uncompressed, $lengths, $matches, $distances) = lz77_encode($chunk);
 
     my $est_ratio = length($chunk) / (4 * scalar(@$uncompressed));
-
     say(scalar(@$uncompressed), ' -> ', $est_ratio);
 
     if ($est_ratio > RANDOM_DATA_THRESHOLD) {
         print $out_fh COMPRESSED_BYTE;
         print $out_fh create_ac_entry($uncompressed);
         print $out_fh create_ac_entry($lengths);
-        print $out_fh abc_encode($indices);
+        print $out_fh create_ac_entry($matches);
+        print $out_fh abc_encode($distances);
     }
     else {
         print $out_fh UNCOMPRESSED_BYTE;
@@ -144,9 +145,10 @@ sub lzhd_decompression ($fh) {
 
         my $uncompressed = decode_ac_entry($fh);
         my $lengths      = decode_ac_entry($fh);
-        my $indices      = abc_decode($fh);
+        my $matches      = decode_ac_entry($fh);
+        my $distances    = abc_decode($fh);
 
-        return lz77_decode($uncompressed, $indices, $lengths);
+        return lz77_decode($uncompressed, $lengths, $matches, $distances);
     }
     elsif ($compression_byte eq UNCOMPRESSED_BYTE) {
         return symbols2string(decode_ac_entry($fh));

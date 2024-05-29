@@ -1,30 +1,26 @@
 #!/usr/bin/perl
 
 # Author: Trizen
-# Date: 15 December 2022
-# Edit: 11 April 2024
+# Date: 29 May 2024
 # https://github.com/trizen
 
-# Compress/decompress files using LZ77 compression + Huffman coding.
-
-# Encoding the distances/indices using a DEFLATE-like approach.
+# Compress/decompress files using LZ77 compression + Bzip2, with maximum distance limited to 255.
 
 use 5.036;
-
 use Getopt::Std       qw(getopts);
 use File::Basename    qw(basename);
 use Compression::Util qw(:all);
 
 use constant {
-    PKGNAME => 'LZHD',
-    VERSION => '0.02',
-    FORMAT  => 'lzhd',
+    PKGNAME => 'LZBW3',
+    VERSION => '0.01',
+    FORMAT  => 'lzbw3',
 
-    CHUNK_SIZE            => 1 << 18,    # higher value = better compression
+    CHUNK_SIZE => 1 << 17,    # higher value = better compression
 };
 
 # Container signature
-use constant SIGNATURE => uc(FORMAT) . chr(2);
+use constant SIGNATURE => uc(FORMAT) . chr(4);
 
 sub usage {
     my ($code) = @_;
@@ -122,14 +118,14 @@ sub compress_file ($input, $output) {
     # Compress data
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
 
-        my ($uncompressed, $lengths, $matches, $distances) = lz77_encode($chunk);
-        my $est_ratio = length($chunk) / (4 * scalar(@$uncompressed));
-        say(scalar(@$uncompressed), ' -> ', $est_ratio);
+        local $Compression::Util::LZ_MAX_DIST = 255;
 
-            print $out_fh create_huffman_entry($uncompressed);
-            print $out_fh create_huffman_entry($lengths);
-            print $out_fh create_huffman_entry($matches);
-            print $out_fh obh_encode($distances);
+        my ($uncompressed, $lengths, $matches, $distances) = lz77_encode($chunk);
+
+        print $out_fh bwt_compress(symbols2string($uncompressed));
+        print $out_fh create_huffman_entry($lengths);
+        print $out_fh bwt_compress(symbols2string($matches));
+        print $out_fh bwt_compress(symbols2string($distances));
     }
 
     # Close the file
@@ -151,12 +147,12 @@ sub decompress_file ($input, $output) {
 
     while (!eof($fh)) {
 
-            my $uncompressed = decode_huffman_entry($fh);
-            my $lengths      = decode_huffman_entry($fh);
-            my $matches      = decode_huffman_entry($fh);
-            my $distances    = obh_decode($fh);
+        my $uncompressed = bwt_decompress_symbolic($fh);
+        my $lengths      = decode_huffman_entry($fh);
+        my $matches      = bwt_decompress_symbolic($fh);
+        my $distances    = bwt_decompress_symbolic($fh);
 
-            print $out_fh lz77_decode($uncompressed, $lengths, $matches, $distances);
+        print $out_fh lz77_decode($uncompressed, $lengths, $matches, $distances);
     }
 
     # Close the file

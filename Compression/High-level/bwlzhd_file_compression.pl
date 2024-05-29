@@ -117,7 +117,7 @@ sub compression ($chunk, $out_fh) {
 
     say "BWT index = $idx";
 
-    my ($uncompressed, $indices, $lengths) = lz77_encode($bwt);
+    my ($uncompressed, $lengths, $matches, $distances) = lz77_encode($bwt);
     my $est_ratio = length($chunk) / (4 * scalar(@$uncompressed));
 
     say(scalar(@$uncompressed), ' -> ', $est_ratio);
@@ -127,7 +127,8 @@ sub compression ($chunk, $out_fh) {
         print $out_fh pack('N', $idx);
         print $out_fh create_huffman_entry($uncompressed);
         print $out_fh create_huffman_entry($lengths);
-        print $out_fh obh_encode($indices);
+        print $out_fh create_huffman_entry($matches);
+        print $out_fh obh_encode($distances);
     }
     else {
         print $out_fh UNCOMPRESSED_BYTE;
@@ -143,9 +144,10 @@ sub decompression ($fh, $out_fh) {
         my $idx          = unpack('N', join('', map { getc($fh) // return undef } 1 .. 4));
         my $uncompressed = decode_huffman_entry($fh);
         my $lengths      = decode_huffman_entry($fh);
-        my $indices      = obh_decode($fh);
+        my $matches      = decode_huffman_entry($fh);
+        my $distances    = obh_decode($fh);
 
-        my $rle4 = lz77_decode($uncompressed, $indices, $lengths);
+        my $rle4 = lz77_decode($uncompressed, $lengths, $matches, $distances);
         my $bwt  = symbols2string(rle4_decode(string2symbols($rle4)));
         my @rle4 = unpack('C*', bwt_decode($bwt, $idx));
         print $out_fh symbols2string(rle4_decode(\@rle4));

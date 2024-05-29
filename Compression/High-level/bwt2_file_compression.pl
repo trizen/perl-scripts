@@ -122,7 +122,7 @@ sub compress_file ($input, $output) {
 
     # Compress data
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
-        print $out_fh bz2_compress($chunk, \&bz2_compress_symbolic);
+        print $out_fh bwt_compress($chunk, \&bwt_compress_symbolic);
     }
 
     # Close the file
@@ -143,7 +143,7 @@ sub decompress_file ($input, $output) {
       or die "Can't open file <<$output>> for writing: $!";
 
     while (!eof($fh)) {
-        print $out_fh bz2_decompress($fh, \&bz2_decompress_symbolic);
+        print $out_fh bwt_decompress($fh, \&bwt_decompress_symbolic);
     }
 
     # Close the file

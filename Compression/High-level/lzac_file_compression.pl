@@ -131,7 +131,7 @@ sub compress_file ($input, $output) {
     # Compress data
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
 
-        my ($uncompressed, $distances, $lengths) = lz77_encode($chunk);
+        my ($uncompressed, $lengths, $matches, $distances) = lz77_encode($chunk);
 
         my $est_ratio = length($chunk) / (4 * scalar(@$uncompressed));
 
@@ -141,6 +141,7 @@ sub compress_file ($input, $output) {
             print $out_fh COMPRESSED_BYTE;
             print $out_fh create_ac_entry($uncompressed);
             print $out_fh create_ac_entry($lengths);
+            print $out_fh create_ac_entry($matches);
             print $out_fh obh_encode($distances, \&create_ac_entry);
         }
         else {
@@ -174,9 +175,10 @@ sub decompress_file ($input, $output) {
 
             my $uncompressed = decode_ac_entry($fh);
             my $lengths      = decode_ac_entry($fh);
+            my $matches      = decode_ac_entry($fh);
             my $distances    = obh_decode($fh, \&decode_ac_entry);
 
-            print $out_fh lz77_decode($uncompressed, $distances, $lengths);
+            print $out_fh lz77_decode($uncompressed, $lengths, $matches, $distances);
         }
         elsif ($compression_byte eq UNCOMPRESSED_BYTE) {
             print $out_fh pack('C*', @{decode_ac_entry($fh)});

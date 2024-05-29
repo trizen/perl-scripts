@@ -175,13 +175,15 @@ sub compress_file ($input, $output) {
     print $out_fh $header;
 
     my $lengths_str      = '';
+    my $matches_str      = '';
     my $uncompressed_str = '';
 
     my @sizes;
     my @distances_chunk;
 
-    open my $uc_fh,  '>:raw', \$uncompressed_str;
-    open my $len_fh, '>:raw', \$lengths_str;
+    open my $uc_fh,    '>:raw', \$uncompressed_str;
+    open my $len_fh,   '>:raw', \$lengths_str;
+    open my $match_fh, '>:raw', \$matches_str;
 
     my $create_bz2_block = sub {
 
@@ -192,10 +194,11 @@ sub compress_file ($input, $output) {
 
         my ($symbols, $offset_bits) = encode_integers(\@distances_chunk);
 
-        print $out_fh bz2_compress($uncompressed_str);
-        print $out_fh bz2_compress($lengths_str);
-        print $out_fh bz2_compress($symbols);
-        print $out_fh bz2_compress($offset_bits);
+        print $out_fh bwt_compress($uncompressed_str);
+        print $out_fh bwt_compress($lengths_str);
+        print $out_fh bwt_compress($matches_str);
+        print $out_fh bwt_compress($symbols);
+        print $out_fh bwt_compress($offset_bits);
 
         @sizes           = ();
         @distances_chunk = ();
@@ -207,22 +210,23 @@ sub compress_file ($input, $output) {
     # Compress data
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
 
-        my ($literals, $distances, $lengths) = lz77_encode($chunk);
+        my ($literals, $lengths, $matches, $distances) = lz77_encode($chunk);
 
         my $est_ratio = length($chunk) / (4 * scalar(@$literals));
         say "Est. ratio: ", $est_ratio, " (", scalar(@$literals), " uncompressed bytes)";
 
         if ($est_ratio > RANDOM_DATA_THRESHOLD) {
-            push @sizes, scalar(@$literals);
+            push(@sizes, scalar(@$literals), scalar(@$lengths), scalar(@$matches), scalar(@$distances));
             print $uc_fh pack('C*', @$literals);
             print $len_fh pack('C*', @$lengths);
+            print $match_fh pack('C*', @$matches);
             push @distances_chunk, @$distances;
         }
         else {
             say "Random data detected...";
             $create_bz2_block->();
             print $out_fh UNCOMPRESSED_BYTE;
-            print $out_fh create_huffman_entry([unpack 'C*', $chunk]);
+            print $out_fh create_huffman_entry(string2symbols($chunk));
         }
 
         if (length($uncompressed_str) >= CHUNK_SIZE) {
@@ -262,27 +266,33 @@ sub decompress_file ($input, $output) {
 
         my @sizes = @{delta_decode($fh)};
 
-        my @uncompressed = unpack('C*', bz2_decompress($fh));
-        my @lengths      = unpack('C*', bz2_decompress($fh));
-        my @symbols      = unpack('C*', bz2_decompress($fh));
-        my $offset_bits  = bz2_decompress($fh);
+        my @uncompressed = unpack('C*', bwt_decompress($fh));
+        my @lengths      = unpack('C*', bwt_decompress($fh));
+        my @matches      = unpack('C*', bwt_decompress($fh));
+        my @symbols      = unpack('C*', bwt_decompress($fh));
+        my $offset_bits  = bwt_decompress($fh);
 
         open my $offbits_fh, '<:raw', \$offset_bits;
         my @distances = @{decode_integers(\@symbols, $offbits_fh)};
 
         while (@uncompressed) {
 
-            my $size = shift(@sizes) // die "decompression error";
+            my $literals_size  = shift(@sizes) // die "decompression error";
+            my $lengths_size   = shift(@sizes) // die "decompression error";
+            my $matches_size   = shift(@sizes) // die "decompression error";
+            my $distances_size = shift(@sizes) // die "decompression error";
 
-            my @uncompressed_chunk = splice(@uncompressed, 0, $size);
-            my @lengths_chunk      = splice(@lengths,      0, $size);
-            my @distances_chunk    = splice(@distances,    0, $size);
+            my @uncompressed_chunk = splice(@uncompressed, 0, $literals_size);
+            my @lengths_chunk      = splice(@lengths,      0, $lengths_size);
+            my @matches_chunk      = splice(@matches,      0, $matches_size);
+            my @distances_chunk    = splice(@distances,    0, $distances_size);
 
-            scalar(@uncompressed_chunk) == $size or die "decompression error";
-            scalar(@lengths_chunk) == $size      or die "decompression error";
-            scalar(@distances_chunk) == $size    or die "decompression error";
+            scalar(@uncompressed_chunk) == $literals_size or die "decompression error";
+            scalar(@lengths_chunk) == $lengths_size       or die "decompression error";
+            scalar(@matches_chunk) == $matches_size       or die "decompression error";
+            scalar(@distances_chunk) == $distances_size   or die "decompression error";
 
-            print $out_fh lz77_decode(\@uncompressed_chunk, \@distances_chunk, \@lengths_chunk);
+            print $out_fh lz77_decode(\@uncompressed_chunk, \@lengths_chunk, \@matches_chunk, \@distances_chunk,);
         }
     }
 

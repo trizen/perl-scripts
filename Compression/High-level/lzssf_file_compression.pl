@@ -19,12 +19,14 @@ use File::Basename    qw(basename);
 use Compression::Util qw(:all);
 
 use constant {
-    PKGNAME => 'LZSS',
+    PKGNAME => 'LZSSF',
     VERSION => '0.01',
-    FORMAT  => 'lzss',
+    FORMAT  => 'lzssf',
 
-    CHUNK_SIZE => 1 << 17,    # higher value = better compression
+    CHUNK_SIZE => 1 << 18,    # higher value = better compression
 };
+
+local $Compression::Util::LZ_MIN_LEN = 5;    # minimum match length
 
 # Container signature
 use constant SIGNATURE => uc(FORMAT) . chr(1);

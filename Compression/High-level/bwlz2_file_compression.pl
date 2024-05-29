@@ -134,7 +134,7 @@ sub compression ($chunk, $out_fh) {
 
     print $out_fh pack('N', $idx);
     print $out_fh encode_alphabet(\@alphabet);
-    print $out_fh lzss_compress(pack('C*', @$enc_bytes), \&bz2_compress_symbolic);
+    print $out_fh lzss_compress(pack('C*', @$enc_bytes), \&bwt_compress_symbolic);
 }
 
 sub decompression ($fh, $out_fh) {
@@ -143,7 +143,7 @@ sub decompression ($fh, $out_fh) {
     my $idx         = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
     my $alphabet    = decode_alphabet($fh);
 
-    my $dec   = lzss_decompress($fh, \&bz2_decompress_symbolic);
+    my $dec   = lzss_decompress($fh, \&bwt_decompress_symbolic);
     my $bytes = [unpack('C*', $dec)];
 
     if ($rle_encoded) {

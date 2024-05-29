@@ -23,8 +23,11 @@ use constant {
     VERSION => '0.01',
     FORMAT  => 'lzss',
 
-    CHUNK_SIZE => 1 << 17,    # higher value = better compression
+    CHUNK_SIZE => 1 << 18,    # higher value = better compression
 };
+
+local $Compression::Util::LZ_MIN_LEN       = 4;     # minimum match length
+local $Compression::Util::LZ_MAX_CHAIN_LEN = 32;    # higher value = better compression
 
 # Container signature
 use constant SIGNATURE => uc(FORMAT) . chr(1);

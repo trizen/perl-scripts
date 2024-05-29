@@ -129,7 +129,7 @@ sub compress_file ($input, $output) {
         my $est_ratio = length($chunk) / (scalar(@$literals) + scalar(@$lengths) + 2 * scalar(@$distances));
         say scalar(@$literals), ' -> ', $est_ratio;
 
-        print $out_fh deflate_encode($literals, $distances, $lengths, \&bz2_compress_symbolic);
+        print $out_fh deflate_encode($literals, $distances, $lengths, \&bwt_compress_symbolic);
     }
 
     # Close the file
@@ -150,7 +150,7 @@ sub decompress_file ($input, $output) {
       or die "Can't open file <<$output>> for writing: $!";
 
     while (!eof($fh)) {
-        my ($literals, $distances, $lengths) = deflate_decode($fh, \&bz2_decompress_symbolic);
+        my ($literals, $distances, $lengths) = deflate_decode($fh, \&bwt_decompress_symbolic);
         print $out_fh lzss_decode($literals, $distances, $lengths);
     }
 
