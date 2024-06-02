@@ -89,11 +89,19 @@ sub decode_huffman($in_fh, $buffer, $rev_dict, $dist_rev_dict, $search_window) {
                 my ($dist, $dist_bits) = @{$DISTANCE_SYMBOLS->[$dist_rev_dict->{$dist_code} + 1]};
                 $dist += bits2int_lsb($in_fh, $dist_bits, $buffer) if ($dist_bits > 0);
 
-                foreach my $i (1 .. $length) {
-                    my $str = substr($$search_window, length($$search_window) - $dist, 1);
-                    $$search_window .= $str;
-                    $data           .= $str;
+                if ($dist == 1) {
+                    $$search_window .= substr($$search_window, -1) x $length;
                 }
+                elsif ($dist >= $length) {    # non-overlapping matches
+                    $$search_window .= substr($$search_window, length($$search_window) - $dist, $length);
+                }
+                else {                        # overlapping matches
+                    foreach my $i (1 .. $length) {
+                        $$search_window .= substr($$search_window, length($$search_window) - $dist, 1);
+                    }
+                }
+
+                $data .= substr($$search_window, -$length);
             }
 
             $code = '';
@@ -297,7 +305,7 @@ sub extract ($in_fh, $output_file, $defined_output_file) {
         print $out_fh $chunk;
         $crc32->add($chunk);
         $actual_length += length($chunk);
-        $search_window = substr($search_window, -WINDOW_SIZE) if (length($search_window) > WINDOW_SIZE);
+        $search_window = substr($search_window, -WINDOW_SIZE) if (length($search_window) > 2 * WINDOW_SIZE);
 
         last if $is_last;
     }

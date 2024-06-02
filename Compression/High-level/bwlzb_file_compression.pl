@@ -1,34 +1,34 @@
 #!/usr/bin/perl
 
 # Author: Trizen
-# Date: 10 May 2024
+# Date: 03 June 2024
 # https://github.com/trizen
 
-# Compress/decompress files using LZ77 compression (LZSS variant with hash tables -- fast variant), using a byte-aligned encoding, similar to LZ4.
+# Compress/decompress files using byte-aligned LZ77 compression (LZSS) + Burrows-Wheeler Transform (BWT) + Move-to-front transform (MTF) + Huffman coding.
 
 # References:
-#   https://github.com/lz4/lz4/blob/dev/doc/lz4_Frame_format.md
-#   https://github.com/lz4/lz4/blob/dev/doc/lz4_Block_format.md
+#   Data Compression (Summer 2023) - Lecture 11 - DEFLATE (gzip)
+#   https://youtube.com/watch?v=SJPvNi4HrWQ
+#
+#   Data Compression (Summer 2023) - Lecture 13 - BZip2
+#   https://youtube.com/watch?v=cvoZbBZ3M2A
 
 use 5.036;
 use Getopt::Std       qw(getopts);
 use File::Basename    qw(basename);
+use List::Util        qw(max uniq);
 use Compression::Util qw(:all);
 
 use constant {
-    PKGNAME => 'LZBF',
+    PKGNAME => 'BWLZB',
     VERSION => '0.01',
-    FORMAT  => 'lzbf',
+    FORMAT  => 'bwlzb',
 
-    CHUNK_SIZE => 1 << 18,
+    CHUNK_SIZE => 1 << 17,    # higher value = better compression
 };
 
-local $Compression::Util::LZ_MIN_LEN  = 5;                # minimum match length
-local $Compression::Util::LZ_MAX_LEN  = ~0;               # maximum match length
-local $Compression::Util::LZ_MAX_DIST = (1 << 16) - 1;    # maximum distance
-
 # Container signature
-use constant SIGNATURE => uc(FORMAT) . chr(1);
+use constant SIGNATURE => uc(FORMAT) . chr(5);
 
 sub usage {
     my ($code) = @_;
@@ -108,6 +108,37 @@ sub main {
     }
 }
 
+sub compression ($chunk, $out_fh) {
+
+    local $Compression::Util::LZ_MIN_LEN = 64;
+
+    my $rle4 = symbols2string(rle4_encode(string2symbols($chunk)));
+    my $lzb  = lzb_compress($rle4);
+    my ($bwt, $idx) = bwt_encode($lzb);
+
+    my ($mtf, $alphabet) = mtf_encode(string2symbols($bwt));
+    my $rle = zrle_encode($mtf);
+
+    my $enc = pack('N', $idx) . encode_alphabet($alphabet) . create_huffman_entry($rle);
+
+    print $out_fh $enc;
+}
+
+sub decompression ($fh, $out_fh) {
+
+    my $idx      = bits2int($fh, 32, \my $buffer);
+    my $alphabet = decode_alphabet($fh);
+    my $rle      = decode_huffman_entry($fh);
+
+    my $mtf = zrle_decode($rle);
+    my $bwt = symbols2string(mtf_decode($mtf, $alphabet));
+    my $lzb = bwt_decode($bwt, $idx);
+
+    my $rle4 = lzb_decompress($lzb);
+    my $data = symbols2string(rle4_decode(string2symbols($rle4)));
+    print $out_fh $data;
+}
+
 # Compress file
 sub compress_file ($input, $output) {
 
@@ -125,10 +156,10 @@ sub compress_file ($input, $output) {
 
     # Compress data
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
-        print $out_fh lzb_compress($chunk, \&lzss_encode_fast);
+        compression($chunk, $out_fh);
     }
 
-    # Close the file
+    # Close the output file
     close $out_fh;
 }
 
@@ -146,10 +177,10 @@ sub decompress_file ($input, $output) {
       or die "Can't open file <<$output>> for writing: $!";
 
     while (!eof($fh)) {
-        print $out_fh lzb_decompress($fh);
+        decompression($fh, $out_fh);
     }
 
-    # Close the file
+    # Close the files
     close $fh;
     close $out_fh;
 }

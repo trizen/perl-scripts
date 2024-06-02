@@ -251,30 +251,22 @@ sub decompression($fh, $out_fh) {
 
         my $offset = oct('0b' . unpack('B*', getc($fh) . getc($fh)));
 
-        print $out_fh $literals;
         $search_window .= $literals;
 
-        my $data = '';
         if ($offset == 1) {
-            my $str = substr($search_window, -1) x $match_len;
-            $search_window .= $str;
-            $data          .= $str;
+            $search_window .= substr($search_window, -1) x $match_len;
         }
         elsif ($offset >= $match_len) {    # non-overlapping matches
-            my $str = substr($search_window, length($search_window) - $offset, $match_len);
-            $search_window .= $str;
-            $data          .= $str;
+            $search_window .= substr($search_window, length($search_window) - $offset, $match_len);
         }
         else {                             # overlapping matches
             foreach my $i (1 .. $match_len) {
-                my $str = substr($search_window, length($search_window) - $offset, 1);
-                $search_window .= $str;
-                $data          .= $str;
+                $search_window .= substr($search_window, length($search_window) - $offset, 1);
             }
         }
 
-        print $out_fh $data;
-        $search_window = substr($search_window, -CHUNK_SIZE) if (length($search_window) > CHUNK_SIZE);
+        print $out_fh substr($search_window, -($match_len + $literals_length));
+        $search_window = substr($search_window, -MAX_MATCH_DIST) if (length($search_window) > 2*MAX_MATCH_DIST);
     }
 }
 

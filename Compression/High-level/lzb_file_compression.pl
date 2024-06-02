@@ -109,106 +109,6 @@ sub main {
     }
 }
 
-sub compression($chunk, $out_fh) {
-    my ($literals, $distances, $lengths) = lzss_encode($chunk);
-
-    my $literals_end = $#{$literals};
-
-    for (my $i = 0 ; $i <= $literals_end ; ++$i) {
-
-        my @uncompressed;
-        while ($i <= $literals_end and defined($literals->[$i])) {
-            push @uncompressed, $literals->[$i];
-            ++$i;
-        }
-
-        my $literals_string = pack('C*', @uncompressed);
-        my $literals_length = scalar(@uncompressed);
-
-        my $dist      = $distances->[$i] // 0;
-        my $match_len = $lengths->[$i]   // 0;
-
-        my $len_byte = 0;
-
-        $len_byte |= ($literals_length >= 15 ? 15 : $literals_length) << 4;
-        $len_byte |= ($match_len >= 15       ? 15 : $match_len);
-
-        $literals_length -= 15;
-        $match_len       -= 15;
-
-        print $out_fh chr($len_byte);
-
-        while ($literals_length >= 0) {
-            print $out_fh chr($literals_length >= 255 ? 255 : $literals_length);
-            $literals_length -= 255;
-        }
-
-        print $out_fh $literals_string;
-
-        while ($match_len >= 0) {
-            print $out_fh chr($match_len >= 255 ? 255 : $match_len);
-            $match_len -= 255;
-        }
-
-        if ($dist >= 1 << 16) {
-            die "Too large distance: $dist";
-        }
-
-        print $out_fh pack('B*', int2bits($dist, 16));
-    }
-
-}
-
-sub decompression($fh, $out_fh) {
-
-    my $buffer        = '';
-    my $search_window = '';
-
-    while (!eof($fh)) {
-
-        my $len_byte = ord(getc($fh));
-
-        my $literals_length = $len_byte >> 4;
-        my $match_len       = $len_byte & 0b1111;
-
-        if ($literals_length == 15) {
-            while (1) {
-                my $byte_len = ord(getc($fh));
-                $literals_length += $byte_len;
-                last if $byte_len != 255;
-            }
-        }
-
-        my $literals = '';
-        if ($literals_length > 0) {
-            read($fh, $literals, $literals_length);
-        }
-
-        if ($match_len == 15) {
-            while (1) {
-                my $byte_len = ord(getc($fh));
-                $match_len += $byte_len;
-                last if $byte_len != 255;
-            }
-        }
-
-        my $offset = bits2int($fh, 16, \$buffer);
-
-        print $out_fh $literals;
-        $search_window .= $literals;
-
-        my $data = '';
-        foreach my $i (1 .. $match_len) {
-            my $str = substr($search_window, length($search_window) - $offset, 1);
-            $search_window .= $str;
-            $data          .= $str;
-        }
-
-        print $out_fh $data;
-        $search_window = substr($search_window, -CHUNK_SIZE) if (length($search_window) > CHUNK_SIZE);
-    }
-}
-
 # Compress file
 sub compress_file ($input, $output) {
 
@@ -226,7 +126,7 @@ sub compress_file ($input, $output) {
 
     # Compress data
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
-        compression($chunk, $out_fh);
+        print $out_fh lzb_compress($chunk);
     }
 
     # Close the file
@@ -247,7 +147,7 @@ sub decompress_file ($input, $output) {
       or die "Can't open file <<$output>> for writing: $!";
 
     while (!eof($fh)) {
-        decompression($fh, $out_fh);
+        print $out_fh lzb_decompress($fh);
     }
 
     # Close the file
