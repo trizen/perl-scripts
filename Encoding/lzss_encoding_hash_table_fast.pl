@@ -17,8 +17,9 @@ sub lzss_encode($str) {
     my @symbols = unpack('C*', $str);
     my $end     = $#symbols;
 
-    my $min_len = 4;      # minimum match length
-    my $max_len = 258;    # maximum match length
+    my $min_len  = 4;                # minimum match length
+    my $max_len  = 255;              # maximum match length
+    my $max_dist = (1 << 16) - 1;    # maximum match distance
 
     my (@literals, @distances, @lengths, %table);
 
@@ -29,7 +30,7 @@ sub lzss_encode($str) {
 
         my $lookahead = substr($str, $la, $min_len);
 
-        if (exists($table{$lookahead})) {
+        if (exists($table{$lookahead}) and $la - $table{$lookahead} <= $max_dist) {
 
             my $p = $table{$lookahead};
             my $n = $min_len;

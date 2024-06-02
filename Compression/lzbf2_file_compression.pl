@@ -2,6 +2,7 @@
 
 # Author: Trizen
 # Date: 11 May 2024
+# Edit: 02 June 2024
 # https://github.com/trizen
 
 # Compress/decompress files using LZ77 compression (LZSS variant with hash tables), using a byte-aligned encoding, similar to LZ4.
@@ -15,14 +16,13 @@ use Getopt::Std    qw(getopts);
 use File::Basename qw(basename);
 
 use constant {
-    PKGNAME => 'LZB',
+    PKGNAME => 'LZBF2',
     VERSION => '0.01',
-    FORMAT  => 'lzb',
+    FORMAT  => 'lzbf2',
 
-    MIN_MATCH_LEN  => 4,                # minimum match length
+    MIN_MATCH_LEN  => 5,                # minimum match length
     MAX_MATCH_LEN  => ~0,               # maximum match length
     MAX_MATCH_DIST => (1 << 16) - 1,    # maximum match distance
-    MAX_CHAIN_LEN  => 48,               # higher value = better compression
 
     CHUNK_SIZE => 1 << 18,
 };
@@ -108,17 +108,16 @@ sub main {
     }
 }
 
-sub lzss_encode($str) {
+sub lzss_encode_fast($str) {
 
     my $la = 0;
 
     my @symbols = unpack('C*', $str);
     my $end     = $#symbols;
 
-    my $min_len       = MIN_MATCH_LEN;     # minimum match length
-    my $max_len       = MAX_MATCH_LEN;     # maximum match length
-    my $max_dist      = MAX_MATCH_DIST;    # maximum match distance
-    my $max_chain_len = MAX_CHAIN_LEN;     # how many recent positions to keep track of
+    my $min_len  = MIN_MATCH_LEN;     # minimum match length
+    my $max_len  = MAX_MATCH_LEN;     # maximum match length
+    my $max_dist = MAX_MATCH_DIST;    # maximum match distance
 
     my (@literals, @distances, @lengths, %table);
 
@@ -129,40 +128,22 @@ sub lzss_encode($str) {
 
         my $lookahead = substr($str, $la, $min_len);
 
-        if (exists($table{$lookahead})) {
+        if (exists($table{$lookahead}) and $la - $table{$lookahead} <= $max_dist) {
 
-            foreach my $p (@{$table{$lookahead}}) {
+            my $p = $table{$lookahead};
+            my $n = $min_len;
 
-                if ($la - $p > $max_dist) {
-                    last;
-                }
-
-                my $n = $min_len;
-
-                while ($n <= $max_len and $la + $n <= $end and $symbols[$la + $n - 1] == $symbols[$p + $n - 1]) {
-                    ++$n;
-                }
-
-                if ($n > $best_n) {
-                    $best_p = $p;
-                    $best_n = $n;
-                }
+            while ($n <= $max_len and $la + $n <= $end and $symbols[$la + $n - 1] == $symbols[$p + $n - 1]) {
+                ++$n;
             }
 
-            my $matched = substr($str, $la, $best_n);
+            $best_p = $p;
+            $best_n = $n;
 
-            foreach my $i (0 .. length($matched) - $min_len) {
-
-                my $key = substr($matched, $i, $min_len);
-                unshift @{$table{$key}}, $la + $i;
-
-                if (scalar(@{$table{$key}}) > $max_chain_len) {
-                    pop @{$table{$key}};
-                }
-            }
+            $table{$lookahead} = $la;
         }
         else {
-            $table{$lookahead} = [$la];
+            $table{$lookahead} = $la;
         }
 
         if ($best_n > $min_len) {
@@ -187,7 +168,7 @@ sub lzss_encode($str) {
 }
 
 sub compression($chunk, $out_fh) {
-    my ($literals, $distances, $lengths) = lzss_encode($chunk);
+    my ($literals, $distances, $lengths) = lzss_encode_fast($chunk);
 
     my $literals_end = $#{$literals};
 
@@ -207,11 +188,11 @@ sub compression($chunk, $out_fh) {
 
         my $len_byte = 0;
 
-        $len_byte |= ($literals_length >= 15 ? 15 : $literals_length) << 4;
-        $len_byte |= ($match_len >= 15       ? 15 : $match_len);
+        $len_byte |= ($literals_length >= 7 ? 7  : $literals_length) << 5;
+        $len_byte |= ($match_len >= 31      ? 31 : $match_len);
 
-        $literals_length -= 15;
-        $match_len       -= 15;
+        $literals_length -= 7;
+        $match_len       -= 31;
 
         print $out_fh chr($len_byte);
 
@@ -244,10 +225,10 @@ sub decompression($fh, $out_fh) {
 
         my $len_byte = ord(getc($fh));
 
-        my $literals_length = $len_byte >> 4;
-        my $match_len       = $len_byte & 0b1111;
+        my $literals_length = $len_byte >> 5;
+        my $match_len       = $len_byte & 0b11111;
 
-        if ($literals_length == 15) {
+        if ($literals_length == 7) {
             while (1) {
                 my $byte_len = ord(getc($fh));
                 $literals_length += $byte_len;
@@ -260,7 +241,7 @@ sub decompression($fh, $out_fh) {
             read($fh, $literals, $literals_length);
         }
 
-        if ($match_len == 15) {
+        if ($match_len == 31) {
             while (1) {
                 my $byte_len = ord(getc($fh));
                 $match_len += $byte_len;
@@ -274,7 +255,6 @@ sub decompression($fh, $out_fh) {
         $search_window .= $literals;
 
         my $data = '';
-
         if ($offset == 1) {
             my $str = substr($search_window, -1) x $match_len;
             $search_window .= $str;

@@ -19,10 +19,11 @@ use constant {
     VERSION => '0.01',
     FORMAT  => 'lzbf',
 
-    MIN_MATCH_LEN => 5,     # minimum match length
-    MAX_MATCH_LEN => ~0,    # maximum match length
+    MIN_MATCH_LEN  => 5,                # minimum match length
+    MAX_MATCH_LEN  => ~0,               # maximum match length
+    MAX_MATCH_DIST => (1 << 16) - 1,    # maximum match distance
 
-    CHUNK_SIZE => 1 << 16,
+    CHUNK_SIZE => 1 << 18,
 };
 
 # Container signature
@@ -106,15 +107,16 @@ sub main {
     }
 }
 
-sub my_lzss_encode_fast($str) {
+sub lzss_encode_fast($str) {
 
     my $la = 0;
 
     my @symbols = unpack('C*', $str);
     my $end     = $#symbols;
 
-    my $min_len = MIN_MATCH_LEN;    # minimum match length
-    my $max_len = MAX_MATCH_LEN;    # maximum match length
+    my $min_len  = MIN_MATCH_LEN;     # minimum match length
+    my $max_len  = MAX_MATCH_LEN;     # maximum match length
+    my $max_dist = MAX_MATCH_DIST;    # maximum match distance
 
     my (@literals, @distances, @lengths, %table);
 
@@ -125,7 +127,7 @@ sub my_lzss_encode_fast($str) {
 
         my $lookahead = substr($str, $la, $min_len);
 
-        if (exists($table{$lookahead})) {
+        if (exists($table{$lookahead}) and $la - $table{$lookahead} <= $max_dist) {
 
             my $p = $table{$lookahead};
             my $n = $min_len;
@@ -165,7 +167,7 @@ sub my_lzss_encode_fast($str) {
 }
 
 sub compression($chunk, $out_fh) {
-    my ($literals, $distances, $lengths) = my_lzss_encode_fast($chunk);
+    my ($literals, $distances, $lengths) = lzss_encode_fast($chunk);
 
     my $literals_end = $#{$literals};
 
@@ -252,10 +254,22 @@ sub decompression($fh, $out_fh) {
         $search_window .= $literals;
 
         my $data = '';
-        foreach my $i (1 .. $match_len) {
-            my $str = substr($search_window, length($search_window) - $offset, 1);
+        if ($offset == 1) {
+            my $str = substr($search_window, -1) x $match_len;
             $search_window .= $str;
             $data          .= $str;
+        }
+        elsif ($offset >= $match_len) {    # non-overlapping matches
+            my $str = substr($search_window, length($search_window) - $offset, $match_len);
+            $search_window .= $str;
+            $data          .= $str;
+        }
+        else {                             # overlapping matches
+            foreach my $i (1 .. $match_len) {
+                my $str = substr($search_window, length($search_window) - $offset, 1);
+                $search_window .= $str;
+                $data          .= $str;
+            }
         }
 
         print $out_fh $data;

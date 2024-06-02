@@ -2,6 +2,7 @@
 
 # Author: Trizen
 # Date: 11 May 2024
+# Edit: 02 June 2024
 # https://github.com/trizen
 
 # Compress/decompress files using LZ77 compression (LZSS variant with hash tables), using a byte-aligned encoding, similar to LZ4.
@@ -15,9 +16,9 @@ use Getopt::Std    qw(getopts);
 use File::Basename qw(basename);
 
 use constant {
-    PKGNAME => 'LZB',
+    PKGNAME => 'LZB2',
     VERSION => '0.01',
-    FORMAT  => 'lzb',
+    FORMAT  => 'lzb2',
 
     MIN_MATCH_LEN  => 4,                # minimum match length
     MAX_MATCH_LEN  => ~0,               # maximum match length
@@ -207,11 +208,11 @@ sub compression($chunk, $out_fh) {
 
         my $len_byte = 0;
 
-        $len_byte |= ($literals_length >= 15 ? 15 : $literals_length) << 4;
-        $len_byte |= ($match_len >= 15       ? 15 : $match_len);
+        $len_byte |= ($literals_length >= 7 ? 7  : $literals_length) << 5;
+        $len_byte |= ($match_len >= 31      ? 31 : $match_len);
 
-        $literals_length -= 15;
-        $match_len       -= 15;
+        $literals_length -= 7;
+        $match_len       -= 31;
 
         print $out_fh chr($len_byte);
 
@@ -244,10 +245,10 @@ sub decompression($fh, $out_fh) {
 
         my $len_byte = ord(getc($fh));
 
-        my $literals_length = $len_byte >> 4;
-        my $match_len       = $len_byte & 0b1111;
+        my $literals_length = $len_byte >> 5;
+        my $match_len       = $len_byte & 0b11111;
 
-        if ($literals_length == 15) {
+        if ($literals_length == 7) {
             while (1) {
                 my $byte_len = ord(getc($fh));
                 $literals_length += $byte_len;
@@ -260,7 +261,7 @@ sub decompression($fh, $out_fh) {
             read($fh, $literals, $literals_length);
         }
 
-        if ($match_len == 15) {
+        if ($match_len == 31) {
             while (1) {
                 my $byte_len = ord(getc($fh));
                 $match_len += $byte_len;
