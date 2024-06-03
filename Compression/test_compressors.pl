@@ -15,6 +15,7 @@ use Time::HiRes           qw(gettimeofday tv_interval);
 my %ignored_methods = (
     'tac_file_compression.pl'   => 1,    # slow
     'tacc_file_compression.pl'  => 1,    # slow
+    'rans_file_compression.pl'  => 1,    # slow
     'tzip_file_compression.pl'  => 1,    # poor compression / slow
     'tzip2_file_compression.pl' => 1,    # poor compression / slow
     'lzt_file_compression.pl'   => 1,    # poor compression

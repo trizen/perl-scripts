@@ -142,6 +142,7 @@ A nice collection of day-to-day Perl scripts.
     * [Mrh file compression](./Compression/mrh_file_compression.pl)
     * [Mrlz file compression](./Compression/mrlz_file_compression.pl)
     * [Ppmh file compression](./Compression/ppmh_file_compression.pl)
+    * [Rans file compression](./Compression/rans_file_compression.pl)
     * [Rlac file compression](./Compression/rlac_file_compression.pl)
     * [Rlh file compression](./Compression/rlh_file_compression.pl)
     * [Tac file compression](./Compression/tac_file_compression.pl)

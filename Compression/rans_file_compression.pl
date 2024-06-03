@@ -1,35 +1,26 @@
 #!/usr/bin/perl
 
-# Daniel "Trizen" Șuteu
-# Date: 11 February 2016
-# Edit: 14 July 2023
-# https://github.com/trizen
+# File compression with rANS encoding, using big integers.
 
-# Arithmetic coding compressor for small files.
+# Reference:
+#   ‎Stanford EE274: Data Compression I 2023 I Lecture 7 - ANS
+#   https://youtube.com/watch?v=5Hp4bnvSjng
 
-# See also:
-#   https://en.wikipedia.org/wiki/Arithmetic_coding#Arithmetic_coding_as_a_generalized_change_of_radix
-
-use 5.020;
-use strict;
-use autodie;
-use warnings;
-
+use 5.036;
 use Getopt::Std    qw(getopts);
 use File::Basename qw(basename);
-use List::Util     qw(sum max);
-use experimental   qw(signatures);
+use List::Util     qw(max);
 
 use Math::GMPz;
 
 use constant {
-              PKGNAME => 'TAC Compressor',
-              VERSION => '0.05',
-              FORMAT  => 'tacc',
+              PKGNAME => 'rANS',
+              VERSION => '0.01',
+              FORMAT  => 'rans',
              };
 
 # Container signature
-use constant SIGNATURE => uc(FORMAT) . chr(5);
+use constant SIGNATURE => uc(FORMAT) . chr(1);
 
 sub usage ($code = 0) {
     print <<"EOH";
@@ -209,6 +200,83 @@ sub cumulative_freq ($freq) {
     return %cf;
 }
 
+sub rans_base_enc($freq, $cumul, $M, $x_prev, $s, $block_id, $x) {
+
+    Math::GMPz::Rmpz_div_ui($block_id, $x_prev, $freq->{$s});
+
+    my $r    = Math::GMPz::Rmpz_mod_ui($x, $x_prev, $freq->{$s});
+    my $slot = $cumul->{$s} + $r;
+
+    Math::GMPz::Rmpz_mul_ui($x, $block_id, $M);
+    Math::GMPz::Rmpz_add_ui($x, $x, $slot);
+
+    return $x;
+}
+
+sub encode($input, $freq, $cumul, $M) {
+
+    my $x        = Math::GMPz::Rmpz_init_set_ui(0);
+    my $block_id = Math::GMPz::Rmpz_init();
+    my $next_x   = Math::GMPz::Rmpz_init();
+
+    foreach my $s (@$input) {
+        $x = rans_base_enc($freq, $cumul, $M, $x, $s, $block_id, $next_x);
+    }
+
+    return $x;
+}
+
+sub rans_base_dec($alphabet, $freq, $cumul, $M, $x, $block_id, $slot, $x_prev) {
+
+    Math::GMPz::Rmpz_tdiv_qr_ui($block_id, $slot, $x, $M);
+
+    my ($left, $right, $mid, $cmp) = (0, $#{$alphabet});
+
+    while (1) {
+
+        $mid = ($left + $right) >> 1;
+        $cmp = ($cumul->{$alphabet->[$mid]} <=> $slot) || last;
+
+        if ($cmp < 0) {
+            $left = $mid + 1;
+            $left > $right and last;
+        }
+        else {
+            $right = $mid - 1;
+
+            if ($left > $right) {
+                $mid -= 1;
+                last;
+            }
+        }
+    }
+
+    my $s = $alphabet->[$mid];
+
+    Math::GMPz::Rmpz_mul_ui($x_prev, $block_id, $freq->{$s});
+    Math::GMPz::Rmpz_add($x_prev, $x_prev, $slot);
+    Math::GMPz::Rmpz_sub_ui($x_prev, $x_prev, $cumul->{$s});
+
+    return ($s, $x_prev);
+}
+
+sub decode($x, $alphabet, $freq, $cumul, $M) {
+
+    my @dec;
+    my $s = undef;
+
+    my $block_id = Math::GMPz::Rmpz_init();
+    my $slot     = Math::GMPz::Rmpz_init();
+    my $x_prev   = Math::GMPz::Rmpz_init();
+
+    for (1 .. $M) {
+        ($s, $x) = rans_base_dec($alphabet, $freq, $cumul, $M, $x, $block_id, $slot, $x_prev);
+        push @dec, $s;
+    }
+
+    return [reverse @dec];
+}
+
 sub compress ($input, $output) {
 
     # Open the input file
@@ -225,55 +293,28 @@ sub compress ($input, $output) {
 
     close $fh;
 
-    my @chars = split(//, $str);
+    my (%freq, %cumul);
+    my @symbols = unpack('C*', $str);
+    ++$freq{$_} for @symbols;
 
-    # The frequency characters
-    my %freq;
-    $freq{$_}++ for @chars;
+    my @alphabet = sort { $a <=> $b } keys %freq;
 
-    # Create the cumulative frequency table
-    my %cf = cumulative_freq(\%freq);
-
-    # Limit and base
-    my $base = Math::GMPz->new(scalar @chars);
-
-    # Lower bound
-    my $L = Math::GMPz->new(0);
-
-    # Product of all frequencies
-    my $pf = Math::GMPz->new(1);
-
-    # Each term is multiplied by the product of the
-    # frequencies of all previously occurring symbols
-    foreach my $c (@chars) {
-        Math::GMPz::Rmpz_mul($L, $L, $base);
-        Math::GMPz::Rmpz_addmul($L, $pf, $cf{$c});
-        Math::GMPz::Rmpz_mul_ui($pf, $pf, $freq{$c});
+    my $t = 0;
+    foreach my $s (@alphabet) {
+        $cumul{$s} = $t;
+        $t += $freq{$s};
     }
 
-    # Upper bound
-    my $U = $L + $pf;
-
-    # Compute the power for left shift
-    my $pow = Math::GMPz::Rmpz_sizeinbase($pf, 2) - 1;
-
-    # Set $enc to (U-1) divided by 2^pow
-    my $enc = ($U - 1) >> $pow;
-
-    # Remove any divisibility by 2
-    if ($enc > 0 and Math::GMPz::Rmpz_even_p($enc)) {
-        $pow += Math::GMPz::Rmpz_remove($enc, $enc, Math::GMPz->new(2));
-    }
+    my $M   = $t;
+    my $enc = encode(\@symbols, \%freq, \%cumul, $M);
 
     my $bin        = Math::GMPz::Rmpz_get_str($enc, 2);
-    my $max_symbol = max(map { ord($_) } keys %freq) // 0;
+    my $max_symbol = max(keys %freq) // 0;
 
     my @freqs;
     foreach my $k (0 .. $max_symbol) {
-        push @freqs, $freq{chr($k)} // 0;
+        push @freqs, $freq{$k} // 0;
     }
-
-    push @freqs, $pow;
 
     print {$out_fh} delta_encode(\@freqs);
     print {$out_fh} pack('N',  length($bin));
@@ -287,76 +328,35 @@ sub decompress ($input, $output) {
     open my $fh, '<:raw', $input;
     valid_archive($fh) || die "$0: file `$input' is not a \U${\FORMAT}\E archive!\n";
 
-    my @freqs = @{delta_decode($fh)};
-    my $pow2  = pop(@freqs);
-
+    my @freqs    = @{delta_decode($fh)};
     my $bits_len = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
 
     # Create the frequency table
     my %freq;
     foreach my $i (0 .. $#freqs) {
         if ($freqs[$i] > 0) {
-            $freq{chr($i)} = $freqs[$i];
+            $freq{$i} = $freqs[$i];
         }
     }
 
     # Decode the bits into an integer
     my $enc = Math::GMPz->new(read_bits($fh, $bits_len), 2);
 
-    $enc <<= $pow2;
-
-    my $base = sum(values %freq) // 0;
-
-    # Create the cumulative frequency table
-    my %cf = cumulative_freq(\%freq);
-
-    # Create the dictionary
-    my %dict;
-    while (my ($k, $v) = each %cf) {
-        $dict{$v} = $k;
-    }
-
-    # Fill the gaps in the dictionary
-    my $lchar;
-    foreach my $i (0 .. $base - 1) {
-        if (exists $dict{$i}) {
-            $lchar = $dict{$i};
-        }
-        elsif (defined $lchar) {
-            $dict{$i} = $lchar;
-        }
-    }
-
     # Open the output file
     open my $out_fh, '>:raw', $output;
 
-    if ($base == 0) {
-        close $out_fh;
-        return;
-    }
-    elsif ($base == 1) {
-        print {$out_fh} keys %freq;
-        close $out_fh;
-        return;
-    }
+    my @alphabet = sort { $a <=> $b } keys %freq;
 
-    my $div = Math::GMPz::Rmpz_init();
-
-    # Decode the input number
-    for (my $pow = Math::GMPz->new($base)**($base - 1) ; Math::GMPz::Rmpz_sgn($pow) > 0 ; Math::GMPz::Rmpz_tdiv_q_ui($pow, $pow, $base)) {
-
-        Math::GMPz::Rmpz_tdiv_q($div, $enc, $pow);
-
-        my $c  = $dict{$div};
-        my $fv = $freq{$c};
-        my $cv = $cf{$c};
-
-        Math::GMPz::Rmpz_submul($enc, $pow, $cv);
-        Math::GMPz::Rmpz_tdiv_q_ui($enc, $enc, $fv);
-
-        print {$out_fh} $c;
+    my $t = 0;
+    my %cumul;
+    foreach my $s (@alphabet) {
+        $cumul{$s} = $t;
+        $t += $freq{$s};
     }
 
+    my $M       = $t;
+    my $symbols = decode($enc, \@alphabet, \%freq, \%cumul, $M);
+    print $out_fh pack('C*', @$symbols);
     close $out_fh;
 }
 

@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Basic implementation of rANS encoding.
+# Basic implementation of rANS encoding, using big integers.
 
 # Reference:
 #   ‎Stanford EE274: Data Compression I 2023 I Lecture 7 - ANS
@@ -60,6 +60,7 @@ package rANS {
         foreach my $s (@{$self->{input}}) {
             $x = $self->rans_base_enc($x, $s, $block_id, $next_x);
         }
+
         return $x;
     }
 
@@ -112,6 +113,7 @@ package rANS {
             ($s, $x) = $self->rans_base_dec($x, $block_id, $slot, $x_prev);
             push @dec, $s;
         }
+
         return [reverse @dec];
     }
 }

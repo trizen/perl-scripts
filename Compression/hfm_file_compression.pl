@@ -13,12 +13,7 @@
 # See also:
 #   https://en.wikipedia.org/wiki/Huffman_coding
 
-use 5.020;
-use strict;
-use warnings;
-
-use experimental qw(signatures);
-
+use 5.036;
 use List::Util     qw(min max);
 use Getopt::Std    qw(getopts);
 use File::Basename qw(basename);
