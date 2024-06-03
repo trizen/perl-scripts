@@ -229,6 +229,7 @@ A nice collection of day-to-day Perl scripts.
     * [Ppm encoding](./Encoding/ppm_encoding.pl)
     * [Ppm encoding dynamic](./Encoding/ppm_encoding_dynamic.pl)
     * [RANS encoding](./Encoding/rANS_encoding.pl)
+    * [RANS encoding mpz](./Encoding/rANS_encoding_mpz.pl)
     * [Run length with elias coding](./Encoding/run_length_with_elias_coding.pl)
     * [String to integer encoding based on primes](./Encoding/string_to_integer_encoding_based_on_primes.pl)
     * [Tlen encoding](./Encoding/tlen_encoding.pl)
