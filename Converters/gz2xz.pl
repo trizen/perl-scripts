@@ -26,9 +26,8 @@ sub gz2xz ($in_fh, $out_fh) {
     $out_fh->close;
 }
 
-my $compression_method = 'none';
-my $keep_original      = 0;
-my $overwrite          = 0;
+my $keep_original = 0;
+my $overwrite     = 0;
 
 sub usage ($exit_code) {
     print <<"EOT";
@@ -50,62 +49,61 @@ EOT
 }
 
 GetOptions(
-           'c|compress=s' => \$compression_method,
-           'k|keep!'      => \$keep_original,
-           'f|force!'     => \$overwrite,
-           'h|help'       => sub { usage(0) },
+           'k|keep!'  => \$keep_original,
+           'f|force!' => \$overwrite,
+           'h|help'   => sub { usage(0) },
           )
   or usage(1);
 
 @ARGV || usage(2);
 
 foreach my $gz_file (@ARGV) {
-    if (-f $gz_file) {
 
-        say "\n:: Processing: $gz_file";
+    if (not -f $gz_file) {
+        warn ":: Not a file: <<$gz_file>>. Skipping...\n";
+        next;
+    }
 
-        my $xz_file = $gz_file;
+    say "\n:: Processing: $gz_file";
 
-        if (   $xz_file =~ s{\.tgz\z}{.txz}i
-            or $xz_file =~ s{\.gz\z}{.xz}i) {
-            ## ok
-        }
-        else {
-            $xz_file .= '.xz';
-        }
+    my $xz_file = $gz_file;
 
-        if (-e $xz_file) {
-            if (not $overwrite) {
-                say "-> Tar file <<$xz_file>> already exists. Skipping...";
-                next;
-            }
-        }
-
-        my $in_fh = IO::Uncompress::Gunzip->new($gz_file) or do {
-            warn "[!] Probably not a Gzip file ($IO::Uncompress::Gunzip::GunzipError). Skipping...\n";
-            next;
-        };
-
-        my $out_fh = IO::Compress::Xz->new($xz_file)
-          or die "[!] Failed to initialize the compressor: $IO::Compress::Xz::XzError\n";
-
-        gz2xz($in_fh, $out_fh) || do {
-            warn "[!] Something went wrong! Skipping...\n";
-            unlink($xz_file);
-            next;
-        };
-
-        my $old_size = -s $gz_file;
-        my $new_size = -s $xz_file;
-
-        say "-> $old_size vs. $new_size";
-
-        if (not $keep_original) {
-            say "-> Removing the original Gzip file: $gz_file";
-            unlink($gz_file) or warn "[!] Can't remove file <<$gz_file>>: $!\n";
-        }
+    if (   $xz_file =~ s{\.tgz\z}{.txz}i
+        or $xz_file =~ s{\.gz\z}{.xz}i) {
+        ## ok
     }
     else {
-        warn ":: Not a file: <<$gz_file>>. Skipping...\n";
+        $xz_file .= '.xz';
+    }
+
+    if (-e $xz_file) {
+        if (not $overwrite) {
+            say "-> File <<$xz_file>> already exists. Skipping...";
+            next;
+        }
+    }
+
+    my $in_fh = IO::Uncompress::Gunzip->new($gz_file) or do {
+        warn "[!] Probably not a Gzip file ($IO::Uncompress::Gunzip::GunzipError). Skipping...\n";
+        next;
+    };
+
+    my $out_fh = IO::Compress::Xz->new($xz_file)
+      or die "[!] Failed to initialize the compressor: $IO::Compress::Xz::XzError\n";
+
+    gz2xz($in_fh, $out_fh) || do {
+        warn "[!] Something went wrong! Skipping...\n";
+        unlink($xz_file);
+        next;
+    };
+
+    my $old_size = -s $gz_file;
+    my $new_size = -s $xz_file;
+
+    say "-> $old_size vs. $new_size";
+
+    if (not $keep_original) {
+        say "-> Removing the original Gzip file: $gz_file";
+        unlink($gz_file) or warn "[!] Can't remove file <<$gz_file>>: $!\n";
     }
 }

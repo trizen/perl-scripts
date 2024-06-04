@@ -265,7 +265,7 @@ sub decompression($fh, $out_fh) {
         }
 
         print $out_fh substr($search_window, -($match_len + $literals_length));
-        $search_window = substr($search_window, -MAX_MATCH_DIST) if (length($search_window) > 2*MAX_MATCH_DIST);
+        $search_window = substr($search_window, -MAX_MATCH_DIST) if (length($search_window) > 2 * MAX_MATCH_DIST);
     }
 }
 

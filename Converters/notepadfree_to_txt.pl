@@ -7,10 +7,10 @@ use 5.014;
 use autodie;
 use warnings;
 
-use JSON qw(from_json);
-use File::Slurper qw(read_text write_text);
+use JSON                  qw(from_json);
+use File::Slurper         qw(read_text write_text);
 use File::Spec::Functions qw(catfile updir);
-use File::Compare qw();
+use File::Compare         qw();
 
 my $output_dir = 'Text files';
 my $meta_json  = from_json(read_text('notes_meta_data.json'));

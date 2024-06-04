@@ -11,7 +11,7 @@ use 5.010;
 use strict;
 use warnings;
 
-use Encode qw(decode_utf8);
+use Encode          qw(decode_utf8);
 use Text::Unidecode qw(unidecode);
 
 while (defined(my $line = <>)) {

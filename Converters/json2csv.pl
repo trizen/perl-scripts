@@ -12,10 +12,10 @@ use 5.010;
 use strict;
 use warnings;
 
-use Text::CSV qw();
-use JSON qw(from_json);
-use Getopt::Std qw(getopts);
-use Encode qw(decode_utf8);
+use Text::CSV        qw();
+use JSON             qw(from_json);
+use Getopt::Std      qw(getopts);
+use Encode           qw(decode_utf8);
 use Text::ParseWords qw(quotewords);
 
 use open IO => ':encoding(UTF-8)', ':std';

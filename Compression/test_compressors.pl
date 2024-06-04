@@ -25,8 +25,8 @@ my %ignored_methods = (
     'ppmh_file_compression.pl'  => 1,    # slow
                       );
 
-my $input_file       = shift(@ARGV) // die "usage: perl $0 [input file] [regex]\n";
-my $regex = shift(@ARGV) // '';
+my $input_file = shift(@ARGV) // die "usage: perl $0 [input file] [regex]\n";
+my $regex      = shift(@ARGV) // '';
 
 if (not -f $input_file) {
     die "Error for input file <<$input_file>>: $!\n";

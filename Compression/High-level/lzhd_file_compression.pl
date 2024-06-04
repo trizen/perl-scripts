@@ -20,7 +20,7 @@ use constant {
     VERSION => '0.02',
     FORMAT  => 'lzhd',
 
-    CHUNK_SIZE            => 1 << 18,    # higher value = better compression
+    CHUNK_SIZE => 1 << 18,    # higher value = better compression
 };
 
 # Container signature
@@ -126,10 +126,10 @@ sub compress_file ($input, $output) {
         my $est_ratio = length($chunk) / (4 * scalar(@$uncompressed));
         say(scalar(@$uncompressed), ' -> ', $est_ratio);
 
-            print $out_fh create_huffman_entry($uncompressed);
-            print $out_fh create_huffman_entry($lengths);
-            print $out_fh create_huffman_entry($matches);
-            print $out_fh obh_encode($distances);
+        print $out_fh create_huffman_entry($uncompressed);
+        print $out_fh fibonacci_encode($lengths);
+        print $out_fh create_huffman_entry($matches);
+        print $out_fh obh_encode($distances);
     }
 
     # Close the file
@@ -151,12 +151,12 @@ sub decompress_file ($input, $output) {
 
     while (!eof($fh)) {
 
-            my $uncompressed = decode_huffman_entry($fh);
-            my $lengths      = decode_huffman_entry($fh);
-            my $matches      = decode_huffman_entry($fh);
-            my $distances    = obh_decode($fh);
+        my $uncompressed = decode_huffman_entry($fh);
+        my $lengths      = fibonacci_decode($fh);
+        my $matches      = decode_huffman_entry($fh);
+        my $distances    = obh_decode($fh);
 
-            print $out_fh lz77_decode($uncompressed, $lengths, $matches, $distances);
+        print $out_fh lz77_decode($uncompressed, $lengths, $matches, $distances);
     }
 
     # Close the file

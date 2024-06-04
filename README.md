@@ -170,10 +170,12 @@ A nice collection of day-to-day Perl scripts.
     * [Notepadfree to txt](./Converters/notepadfree_to_txt.pl)
     * [Pod2pdf](./Converters/pod2pdf.pl)
     * [Pod2text](./Converters/pod2text.pl)
+    * [Recompress](./Converters/recompress.pl)
     * [Unicode2ascii](./Converters/unicode2ascii.pl)
     * [Vnt2txt simple](./Converters/vnt2txt_simple.pl)
     * [Xml2hash](./Converters/xml2hash.pl)
     * [Xpm c to perl](./Converters/xpm_c_to_perl.pl)
+    * [Xz2gz](./Converters/xz2gz.pl)
     * [Zip2tar](./Converters/zip2tar.pl)
     * [Zip2tar fast](./Converters/zip2tar_fast.pl)
 * Decoders

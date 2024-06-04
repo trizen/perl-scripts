@@ -15,8 +15,8 @@ use 5.010;
 use strict;
 use warnings;
 
-use Getopt::Std qw(getopts);
-use File::Path qw(make_path);
+use Getopt::Std           qw(getopts);
+use File::Path            qw(make_path);
 use File::Spec::Functions qw(catfile);
 
 my %opt;
@@ -37,8 +37,8 @@ USAGE
     exit !$opt{h};
 }
 
-my $output_dir = $opt{o} // '.';
-my $input_dir  = $opt{i} // '.';
+my $output_dir   = $opt{o}                         // '.';
+my $input_dir    = $opt{i}                         // '.';
 my $input_format = eval { qr{\.\K(?:$opt{f})\z}i } // die "$0: Invalid regex: $@";
 
 if (not -d $output_dir) {
@@ -62,7 +62,7 @@ while (defined(my $file = readdir $dir_h)) {
       -vcodec      h263
       -s           qcif
       -r             15
-      ), catfile($output_dir, $output_file);
+    ), catfile($output_dir, $output_file);
 
     if ($? != 0) {
         die "$0: ffmpeg exited with a non-zero code!\n";
