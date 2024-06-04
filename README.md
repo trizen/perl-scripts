@@ -501,6 +501,7 @@ A nice collection of day-to-day Perl scripts.
     * [Magick similar images](./Image/magick_similar_images.pl)
     * [Magick star trails](./Image/magick_star_trails.pl)
     * [Matrix visual](./Image/matrix_visual.pl)
+    * [Mirror images](./Image/mirror_images.pl)
     * [Mtf horizontal transform](./Image/mtf_horizontal_transform.pl)
     * [Mtf vertical transform](./Image/mtf_vertical_transform.pl)
     * [Nearest neighbor interpolation](./Image/nearest_neighbor_interpolation.pl)
