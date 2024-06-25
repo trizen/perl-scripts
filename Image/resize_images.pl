@@ -2,6 +2,7 @@
 
 # Author: Trizen
 # Date: 30 October 2023
+# Edit: 25 June 2024
 # https://github.com/trizen
 
 # Resize images to a given width or height, keeping aspect ratio.
@@ -9,10 +10,13 @@
 use 5.036;
 use Imager       qw();
 use File::Find   qw(find);
+use List::Util   qw(min max);
 use Getopt::Long qw(GetOptions);
 
 my $width  = 'auto';
 my $height = 'auto';
+my $min    = 'auto';
+my $max    = 'auto';
 my $qtype  = 'mixing';
 
 my $img_formats = '';
@@ -29,21 +33,30 @@ sub usage ($code) {
 usage: $0 [options] [dirs | files]
 
 options:
-    -w  --width=i       : resize images to this width (default: $width)
-    -h  --height=i      : resize images to this height (default: $height)
+    -w  --width=i       : resize images to this width
+    -h  --height=i      : resize images to this height
+
+        --min=i         : resize images to have the smallest side equal to this
+        --max=i         : resize images to have the largest side equal to this
+
     -q  --quality=s     : quality of scaling: 'normal', 'preview' or 'mixing' (default: $qtype)
     -f  --formats=s,s   : specify more image formats (default: @img_formats)
 
-example:
-    perl $0 --height=1080 ~/Pictures
+examples:
+
+    $0 --min=1080 *.jpg     # smallest side = 1080 pixels
+    $0 --height=1080 *.jpg  # height = 1080 pixels
+
 EOT
 
     exit($code);
 }
 
 GetOptions(
-           'w|width=s'   => \$width,
-           'h|height=s'  => \$height,
+           'w|width=i'   => \$width,
+           'h|height=i'  => \$height,
+           'minimum=i'   => \$min,
+           'maximum=i'   => \$max,
            'q|quality=s' => \$qtype,
            'f|formats=s' => \$img_formats,
            'help'        => sub { usage(0) },
@@ -66,7 +79,35 @@ sub resize_image ($image) {
 
     my ($curr_width, $curr_height) = ($img->getwidth, $img->getheight);
 
-    if ($height ne 'auto' and $height > 0) {
+    if ($min ne 'auto' and $min > 0) {
+
+        if (min($curr_width, $curr_height) <= $min) {
+            say "Image too small to resize";
+            return;
+        }
+
+        if ($curr_width < $curr_height) {
+            $img = $img->scale(xpixels => $min, qtype => $qtype);
+        }
+        else {
+            $img = $img->scale(ypixels => $min, qtype => $qtype);
+        }
+    }
+    elsif ($max ne 'auto' and $max > 0) {
+
+        if (max($curr_width, $curr_height) <= $max) {
+            say "Image too small to resize";
+            return;
+        }
+
+        if ($curr_height > $curr_width) {
+            $img = $img->scale(ypixels => $max, qtype => $qtype);
+        }
+        else {
+            $img = $img->scale(xpixels => $max, qtype => $qtype);
+        }
+    }
+    elsif ($height ne 'auto' and $height > 0) {
         if ($curr_height <= $height) {
             say "Image too small to resize";
             return;
