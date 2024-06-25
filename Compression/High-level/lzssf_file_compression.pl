@@ -26,7 +26,8 @@ use constant {
     CHUNK_SIZE => 1 << 18,    # higher value = better compression
 };
 
-local $Compression::Util::LZ_MIN_LEN = 5;    # minimum match length
+local $Compression::Util::LZ_MIN_LEN = 5;          # minimum match length
+local $Compression::Util::LZ_MAX_LEN = 1 << 15;    # maximum match length
 
 # Container signature
 use constant SIGNATURE => uc(FORMAT) . chr(1);

@@ -159,7 +159,7 @@ sub compress_file ($input, $output) {
     # Compress data
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
 
-        my ($bwt,          $idx)     = bwt_encode($chunk);
+        my ($bwt,          $idx)     = bwt_encode(symbols2string(rle4_encode($chunk)));
         my ($uncompressed, $lengths) = VLR_encoding(string2symbols($bwt));
 
         print $out_fh pack('N', $idx);
@@ -191,7 +191,7 @@ sub decompress_file ($input, $output) {
         my $uncompressed = mrl_decompress_symbolic($fh);
         my $lengths      = bwt_decompress($fh);
         my $dec          = VLR_decoding($uncompressed, string2symbols($lengths));
-        print $out_fh bwt_decode($dec, $idx);
+        print $out_fh symbols2string(rle4_decode(bwt_decode($dec, $idx)));
     }
 
     close $fh;

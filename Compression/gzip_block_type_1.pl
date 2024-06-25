@@ -16,16 +16,19 @@ use Digest::CRC       qw();
 use File::Basename    qw(basename);
 use Compression::Util qw(:all);
 
-use constant {
-              WINDOW_SIZE => 32_768,    # 2^15
-             };
+use constant {CHUNK_SIZE => (1 << 18) - 1,};
 
-my $MAGIC  = pack('C*', 0x1f, 0x8b);    # magic MIME type
-my $CM     = chr(0x08);                 # 0x08 = DEFLATE
-my $FLAGS  = chr(0x00);                 # flags
-my $MTIME  = pack('C*', (0x00) x 4);    # modification time
-my $XFLAGS = chr(0x00);                 # extra flags
-my $OS     = chr(0x03);                 # 0x03 = Unix
+local $Compression::Util::LZ_MIN_LEN       = 4;                # minimum match length in LZ parsing
+local $Compression::Util::LZ_MAX_LEN       = 258;              # maximum match length in LZ parsing
+local $Compression::Util::LZ_MAX_DIST      = (1 << 15) - 1;    # maximum allowed back-reference distance in LZ parsing
+local $Compression::Util::LZ_MAX_CHAIN_LEN = 64;               # how many recent positions to remember in LZ parsing
+
+my $MAGIC  = pack('C*', 0x1f, 0x8b);                           # magic MIME type
+my $CM     = chr(0x08);                                        # 0x08 = DEFLATE
+my $FLAGS  = chr(0x00);                                        # flags
+my $MTIME  = pack('C*', (0x00) x 4);                           # modification time
+my $XFLAGS = chr(0x00);                                        # extra flags
+my $OS     = chr(0x03);                                        # 0x03 = Unix
 
 my $input  = $ARGV[0] // die "usage: $0 [input] [output.gz]\n";
 my $output = $ARGV[1] // (basename($input) . '.gz');
@@ -61,13 +64,13 @@ foreach my $i (280 .. 287) {
 my ($dict)      = huffman_from_code_lengths(\@code_lengths);
 my ($dist_dict) = huffman_from_code_lengths([(5) x 32]);
 
-my ($DISTANCE_SYMBOLS, $LENGTH_SYMBOLS, $LENGTH_INDICES) = make_deflate_tables(WINDOW_SIZE);
+my ($DISTANCE_SYMBOLS, $LENGTH_SYMBOLS, $LENGTH_INDICES) = make_deflate_tables();
 
 if (eof($in_fh)) {    # empty file
     $bitstring = '1' . '10' . $dict->{256};
 }
 
-while (read($in_fh, (my $chunk), WINDOW_SIZE)) {
+while (read($in_fh, (my $chunk), CHUNK_SIZE)) {
 
     my $chunk_len    = length($chunk);
     my $is_last      = eof($in_fh) ? '1' : '0';

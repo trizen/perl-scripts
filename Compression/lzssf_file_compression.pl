@@ -215,28 +215,36 @@ sub lz77_compression($str) {
 
 sub lz77_decompression ($literals, $distances, $lengths) {
 
-    my @data;
+    my $data     = '';
     my $data_len = 0;
 
     foreach my $i (0 .. $#$lengths) {
 
         if ($lengths->[$i] == 0) {
-            push @data, $literals->[$i];
-            $data_len += 1;
+            $data .= chr($literals->[$i]);
+            ++$data_len;
             next;
         }
 
         my $length = $lengths->[$i];
         my $dist   = $distances->[$i];
 
-        foreach my $j (1 .. $length) {
-            push @data, $data[$data_len + $j - $dist - 1];
+        if ($dist >= $length) {
+            $data .= substr($data, $data_len - $dist, $length);
+        }
+        elsif ($dist == 1) {
+            $data .= substr($data, -1) x $length;
+        }
+        else {
+            foreach my $i (1 .. $length) {
+                $data .= substr($data, $data_len + $i - $dist - 1, 1);
+            }
         }
 
         $data_len += $length;
     }
 
-    pack('C*', @data);
+    return $data;
 }
 
 sub read_bit ($fh, $bitstring) {

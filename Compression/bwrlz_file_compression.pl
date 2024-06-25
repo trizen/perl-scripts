@@ -630,6 +630,80 @@ sub run_length ($arr) {
     return \@result;
 }
 
+sub rle4_encode ($bytes) {    # RLE1
+
+    my @rle;
+    my $end  = $#{$bytes};
+    my $prev = -1;
+    my $run  = 0;
+
+    for (my $i = 0 ; $i <= $end ; ++$i) {
+
+        if ($bytes->[$i] == $prev) {
+            ++$run;
+        }
+        else {
+            $run = 1;
+        }
+
+        push @rle, $bytes->[$i];
+        $prev = $bytes->[$i];
+
+        if ($run >= 4) {
+
+            $run = 0;
+            $i += 1;
+
+            while ($run < 255 and $i <= $end and $bytes->[$i] == $prev) {
+                ++$run;
+                ++$i;
+            }
+
+            push @rle, $run;
+            $run = 1;
+
+            if ($i <= $end) {
+                $prev = $bytes->[$i];
+                push @rle, $bytes->[$i];
+            }
+        }
+    }
+
+    return \@rle;
+}
+
+sub rle4_decode ($bytes) {    # RLE1
+
+    my @dec  = $bytes->[0];
+    my $end  = $#{$bytes};
+    my $prev = $bytes->[0];
+    my $run  = 1;
+
+    for (my $i = 1 ; $i <= $end ; ++$i) {
+
+        if ($bytes->[$i] == $prev) {
+            ++$run;
+        }
+        else {
+            $run = 1;
+        }
+
+        push @dec, $bytes->[$i];
+        $prev = $bytes->[$i];
+
+        if ($run >= 4) {
+            if (++$i <= $end) {
+                $run = $bytes->[$i];
+                push @dec, (($prev) x $run);
+            }
+
+            $run = 0;
+        }
+    }
+
+    return \@dec;
+}
+
 sub VLR_encoding ($bytes) {
 
     my $uncompressed = '';
@@ -692,7 +766,7 @@ sub compress_file ($input, $output) {
     # Compress data
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
 
-        my ($bwt,          $idx)     = bwt_encode($chunk);
+        my ($bwt,          $idx)     = bwt_encode(pack('C*', @{rle4_encode([unpack('C*', $chunk)])}));
         my ($uncompressed, $lengths) = VLR_encoding([split(//, $bwt)]);
 
         print $out_fh pack('N', $idx);
@@ -733,7 +807,7 @@ sub decompress_file ($input, $output) {
         seek($len_fh, 0, 0);
 
         my $dec = VLR_decoding([split(//, $uncompressed)], $len_fh);
-        print $out_fh bwt_decode($dec, $idx);
+        print $out_fh pack('C*', @{rle4_decode([unpack('C*', bwt_decode($dec, $idx))])});
     }
 
     close $fh;

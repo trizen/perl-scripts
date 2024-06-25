@@ -138,12 +138,9 @@ sub lzss_encode_fast($str) {
 
             $best_p = $p;
             $best_n = $n;
+        }
 
-            $table{$lookahead} = $la;
-        }
-        else {
-            $table{$lookahead} = $la;
-        }
+        $table{$lookahead} = $la;
 
         if ($best_n > $min_len) {
 

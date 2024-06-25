@@ -19,8 +19,11 @@ use List::Util        qw(max);
 use Compression::Util qw(:all);
 
 use constant {
-              WINDOW_SIZE => 1 << 15,    # maximum window size in DEFLATE: 2^15
+              CHUNK_SIZE => (1 << 15) - 1,    # maximum window size in DEFLATE: 2^15
              };
+
+local $Compression::Util::LZ_MAX_LEN  = 258;              # maximum match length in LZ parsing
+local $Compression::Util::LZ_MAX_DIST = (1 << 15) - 1;    # maximum allowed back-reference distance in LZ parsing
 
 sub extract_block_type_0 ($in_fh, $buffer) {
 
@@ -39,7 +42,7 @@ sub extract_block_type_0 ($in_fh, $buffer) {
     return $chunk;
 }
 
-my ($DISTANCE_SYMBOLS, $LENGTH_SYMBOLS) = make_deflate_tables(WINDOW_SIZE);
+my ($DISTANCE_SYMBOLS, $LENGTH_SYMBOLS) = make_deflate_tables();
 
 sub decode_huffman($in_fh, $buffer, $rev_dict, $dist_rev_dict, $search_window) {
 
@@ -276,6 +279,7 @@ sub extract ($in_fh, $output_file, $defined_output_file) {
     my $actual_length = 0;
     my $buffer        = '';
     my $search_window = '';
+    my $window_size   = $Compression::Util::LZ_MAX_DIST;
 
     while (1) {
 
@@ -305,7 +309,7 @@ sub extract ($in_fh, $output_file, $defined_output_file) {
         print $out_fh $chunk;
         $crc32->add($chunk);
         $actual_length += length($chunk);
-        $search_window = substr($search_window, -WINDOW_SIZE) if (length($search_window) > 2 * WINDOW_SIZE);
+        $search_window = substr($search_window, -$window_size) if (length($search_window) > 2 * $window_size);
 
         last if $is_last;
     }

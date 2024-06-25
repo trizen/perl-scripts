@@ -133,9 +133,7 @@ sub lzss_encode($str) {
 
             foreach my $p (@{$table{$lookahead}}) {
 
-                if ($la - $p > $max_dist) {
-                    last;
-                }
+                last if ($la - $p > $max_dist);
 
                 my $n = $min_len;
 
@@ -161,7 +159,8 @@ sub lzss_encode($str) {
                 }
             }
         }
-        else {
+
+        if ($best_n == 1) {
             $table{$lookahead} = [$la];
         }
 

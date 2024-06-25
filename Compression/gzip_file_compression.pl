@@ -18,18 +18,23 @@ use List::Util        qw(all min max);
 use Getopt::Std       qw(getopts);
 
 use constant {
-              FORMAT      => 'gz',
-              WINDOW_SIZE => 1 << 15,    # 2^15
+              FORMAT     => 'gz',
+              CHUNK_SIZE => (1 << 15) - 1,
              };
 
-my $MAGIC  = pack('C*', 0x1f, 0x8b);    # magic MIME type
-my $CM     = chr(0x08);                 # 0x08 = DEFLATE
-my $FLAGS  = chr(0x00);                 # flags
-my $MTIME  = pack('C*', (0x00) x 4);    # modification time
-my $XFLAGS = chr(0x00);                 # extra flags
-my $OS     = chr(0x03);                 # 0x03 = Unix
+local $Compression::Util::LZ_MIN_LEN       = 4;                # minimum match length in LZ parsing
+local $Compression::Util::LZ_MAX_LEN       = 258;              # maximum match length in LZ parsing
+local $Compression::Util::LZ_MAX_DIST      = (1 << 15) - 1;    # maximum allowed back-reference distance in LZ parsing
+local $Compression::Util::LZ_MAX_CHAIN_LEN = 64;               # how many recent positions to remember in LZ parsing
 
-my ($DISTANCE_SYMBOLS, $LENGTH_SYMBOLS, $LENGTH_INDICES) = make_deflate_tables(WINDOW_SIZE);
+my $MAGIC  = pack('C*', 0x1f, 0x8b);                           # magic MIME type
+my $CM     = chr(0x08);                                        # 0x08 = DEFLATE
+my $FLAGS  = chr(0x00);                                        # flags
+my $MTIME  = pack('C*', (0x00) x 4);                           # modification time
+my $XFLAGS = chr(0x00);                                        # extra flags
+my $OS     = chr(0x03);                                        # 0x03 = Unix
+
+my ($DISTANCE_SYMBOLS, $LENGTH_SYMBOLS, $LENGTH_INDICES) = make_deflate_tables();
 
 sub usage ($code) {
     print <<"EOH";
@@ -349,7 +354,7 @@ sub gzip_compress ($in_fh, $out_fh) {
         $bitstring = '1' . '10' . '0000000';
     }
 
-    while (read($in_fh, (my $chunk), WINDOW_SIZE)) {
+    while (read($in_fh, (my $chunk), CHUNK_SIZE)) {
 
         $crc32->add($chunk);
         $total_length += length($chunk);
@@ -648,6 +653,7 @@ sub gzip_decompress ($in_fh, $out_fh) {
     my $actual_length = 0;
     my $buffer        = '';
     my $search_window = '';
+    my $window_size   = $Compression::Util::LZ_MAX_DIST;
 
     while (1) {
 
@@ -677,7 +683,7 @@ sub gzip_decompress ($in_fh, $out_fh) {
         print $out_fh $chunk;
         $crc32->add($chunk);
         $actual_length += length($chunk);
-        $search_window = substr($search_window, -WINDOW_SIZE) if (length($search_window) > 2 * WINDOW_SIZE);
+        $search_window = substr($search_window, -$window_size) if (length($search_window) > 2 * $window_size);
 
         last if $is_last;
     }

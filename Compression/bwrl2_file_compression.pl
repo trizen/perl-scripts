@@ -692,7 +692,7 @@ sub compress_file ($input, $output) {
     # Compress data
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
 
-        my ($bwt,          $idx)     = bwt_encode($chunk);
+        my ($bwt,          $idx)     = bwt_encode(pack('C*', @{rle4_encode([unpack('C*', $chunk)])}));
         my ($uncompressed, $lengths) = VLR_encoding([split(//, $bwt)]);
 
         print $out_fh pack('N', $idx);
@@ -732,7 +732,7 @@ sub decompress_file ($input, $output) {
         seek($len_fh, 0, 0);
 
         my $dec = VLR_decoding([split(//, $uncompressed)], $len_fh);
-        print $out_fh bwt_decode($dec, $idx);
+        print $out_fh pack('C*', @{rle4_decode([unpack('C*', bwt_decode($dec, $idx))])});
     }
 
     close $fh;
