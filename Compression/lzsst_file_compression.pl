@@ -19,7 +19,6 @@ use 5.036;
 use Getopt::Std    qw(getopts);
 use File::Basename qw(basename);
 use List::Util     qw(max);
-use POSIX          qw(ceil log2);
 
 use constant {
     PKGNAME => 'LZSST',
@@ -164,7 +163,7 @@ sub lz77_compression($str) {
 
     my $min_len       = 4;      # minimum match length
     my $max_len       = 258;    # maximum match length
-    my $max_chain_len = 32;     # how many recent positions to keep track of
+    my $max_chain_len = 48;     # how many recent positions to keep track of
 
     my (@literals, @distances, @lengths, %table);
 

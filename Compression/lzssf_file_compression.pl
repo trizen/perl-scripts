@@ -19,7 +19,6 @@ use 5.036;
 use Getopt::Std    qw(getopts);
 use File::Basename qw(basename);
 use List::Util     qw(max);
-use POSIX          qw(ceil log2);
 
 use constant {
     PKGNAME => 'LZSSF',

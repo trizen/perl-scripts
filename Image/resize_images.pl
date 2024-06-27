@@ -33,14 +33,14 @@ sub usage ($code) {
 usage: $0 [options] [dirs | files]
 
 options:
-    -w  --width=i       : resize images to this width
-    -h  --height=i      : resize images to this height
+    -w  --width=i     : resize images to this width
+    -h  --height=i    : resize images to this height
 
-        --min=i         : resize images to have the smallest side equal to this
-        --max=i         : resize images to have the largest side equal to this
+        --min=i       : resize images to have the smallest side equal to this
+        --max=i       : resize images to have the largest side equal to this
 
-    -q  --quality=s     : quality of scaling: 'normal', 'preview' or 'mixing' (default: $qtype)
-    -f  --formats=s,s   : specify more image formats (default: @img_formats)
+    -q  --quality=s   : quality of scaling: 'normal', 'preview' or 'mixing' (default: $qtype)
+    -f  --formats=s,s : specify more image formats (default: @img_formats)
 
 examples:
 

@@ -18,10 +18,6 @@ use Digest::CRC       qw();
 use List::Util        qw(max);
 use Compression::Util qw(:all);
 
-use constant {
-              CHUNK_SIZE => (1 << 15) - 1,    # maximum window size in DEFLATE: 2^15
-             };
-
 local $Compression::Util::LZ_MAX_LEN  = 258;              # maximum match length in LZ parsing
 local $Compression::Util::LZ_MAX_DIST = (1 << 15) - 1;    # maximum allowed back-reference distance in LZ parsing
 
@@ -290,8 +286,8 @@ sub extract ($in_fh, $output_file, $defined_output_file) {
 
         if ($block_type == 0) {
             say STDERR "\n:: Extracting block of type 0";
-            read_bit_lsb($in_fh, \$buffer) for (1 .. (length($buffer) % 8));    # pad to a byte
-            $chunk = extract_block_type_0($in_fh, \$buffer);
+            $buffer = '';                                       # pad to a byte
+            $chunk  = extract_block_type_0($in_fh, \$buffer);
             $search_window .= $chunk;
         }
         elsif ($block_type == 1) {
