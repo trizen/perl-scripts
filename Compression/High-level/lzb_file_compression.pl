@@ -25,8 +25,8 @@ use constant {
 
 local $Compression::Util::LZ_MIN_LEN       = 4;                # minimum match length
 local $Compression::Util::LZ_MAX_LEN       = ~0;               # maximum match length
-local $Compression::Util::LZ_MAX_DIST      = (1 << 16) - 1;    # maximum match length
-local $Compression::Util::LZ_MAX_CHAIN_LEN = 16;               # higher value = better compression
+local $Compression::Util::LZ_MAX_DIST      = (1 << 16) - 1;    # maximum match distance
+local $Compression::Util::LZ_MAX_CHAIN_LEN = 32;               # higher value = better compression
 
 # Container signature
 use constant SIGNATURE => uc(FORMAT) . chr(1);

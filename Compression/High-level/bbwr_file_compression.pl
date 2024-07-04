@@ -1,14 +1,17 @@
 #!/usr/bin/perl
 
 # Author: Trizen
-# Date: 10 May 2024
+# Date: 04 July 2024
 # https://github.com/trizen
 
-# Compress/decompress files using LZ77 compression (LZSS variant with hash tables -- fast variant), using a byte-aligned encoding, similar to LZ4.
+# Compress/decompress files using Binary Burrows-Wheeler Transform (BWT) + Binary Variable Run-Length Encoding.
 
 # References:
-#   https://github.com/lz4/lz4/blob/dev/doc/lz4_Frame_format.md
-#   https://github.com/lz4/lz4/blob/dev/doc/lz4_Block_format.md
+#   Data Compression (Summer 2023) - Lecture 13 - BZip2
+#   https://youtube.com/watch?v=cvoZbBZ3M2A
+#
+#   Data Compression (Summer 2023) - Lecture 5 - Basic Techniques
+#   https://youtube.com/watch?v=TdFWb8mL5Gk
 
 use 5.036;
 use Getopt::Std       qw(getopts);
@@ -16,16 +19,12 @@ use File::Basename    qw(basename);
 use Compression::Util qw(:all);
 
 use constant {
-    PKGNAME => 'LZBF',
+    PKGNAME => 'BBWR',
     VERSION => '0.01',
-    FORMAT  => 'lzbf',
+    FORMAT  => 'bbwr',
 
-    CHUNK_SIZE => 1 << 18,
+    CHUNK_SIZE => 1 << 13,    # larger values == better compression
 };
-
-local $Compression::Util::LZ_MIN_LEN  = 5;                # minimum match length
-local $Compression::Util::LZ_MAX_LEN  = ~0;               # maximum match length
-local $Compression::Util::LZ_MAX_DIST = (1 << 16) - 1;    # maximum match distance
 
 # Container signature
 use constant SIGNATURE => uc(FORMAT) . chr(1);
@@ -108,6 +107,49 @@ sub main {
     }
 }
 
+sub compression ($chunk, $out_fh) {
+
+    my $bits  = unpack('B*', $chunk);
+    my $vrle1 = binary_vrl_encode($bits);
+
+    if (length($vrle1) < length($bits)) {
+        printf "Doing early VLR, saving %s bits\n", length($bits) - length($vrle1);
+        print $out_fh chr(1);
+    }
+    else {
+        print $out_fh chr(0);
+        $vrle1 = $bits;
+    }
+
+    my ($bwt, $idx) = bwt_encode($vrle1);
+    my $vrle2 = binary_vrl_encode($bwt);
+
+    say "BWT index: $idx";
+
+    print $out_fh pack('N',  $idx);
+    print $out_fh pack('N',  length($vrle2));
+    print $out_fh pack('B*', $vrle2);
+}
+
+sub decompression ($fh, $out_fh) {
+
+    my $compressed_byte = ord(getc($fh) // die "error");
+
+    my $idx      = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
+    my $bits_len = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
+
+    say "BWT index = $idx";
+
+    my $bwt  = binary_vrl_decode(read_bits($fh, $bits_len));
+    my $data = bwt_decode($bwt, $idx);
+
+    if ($compressed_byte == 1) {
+        $data = binary_vrl_decode($data);
+    }
+
+    print $out_fh pack('B*', $data);
+}
+
 # Compress file
 sub compress_file ($input, $output) {
 
@@ -125,7 +167,7 @@ sub compress_file ($input, $output) {
 
     # Compress data
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
-        print $out_fh lzb_compress($chunk, \&lzss_encode_fast);
+        compression($chunk, $out_fh);
     }
 
     # Close the file
@@ -146,7 +188,7 @@ sub decompress_file ($input, $output) {
       or die "Can't open file <<$output>> for writing: $!";
 
     while (!eof($fh)) {
-        print $out_fh lzb_decompress($fh);
+        decompression($fh, $out_fh);
     }
 
     # Close the file

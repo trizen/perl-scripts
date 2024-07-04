@@ -16,7 +16,7 @@ use constant {
     VERSION => '0.01',
     FORMAT  => 'lzbw3',
 
-    CHUNK_SIZE => 1 << 17,    # higher value = better compression
+    CHUNK_SIZE => 1 << 18,    # higher value = better compression
 };
 
 # Container signature

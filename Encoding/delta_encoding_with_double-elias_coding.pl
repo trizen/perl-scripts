@@ -73,7 +73,7 @@ sub delta_decode ($str) {
             my $bl2 = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. $bl));
             my $int = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. ($bl2 - 1)));
 
-            push @deltas, ($bit eq '1' ? 1 : - 1) * ($int - 1);
+            push @deltas, ($bit eq '1' ? 1 : -1) * ($int - 1);
         }
 
         if ($k == 0) {

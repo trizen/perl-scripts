@@ -2,17 +2,20 @@
 
 # Author: Trizen
 # Date: 17 June 2023
-# Edit: 02 May 2024
+# Edit: 04 July 2024
 # https://github.com/trizen
 
-# Compress/decompress files using LZ77 compression (LZSS variant with hash tables) + Huffman coding.
+# Compress/decompress files using LZ77 compression (LZSS variant with hash tables with lazy matching) + Huffman coding.
 
 # Encoding the literals and the pointers using a DEFLATE-like approach.
 # This version is memory-friendly, supporting arbitrary large chunk sizes.
 
-# Reference:
+# References:
 #   Data Compression (Summer 2023) - Lecture 11 - DEFLATE (gzip)
 #   https://youtube.com/watch?v=SJPvNi4HrWQ
+#
+#   DEFLATE Compressed Data Format Specification version 1.3
+#   https://datatracker.ietf.org/doc/html/rfc1951
 
 use 5.036;
 
@@ -21,9 +24,9 @@ use File::Basename qw(basename);
 use List::Util     qw(max);
 
 use constant {
-    PKGNAME => 'LZSST',
+    PKGNAME => 'LZSST2',
     VERSION => '0.01',
-    FORMAT  => 'lzsst',
+    FORMAT  => 'lzsst2',
 
     CHUNK_SIZE => 1 << 19,    # higher value = better compression
 };
@@ -154,6 +157,33 @@ sub make_deflate_symbols ($size) {
     return (\@DISTANCE_SYMBOLS, \@LENGTH_INDICES, \@LENGTH_SYMBOLS);
 }
 
+sub find_match ($str_ref, $la, $min_len, $max_len, $end, $table, $symbols) {
+
+    my $best_n = 1;
+    my $best_p = $la;
+
+    my $lookahead = substr($$str_ref, $la, $min_len);
+
+    if (exists($table->{$lookahead})) {
+
+        foreach my $p (@{$table->{$lookahead}}) {
+
+            my $n = $min_len;
+
+            while ($n <= $max_len and $la + $n <= $end and $symbols->[$la + $n - 1] == $symbols->[$p + $n - 1]) {
+                ++$n;
+            }
+
+            if ($n > $best_n) {
+                $best_p = $p;
+                $best_n = $n;
+            }
+        }
+    }
+
+    return ($best_n, $best_p);
+}
+
 sub lz77_compression($str) {
 
     my $la = 0;
@@ -169,37 +199,50 @@ sub lz77_compression($str) {
 
     while ($la <= $end) {
 
-        my $best_n = 1;
-        my $best_p = $la;
+        my $lookahead1 = substr($str, $la,     $min_len);
+        my $lookahead2 = substr($str, $la + 1, $min_len);
 
-        my $lookahead = substr($str, $la, $min_len);
+        my ($n1, $p1) = (1, $la);
+        my ($n2, $p2) = (1, $la + 1);
 
-        if (exists($table{$lookahead})) {
+        if (exists($table{$lookahead1})) {
+            ($n1, $p1) = find_match(\$str, $la, $min_len, $max_len, $end, \%table, \@symbols);
+        }
 
-            foreach my $p (@{$table{$lookahead}}) {
+        if (exists($table{$lookahead2})) {
+            ($n2, $p2) = find_match(\$str, $la + 1, $min_len, $max_len, $end, \%table, \@symbols);
+        }
 
-                my $n = $min_len;
+        my $best_n    = $n1;
+        my $best_p    = $p1;
+        my $lookahead = $lookahead1;
 
-                while ($n <= $max_len and $la + $n <= $end and $symbols[$la + $n - 1] == $symbols[$p + $n - 1]) {
-                    ++$n;
-                }
+        # When a longer match is found at position la+1,
+        # emit a literal followed by the longer match.
+        # https://datatracker.ietf.org/doc/html/rfc1951#section-4
 
-                if ($n > $best_n) {
-                    $best_p = $p;
-                    $best_n = $n;
-                }
-            }
+        if ($n2 > $n1 and $p1 < $p2) {
 
-            my $matched = substr($str, $la, $best_n);
+            push @lengths,   (0);
+            push @distances, (0);
+            push @literals, @symbols[$la .. $la];
 
-            foreach my $i (0 .. length($matched) - $min_len) {
+            $la += 1;
 
-                my $key = substr($matched, $i, $min_len);
-                unshift @{$table{$key}}, $la + $i;
+            $best_n    = $n2;
+            $best_p    = $p2;
+            $lookahead = $lookahead2;
+        }
 
-                if (scalar(@{$table{$key}}) > $max_chain_len) {
-                    pop @{$table{$key}};
-                }
+        my $matched = substr($str, $la, $best_n);
+
+        foreach my $i (0 .. length($matched) - $min_len) {
+
+            my $key = substr($matched, $i, $min_len);
+            unshift @{$table{$key}}, $la + $i;
+
+            if (scalar(@{$table{$key}}) > $max_chain_len) {
+                pop @{$table{$key}};
             }
         }
 

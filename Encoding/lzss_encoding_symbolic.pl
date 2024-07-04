@@ -13,9 +13,10 @@ sub lzss_encode_symbolic ($symbols) {
     my $la  = 0;
     my $end = $#$symbols;
 
-    my $min_len       = 4;      # minimum match length
-    my $max_len       = 255;    # maximum match length
-    my $max_chain_len = 16;     # how many recent positions to keep track of
+    my $min_len       = 4;                # minimum match length
+    my $max_len       = 255;              # maximum match length
+    my $max_dist      = (1 << 16) - 1;    # maximum match distance
+    my $max_chain_len = 16;               # how many recent positions to keep track of
 
     my (@literals, @distances, @lengths, %table);
 
@@ -39,6 +40,10 @@ sub lzss_encode_symbolic ($symbols) {
         if (exists($table{$lookahead})) {
 
             foreach my $p (@{$table{$lookahead}}) {
+
+                if ($la - $p > $max_dist) {
+                    last;
+                }
 
                 my $n = $min_len;
 
@@ -64,7 +69,8 @@ sub lzss_encode_symbolic ($symbols) {
                 }
             }
         }
-        else {
+
+        if ($best_n == 1) {
             $table{$lookahead} = [$la];
         }
 

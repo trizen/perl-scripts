@@ -49,7 +49,7 @@ sub bwt_cyclic ($s) {    # O(n) space (slowish)
 sub bwt_encode ($s) {
 
     my $bwt = bwt_cyclic($s);
-    my @ret    = map { $s->[$_ - 1] } @$bwt;
+    my @ret = map { $s->[$_ - 1] } @$bwt;
 
     my $idx = 0;
     foreach my $i (@$bwt) {

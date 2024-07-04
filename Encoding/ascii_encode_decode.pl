@@ -54,8 +54,7 @@ say "Enc: ", $enc;
 say "Dec: ", $dec;
 
 # Encoding
-my $encoded = encode_decode(1, "Just another ")
-            . encode_decode(1, "Perl hacker,");
+my $encoded = encode_decode(1, "Just another ") . encode_decode(1, "Perl hacker,");
 
 # Decoding
 my $decoded = encode_decode(0, $encoded);

@@ -32,7 +32,7 @@ sub create_cfreq ($freq_value) {
 
     foreach my $i (0 .. EOF_SYMBOL) {
         $freq[$i] = $freq_value;
-        $cf[$i] = $T;
+        $cf[$i]   = $T;
         $T += $freq_value;
         $cf[$i + 1] = $T;
     }

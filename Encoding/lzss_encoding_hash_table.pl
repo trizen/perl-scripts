@@ -61,7 +61,8 @@ sub lzss_encode ($str) {
                 }
             }
         }
-        else {
+
+        if ($best_n == 1) {
             $table{$lookahead} = [$la];
         }
 
