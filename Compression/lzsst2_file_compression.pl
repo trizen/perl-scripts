@@ -5,7 +5,7 @@
 # Edit: 04 July 2024
 # https://github.com/trizen
 
-# Compress/decompress files using LZ77 compression (LZSS variant with hash tables with lazy matching) + Huffman coding.
+# Compress/decompress files using LZ77 compression (LZSS variant with hash tables and lazy matching) + Huffman coding.
 
 # Encoding the literals and the pointers using a DEFLATE-like approach.
 # This version is memory-friendly, supporting arbitrary large chunk sizes.
@@ -225,7 +225,7 @@ sub lz77_compression($str) {
 
             push @lengths,   (0);
             push @distances, (0);
-            push @literals, @symbols[$la .. $la];
+            push @literals, $symbols[$la];
 
             $la += 1;
 

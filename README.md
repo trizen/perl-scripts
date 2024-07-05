@@ -923,6 +923,7 @@ A nice collection of day-to-day Perl scripts.
     * [Next palindrome in base](./Math/next_palindrome_in_base.pl)
     * [Next power of two](./Math/next_power_of_two.pl)
     * [Nth composite](./Math/nth_composite.pl)
+    * [Nth digit of fraction](./Math/nth_digit_of_fraction.pl)
     * [Nth prime approx](./Math/nth_prime_approx.pl)
     * [Nth root good rational approximations](./Math/nth_root_good_rational_approximations.pl)
     * [Nth root recurrence constant](./Math/nth_root_recurrence_constant.pl)
