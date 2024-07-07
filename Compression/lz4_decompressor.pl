@@ -2,6 +2,7 @@
 
 # Author: Trizen
 # Date: 09 May 2024
+# Edit: 07 July 2024
 # https://github.com/trizen
 
 # A simple LZ4 decompressor.
@@ -9,8 +10,6 @@
 # References:
 #   https://github.com/lz4/lz4/blob/dev/doc/lz4_Frame_format.md
 #   https://github.com/lz4/lz4/blob/dev/doc/lz4_Block_format.md
-
-# WORK IN PROGRESS: for some archives with uncompressed data, it does not work correctly, yet.
 
 use 5.036;
 use Compression::Util qw(:all);
@@ -66,7 +65,7 @@ BLOCK_LOOP: while (!eof($fh)) {
 
     if ($block_size >> 31) {
         say STDERR "Highest bit set: ", $block_size;
-        $block_size &= 0b01_11_11_11;
+        $block_size &= ((1 << 31) - 1);
         say STDERR "Block size: ", $block_size;
         my $uncompressed = '';
         read($fh, $uncompressed, $block_size);
@@ -103,9 +102,9 @@ BLOCK_LOOP: while (!eof($fh)) {
                 read($block_fh, $literals, $literals_length);
             }
 
-            if ($match_len == 0) {    # end of block
+            if (eof($block_fh)) {    # end of block
                 $decoded .= $literals;
-                next BLOCK_LOOP;      # FIXME: this is not correct
+                next BLOCK_LOOP;
             }
 
             my $offset = bits2int_lsb($block_fh, 16, \$buffer);
@@ -141,4 +140,5 @@ if ($C_checksum) {
     say STDERR "Checksum: $content_checksum";
 }
 
+local $| = 1;
 print $decoded;
