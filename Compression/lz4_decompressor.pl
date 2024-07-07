@@ -75,10 +75,9 @@ BLOCK_LOOP: while (!eof($fh)) {
 
         my $compressed = '';
         read($fh, $compressed, $block_size);
-        open my $block_fh, '<:raw', \$compressed;
 
-        while (!eof($block_fh)) {
-            my $len_byte = ord(getc($block_fh));
+        while ($compressed ne '') {
+            my $len_byte = ord(substr($compressed, 0, 1, ''));
 
             my $literals_length = $len_byte >> 4;
             my $match_len       = $len_byte & 0b1111;
@@ -88,7 +87,7 @@ BLOCK_LOOP: while (!eof($fh)) {
 
             if ($literals_length == 15) {
                 while (1) {
-                    my $byte_len = ord(getc($block_fh));
+                    my $byte_len = ord(substr($compressed, 0, 1, ''));
                     $literals_length += $byte_len;
                     last if $byte_len != 255;
                 }
@@ -99,15 +98,15 @@ BLOCK_LOOP: while (!eof($fh)) {
             my $literals = '';
 
             if ($literals_length > 0) {
-                read($block_fh, $literals, $literals_length);
+                $literals = substr($compressed, 0, $literals_length, '');
             }
 
-            if (eof($block_fh)) {    # end of block
+            if ($compressed eq '') {    # end of block
                 $decoded .= $literals;
                 last;
             }
 
-            my $offset = bits2int_lsb($block_fh, 16, \$buffer);
+            my $offset = oct('0b' . reverse unpack('b16', substr($compressed, 0, 2, '')));
 
             if ($offset == 0) {
                 die "Corrupted block";
@@ -115,7 +114,7 @@ BLOCK_LOOP: while (!eof($fh)) {
 
             if ($match_len == 15) {
                 while (1) {
-                    my $byte_len = ord(getc($block_fh));
+                    my $byte_len = ord(substr($compressed, 0, 1, ''));
                     $match_len += $byte_len;
                     last if $byte_len != 255;
                 }
