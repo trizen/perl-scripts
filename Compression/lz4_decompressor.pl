@@ -83,8 +83,8 @@ BLOCK_LOOP: while (!eof($fh)) {
             my $literals_length = $len_byte >> 4;
             my $match_len       = $len_byte & 0b1111;
 
-            say STDERR "Literal: ",   $literals_length;
-            say STDERR "Match len: ", $match_len;
+            #say STDERR "Literal: ",   $literals_length;
+            #say STDERR "Match len: ", $match_len;
 
             if ($literals_length == 15) {
                 while (1) {
@@ -94,7 +94,7 @@ BLOCK_LOOP: while (!eof($fh)) {
                 }
             }
 
-            say STDERR "Total literals length: ", $literals_length;
+            #say STDERR "Total literals length: ", $literals_length;
 
             my $literals = '';
 
@@ -104,7 +104,7 @@ BLOCK_LOOP: while (!eof($fh)) {
 
             if (eof($block_fh)) {    # end of block
                 $decoded .= $literals;
-                next BLOCK_LOOP;
+                last;
             }
 
             my $offset = bits2int_lsb($block_fh, 16, \$buffer);
@@ -122,23 +122,39 @@ BLOCK_LOOP: while (!eof($fh)) {
             }
 
             $decoded .= $literals;
+            $match_len += 4;
 
-            foreach my $i (1 .. $match_len + 4) {
-                $decoded .= substr($decoded, length($decoded) - $offset, 1);
+            if ($offset >= $match_len) {    # non-overlapping matches
+                $decoded .= substr($decoded, length($decoded) - $offset, $match_len);
+            }
+            elsif ($offset == 1) {
+                $decoded .= substr($decoded, -1) x $match_len;
+            }
+            else {                          # overlapping matches
+                foreach my $i (1 .. $match_len) {
+                    $decoded .= substr($decoded, length($decoded) - $offset, 1);
+                }
             }
         }
     }
 
     if ($B_checksum) {
         my $content_checksum = bits2int_lsb($fh, 32, \$buffer);
-        say STDERR "Checksum: $content_checksum";
+        say STDERR "Block checksum: $content_checksum";
+    }
+
+    if ($B_indep) {    # blocks are independent of each other
+        print $decoded;
+        $decoded = '';
+    }
+    elsif (length($decoded) > 2**16) {    # blocks are dependent
+        print substr($decoded, 0, -(2**16), '');
     }
 }
 
 if ($C_checksum) {
     my $content_checksum = bits2int_lsb($fh, 32, \$buffer);
-    say STDERR "Checksum: $content_checksum";
+    say STDERR "Content checksum: $content_checksum";
 }
 
-local $| = 1;
 print $decoded;
