@@ -2,7 +2,7 @@
 
 # Author: Trizen
 # Date: 09 May 2024
-# Edit: 07 July 2024
+# Edit: 08 July 2024
 # https://github.com/trizen
 
 # A simple LZ4 decompressor.
@@ -12,15 +12,19 @@
 #   https://github.com/lz4/lz4/blob/dev/doc/lz4_Block_format.md
 
 use 5.036;
-use Compression::Util qw(:all);
+
+sub bytes2int_lsb ($fh, $n) {
+    my $bytes = '';
+    $bytes .= getc($fh) for (1 .. $n);
+    oct('0b' . reverse unpack('b*', $bytes));
+}
 
 my $file = $ARGV[0] // die "usage: $0 [file.lz4]\n";
 
 open my $fh, '<:raw', $file
   or die "Can't open file <<$file>> for reading: $!";
 
-my $buffer = '';
-bits2int_lsb($fh, 32, \$buffer) == 0x184D2204 or die "Not an LZ4 file\n";
+bytes2int_lsb($fh, 4) == 0x184D2204 or die "Not an LZ4 file\n";
 
 my $FLG = ord(getc($fh));
 my $BD  = ord(getc($fh));
@@ -39,12 +43,12 @@ if ($version != 0b01_00_00_00) {
 }
 
 if ($C_size) {
-    my $content_size = bits2int_lsb($fh, 64, \$buffer);
+    my $content_size = bytes2int_lsb($fh, 8);
     say STDERR "Content size: ", $content_size;
 }
 
 if ($DictID) {
-    my $dict_id = bits2int_lsb($fh, 32, \$buffer);
+    my $dict_id = bytes2int_lsb($fh, 4);
     say STDERR "Dictionary ID: ", $dict_id;
 }
 
@@ -54,7 +58,7 @@ my $decoded = '';
 
 BLOCK_LOOP: while (!eof($fh)) {
 
-    my $block_size = bits2int_lsb($fh, 32, \$buffer);
+    my $block_size = bytes2int_lsb($fh, 4);
 
     if ($block_size == 0x00000000) {    # signifies an EndMark
         say STDERR "Block size == 0";
@@ -138,7 +142,7 @@ BLOCK_LOOP: while (!eof($fh)) {
     }
 
     if ($B_checksum) {
-        my $content_checksum = bits2int_lsb($fh, 32, \$buffer);
+        my $content_checksum = bytes2int_lsb($fh, 4);
         say STDERR "Block checksum: $content_checksum";
     }
 
@@ -152,7 +156,7 @@ BLOCK_LOOP: while (!eof($fh)) {
 }
 
 if ($C_checksum) {
-    my $content_checksum = bits2int_lsb($fh, 32, \$buffer);
+    my $content_checksum = bytes2int_lsb($fh, 4);
     say STDERR "Content checksum: $content_checksum";
 }
 
