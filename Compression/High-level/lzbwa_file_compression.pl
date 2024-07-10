@@ -153,8 +153,9 @@ sub compress_file ($input, $output) {
         @sizes           = ();
         @distances_block = ();
 
-        open $uc_fh,  '>:raw', \$uncompressed_str;
-        open $len_fh, '>:raw', \$lengths_str;
+        open $uc_fh,    '>:raw', \$uncompressed_str;
+        open $len_fh,   '>:raw', \$lengths_str;
+        open $match_fh, '>:raw', \$matches_str;
     };
 
     # Compress data
