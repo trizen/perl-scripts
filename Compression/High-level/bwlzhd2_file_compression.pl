@@ -2,10 +2,10 @@
 
 # Author: Trizen
 # Date: 15 December 2022
-# Edit: 19 March 2024
+# Edit: 25 July 2024
 # https://github.com/trizen
 
-# Compress/decompress files using Burrows-Wheeler transform (BWT) + Run-length Encoding (RLE) + LZ77 compression (LZHD variant) + Huffman coding.
+# Compress/decompress files using Burrows-Wheeler transform (BWT) + Run-length Encoding (RLE) + LZ77 compression (LZ4-like) + Move-to-front + Huffman coding.
 
 # Encoding the distances/indices using a DEFLATE-like approach.
 
@@ -16,15 +16,15 @@ use File::Basename    qw(basename);
 use Compression::Util qw(:all);
 
 use constant {
-    PKGNAME => 'BWLZHD',
-    VERSION => '0.02',
-    FORMAT  => 'bwlzhd',
+    PKGNAME => 'BWLZHD2',
+    VERSION => '0.01',
+    FORMAT  => 'bwlzhd2',
 
-    CHUNK_SIZE => 1 << 17,    # higher value = better compression
+    CHUNK_SIZE            => 1 << 17,    # higher value = better compression
 };
 
 # Container signature
-use constant SIGNATURE => uc(FORMAT) . chr(2);
+use constant SIGNATURE => uc(FORMAT) . chr(1);
 
 sub usage {
     my ($code) = @_;
@@ -109,8 +109,6 @@ sub compression ($chunk, $out_fh) {
     my $rle4 = rle4_encode([unpack('C*', $chunk)]);
     my ($bwt, $idx) = bwt_encode(pack('C*', @$rle4));
 
-    $bwt = pack('C*', @{rle4_encode([unpack('C*', $bwt)])});
-
     say "BWT index = $idx";
 
     my ($uncompressed, $lengths, $matches, $distances) = lz77_encode($bwt);
@@ -122,7 +120,7 @@ sub compression ($chunk, $out_fh) {
     print $out_fh mrl_compress_symbolic($uncompressed);
     print $out_fh create_huffman_entry($lengths);
     print $out_fh create_huffman_entry($matches);
-    print $out_fh obh_encode($distances);
+    print $out_fh obh_encode($distances, \&mrl_compress_symbolic);
 }
 
 sub decompression ($fh, $out_fh) {
@@ -131,10 +129,9 @@ sub decompression ($fh, $out_fh) {
     my $uncompressed = mrl_decompress_symbolic($fh);
     my $lengths      = decode_huffman_entry($fh);
     my $matches      = decode_huffman_entry($fh);
-    my $distances    = obh_decode($fh);
+    my $distances    = obh_decode($fh, \&mrl_decompress_symbolic);
 
-    my $rle4 = lz77_decode($uncompressed, $lengths, $matches, $distances);
-    my $bwt  = symbols2string(rle4_decode(string2symbols($rle4)));
+    my $bwt  = lz77_decode($uncompressed, $lengths, $matches, $distances);
     my @rle4 = unpack('C*', bwt_decode($bwt, $idx));
     print $out_fh symbols2string(rle4_decode(\@rle4));
 }
