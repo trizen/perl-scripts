@@ -111,7 +111,12 @@ sub main {
 
 sub compression ($chunk, $out_fh) {
 
-    my @chunk_bytes = unpack('C*', $chunk);
+    my $lzb = do {
+        local $Compression::Util::LZ_MIN_LEN = 512;
+        lzb_compress($chunk);
+    };
+
+    my @chunk_bytes = unpack('C*', $lzb);
     my $data        = rle4_encode(\@chunk_bytes, scalar(@chunk_bytes));
 
     my ($bwt,       $idx)      = bwt_encode_symbolic($data);
@@ -134,7 +139,7 @@ sub decompression ($fh, $out_fh) {
     $symbols = zrle_decode($symbols);
     $symbols = mtf_decode($symbols, $alphabet);
 
-    print $out_fh symbols2string(rle4_decode(bwt_decode_symbolic($symbols, $idx)));
+    print $out_fh lzb_decompress(symbols2string(rle4_decode(bwt_decode_symbolic($symbols, $idx))));
 }
 
 # Compress file
