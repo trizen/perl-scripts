@@ -126,6 +126,15 @@ sub compress_file ($input, $output) {
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
         my $bits = unpack('B*', $chunk);
         my $rle  = binary_vrl_encode($bits);
+        if (length($rle) >= length($bits)) {
+            print $out_fh chr(0);
+            printf("Without binary VRLE: %s >= %s\n", length($rle), length($bits));
+            $rle = $bits;
+        }
+        else {
+            print $out_fh chr(1);
+            printf("With binary VRLE: %s < %s\n", length($rle), length($bits));
+        }
         my ($uncompressed, $lengths, $matches, $distances) = lz77_encode($rle);
         my $ubits = pack('C*', @$uncompressed);
 
@@ -156,9 +165,10 @@ sub decompress_file ($input, $output) {
       or die "Can't open file <<$output>> for writing: $!";
 
     while (!eof($fh)) {
-        my $rem   = ord getc($fh);
-        my $str   = symbols2string decode_huffman_entry($fh);
-        my $ubits = unpack('B*', $str);
+        my $with_vrle = ord getc($fh);
+        my $rem       = ord getc($fh);
+        my $str       = symbols2string decode_huffman_entry($fh);
+        my $ubits     = unpack('B*', $str);
         if ($rem != 0) {
             $ubits = substr($ubits, 0, -(8 - $rem));
         }
@@ -167,7 +177,7 @@ sub decompress_file ($input, $output) {
         my $matches      = decode_huffman_entry($fh);
         my $distances    = obh_decode($fh, \&mrl_decompress_symbolic);
         my $rle          = lz77_decode($uncompressed, $lengths, $matches, $distances);
-        my $bits         = binary_vrl_decode($rle);
+        my $bits         = $with_vrle ? binary_vrl_decode($rle) : $rle;
         print $out_fh pack('B*', $bits);
     }
 
