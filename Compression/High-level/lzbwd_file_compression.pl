@@ -28,7 +28,7 @@ use constant {
     UNCOMPRESSED_BYTE => chr(0),
 
     CHUNK_SIZE            => 1 << 16,                  # higher value = better compression
-    RANDOM_DATA_THRESHOLD => 1,                        # in ratio
+    RANDOM_DATA_THRESHOLD => 0.5,                      # in ratio
     MAX_INT               => oct('0b' . ('1' x 32)),
 };
 

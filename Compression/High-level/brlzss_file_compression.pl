@@ -5,15 +5,9 @@
 # Edit: 25 July 2024
 # https://github.com/trizen
 
-# Compress/decompress files using Binary RLE + LZ77 compression (LZSS variant) + Huffman coding.
+# Compress/decompress files using Binary RLE + LZ77 compression (LZ4-like) + Huffman coding.
 
-# Encoding the literals and the pointers using a DEFLATE-like approach.
-
-# Reference:
-#   Data Compression (Summer 2023) - Lecture 11 - DEFLATE (gzip)
-#   https://youtube.com/watch?v=SJPvNi4HrWQ
-
-# TODO: Improve the compression ratio (some cleverness required).
+# Good at compressing data where there are patterns on bits, but not at byte boundaries (e.g.: variable-bit encoded data).
 
 use 5.036;
 use Getopt::Std       qw(getopts);
@@ -28,7 +22,7 @@ use constant {
     CHUNK_SIZE => 1 << 18,    # higher value = better compression
 };
 
-local $Compression::Util::LZ_MIN_LEN       = 4;          # minimum match length
+local $Compression::Util::LZ_MIN_LEN       = 8 * 3;      # minimum match length
 local $Compression::Util::LZ_MAX_LEN       = 1 << 15;    # maximum match length
 local $Compression::Util::LZ_MAX_CHAIN_LEN = 64;         # higher value = better compression
 
@@ -132,8 +126,16 @@ sub compress_file ($input, $output) {
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
         my $bits = unpack('B*', $chunk);
         my $rle  = binary_vrl_encode($bits);
-        my $str  = pack('B*', $rle);
-        print $out_fh chr(length($rle) % 8) . lzss_compress($str);
+        my ($uncompressed, $lengths, $matches, $distances) = lz77_encode($rle);
+        my $ubits = pack('C*', @$uncompressed);
+
+        print $out_fh chr(length($ubits) % 8);
+
+        my $str = pack('B*', $ubits);
+        print $out_fh create_huffman_entry(string2symbols $str);
+        print $out_fh create_huffman_entry($lengths);
+        print $out_fh create_huffman_entry($matches);
+        print $out_fh obh_encode($distances, \&mrl_compress_symbolic);
     }
 
     # Close the file
@@ -154,13 +156,18 @@ sub decompress_file ($input, $output) {
       or die "Can't open file <<$output>> for writing: $!";
 
     while (!eof($fh)) {
-        my $rem = ord getc($fh);
-        my $str = lzss_decompress($fh);
-        my $rle = unpack('B*', $str);
+        my $rem   = ord getc($fh);
+        my $str   = symbols2string decode_huffman_entry($fh);
+        my $ubits = unpack('B*', $str);
         if ($rem != 0) {
-            $rle = substr($rle, 0, -(8 - $rem));
+            $ubits = substr($ubits, 0, -(8 - $rem));
         }
-        my $bits = binary_vrl_decode($rle);
+        my $uncompressed = [unpack('C*', $ubits)];
+        my $lengths      = decode_huffman_entry($fh);
+        my $matches      = decode_huffman_entry($fh);
+        my $distances    = obh_decode($fh, \&mrl_decompress_symbolic);
+        my $rle          = lz77_decode($uncompressed, $lengths, $matches, $distances);
+        my $bits         = binary_vrl_decode($rle);
         print $out_fh pack('B*', $bits);
     }
 

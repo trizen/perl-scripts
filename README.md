@@ -72,8 +72,8 @@ A nice collection of day-to-day Perl scripts.
     * [Hfm file compression](./Compression/hfm_file_compression.pl)
     * High-level
         * [Bbwr file compression](./Compression/High-level/bbwr_file_compression.pl)
+        * [Blzss2 file compression](./Compression/High-level/blzss2_file_compression.pl)
         * [Blzss file compression](./Compression/High-level/blzss_file_compression.pl)
-        * [Brlzss2 file compression](./Compression/High-level/brlzss2_file_compression.pl)
         * [Brlzss file compression](./Compression/High-level/brlzss_file_compression.pl)
         * [Bwac file compression](./Compression/High-level/bwac_file_compression.pl)
         * [Bwad file compression](./Compression/High-level/bwad_file_compression.pl)

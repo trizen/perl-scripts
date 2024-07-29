@@ -5,11 +5,9 @@
 # Edit: 25 July 2024
 # https://github.com/trizen
 
-# Compress/decompress files using LZ77 compression (LZSS variant) on bits + Huffman coding.
+# Compress/decompress files using LZ77 compression (LZ4-like) on bits + Huffman coding.
 
-# Reference:
-#   Data Compression (Summer 2023) - Lecture 11 - DEFLATE (gzip)
-#   https://youtube.com/watch?v=SJPvNi4HrWQ
+# Good at compressing data where there are patterns on bits, but not at byte boundaries (e.g.: variable-bit encoded data).
 
 use 5.036;
 use Getopt::Std       qw(getopts);

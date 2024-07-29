@@ -21,11 +21,7 @@ use constant {
     VERSION => '0.01',
     FORMAT  => 'lzbw',
 
-    COMPRESSED_BYTE   => chr(1),
-    UNCOMPRESSED_BYTE => chr(0),
-
-    CHUNK_SIZE            => 1 << 16,    # higher value = better compression
-    RANDOM_DATA_THRESHOLD => 1,          # in ratio
+    CHUNK_SIZE => 1 << 16,    # higher value = better compression
 };
 
 # Container signature
@@ -139,9 +135,7 @@ sub compress_file ($input, $output) {
 
         scalar(@sizes) > 0 or return;
 
-        print $out_fh COMPRESSED_BYTE;
         print $out_fh delta_encode(\@sizes);
-
         print $out_fh bwt_compress($uncompressed_str);
         print $out_fh bwt_compress($lengths_str);
         print $out_fh bwt_compress($matches_str);
@@ -163,19 +157,11 @@ sub compress_file ($input, $output) {
         my $est_ratio = length($chunk) / (4 * scalar(@$literals));
         say "Est. ratio: ", $est_ratio, " (", scalar(@$literals), " uncompressed bytes)";
 
-        if ($est_ratio > RANDOM_DATA_THRESHOLD) {
-            push(@sizes, scalar(@$literals), scalar(@$lengths), scalar(@$matches), scalar(@$distances));
-            print $uc_fh pack('C*', @$literals);
-            print $len_fh pack('C*', @$lengths);
-            print $match_fh pack('C*', @$matches);
-            push @distances_block, @$distances;
-        }
-        else {
-            say "Random data detected...";
-            $create_bz2_block->();
-            print $out_fh UNCOMPRESSED_BYTE;
-            print $out_fh create_huffman_entry(string2symbols($chunk));
-        }
+        push(@sizes, scalar(@$literals), scalar(@$lengths), scalar(@$matches), scalar(@$distances));
+        print $uc_fh pack('C*', @$literals);
+        print $len_fh pack('C*', @$lengths);
+        print $match_fh pack('C*', @$matches);
+        push @distances_block, @$distances;
 
         if (length($uncompressed_str) >= CHUNK_SIZE) {
             $create_bz2_block->();
@@ -200,17 +186,6 @@ sub decompress_file ($input, $output) {
       or die "Can't open file <<$output>> for writing: $!";
 
     while (!eof($fh)) {
-
-        my $compression_byte = getc($fh) // die "decompression error";
-
-        if ($compression_byte eq UNCOMPRESSED_BYTE) {
-            say "Decoding random data...";
-            print $out_fh pack('C*', @{decode_huffman_entry($fh)});
-            next;
-        }
-        elsif ($compression_byte ne COMPRESSED_BYTE) {
-            die "decompression error";
-        }
 
         my @sizes = @{delta_decode($fh)};
 

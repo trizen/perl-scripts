@@ -34,7 +34,7 @@ use constant {
     UNCOMPRESSED_BYTE => chr(0),
 
     CHUNK_SIZE            => 1 << 17,    # higher value = better compression
-    RANDOM_DATA_THRESHOLD => 1,          # in ratio
+    RANDOM_DATA_THRESHOLD => 0.5,        # in ratio
 };
 
 # Container signature
