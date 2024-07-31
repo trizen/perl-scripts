@@ -30,7 +30,7 @@ use constant {
     COMPRESSED_BYTE       => chr(1),
     UNCOMPRESSED_BYTE     => chr(0),
     CHUNK_SIZE            => 1 << 16,    # higher value = better compression
-    RANDOM_DATA_THRESHOLD => 1,          # in ratio
+    RANDOM_DATA_THRESHOLD => 0.5,          # in ratio
 };
 
 # Arithmetic Coding settings

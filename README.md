@@ -71,6 +71,7 @@ A nice collection of day-to-day Perl scripts.
     * [Gzip store](./Compression/gzip_store.pl)
     * [Hfm file compression](./Compression/hfm_file_compression.pl)
     * High-level
+        * [Ablz file compression](./Compression/High-level/ablz_file_compression.pl)
         * [Bbwr file compression](./Compression/High-level/bbwr_file_compression.pl)
         * [Blzss2 file compression](./Compression/High-level/blzss2_file_compression.pl)
         * [Blzss file compression](./Compression/High-level/blzss_file_compression.pl)
@@ -94,6 +95,7 @@ A nice collection of day-to-day Perl scripts.
         * [Bwrm file compression](./Compression/High-level/bwrm_file_compression.pl)
         * [Bwt2 file compression](./Compression/High-level/bwt2_file_compression.pl)
         * [Bwt file compression](./Compression/High-level/bwt_file_compression.pl)
+        * [Hblz file compression](./Compression/High-level/hblz_file_compression.pl)
         * [Lz2ss file compression](./Compression/High-level/lz2ss_file_compression.pl)
         * [Lz772 file compression](./Compression/High-level/lz772_file_compression.pl)
         * [Lz77 file compression](./Compression/High-level/lz77_file_compression.pl)
@@ -123,6 +125,7 @@ A nice collection of day-to-day Perl scripts.
         * [Lzssm file compression](./Compression/High-level/lzssm_file_compression.pl)
         * [Lzw file compression](./Compression/High-level/lzw_file_compression.pl)
         * [Mbwr file compression](./Compression/High-level/mbwr_file_compression.pl)
+        * [Rablz file compression](./Compression/High-level/rablz_file_compression.pl)
         * [Rlzss file compression](./Compression/High-level/rlzss_file_compression.pl)
     * [Lz4 decompressor](./Compression/lz4_decompressor.pl)
     * [Lz77 file compression](./Compression/lz77_file_compression.pl)
