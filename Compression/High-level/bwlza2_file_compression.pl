@@ -30,11 +30,7 @@ use constant {
     VERSION => '0.01',
     FORMAT  => 'bwlza2',
 
-    COMPRESSED_BYTE   => chr(1),
-    UNCOMPRESSED_BYTE => chr(0),
-
-    CHUNK_SIZE            => 1 << 17,    # higher value = better compression
-    RANDOM_DATA_THRESHOLD => 0.5,        # in ratio
+    CHUNK_SIZE => 1 << 17,    # higher value = better compression
 };
 
 # Container signature
@@ -120,43 +116,25 @@ sub main {
 
 sub lzad_compression ($chunk, $out_fh) {
 
-    my ($uncompressed, $lengths, $matches, $distances) = lz77_encode($chunk);
+    my ($uncompressed, $distances, $lengths, $matches) = lz77_encode($chunk);
 
     my $est_ratio = length($chunk) / (4 * scalar(@$uncompressed));
     say(scalar(@$uncompressed), ' -> ', $est_ratio);
 
-    if ($est_ratio > RANDOM_DATA_THRESHOLD) {
-        print $out_fh COMPRESSED_BYTE;
-        print $out_fh create_ac_entry($uncompressed);
-        print $out_fh create_ac_entry($lengths);
-        print $out_fh create_ac_entry($matches);
-        print $out_fh obh_encode($distances, \&create_ac_entry);
-    }
-    else {
-        say "Random data detected...";
-        print $out_fh UNCOMPRESSED_BYTE;
-        print $out_fh create_ac_entry(string2symbols($chunk));
-    }
+    print $out_fh create_ac_entry($uncompressed);
+    print $out_fh create_ac_entry($lengths);
+    print $out_fh create_ac_entry($matches);
+    print $out_fh obh_encode($distances, \&create_ac_entry);
 }
 
 sub lzad_decompression ($fh) {
-    my $compression_byte = getc($fh) // die "decompression error";
 
-    if ($compression_byte eq COMPRESSED_BYTE) {
+    my $uncompressed = decode_ac_entry($fh);
+    my $lengths      = decode_ac_entry($fh);
+    my $matches      = decode_ac_entry($fh);
+    my $distances    = obh_decode($fh, \&decode_ac_entry);
 
-        my $uncompressed = decode_ac_entry($fh);
-        my $lengths      = decode_ac_entry($fh);
-        my $matches      = decode_ac_entry($fh);
-        my $distances    = obh_decode($fh, \&decode_ac_entry);
-
-        return lz77_decode($uncompressed, $lengths, $matches, $distances);
-    }
-    elsif ($compression_byte eq UNCOMPRESSED_BYTE) {
-        return pack('C*', @{decode_ac_entry($fh)});
-    }
-    else {
-        die "Invalid compression...";
-    }
+    return lz77_decode($uncompressed, $distances, $lengths, $matches);
 }
 
 sub compression ($chunk, $out_fh) {

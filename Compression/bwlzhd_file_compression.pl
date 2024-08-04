@@ -20,12 +20,8 @@ use constant {
     VERSION => '0.01',
     FORMAT  => 'bwlzhd',
 
-    COMPRESSED_BYTE   => chr(1),
-    UNCOMPRESSED_BYTE => chr(0),
-
-    LOOKAHEAD_LEN         => 128,
-    CHUNK_SIZE            => 1 << 17,    # higher value = better compression
-    RANDOM_DATA_THRESHOLD => 1,          # in ratio
+    LOOKAHEAD_LEN => 128,
+    CHUNK_SIZE    => 1 << 17,    # higher value = better compression
 };
 
 # Container signature
@@ -541,40 +537,23 @@ sub compression ($chunk, $out_fh) {
 
     say(scalar(@uncompressed), ' -> ', $est_ratio);
 
-    if ($est_ratio > RANDOM_DATA_THRESHOLD) {
-        print $out_fh COMPRESSED_BYTE;
-        print $out_fh pack('N', $idx);
-        create_huffman_entry(\@uncompressed, $out_fh);
-        create_huffman_entry(\@lengths,      $out_fh);
-        encode_distances(\@indices, $out_fh);
-    }
-    else {
-        print $out_fh UNCOMPRESSED_BYTE;
-        create_huffman_entry([unpack('C*', $chunk)], $out_fh);
-    }
+    print $out_fh pack('N', $idx);
+    create_huffman_entry(\@uncompressed, $out_fh);
+    create_huffman_entry(\@lengths,      $out_fh);
+    encode_distances(\@indices, $out_fh);
 }
 
 sub decompression ($fh, $out_fh) {
 
-    my $compression_byte = getc($fh) // die "decompression error";
+    my $idx          = unpack('N', join('', map { getc($fh) // return undef } 1 .. 4));
+    my @uncompressed = split(//, decode_huffman_entry($fh));
+    my @lengths      = unpack('C*', decode_huffman_entry($fh));
+    my $indices      = decode_distances($fh);
 
-    if ($compression_byte eq COMPRESSED_BYTE) {
-        my $idx          = unpack('N', join('', map { getc($fh) // return undef } 1 .. 4));
-        my @uncompressed = split(//, decode_huffman_entry($fh));
-        my @lengths      = unpack('C*', decode_huffman_entry($fh));
-        my $indices      = decode_distances($fh);
-
-        my $rle4 = lz77_decompression(\@uncompressed, $indices, \@lengths);
-        my $bwt  = pack('C*', @{rle4_decode([unpack('C*', $rle4)])});
-        my @rle4 = unpack('C*', bwt_decode($bwt, $idx));
-        print $out_fh pack('C*', @{rle4_decode(\@rle4)});
-    }
-    elsif ($compression_byte eq UNCOMPRESSED_BYTE) {
-        print $out_fh decode_huffman_entry($fh);
-    }
-    else {
-        die "Invalid compression...";
-    }
+    my $rle4 = lz77_decompression(\@uncompressed, $indices, \@lengths);
+    my $bwt  = pack('C*', @{rle4_decode([unpack('C*', $rle4)])});
+    my @rle4 = unpack('C*', bwt_decode($bwt, $idx));
+    print $out_fh pack('C*', @{rle4_decode(\@rle4)});
 }
 
 # Compress file

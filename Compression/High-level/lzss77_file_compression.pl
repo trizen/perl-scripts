@@ -126,7 +126,7 @@ sub compress_file ($input, $output) {
 
     # Compress data
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
-        print $out_fh lzss_compress($chunk, \&lz77_compress_symbolic);
+        print $out_fh lzss_compress($chunk, sub($s) { lz77_compress_symbolic($s, \&mrl_compress_symbolic) });
     }
 
     # Close the file
@@ -147,7 +147,7 @@ sub decompress_file ($input, $output) {
       or die "Can't open file <<$output>> for writing: $!";
 
     while (!eof($fh)) {
-        print $out_fh lzss_decompress($fh, \&lz77_decompress_symbolic);
+        print $out_fh lzss_decompress($fh, sub($s) { lz77_decompress_symbolic($s, \&mrl_decompress_symbolic) });
     }
 
     # Close the file

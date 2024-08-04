@@ -24,12 +24,8 @@ use constant {
     VERSION => '0.01',
     FORMAT  => 'lzbwa',
 
-    COMPRESSED_BYTE   => chr(1),
-    UNCOMPRESSED_BYTE => chr(0),
-
-    CHUNK_SIZE            => 1 << 16,    # higher value = better compression
-    LOOKAHEAD_LEN         => 128,
-    RANDOM_DATA_THRESHOLD => 1,          # in ratio
+    CHUNK_SIZE    => 1 << 16,    # higher value = better compression
+    LOOKAHEAD_LEN => 128,
 };
 
 # Arithmetic Coding settings
@@ -867,7 +863,6 @@ sub compress_file ($input, $output) {
 
         scalar(@sizes) > 0 or return;
 
-        print $out_fh COMPRESSED_BYTE;
         print $out_fh delta_encode(\@sizes, 1);
 
         my $indices = encode_integers(\@indices_block);
@@ -892,18 +887,10 @@ sub compress_file ($input, $output) {
         my $est_ratio = length($chunk) / (4 * scalar(@uncompressed));
         say "Est. ratio: ", $est_ratio, " (", scalar(@uncompressed), " uncompressed bytes)";
 
-        if ($est_ratio > RANDOM_DATA_THRESHOLD) {
-            push @sizes, scalar(@uncompressed);
-            print $uc_fh pack('C*', @uncompressed);
-            print $len_fh pack('C*', @lengths);
-            push @indices_block, @indices;
-        }
-        else {
-            say "Random data detected...";
-            $create_bz2_block->();
-            print $out_fh UNCOMPRESSED_BYTE;
-            create_ac_entry([unpack 'C*', $chunk], $out_fh);
-        }
+        push @sizes, scalar(@uncompressed);
+        print $uc_fh pack('C*', @uncompressed);
+        print $len_fh pack('C*', @lengths);
+        push @indices_block, @indices;
 
         if (length($uncompressed) >= CHUNK_SIZE) {
             $create_bz2_block->();
@@ -928,17 +915,6 @@ sub decompress_file ($input, $output) {
       or die "Can't open file <<$output>> for writing: $!";
 
     while (!eof($fh)) {
-
-        my $compression_byte = getc($fh) // die "decompression error";
-
-        if ($compression_byte eq UNCOMPRESSED_BYTE) {
-            say "Decoding random data...";
-            print $out_fh pack('C*', @{decode_ac_entry($fh)});
-            next;
-        }
-        elsif ($compression_byte ne COMPRESSED_BYTE) {
-            die "decompression error";
-        }
 
         my @sizes = @{delta_decode($fh, 1)};
 

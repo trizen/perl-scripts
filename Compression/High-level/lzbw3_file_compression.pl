@@ -119,10 +119,9 @@ sub compress_file ($input, $output) {
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
 
         local $Compression::Util::LZ_MAX_DIST = 255;
+        my ($uncompressed, $distances, $lengths, $matches) = lz77_encode($chunk);
 
-        my ($uncompressed, $lengths, $matches, $distances) = lz77_encode($chunk);
-
-        print $out_fh bwt_compress(symbols2string($uncompressed));
+        print $out_fh bwt_compress(symbols2string($uncompressed), sub($s) { lzss_compress_symbolic($s, \&mrl_compress_symbolic) });
         print $out_fh create_huffman_entry($lengths);
         print $out_fh bwt_compress(symbols2string($matches));
         print $out_fh bwt_compress(symbols2string($distances));
@@ -147,12 +146,12 @@ sub decompress_file ($input, $output) {
 
     while (!eof($fh)) {
 
-        my $uncompressed = bwt_decompress_symbolic($fh);
+        my $uncompressed = bwt_decompress_symbolic($fh, sub($s) { lzss_decompress_symbolic($s, \&mrl_decompress_symbolic) });
         my $lengths      = decode_huffman_entry($fh);
         my $matches      = bwt_decompress_symbolic($fh);
         my $distances    = bwt_decompress_symbolic($fh);
 
-        print $out_fh lz77_decode($uncompressed, $lengths, $matches, $distances);
+        print $out_fh lz77_decode($uncompressed, $distances, $lengths, $matches);
     }
 
     # Close the file

@@ -22,10 +22,6 @@ use constant {
     CHUNK_SIZE => 1 << 18,    # higher value = better compression
 };
 
-local $Compression::Util::LZ_MIN_LEN       = 8 * 4;      # minimum match length
-local $Compression::Util::LZ_MAX_LEN       = 1 << 15;    # maximum match length
-local $Compression::Util::LZ_MAX_CHAIN_LEN = 64;         # higher value = better compression
-
 # Container signature
 use constant SIGNATURE => uc(FORMAT) . chr(1);
 
@@ -125,12 +121,17 @@ sub compress_file ($input, $output) {
     # Compress data
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
         my $bits = unpack('B*', $chunk);
-        my ($uncompressed, $lengths, $matches, $distances) = lz77_encode($bits);
+        my ($uncompressed, $distances, $lengths, $matches) = do {
+            local $Compression::Util::LZ_MIN_LEN       = 8 * 4;      # minimum match length
+            local $Compression::Util::LZ_MAX_LEN       = 1 << 15;    # maximum match length
+            local $Compression::Util::LZ_MAX_CHAIN_LEN = 64;         # higher value = better compression
+            lz77_encode($bits);
+        };
         my $ubits = pack('C*', @$uncompressed);
         my $rem   = length($ubits) % 8;
         my $str   = pack('B*', $ubits);
         print $out_fh chr($rem);
-        print $out_fh bwt_compress($str);
+        print $out_fh mrl_compress_symbolic($str, \&lzss_compress_symbolic);
         print $out_fh create_huffman_entry($lengths);
         print $out_fh create_huffman_entry($matches);
         print $out_fh obh_encode($distances, \&mrl_compress_symbolic);
@@ -155,7 +156,7 @@ sub decompress_file ($input, $output) {
 
     while (!eof($fh)) {
         my $rem   = ord getc $fh;
-        my $str   = bwt_decompress($fh);
+        my $str   = symbols2string(mrl_decompress_symbolic($fh, \&lzss_decompress_symbolic));
         my $ubits = unpack('B*', $str);
         if ($rem != 0) {
             $ubits = substr($ubits, 0, -(8 - $rem));
@@ -164,7 +165,7 @@ sub decompress_file ($input, $output) {
         my $lengths      = decode_huffman_entry($fh);
         my $matches      = decode_huffman_entry($fh);
         my $distances    = obh_decode($fh, \&mrl_decompress_symbolic);
-        my $bits         = lz77_decode($uncompressed, $lengths, $matches, $distances);
+        my $bits         = lz77_decode($uncompressed, $distances, $lengths, $matches);
         print $out_fh pack('B*', $bits);
     }
 

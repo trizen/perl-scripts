@@ -1,15 +1,10 @@
 #!/usr/bin/perl
 
 # Author: Trizen
-# Date: 10 September 2023
-# Edit: 13 April 2024
+# Date: 04 August 2024
 # https://github.com/trizen
 
-# Compress/decompress files using Burrows-Wheeler Transform (BWT) + Variable Run-Length encoding + Huffman coding + Bzip2.
-
-# Reference:
-#   Data Compression (Summer 2023) - Lecture 13 - BZip2
-#   https://youtube.com/watch?v=cvoZbBZ3M2A
+# Compress/decompress files using Move-To-Front transform + RLE + Huffman coding (MRL method).
 
 use 5.036;
 use Getopt::Std       qw(getopts);
@@ -17,11 +12,11 @@ use File::Basename    qw(basename);
 use Compression::Util qw(:all);
 
 use constant {
-    PKGNAME => 'BWRL3',
+    PKGNAME => 'MRL',
     VERSION => '0.01',
-    FORMAT  => 'bwrl3',
+    FORMAT  => 'mrl',
 
-    CHUNK_SIZE => 1 << 17,    # higher value = better compression
+    CHUNK_SIZE => 1 << 18,    # higher value = better compression
 };
 
 # Container signature
@@ -105,50 +100,6 @@ sub main {
     }
 }
 
-sub VLR_encoding ($bytes) {
-
-    my $uncompressed = '';
-    my $bitstream    = '';
-    my $rle          = run_length($bytes);
-
-    foreach my $cv (@$rle) {
-        my ($c, $v) = @$cv;
-        $uncompressed .= chr($c);
-        if ($v == 1) {
-            $bitstream .= '0';
-        }
-        else {
-            my $t = sprintf('%b', $v);
-            $bitstream .= join('', '1' x (length($t) - 1), '0', substr($t, 1));
-        }
-    }
-
-    return ($uncompressed, pack('B*', $bitstream));
-}
-
-sub VLR_decoding ($uncompressed, $bits_fh) {
-
-    my $decoded = '';
-    my $buffer  = '';
-
-    foreach my $c (@$uncompressed) {
-
-        my $bl = 0;
-        while (read_bit($bits_fh, \$buffer) == 1) {
-            ++$bl;
-        }
-
-        if ($bl > 0) {
-            $decoded .= chr($c) x oct('0b1' . join('', map { read_bit($bits_fh, \$buffer) } 1 .. $bl));
-        }
-        else {
-            $decoded .= chr($c);
-        }
-    }
-
-    return $decoded;
-}
-
 # Compress file
 sub compress_file ($input, $output) {
 
@@ -166,15 +117,10 @@ sub compress_file ($input, $output) {
 
     # Compress data
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
-
-        my ($bwt,          $idx)     = bwt_encode(symbols2string(rle4_encode($chunk)));
-        my ($uncompressed, $lengths) = VLR_encoding(string2symbols($bwt));
-
-        print $out_fh pack('N', $idx);
-        print $out_fh mrl_compress_symbolic($uncompressed, \&bwt_compress_symbolic);
-        print $out_fh create_huffman_entry(rle4_encode(string2symbols($lengths)));
+        print $out_fh mrl_compress_symbolic(string2symbols($chunk));
     }
 
+    # Close the file
     close $out_fh;
 }
 
@@ -192,19 +138,10 @@ sub decompress_file ($input, $output) {
       or die "Can't open file <<$output>> for writing: $!";
 
     while (!eof($fh)) {
-
-        my $idx = unpack('N', join('', map { getc($fh) // die "decompression error" } 1 .. 4));
-
-        my $uncompressed = mrl_decompress_symbolic($fh, \&bwt_decompress_symbolic);    # uncompressed
-
-        open my $len_fh, '+>:raw', \my $lengths;
-        print $len_fh symbols2string(rle4_decode(decode_huffman_entry($fh)));
-        seek($len_fh, 0, 0);
-
-        my $dec = VLR_decoding($uncompressed, $len_fh);
-        print $out_fh symbols2string(rle4_decode(bwt_decode($dec, $idx)));
+        print $out_fh symbols2string(mrl_decompress_symbolic($fh));
     }
 
+    # Close the file
     close $fh;
     close $out_fh;
 }

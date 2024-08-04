@@ -123,12 +123,12 @@ sub compress_file ($input, $output) {
     # Compress data
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
         my $bits = unpack('B*', abc_encode(string2symbols($chunk)));
-        my ($uncompressed, $lengths, $matches, $distances) = lz77_encode($bits);
+        my ($uncompressed, $distances, $lengths, $matches) = lz77_encode($bits);
         my $ubits = pack('C*', @$uncompressed);
         my $rem   = length($ubits) % 8;
         my $str   = pack('B*', $ubits);
         print $out_fh chr($rem);
-        print $out_fh bwt_compress($str);
+        print $out_fh mrl_compress_symbolic($str);
         print $out_fh create_huffman_entry($lengths);
         print $out_fh create_huffman_entry($matches);
         print $out_fh obh_encode($distances, \&mrl_compress_symbolic);
@@ -153,7 +153,7 @@ sub decompress_file ($input, $output) {
 
     while (!eof($fh)) {
         my $rem   = ord getc $fh;
-        my $str   = bwt_decompress($fh);
+        my $str   = symbols2string(mrl_decompress_symbolic($fh));
         my $ubits = unpack('B*', $str);
         if ($rem != 0) {
             $ubits = substr($ubits, 0, -(8 - $rem));
@@ -162,7 +162,7 @@ sub decompress_file ($input, $output) {
         my $lengths      = decode_huffman_entry($fh);
         my $matches      = decode_huffman_entry($fh);
         my $distances    = obh_decode($fh, \&mrl_decompress_symbolic);
-        my $bits         = lz77_decode($uncompressed, $lengths, $matches, $distances);
+        my $bits         = lz77_decode($uncompressed, $distances, $lengths, $matches);
         print $out_fh symbols2string(abc_decode(pack('B*', $bits)));
     }
 

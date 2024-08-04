@@ -639,18 +639,17 @@ sub bwt_decode_symbolic ($bwt, $idx) {    # fast inversion
 }
 
 sub encode_alphabet_symbolic ($alphabet) {
-
-    # TODO: encode the alphabet more efficiently
-    return delta_encode([reverse @$alphabet]);
+    return delta_encode([@$alphabet]);
 }
 
 sub decode_alphabet_symbolic ($fh) {
-    return [reverse @{delta_decode($fh)}];
+    return [@{delta_decode($fh)}];
 }
 
 sub bz2_compression_symbolic ($symbols, $out_fh) {
 
-    my ($bwt, $idx) = bwt_encode_symbolic($symbols);
+    my $rle4 = rle4_encode($symbols);
+    my ($bwt, $idx) = bwt_encode_symbolic($rle4);
 
     my @bytes        = @$bwt;
     my @alphabet     = sort { $a <=> $b } uniq(@bytes);
@@ -680,7 +679,7 @@ sub bz2_decompression_symbolic ($fh) {
     my $bwt  = mtf_decode($mtf, $alphabet);
     my $data = bwt_decode_symbolic($bwt, $idx);
 
-    return $data;
+    return rle4_decode($data);
 }
 
 sub compression ($chunk, $out_fh) {
@@ -699,18 +698,34 @@ sub compression ($chunk, $out_fh) {
 
     print $out_fh pack('N', $idx);
     print $out_fh $alphabet_enc;
-    bz2_compression_symbolic($rle, $out_fh);
+
+    my @alphabet2 = sort { $a <=> $b } uniq(@$rle);
+    my $mtf2      = mtf_encode([@$rle], [@alphabet2]);
+    my $rle2      = rle4_encode($mtf2);
+
+    my @alphabet3 = sort { $a <=> $b } uniq(@$rle2);
+    my $mtf3      = mtf_encode([@$rle2], [@alphabet3]);
+
+    print $out_fh encode_alphabet_symbolic(\@alphabet2);
+    print $out_fh encode_alphabet_symbolic(\@alphabet3);
+
+    bz2_compression_symbolic($mtf3, $out_fh);
 }
 
 sub decompression ($fh, $out_fh) {
 
-    my $idx      = unpack('N', join('', map { getc($fh) // return undef } 1 .. 4));
-    my $alphabet = decode_alphabet($fh);
+    my $idx       = unpack('N', join('', map { getc($fh) // return undef } 1 .. 4));
+    my $alphabet  = decode_alphabet($fh);
+    my $alphabet2 = decode_alphabet_symbolic($fh);
+    my $alphabet3 = decode_alphabet_symbolic($fh);
 
     say "BWT index = $idx";
     say "Alphabet size: ", scalar(@$alphabet);
 
-    my $rle  = bz2_decompression_symbolic($fh);
+    my $mtf3 = bz2_decompression_symbolic($fh);
+    my $rle2 = mtf_decode($mtf3, $alphabet3);
+    my $mtf2 = rle4_decode($rle2);
+    my $rle  = mtf_decode($mtf2, $alphabet2);
     my $mtf  = rle_decode($rle);
     my $bwt  = mtf_decode($mtf, $alphabet);
     my $rle4 = bwt_decode(pack('C*', @$bwt), $idx);

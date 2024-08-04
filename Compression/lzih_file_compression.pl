@@ -22,10 +22,7 @@ use constant {
     VERSION => '0.04',
     FORMAT  => 'lzih',
 
-    COMPRESSED_BYTE       => chr(1),
-    UNCOMPRESSED_BYTE     => chr(0),
-    CHUNK_SIZE            => 1 << 16,    # higher value = better compression
-    RANDOM_DATA_THRESHOLD => 1,          # in ratio
+    CHUNK_SIZE => 1 << 16,    # higher value = better compression
 };
 
 # Container signature
@@ -427,16 +424,9 @@ sub compress_file ($input, $output) {
 
         say(scalar(@uncompressed), ' -> ', $est_ratio);
 
-        if ($est_ratio > RANDOM_DATA_THRESHOLD) {
-            print $out_fh COMPRESSED_BYTE;
-            create_huffman_entry(\@uncompressed, $out_fh);
-            create_huffman_entry(\@lengths,      $out_fh);
-            print $out_fh encode_integers(\@indices);
-        }
-        else {
-            print $out_fh UNCOMPRESSED_BYTE;
-            create_huffman_entry([unpack('C*', $chunk)], $out_fh);
-        }
+        create_huffman_entry(\@uncompressed, $out_fh);
+        create_huffman_entry(\@lengths,      $out_fh);
+        print $out_fh encode_integers(\@indices);
     }
 
     # Close the file
@@ -458,22 +448,11 @@ sub decompress_file ($input, $output) {
 
     while (!eof($fh)) {
 
-        my $compression_byte = getc($fh) // die "decompression error";
+        my @uncompressed = split(//, decode_huffman_entry($fh));
+        my @lengths      = unpack('C*', decode_huffman_entry($fh));
+        my $indices      = decode_integers($fh);
 
-        if ($compression_byte eq COMPRESSED_BYTE) {
-
-            my @uncompressed = split(//, decode_huffman_entry($fh));
-            my @lengths      = unpack('C*', decode_huffman_entry($fh));
-            my $indices      = decode_integers($fh);
-
-            print $out_fh lz77_decompression(\@uncompressed, $indices, \@lengths);
-        }
-        elsif ($compression_byte eq UNCOMPRESSED_BYTE) {
-            print $out_fh decode_huffman_entry($fh);
-        }
-        else {
-            die "Invalid compression...";
-        }
+        print $out_fh lz77_decompression(\@uncompressed, $indices, \@lengths);
     }
 
     # Close the file

@@ -5,13 +5,7 @@
 # Edit: 11 April 2024
 # https://github.com/trizen
 
-# Compress/decompress files using LZSS + Bzip2.
-
-# Encoding the literals and the pointers using a DEFLATE-like approach.
-
-# Reference:
-#   Data Compression (Summer 2023) - Lecture 11 - DEFLATE (gzip)
-#   https://youtube.com/watch?v=SJPvNi4HrWQ
+# Compress/decompress files using LZSS + Bzip2 (MRL variant).
 
 use 5.036;
 use Getopt::Std       qw(getopts);
@@ -23,7 +17,7 @@ use constant {
     VERSION => '0.01',
     FORMAT  => 'lzsbw',
 
-    CHUNK_SIZE => 1 << 16,    # higher value = better compression
+    CHUNK_SIZE => 1 << 18,    # higher value = better compression
 };
 
 # Container signature
@@ -129,7 +123,7 @@ sub compress_file ($input, $output) {
         my $est_ratio = length($chunk) / (scalar(@$literals) + scalar(@$lengths) + 2 * scalar(@$distances));
         say scalar(@$literals), ' -> ', $est_ratio;
 
-        print $out_fh deflate_encode($literals, $distances, $lengths, \&bwt_compress_symbolic);
+        print $out_fh deflate_encode($literals, $distances, $lengths, \&mrl_compress_symbolic);
     }
 
     # Close the file
@@ -150,7 +144,7 @@ sub decompress_file ($input, $output) {
       or die "Can't open file <<$output>> for writing: $!";
 
     while (!eof($fh)) {
-        my ($literals, $distances, $lengths) = deflate_decode($fh, \&bwt_decompress_symbolic);
+        my ($literals, $distances, $lengths) = deflate_decode($fh, \&mrl_decompress_symbolic);
         print $out_fh lzss_decode($literals, $distances, $lengths);
     }
 

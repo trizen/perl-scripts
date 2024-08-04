@@ -114,14 +114,14 @@ sub compression ($chunk, $out_fh) {
     my ($bwt, $idx) = bwt_encode(pack('C*', @$rle4));
 
     print $out_fh pack('N', $idx);
-    print $out_fh lzss_compress($bwt);
+    print $out_fh lzss_compress($bwt, \&mrl_compress_symbolic);
 }
 
 sub decompression ($fh, $out_fh) {
 
     my $idx = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
 
-    my $bwt  = lzss_decompress($fh);
+    my $bwt  = lzss_decompress($fh, \&mrl_decompress_symbolic);
     my $rle4 = bwt_decode($bwt, $idx);
     my $data = rle4_decode([unpack('C*', $rle4)]);
 

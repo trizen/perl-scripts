@@ -126,7 +126,7 @@ sub compression ($chunk, $out_fh) {
 
 sub decompression ($fh, $out_fh) {
 
-    my $idx      = bits2int($fh, 32, \my $buffer);
+    my $idx      = bytes2int($fh, 4);
     my $alphabet = decode_alphabet($fh);
     my $rle      = decode_huffman_entry($fh);
 

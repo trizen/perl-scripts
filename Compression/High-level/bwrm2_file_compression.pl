@@ -164,7 +164,7 @@ sub compress_file ($input, $output) {
 
         print $out_fh pack('N', $idx);
 
-        print $out_fh mrl_compress_symbolic($uncompressed);
+        print $out_fh mrl_compress_symbolic($uncompressed, \&lzss_compress_symbolic);
         print $out_fh bwt_compress(pack('C*', @$lengths));
     }
 
@@ -188,7 +188,7 @@ sub decompress_file ($input, $output) {
 
         my $idx = unpack('N', join('', map { getc($fh) // die "decompression error" } 1 .. 4));
 
-        my $uncompressed = mrl_decompress_symbolic($fh);
+        my $uncompressed = mrl_decompress_symbolic($fh, \&lzss_decompress_symbolic);
         my $lengths      = bwt_decompress($fh);
         my $dec          = VLR_decoding($uncompressed, string2symbols($lengths));
         print $out_fh symbols2string(rle4_decode(bwt_decode($dec, $idx)));

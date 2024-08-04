@@ -29,12 +29,8 @@ use constant {
     VERSION => '0.01',
     FORMAT  => 'bwlzad2',
 
-    COMPRESSED_BYTE   => chr(1),
-    UNCOMPRESSED_BYTE => chr(0),
-
-    CHUNK_SIZE            => 1 << 17,    # higher value = better compression
-    LOOKAHEAD_LEN         => 128,
-    RANDOM_DATA_THRESHOLD => 1,          # in ratio
+    CHUNK_SIZE    => 1 << 17,    # higher value = better compression
+    LOOKAHEAD_LEN => 128,
 };
 
 # Arithmetic Coding settings
@@ -800,35 +796,18 @@ sub lzhd_compression ($chunk, $out_fh) {
 
     say(scalar(@uncompressed), ' -> ', $est_ratio);
 
-    if ($est_ratio > RANDOM_DATA_THRESHOLD) {
-        print $out_fh COMPRESSED_BYTE;
-        create_ac_entry(\@uncompressed, $out_fh);
-        create_ac_entry(\@lengths,      $out_fh);
-        encode_distances(\@indices, $out_fh);
-    }
-    else {
-        print $out_fh UNCOMPRESSED_BYTE;
-        create_ac_entry([unpack('C*', $chunk)], $out_fh);
-    }
+    create_ac_entry(\@uncompressed, $out_fh);
+    create_ac_entry(\@lengths,      $out_fh);
+    encode_distances(\@indices, $out_fh);
 }
 
 sub lzhd_decompression ($fh) {
-    my $compression_byte = getc($fh) // die "decompression error";
 
-    if ($compression_byte eq COMPRESSED_BYTE) {
+    my $uncompressed = decode_ac_entry($fh);
+    my $lengths      = decode_ac_entry($fh);
+    my $indices      = decode_distances($fh);
 
-        my $uncompressed = decode_ac_entry($fh);
-        my $lengths      = decode_ac_entry($fh);
-        my $indices      = decode_distances($fh);
-
-        return lz77_decompression($uncompressed, $indices, $lengths);
-    }
-    elsif ($compression_byte eq UNCOMPRESSED_BYTE) {
-        return pack('C*', @{decode_ac_entry($fh)});
-    }
-    else {
-        die "Invalid compression...";
-    }
+    return lz77_decompression($uncompressed, $indices, $lengths);
 }
 
 sub compression ($chunk, $out_fh) {

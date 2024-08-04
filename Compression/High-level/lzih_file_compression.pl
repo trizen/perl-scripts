@@ -119,12 +119,12 @@ sub compress_file ($input, $output) {
     # Compress data
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
 
-        my ($uncompressed, $lengths, $matches, $distances) = lz77_encode($chunk);
+        my ($uncompressed, $distances, $lengths, $matches) = lz77_encode($chunk);
 
         my $est_ratio = length($chunk) / (4 * scalar(@$uncompressed));
         say(scalar(@$uncompressed), ' -> ', $est_ratio);
 
-        print $out_fh create_huffman_entry($uncompressed);
+        print $out_fh mrl_compress_symbolic($uncompressed);
         print $out_fh create_huffman_entry($lengths);
         print $out_fh create_huffman_entry($matches);
         print $out_fh abc_encode($distances);
@@ -149,12 +149,12 @@ sub decompress_file ($input, $output) {
 
     while (!eof($fh)) {
 
-        my $uncompressed = decode_huffman_entry($fh);
+        my $uncompressed = mrl_decompress_symbolic($fh);
         my $lengths      = decode_huffman_entry($fh);
         my $matches      = decode_huffman_entry($fh);
         my $distances    = abc_decode($fh);
 
-        print $out_fh lz77_decode($uncompressed, $lengths, $matches, $distances);
+        print $out_fh lz77_decode($uncompressed, $distances, $lengths, $matches);
     }
 
     # Close the file

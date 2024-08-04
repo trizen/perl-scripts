@@ -113,7 +113,7 @@ sub compression ($chunk, $out_fh) {
 
     say "BWT index = $idx";
 
-    my ($uncompressed, $lengths, $matches, $distances) = lz77_encode($bwt);
+    my ($uncompressed, $distances, $lengths, $matches) = lz77_encode($bwt);
     my $est_ratio = length($chunk) / (4 * scalar(@$uncompressed));
 
     say(scalar(@$uncompressed), ' -> ', $est_ratio);
@@ -133,7 +133,7 @@ sub decompression ($fh, $out_fh) {
     my $matches      = decode_huffman_entry($fh);
     my $distances    = obh_decode($fh);
 
-    my $rle4 = lz77_decode($uncompressed, $lengths, $matches, $distances);
+    my $rle4 = lz77_decode($uncompressed, $distances, $lengths, $matches);
     my $bwt  = symbols2string(rle4_decode(string2symbols($rle4)));
     my @rle4 = unpack('C*', bwt_decode($bwt, $idx));
     print $out_fh symbols2string(rle4_decode(\@rle4));
