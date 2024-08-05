@@ -1,10 +1,11 @@
 #!/usr/bin/perl
 
 # Author: Trizen
-# Date: 04 August 2024
+# Date: 17 June 2023
+# Edit: 31 July 2024
 # https://github.com/trizen
 
-# Compress/decompress files using Move-To-Front transform + RLE + Huffman coding (MRL method).
+# Compress/decompress files using Move-to-front + Adaptive Binary Coding, followed by LZ77 compression (LZ4-like) on bits + Bzip2 on the literals.
 
 use 5.036;
 use Getopt::Std       qw(getopts);
@@ -12,12 +13,16 @@ use File::Basename    qw(basename);
 use Compression::Util qw(:all);
 
 use constant {
-    PKGNAME => 'MRL',
+    PKGNAME => 'MBLZ',
     VERSION => '0.01',
-    FORMAT  => 'mrl',
+    FORMAT  => 'mblz',
 
     CHUNK_SIZE => 1 << 18,    # higher value = better compression
 };
+
+local $Compression::Util::LZ_MIN_LEN       = 8 * 4;      # minimum match length
+local $Compression::Util::LZ_MAX_LEN       = 1 << 15;    # maximum match length
+local $Compression::Util::LZ_MAX_CHAIN_LEN = 64;         # higher value = better compression
 
 # Container signature
 use constant SIGNATURE => uc(FORMAT) . chr(1);
@@ -117,7 +122,16 @@ sub compress_file ($input, $output) {
 
     # Compress data
     while (read($fh, (my $chunk), CHUNK_SIZE)) {
-        print $out_fh mrl_compress_symbolic(string2symbols($chunk));
+        my $bits = unpack('B*', mrl_compress_symbolic(string2symbols($chunk)));
+        my ($uncompressed, $lengths, $matches, $distances) = lz77_encode($bits);
+        my $ubits = pack('C*', @$uncompressed);
+        my $rem   = length($ubits) % 8;
+        my $str   = pack('B*', $ubits);
+        print $out_fh chr($rem);
+        print $out_fh bwt_compress($str);
+        print $out_fh create_huffman_entry($lengths);
+        print $out_fh create_huffman_entry($matches);
+        print $out_fh obh_encode($distances, \&mrl_compress_symbolic);
     }
 
     # Close the file
@@ -138,7 +152,18 @@ sub decompress_file ($input, $output) {
       or die "Can't open file <<$output>> for writing: $!";
 
     while (!eof($fh)) {
-        print $out_fh symbols2string(mrl_decompress_symbolic($fh));
+        my $rem   = ord getc $fh;
+        my $str   = bwt_decompress($fh);
+        my $ubits = unpack('B*', $str);
+        if ($rem != 0) {
+            $ubits = substr($ubits, 0, -(8 - $rem));
+        }
+        my $uncompressed = [unpack('C*', $ubits)];
+        my $lengths      = decode_huffman_entry($fh);
+        my $matches      = decode_huffman_entry($fh);
+        my $distances    = obh_decode($fh, \&mrl_decompress_symbolic);
+        my $bits         = lz77_decode($uncompressed, $lengths, $matches, $distances);
+        print $out_fh symbols2string(mrl_decompress_symbolic(pack('B*', $bits)));
     }
 
     # Close the file

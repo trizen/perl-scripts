@@ -123,6 +123,7 @@ A nice collection of day-to-day Perl scripts.
         * [Lzssf file compression](./Compression/High-level/lzssf_file_compression.pl)
         * [Lzssm file compression](./Compression/High-level/lzssm_file_compression.pl)
         * [Lzw file compression](./Compression/High-level/lzw_file_compression.pl)
+        * [Mblz file compression](./Compression/High-level/mblz_file_compression.pl)
         * [Mbwr file compression](./Compression/High-level/mbwr_file_compression.pl)
         * [Mrl file compression](./Compression/High-level/mrl_file_compression.pl)
         * [Rablz file compression](./Compression/High-level/rablz_file_compression.pl)
