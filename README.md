@@ -601,6 +601,7 @@ A nice collection of day-to-day Perl scripts.
     * [Almost prime numbers](./Math/almost_prime_numbers.pl)
     * [Almost prime numbers in range](./Math/almost_prime_numbers_in_range.pl)
     * [Almost prime numbers in range mpz](./Math/almost_prime_numbers_in_range_mpz.pl)
+    * [Almost prime numbers in range v2](./Math/almost_prime_numbers_in_range_v2.pl)
     * [Almost primes from factor list](./Math/almost_primes_from_factor_list.pl)
     * [Almost primes in range from factor list](./Math/almost_primes_in_range_from_factor_list.pl)
     * [Area of triangle](./Math/area_of_triangle.pl)
