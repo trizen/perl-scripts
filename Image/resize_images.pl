@@ -19,7 +19,8 @@ my $min    = 'auto';
 my $max    = 'auto';
 my $qtype  = 'mixing';
 
-my $img_formats = '';
+my $img_formats   = '';
+my $preserve_attr = 0;
 
 my @img_formats = qw(
   jpeg
@@ -41,6 +42,7 @@ options:
 
     -q  --quality=s   : quality of scaling: 'normal', 'preview' or 'mixing' (default: $qtype)
     -f  --formats=s,s : specify more image formats (default: @img_formats)
+    -p  --preserve!   : preserve original file timestamps and permissions
 
 examples:
 
@@ -59,6 +61,7 @@ GetOptions(
            'maximum=i'   => \$max,
            'q|quality=s' => \$qtype,
            'f|formats=s' => \$img_formats,
+           'p|preserve!' => \$preserve_attr,
            'help'        => sub { usage(0) },
           )
   or die("Error in command line arguments");
@@ -125,7 +128,28 @@ sub resize_image ($image) {
         die "No --width or --height specified...";
     }
 
-    $img->write(file => $image);
+    my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks) = stat($image);
+
+    $img->write(file => $image) or do {
+        warn "Failed to rewrite image: ", $img->errstr;
+        return;
+    };
+
+    # Set the original ownership of the image
+    chown($uid, $gid, $image);
+
+    if ($preserve_attr) {
+
+        # Set the original modification time
+        utime($atime, $mtime, $image)
+          or warn "Can't change timestamp: $!\n";
+
+        # Set original permissions
+        chmod($mode & 07777, $image)
+          or warn "Can't change permissions: $!\n";
+    }
+
+    return 1;
 }
 
 @ARGV || usage(1);

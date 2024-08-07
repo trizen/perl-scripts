@@ -31,7 +31,7 @@ use 5.036;
 use GD;
 use File::Find            qw(find);
 use File::Temp            qw(mktemp);
-use File::Copy            qw(copy);
+use File::Copy            qw(cp);
 use File::Spec::Functions qw(catfile tmpdir);
 use Getopt::Long          qw(GetOptions);
 
@@ -43,7 +43,8 @@ my $jpeg_only = 0;    # true to recompress only JPEG images
 my $quality         = 85;    # default quality value for JPEG (between 0-100)
 my $png_compression = 0;     # default PNG compression level for GD (between 0-9)
 
-my $use_exiftool = 0;        # true to use `exiftool` instead of `File::MimeInfo::Magic`
+my $use_exiftool  = 0;       # true to use `exiftool` instead of `File::MimeInfo::Magic`
+my $preserve_attr = 0;       # preserve original file attributes
 
 sub png2jpeg (%args) {
 
@@ -134,6 +135,7 @@ options:
     --jpeg      : recompress only JPEG images (default: $jpeg_only)
     --png       : recompress only PNG images (default: $png_only)
     --exiftool  : use `exiftool` to determine the MIME type (default: $use_exiftool)
+    --preserve  : preserve original file timestamps and permissions
 
 WARNING: the original files are deleted!
 WARNING: the program does LOSSY compression of images!
@@ -144,6 +146,7 @@ GetOptions(
            'jpeg|jpg!'   => \$jpeg_only,
            'png!'        => \$png_only,
            'exiftool!'   => \$use_exiftool,
+           'p|preserve!' => \$preserve_attr,
           )
   or die "Error in command-line arguments!";
 
@@ -189,7 +192,7 @@ sub recompress_image ($file, $file_format) {
         $temp_file       = $temp_png;
     }
 
-    copy($file, $temp_file) or do {
+    cp($file, $temp_file) or do {
         warn "[!] Can't copy <<$file>> to <<$temp_file>>: $!\n";
         return;
     };
@@ -223,6 +226,8 @@ sub recompress_image ($file, $file_format) {
                $final_size / 1024**2,
                ($curr_size - $final_size) / $curr_size * 100);
 
+        my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks) = stat($file);
+
         unlink($file) or return;
 
         my $new_file = ($file =~ s/\.(?:png|jpe?g)\z//ir) . '.' . $file_ext;
@@ -231,10 +236,24 @@ sub recompress_image ($file, $file_format) {
             $new_file .= '.' . $file_ext;
         }
 
-        copy($final_file, $new_file) or do {
+        cp($final_file, $new_file) or do {
             warn "[!] Can't copy <<$final_file>> to <<$new_file>>: $!\n";
             return;
         };
+
+        # Set the original ownership of the image
+        chown($uid, $gid, $new_file);
+
+        if ($preserve_attr) {
+
+            # Set the original modification time
+            utime($atime, $mtime, $new_file)
+              or warn "Can't change timestamp: $!\n";
+
+            # Set original permissions
+            chmod($mode & 07777, $new_file)
+              or warn "Can't change permissions: $!\n";
+        }
     }
     else {
         printf(":: The image is already very well compressed. Skipping...\n\n");
