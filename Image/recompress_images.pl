@@ -31,7 +31,7 @@ use 5.036;
 use GD;
 use File::Find            qw(find);
 use File::Temp            qw(mktemp);
-use File::Copy            qw(cp);
+use File::Copy            qw(copy);
 use File::Spec::Functions qw(catfile tmpdir);
 use Getopt::Long          qw(GetOptions);
 
@@ -192,7 +192,7 @@ sub recompress_image ($file, $file_format) {
         $temp_file       = $temp_png;
     }
 
-    cp($file, $temp_file) or do {
+    copy($file, $temp_file) or do {
         warn "[!] Can't copy <<$file>> to <<$temp_file>>: $!\n";
         return;
     };
@@ -236,7 +236,7 @@ sub recompress_image ($file, $file_format) {
             $new_file .= '.' . $file_ext;
         }
 
-        cp($final_file, $new_file) or do {
+        copy($final_file, $new_file) or do {
             warn "[!] Can't copy <<$final_file>> to <<$new_file>>: $!\n";
             return;
         };
