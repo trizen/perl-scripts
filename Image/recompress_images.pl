@@ -2,7 +2,7 @@
 
 # Author: Trizen
 # Date: 13 September 2023
-# Edit: 18 September 2023
+# Edit: 08 August 2024
 # https://github.com/trizen
 
 # Recompress a given list of images, using either PNG or JPEG (whichever results in a smaller file size).
@@ -43,8 +43,10 @@ my $jpeg_only = 0;    # true to recompress only JPEG images
 my $quality         = 85;    # default quality value for JPEG (between 0-100)
 my $png_compression = 0;     # default PNG compression level for GD (between 0-9)
 
+my $keep_original = 0;       # true to keep original images
 my $use_exiftool  = 0;       # true to use `exiftool` instead of `File::MimeInfo::Magic`
 my $preserve_attr = 0;       # preserve original file attributes
+my $suffix        = '';      # recompressed filenames suffix
 
 sub png2jpeg (%args) {
 
@@ -136,6 +138,8 @@ options:
     --png       : recompress only PNG images (default: $png_only)
     --exiftool  : use `exiftool` to determine the MIME type (default: $use_exiftool)
     --preserve  : preserve original file timestamps and permissions
+    --suffix=s  : add a given suffix to recompressed filenames
+    --keep      : keep original files (to be used with --suffix)
 
 WARNING: the original files are deleted!
 WARNING: the program does LOSSY compression of images!
@@ -147,6 +151,8 @@ GetOptions(
            'png!'        => \$png_only,
            'exiftool!'   => \$use_exiftool,
            'p|preserve!' => \$preserve_attr,
+           'suffix=s'    => \$suffix,
+           'keep!'       => \$keep_original,
           )
   or die "Error in command-line arguments!";
 
@@ -228,9 +234,11 @@ sub recompress_image ($file, $file_format) {
 
         my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks) = stat($file);
 
-        unlink($file) or return;
+        if (not $keep_original) {
+            unlink($file) or return;
+        }
 
-        my $new_file = ($file =~ s/\.(?:png|jpe?g)\z//ir) . '.' . $file_ext;
+        my $new_file = ($file =~ s/\.(?:png|jpe?g)\z//ir) . $suffix . '.' . $file_ext;
 
         while (-e $new_file) {    # lazy solution
             $new_file .= '.' . $file_ext;

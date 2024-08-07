@@ -2,7 +2,7 @@
 
 # Author: Trizen
 # Date: 30 October 2023
-# Edit: 25 June 2024
+# Edit: 08 August 2024
 # https://github.com/trizen
 
 # Resize images to a given width or height, keeping aspect ratio.
