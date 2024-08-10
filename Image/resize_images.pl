@@ -2,7 +2,7 @@
 
 # Author: Trizen
 # Date: 30 October 2023
-# Edit: 08 August 2024
+# Edit: 10 August 2024
 # https://github.com/trizen
 
 # Resize images to a given width or height, keeping aspect ratio.
@@ -18,6 +18,7 @@ my $height = 'auto';
 my $min    = 'auto';
 my $max    = 'auto';
 my $qtype  = 'mixing';
+my $outdir = undef;
 
 my $img_formats   = '';
 my $preserve_attr = 0;
@@ -43,6 +44,7 @@ options:
     -q  --quality=s   : quality of scaling: 'normal', 'preview' or 'mixing' (default: $qtype)
     -f  --formats=s,s : specify more image formats (default: @img_formats)
     -p  --preserve!   : preserve original file timestamps and permissions
+    -o  --outdir=s    : create resized images into this directory
 
 examples:
 
@@ -62,6 +64,7 @@ GetOptions(
            'q|quality=s' => \$qtype,
            'f|formats=s' => \$img_formats,
            'p|preserve!' => \$preserve_attr,
+           'o|outdir=s'  => \$outdir,
            'help'        => sub { usage(0) },
           )
   or die("Error in command line arguments");
@@ -72,6 +75,18 @@ my $img_formats_re = do {
     local $" = '|';
     qr/\.(@img_formats)\z/i;
 };
+
+if (defined($outdir)) {
+
+    if (not -d $outdir) {
+        require File::Path;
+        File::Path::make_path($outdir)
+          or die "Can't create output directory <<$outdir>>: $!";
+    }
+
+    require File::Basename;
+    require File::Spec::Functions;
+}
 
 sub resize_image ($image) {
 
@@ -129,6 +144,11 @@ sub resize_image ($image) {
     }
 
     my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks) = stat($image);
+
+    # Create resized image into $outdir directory
+    if (defined($outdir)) {
+        $image = File::Spec::Functions::catfile($outdir, File::Basename::basename($image));
+    }
 
     $img->write(file => $image) or do {
         warn "Failed to rewrite image: ", $img->errstr;
