@@ -59,6 +59,7 @@ A nice collection of day-to-day Perl scripts.
     * [Bwt2 file compression](./Compression/bwt2_file_compression.pl)
     * [Bwt file compression](./Compression/bwt_file_compression.pl)
     * [Bww file compression](./Compression/bww_file_compression.pl)
+    * [Bzip2 decompressor](./Compression/bzip2_decompressor.pl)
     * [Compress](./Compression/compress.pl)
     * [Gzip block type 1](./Compression/gzip_block_type_1.pl)
     * [Gzip block type 1 huffman only](./Compression/gzip_block_type_1_huffman_only.pl)
