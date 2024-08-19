@@ -4,11 +4,14 @@
 # Date: 19 August 2024
 # https://github.com/trizen
 
-# A very basic Bzip2 decompressor. (WIP)
+# A very basic Bzip2 decompressor.
 
-# Reference:
+# References:
 #   BZIP2: Format Specification, by Joe Tsai
 #   https://github.com/dsnet/compress/blob/master/doc/bzip2-format.pdf
+#
+#   Pyflate, by Paul Sladen
+#   http://www.paul.sladen.org/projects/pyflate/
 
 use 5.036;
 use List::Util        qw(max);
@@ -19,6 +22,8 @@ use Compression::Util qw(:all);
 my $s = "BZh91AY&SY\xEA\xE0\x8D\xEB\0\0\0\xC1\0\0\x100\0 \0!\x98\31\x84aw\$S\x85\t\16\xAE\b\xDE\xB0";    # "ab\n"
 
 $s = "BZh91AY&SY\x99\xAC\"V\0\0\2W\x80\0\20`\4\0@\0\x80\6\4\x90\0 \0\"\6\x81\x90\x80i\xA6\x89\30j\xCE\xA4\31o\x8B\xB9\"\x9C(HL\xD6\21+\0";   # "Hello, World!\n"
+
+local $| = 1;
 
 binmode(STDIN,  ":raw");
 binmode(STDOUT, ":raw");
@@ -48,9 +53,9 @@ while (!eof($fh)) {
 
     while (!eof($fh)) {
 
-        my $block_magic = join('', map { read_bit($fh, \$buffer) } 1 .. 48);
+        my $block_magic = pack "B48", join('', map { read_bit($fh, \$buffer) } 1 .. 48);
 
-        if ($block_magic eq '001100010100000101011001001001100101001101011001') {    # BlockHeader
+        if ($block_magic eq "1AY&SY") {    # BlockHeader
             say STDERR "Block header detected";
 
             my $crc32 = bits2int($fh, 32, \$buffer);
@@ -135,11 +140,10 @@ while (!eof($fh)) {
             my $code = '';
 
             my $sel_idx  = 0;
-            my $tree_idx = $sels->[0];
+            my $tree_idx = $sels->[$sel_idx];
+            my $decoded  = 50;
 
-            # TODO: add support for using multiple huffman tables
-
-            while (1) {
+            while (!eof($fh)) {
                 $code .= read_bit($fh, \$buffer);
 
                 if (length($code) > $MaxHuffmanBits) {
@@ -151,19 +155,30 @@ while (!eof($fh)) {
                     my $sym = $huffman_trees[$tree_idx]->{$code};
 
                     if ($sym == $eob) {    # end of block marker
+                        say STDERR "EOB detected: $sym";
                         last;
                     }
 
                     push @zrle, $sym;
                     $code = '';
+
+                    if (--$decoded <= 0) {
+                        if (++$sel_idx <= $#$sels) {
+                            $tree_idx = $sels->[$sel_idx];
+                        }
+                        else {
+                            die "No more selectors";    # should not happen
+                        }
+                        $decoded = 50;
+                    }
                 }
             }
 
             say STDERR "ZRLE: (@zrle)";
-            my $mtf = zrle_decode(\@zrle);
-            say STDERR "MTF: (@$mtf)";
+            my @mtf = reverse @{zrle_decode([reverse @zrle])};
 
-            my $bwt = symbols2string mtf_decode($mtf, \@alphabet);
+            say STDERR "MTF: (@mtf)";
+            my $bwt = symbols2string mtf_decode(\@mtf, \@alphabet);
             ## say "BWT: ($bwt, $bwt_idx)";
 
             my $rle4 = string2symbols bwt_decode($bwt, $bwt_idx);
@@ -171,7 +186,7 @@ while (!eof($fh)) {
 
             print symbols2string($data);
         }
-        elsif ($block_magic eq '000101110111001001000101001110000101000010010000') {    # BlockFooter
+        elsif ($block_magic eq "\27rE8P\x90") {    # BlockFooter
             say STDERR "Block footer detected";
             my $stream_crc = bits2int($fh, 32, \$buffer);
             say STDERR "Stream CRC: $stream_crc";
@@ -186,5 +201,6 @@ while (!eof($fh)) {
 
     say STDERR "End of container";
 }
+
 say STDERR "End of input";
 
