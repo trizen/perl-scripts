@@ -1,4 +1,4 @@
-#!usr/bin/perl
+#!/usr/bin/perl
 
 # Simple implementation of the Cyclic Redundancy Check (CRC32).
 

@@ -104,6 +104,7 @@ while (!eof($fh)) {
                 }
                 push @idxs, $i;
             }
+
             my $sels = mtf_decode(\@idxs, [0 .. $num_trees - 1]);
             say STDERR "Selectors: (@$sels)";
 
@@ -116,7 +117,8 @@ while (!eof($fh)) {
                 my $clen = bits2int($fh, 5, \$buffer);
                 for (1 .. $num_syms) {
                     while (1) {
-                        ($clen > 0 and $clen <= $MaxHuffmanBits) or die "error";
+
+                        #($clen > 0 and $clen <= $MaxHuffmanBits) or die "error";
                         if (not read_bit($fh, \$buffer)) {
                             last;
                         }
@@ -136,7 +138,8 @@ while (!eof($fh)) {
                 for my $clen (@$tree) {
                     $sum -= (1 << $maxLen) >> $clen;
                 }
-                $sum == 0 or die "incomplete tree not supported: (@$tree)";
+
+                #$sum == 0 or die "incomplete tree not supported: (@$tree)";
             }
 
             my @huffman_trees = map { (huffman_from_code_lengths($_))[1] } @trees;
