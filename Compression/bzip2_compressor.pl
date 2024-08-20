@@ -4,7 +4,7 @@
 # Date: 20 August 2024
 # https://github.com/trizen
 
-# A very basic Bzip2 compressor. (WIP)
+# A very basic Bzip2 compressor.
 
 # References:
 #   BZIP2: Format Specification, by Joe Tsai
@@ -84,14 +84,12 @@ sub encode_mtf_alphabet($alphabet) {
 sub encode_code_lengths($dict) {
     my @lengths;
 
-    #use Data::Dump qw(pp);
-    #pp $dict;
-
     foreach my $symbol (0 .. max(keys %$dict) // 0) {
         if (exists($dict->{$symbol})) {
             push @lengths, length($dict->{$symbol});
         }
         else {
+            die "Incomplete Huffman tree not supported";
             push @lengths, 0;
         }
     }
@@ -143,11 +141,13 @@ while (!eof($fh)) {
 
     $bitstring .= $block_header_bitstring;
 
-    my $crc32 = crc32($chunk);
+    my $crc32 = crc32(pack 'B*', unpack 'b*', $chunk);
     say STDERR "CRC32: $crc32";
 
-    $stream_crc32 = $crc32 ^ (($stream_crc32 << 1) | ($stream_crc32 >> 31));
+    $crc32 = oct('0b' . int2bits_lsb($crc32, 32));
+    say STDERR "Bzip2-CRC32: $crc32";
 
+    $stream_crc32 = $crc32 ^ (($stream_crc32 << 1) | ($stream_crc32 >> 31));
     $bitstring .= int2bits($crc32, 32);
     $bitstring .= '0';                    # not randomized
 
@@ -170,21 +170,24 @@ while (!eof($fh)) {
     say STDERR "ZRLE: @$zrle";
 
     my $eob = scalar(@$alphabet) + 1;    # end-of-block symbol
+    say STDERR "EOB symbol: $eob";
     push @$zrle, $eob;
 
-    my ($dict) = huffman_from_symbols($zrle);
+    my %seen;
+    @seen{@$zrle} = ();
 
-    my $num_sels = ceil(scalar(@$zrle) / 50);    # number of selectors
+    my ($dict) = huffman_from_symbols([@$zrle, grep { !$seen{$_} } 0 .. $eob - 1]);
+    my $num_sels = ceil(scalar(@$zrle) / 50);
     say STDERR "Number of selectors: $num_sels";
 
-    $bitstring .= int2bits(2,         3);        # 2 trees
+    $bitstring .= int2bits(2,         3);
     $bitstring .= int2bits($num_sels, 15);
     $bitstring .= '0' x $num_sels;
 
     $bitstring .= encode_code_lengths($dict);
     $bitstring .= encode_code_lengths($dict);
 
-    $bitstring .= $dict->{$_} for @$zrle;
+    $bitstring .= join('', @{$dict}{@$zrle});
 }
 
 $bitstring .= $block_footer_bitstring;
