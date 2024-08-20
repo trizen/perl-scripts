@@ -211,6 +211,7 @@ A nice collection of day-to-day Perl scripts.
     * [Named parameters](./Decoders/named_parameters.pl)
 * Digest
     * [Brute-force resistant hashing](./Digest/brute-force_resistant_hashing.pl)
+    * [Crc32](./Digest/crc32.pl)
 * Encoding
     * [Adaptive huffman coding](./Encoding/adaptive_huffman_coding.pl)
     * [Arithmetic coding](./Encoding/arithmetic_coding.pl)
