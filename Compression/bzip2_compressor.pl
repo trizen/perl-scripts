@@ -166,18 +166,15 @@ while (!eof($fh)) {
     $bitstring .= int2bits($populated, 16);
     $bitstring .= int2bits_lsb($_, 16) for @$marked;
 
-    my $zrle = [reverse @{zrle_encode([reverse @$mtf])}];
-    say STDERR "ZRLE: @$zrle";
+    my @zrle = reverse @{zrle_encode([reverse @$mtf])};
+    say STDERR "ZRLE: @zrle";
 
     my $eob = scalar(@$alphabet) + 1;    # end-of-block symbol
     say STDERR "EOB symbol: $eob";
-    push @$zrle, $eob;
+    push @zrle, $eob;
 
-    my %seen;
-    @seen{@$zrle} = ();
-
-    my ($dict) = huffman_from_symbols([@$zrle, grep { !$seen{$_} } 0 .. $eob - 1]);
-    my $num_sels = ceil(scalar(@$zrle) / 50);
+    my ($dict) = huffman_from_symbols([@zrle, 0 .. $eob - 1]);
+    my $num_sels = ceil(scalar(@zrle) / 50);
     say STDERR "Number of selectors: $num_sels";
 
     $bitstring .= int2bits(2,         3);
@@ -187,7 +184,7 @@ while (!eof($fh)) {
     $bitstring .= encode_code_lengths($dict);
     $bitstring .= encode_code_lengths($dict);
 
-    $bitstring .= join('', @{$dict}{@$zrle});
+    $bitstring .= join('', @{$dict}{@zrle});
 }
 
 $bitstring .= $block_footer_bitstring;
