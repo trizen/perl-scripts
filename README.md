@@ -131,6 +131,7 @@ A nice collection of day-to-day Perl scripts.
         * [Mblz file compression](./Compression/High-level/mblz_file_compression.pl)
         * [Mbwr file compression](./Compression/High-level/mbwr_file_compression.pl)
         * [Mrl file compression](./Compression/High-level/mrl_file_compression.pl)
+        * [Mybzip2 file compression](./Compression/High-level/mybzip2_file_compression.pl)
         * [Rablz file compression](./Compression/High-level/rablz_file_compression.pl)
         * [Rlzss file compression](./Compression/High-level/rlzss_file_compression.pl)
         * [Xz file compression](./Compression/High-level/xz_file_compression.pl)
