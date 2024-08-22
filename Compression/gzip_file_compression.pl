@@ -11,7 +11,6 @@
 #   https://youtube.com/watch?v=SJPvNi4HrWQ
 
 use 5.036;
-use Digest::CRC       qw();
 use File::Basename    qw(basename);
 use Compression::Util qw(:all);
 use List::Util        qw(all min max);
@@ -341,12 +340,12 @@ sub block_type_0($chunk) {
     $len . $nlen;
 }
 
-sub gzip_compress ($in_fh, $out_fh) {
+sub my_gzip_compress ($in_fh, $out_fh) {
 
     print $out_fh $MAGIC, $CM, $FLAGS, $MTIME, $XFLAGS, $OS;
 
     my $total_length = 0;
-    my $crc32        = Digest::CRC->new(type => "crc32");
+    my $crc32        = 0;
 
     my $bitstring = '';
 
@@ -356,7 +355,7 @@ sub gzip_compress ($in_fh, $out_fh) {
 
     while (read($in_fh, (my $chunk), CHUNK_SIZE)) {
 
-        $crc32->add($chunk);
+        $crc32 = crc32($chunk, $crc32);
         $total_length += length($chunk);
 
         my ($literals, $distances, $lengths) = lzss_encode($chunk);
@@ -399,8 +398,8 @@ sub gzip_compress ($in_fh, $out_fh) {
         print $out_fh pack('b*', $bitstring);
     }
 
-    print $out_fh pack('b*', int2bits_lsb($crc32->digest, 32));
-    print $out_fh pack('b*', int2bits_lsb($total_length,  32));
+    print $out_fh pack('b*', int2bits_lsb($crc32,        32));
+    print $out_fh pack('b*', int2bits_lsb($total_length, 32));
 
     return 1;
 }
@@ -610,7 +609,7 @@ sub extract_block_type_2 ($in_fh, $buffer, $search_window) {
     decode_huffman($in_fh, $buffer, $LL_rev_dict, $dist_rev_dict, $search_window);
 }
 
-sub gzip_decompress ($in_fh, $out_fh) {
+sub my_gzip_decompress ($in_fh, $out_fh) {
 
     my $MAGIC = (getc($in_fh) // die "error") . (getc($in_fh) // die "error");
 
@@ -649,7 +648,7 @@ sub gzip_decompress ($in_fh, $out_fh) {
         say STDERR ":: Comment: ", read_null_terminated($in_fh);
     }
 
-    my $crc32         = Digest::CRC->new(type => "crc32");
+    my $crc32         = 0;
     my $actual_length = 0;
     my $buffer        = '';
     my $search_window = '';
@@ -681,7 +680,7 @@ sub gzip_decompress ($in_fh, $out_fh) {
         }
 
         print $out_fh $chunk;
-        $crc32->add($chunk);
+        $crc32 = crc32($chunk, $crc32);
         $actual_length += length($chunk);
         $search_window = substr($search_window, -$window_size) if (length($search_window) > 2 * $window_size);
 
@@ -691,7 +690,7 @@ sub gzip_decompress ($in_fh, $out_fh) {
     $buffer = '';    # discard any padding bits
 
     my $stored_crc32 = bits2int_lsb($in_fh, 32, \$buffer);
-    my $actual_crc32 = $crc32->digest;
+    my $actual_crc32 = $crc32;
 
     say STDERR '';
 
@@ -750,7 +749,7 @@ sub main {
         open my $out_fh, '>:raw', $output
           or die "Can't open file <<$output>> for writing: $!";
 
-        gzip_decompress($in_fh, $out_fh)
+        my_gzip_decompress($in_fh, $out_fh)
           || die "$0: error: decompression failed!\n";
     }
     elsif ($input !~ $ext || (defined($output) && $output =~ $ext)) {
@@ -762,7 +761,7 @@ sub main {
         open my $out_fh, '>:raw', $output
           or die "Can't open file <<$output>> for writing: $!";
 
-        gzip_compress($in_fh, $out_fh)
+        my_gzip_compress($in_fh, $out_fh)
           || die "$0: error: compression failed!\n";
     }
     else {

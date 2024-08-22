@@ -11,8 +11,8 @@
 #   https://youtube.com/watch?v=SJPvNi4HrWQ
 
 use 5.036;
-use Digest::CRC    qw();
-use File::Basename qw(basename);
+use Compression::Util qw(crc32);
+use File::Basename    qw(basename);
 
 use constant {
               CHUNK_SIZE => 0xffff,    # 2^16 - 1
@@ -41,8 +41,8 @@ open my $out_fh, '>:raw', $output
 print $out_fh $MAGIC, $CM, $FLAGS, $MTIME, $XFLAGS, $OS;
 
 my $total_length = 0;
-my $block_type   = '00';                                # 00 = store; 10 = LZSS + Fixed codes; 01 = LZSS + Dynamic codes
-my $crc32        = Digest::CRC->new(type => "crc32");
+my $block_type   = '00';    # 00 = store; 10 = LZSS + Fixed codes; 01 = LZSS + Dynamic codes
+my $crc32        = 0;
 
 while (read($in_fh, (my $chunk), CHUNK_SIZE)) {
 
@@ -56,12 +56,12 @@ while (read($in_fh, (my $chunk), CHUNK_SIZE)) {
     print $out_fh $block_header;
     print $out_fh $chunk;
 
-    $crc32->add($chunk);
+    $crc32 = crc32($chunk, $crc32);
     $total_length += $chunk_len;
 }
 
-print $out_fh pack('b*', int2bits($crc32->digest, 32));
-print $out_fh pack('b*', int2bits($total_length,  32));
+print $out_fh pack('b*', int2bits($crc32,        32));
+print $out_fh pack('b*', int2bits($total_length, 32));
 
 close $in_fh;
 close $out_fh;

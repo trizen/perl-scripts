@@ -15,41 +15,12 @@ use POSIX             qw(ceil);
 use List::Util        qw(max);
 use Compression::Util qw(:all);
 
-use constant {
-              CHUNK_SIZE => 100_000,    # 100 KB
-             };
+use constant {CHUNK_SIZE => 1 << 16};
 
 local $| = 1;
 
 binmode(STDIN,  ":raw");
 binmode(STDOUT, ":raw");
-
-sub create_crc32_table {
-    my @table;
-    for my $i (0 .. 255) {
-        my $k = $i;
-        for (0 .. 7) {
-            if ($k & 1) {
-                $k >>= 1;
-                $k ^= 0xedb88320;
-            }
-            else {
-                $k >>= 1;
-            }
-        }
-        push @table, $k;
-    }
-    return \@table;
-}
-
-sub crc32($str, $crc = 0) {
-    state $crc_table = create_crc32_table();
-    $crc ^= 0xffffffff;
-    foreach my $c (unpack("C*", $str)) {
-        $crc = ($crc >> 8) ^ $crc_table->[($crc & 0xff) ^ $c];
-    }
-    return ($crc ^ 0xffffffff);
-}
 
 sub encode_mtf_alphabet($alphabet) {
     my %table;
@@ -121,7 +92,7 @@ else {
 
 print "BZh";
 
-my $level = int(CHUNK_SIZE / 100_000);
+my $level = 1;
 
 if ($level <= 0 or $level > 9) {
     die "Invalid level value: $level";
@@ -147,7 +118,7 @@ while (!eof($fh)) {
     $crc32 = oct('0b' . int2bits_lsb($crc32, 32));
     say STDERR "Bzip2-CRC32: $crc32";
 
-    $stream_crc32 = $crc32 ^ (($stream_crc32 << 1) | ($stream_crc32 >> 31));
+    $stream_crc32 = $crc32 ^ (0xffffffff & ($stream_crc32 << 1) | ($stream_crc32 >> 31));
     $bitstring .= int2bits($crc32, 32);
     $bitstring .= '0';                    # not randomized
 
@@ -188,6 +159,6 @@ while (!eof($fh)) {
 }
 
 $bitstring .= $block_footer_bitstring;
-$bitstring .= int2bits($stream_crc32 & 0xffffffff, 32);
+$bitstring .= int2bits($stream_crc32, 32);
 
 print pack("B*", $bitstring);

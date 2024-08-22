@@ -12,7 +12,6 @@
 #   https://youtube.com/watch?v=SJPvNi4HrWQ
 
 use 5.036;
-use Digest::CRC       qw();
 use File::Basename    qw(basename);
 use Compression::Util qw(:all);
 use List::Util        qw(uniq);
@@ -40,7 +39,7 @@ open my $out_fh, '>:raw', $output
 print $out_fh $MAGIC, $CM, $FLAGS, $MTIME, $XFLAGS, $OS;
 
 my $total_length = 0;
-my $crc32        = Digest::CRC->new(type => "crc32");
+my $crc32        = 0;
 
 my $bitstring  = '';
 my $block_type = '01';                                                                 # 00 = store; 10 = LZSS + Fixed codes; 01 = LZSS + Dynamic codes
@@ -132,7 +131,7 @@ while (read($in_fh, (my $chunk), CHUNK_SIZE)) {
 
     print $out_fh pack('b*', substr($bitstring, 0, length($bitstring) - (length($bitstring) % 8), ''));
 
-    $crc32->add($chunk);
+    $crc32 = crc32($chunk, $crc32);
     $total_length += $chunk_len;
 }
 
@@ -140,8 +139,8 @@ if ($bitstring ne '') {
     print $out_fh pack('b*', $bitstring);
 }
 
-print $out_fh pack('b*', int2bits_lsb($crc32->digest, 32));
-print $out_fh pack('b*', int2bits_lsb($total_length,  32));
+print $out_fh pack('b*', int2bits_lsb($crc32,        32));
+print $out_fh pack('b*', int2bits_lsb($total_length, 32));
 
 close $in_fh;
 close $out_fh;

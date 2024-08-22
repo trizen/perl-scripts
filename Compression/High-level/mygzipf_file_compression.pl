@@ -1,10 +1,10 @@
 #!/usr/bin/perl
 
 # Author: Trizen
-# Edit: 21 August 2024
+# Edit: 22 August 2024
 # https://github.com/trizen
 
-# Compress/decompress files using Bzip2 from Compression::Util.
+# Compress/decompress files using Gzip from Compression::Util.
 
 # Reference:
 #   Data Compression (Summer 2023) - Lecture 13 - BZip2
@@ -16,12 +16,12 @@ use File::Basename    qw(basename);
 use Compression::Util qw(:all);
 
 use constant {
-              PKGNAME => 'BZIP2',
+              PKGNAME => 'GZIP',
               VERSION => '0.01',
-              FORMAT  => 'bz2',
+              FORMAT  => 'gz',
              };
 
-sub usage ($code = 0) {
+sub usage($code = 0) {
 
     print <<"EOH";
 usage: $0 [options] [input file] [output file]
@@ -100,7 +100,7 @@ sub compress_file ($input, $output) {
       or die "Can't open file <<$output>> for write: $!";
 
     # Compress data
-    print $out_fh bzip2_compress($fh);
+    print $out_fh gzip_compress($fh, \&lzss_encode_fast);
 
     # Close the file
     close $out_fh;
@@ -117,7 +117,7 @@ sub decompress_file ($input, $output) {
     open my $out_fh, '>:raw', $output
       or die "Can't open file <<$output>> for writing: $!";
 
-    print $out_fh bzip2_decompress($fh);
+    print $out_fh gzip_decompress($fh);
 
     # Close the file
     close $fh;

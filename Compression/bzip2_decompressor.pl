@@ -17,8 +17,6 @@ use 5.036;
 use List::Util        qw(max);
 use Compression::Util qw(:all);
 
-#no warnings 'portable';
-
 my $s = "BZh91AY&SY\xEA\xE0\x8D\xEB\0\0\0\xC1\0\0\x100\0 \0!\x98\31\x84aw\$S\x85\t\16\xAE\b\xDE\xB0";    # "ab\n"
 
 $s .= "BZh91AY&SY\x99\xAC\"V\0\0\2W\x80\0\20`\4\0@\0\x80\6\4\x90\0 \0\"\6\x81\x90\x80i\xA6\x89\30j\xCE\xA4\31o\x8B\xB9\"\x9C(HL\xD6\21+\0";  # "Hello, World!\n"
@@ -57,6 +55,8 @@ while (!eof($fh)) {
     }
 
     say STDERR "Compression level: $level";
+
+    my $stream_crc32 = 0;
 
     while (!eof($fh)) {
 
@@ -118,7 +118,9 @@ while (!eof($fh)) {
                 for (1 .. $num_syms) {
                     while (1) {
 
-                        #($clen > 0 and $clen <= $MaxHuffmanBits) or die "error";
+                        ($clen > 0 and $clen <= $MaxHuffmanBits)
+                          or warn "Invalid code length: $clen!\n";
+
                         if (not read_bit($fh, \$buffer)) {
                             last;
                         }
@@ -139,7 +141,7 @@ while (!eof($fh)) {
                     $sum -= (1 << $maxLen) >> $clen;
                 }
 
-                #$sum == 0 or die "incomplete tree not supported: (@$tree)";
+                $sum == 0 or warn "incomplete tree detected: (@$tree)\n";
             }
 
             my @huffman_trees = map { (huffman_from_code_lengths($_))[1] } @trees;
@@ -193,13 +195,29 @@ while (!eof($fh)) {
 
             my $rle4 = string2symbols bwt_decode($bwt, $bwt_idx);
             my $data = rle4_decode($rle4);
+            my $dec  = symbols2string($data);
 
-            print symbols2string($data);
+            my $new_crc32 = oct('0b' . int2bits_lsb(crc32(pack('b*', unpack('B*', $dec))), 32));
+
+            say STDERR "Computed CRC32: $new_crc32";
+
+            if ($crc32 != $new_crc32) {
+                warn "CRC32 error: $crc32 (stored) != $new_crc32 (actual)\n";
+            }
+
+            $stream_crc32 = ($new_crc32 ^ (0xffffffff & (($stream_crc32 << 1) | ($stream_crc32 >> 31))));
+
+            print $dec;
         }
         elsif ($block_magic eq "\27rE8P\x90") {    # BlockFooter
             say STDERR "Block footer detected";
-            my $stream_crc = bits2int($fh, 32, \$buffer);
-            say STDERR "Stream CRC: $stream_crc";
+            my $stored_stream_crc32 = bits2int($fh, 32, \$buffer);
+            say STDERR "Stream CRC32: $stored_stream_crc32";
+
+            if ($stream_crc32 != $stored_stream_crc32) {
+                warn "Stream CRC32 error: $stored_stream_crc32 (stored) != $stream_crc32 (actual)\n";
+            }
+
             $buffer = '';
             last;
         }
@@ -213,4 +231,3 @@ while (!eof($fh)) {
 }
 
 say STDERR "End of input";
-
