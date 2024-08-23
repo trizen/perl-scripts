@@ -186,10 +186,10 @@ while (!eof($fh)) {
                 }
             }
 
-            say STDERR "ZRLE: (@zrle)";
+            ##say STDERR "ZRLE: (@zrle)";
             my @mtf = reverse @{zrle_decode([reverse @zrle])};
+            ##say STDERR "MTF: (@mtf)";
 
-            say STDERR "MTF: (@mtf)";
             my $bwt = symbols2string mtf_decode(\@mtf, \@alphabet);
             ## say "BWT: ($bwt, $bwt_idx)";
 

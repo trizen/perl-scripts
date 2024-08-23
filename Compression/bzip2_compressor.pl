@@ -123,14 +123,14 @@ while (!eof($fh)) {
     $bitstring .= '0';                    # not randomized
 
     my $rle4 = rle4_encode($chunk);
-    say STDERR "RLE4: (@$rle4)";
+    ##say STDERR "RLE4: (@$rle4)";
     my ($bwt, $bwt_idx) = bwt_encode(symbols2string($rle4));
 
     $bitstring .= int2bits($bwt_idx, 24);
 
     my ($mtf, $alphabet) = mtf_encode($bwt);
-    say STDERR "MTF: (@$mtf)";
-    say STDERR "Alphabet: (@$alphabet)";
+    ##say STDERR "MTF: (@$mtf)";
+    say STDERR "MTF Alphabet: (@$alphabet)";
 
     my ($populated, $marked) = encode_mtf_alphabet($alphabet);
 
@@ -138,7 +138,7 @@ while (!eof($fh)) {
     $bitstring .= int2bits_lsb($_, 16) for @$marked;
 
     my @zrle = reverse @{zrle_encode([reverse @$mtf])};
-    say STDERR "ZRLE: @zrle";
+    ##say STDERR "ZRLE: @zrle";
 
     my $eob = scalar(@$alphabet) + 1;    # end-of-block symbol
     say STDERR "EOB symbol: $eob";
@@ -152,9 +152,7 @@ while (!eof($fh)) {
     $bitstring .= int2bits($num_sels, 15);
     $bitstring .= '0' x $num_sels;
 
-    $bitstring .= encode_code_lengths($dict);
-    $bitstring .= encode_code_lengths($dict);
-
+    $bitstring .= encode_code_lengths($dict) x 2;
     $bitstring .= join('', @{$dict}{@zrle});
 }
 
