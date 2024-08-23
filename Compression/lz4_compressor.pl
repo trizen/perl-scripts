@@ -4,7 +4,7 @@
 # Date: 23 August 2024
 # https://github.com/trizen
 
-# A simple LZ4 compressor. (WIP)
+# A simple LZ4 compressor.
 
 # References:
 #   https://github.com/lz4/lz4/blob/dev/doc/lz4_Frame_format.md
@@ -15,6 +15,8 @@
 
 use 5.036;
 use Compression::Util qw(:all);
+
+use constant {CHUNK_SIZE => 1 << 17};
 
 local $| = 1;
 
@@ -32,6 +34,7 @@ else {
 }
 
 my $compressed = '';
+
 $compressed .= int2bytes_lsb(0x184D2204, 4);    # LZ4 magic number
 
 my $fd = '';                                    # frame description
@@ -48,72 +51,72 @@ else {
     $compressed .= chr(115);
 }
 
-# Slurp the entire file
-my $chunk = do {
-    local $/;
-    <$fh>;
-};
+while (!eof($fh)) {
 
-my ($literals, $distances, $lengths) = do {
-    local $Compression::Util::LZ_MIN_LEN       = 4;                # minimum match length
-    local $Compression::Util::LZ_MAX_LEN       = ~0;               # maximum match length
-    local $Compression::Util::LZ_MAX_DIST      = (1 << 16) - 1;    # maximum match distance
-    local $Compression::Util::LZ_MAX_CHAIN_LEN = 48;               # higher value = better compression
-    lzss_encode($chunk);
-};
+    read($fh, (my $chunk), CHUNK_SIZE);
 
-my $literals_end = $#{$literals};
+    my ($literals, $distances, $lengths) = do {
+        local $Compression::Util::LZ_MIN_LEN       = 4;                # minimum match length
+        local $Compression::Util::LZ_MAX_LEN       = ~0;               # maximum match length
+        local $Compression::Util::LZ_MAX_DIST      = (1 << 16) - 1;    # maximum match distance
+        local $Compression::Util::LZ_MAX_CHAIN_LEN = 32;               # higher value = better compression
+        lzss_encode(substr($chunk, 0, -5));
+    };
 
-my $block = '';
+    # The last 5 bytes of each block must be literals
+    # https://github.com/lz4/lz4/issues/1495
+    push @$literals, unpack('C*', substr($chunk, -5));
 
-for (my $i = 0 ; $i <= $literals_end ; ++$i) {
+    my $literals_end = $#{$literals};
 
-    my @uncompressed;
-    while ($i <= $literals_end and defined($literals->[$i])) {
-        push @uncompressed, $literals->[$i];
-        ++$i;
+    my $block = '';
+
+    for (my $i = 0 ; $i <= $literals_end ; ++$i) {
+
+        my @uncompressed;
+        while ($i <= $literals_end and defined($literals->[$i])) {
+            push @uncompressed, $literals->[$i];
+            ++$i;
+        }
+
+        my $literals_string = pack('C*', @uncompressed);
+        my $literals_length = scalar(@uncompressed);
+
+        my $match_len = $lengths->[$i] ? ($lengths->[$i] - 4) : 0;
+
+        my $len_byte = 0;
+
+        $len_byte |= ($literals_length >= 15 ? 15 : $literals_length) << 4;
+        $len_byte |= ($match_len >= 15       ? 15 : $match_len);
+
+        $literals_length -= 15;
+        $match_len       -= 15;
+
+        $block .= chr($len_byte);
+
+        while ($literals_length >= 0) {
+            $block .= ($literals_length >= 255 ? "\xff" : chr($literals_length));
+            $literals_length -= 255;
+        }
+
+        $block .= $literals_string;
+
+        my $dist = $distances->[$i] // last;
+        $block .= pack('b*', scalar reverse sprintf('%016b', $dist));
+
+        while ($match_len >= 0) {
+            $block .= ($match_len >= 255 ? "\xff" : chr($match_len));
+            $match_len -= 255;
+        }
     }
 
-    my $literals_string = pack('C*', @uncompressed);
-    my $literals_length = scalar(@uncompressed);
-
-    my $dist      = $distances->[$i] // 0;
-    my $match_len = $lengths->[$i] ? ($lengths->[$i] - 4) : 0;
-
-    my $len_byte = 0;
-
-    $len_byte |= ($literals_length >= 15 ? 15 : $literals_length) << 4;
-    $len_byte |= ($match_len >= 15       ? 15 : $match_len);
-
-    $literals_length -= 15;
-    $match_len       -= 15;
-
-    $block .= chr($len_byte);
-
-    while ($literals_length >= 0) {
-        $block .= chr($literals_length >= 255 ? 255 : $literals_length);
-        $literals_length -= 255;
+    if ($block ne '') {
+        $compressed .= int2bytes_lsb(length($block), 4);
+        $compressed .= $block;
     }
 
-    $block .= $literals_string;
-
-    if ($dist == 0) {
-        last;
-    }
-
-    $block .= pack('b*', scalar reverse sprintf('%016b', $dist));
-
-    while ($match_len >= 0) {
-        $block .= chr($match_len >= 255 ? 255 : $match_len);
-        $match_len -= 255;
-    }
+    print $compressed;
+    $compressed = '';
 }
 
-if ($block ne '') {
-    $compressed .= int2bytes_lsb(length($block), 4);
-    $compressed .= $block;
-}
-
-$compressed .= int2bytes_lsb(0x00000000, 4);    # EndMark
-
-print $compressed;
+print int2bytes_lsb(0x00000000, 4);    # EndMark
