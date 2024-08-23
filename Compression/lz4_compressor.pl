@@ -16,6 +16,8 @@
 use 5.036;
 use Compression::Util qw(:all);
 
+local $| = 1;
+
 binmode(STDIN,  ":raw");
 binmode(STDOUT, ":raw");
 
@@ -107,8 +109,11 @@ for (my $i = 0 ; $i <= $literals_end ; ++$i) {
     }
 }
 
-$compressed .= int2bytes_lsb(length($block), 4);
-$compressed .= $block;
-$compressed .= int2bytes_lsb(0x00000000, 4);       # EndMark
+if ($block ne '') {
+    $compressed .= int2bytes_lsb(length($block), 4);
+    $compressed .= $block;
+}
+
+$compressed .= int2bytes_lsb(0x00000000, 4);    # EndMark
 
 print $compressed;

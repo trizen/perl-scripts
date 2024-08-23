@@ -133,6 +133,8 @@ while (!eof($fh)) {
                     die "Corrupted block";
                 }
 
+                # say STDERR "Offset: $offset";
+
                 if ($match_len == 15) {
                     while (1) {
                         my $byte_len = ord(substr($compressed, 0, 1, ''));
@@ -143,6 +145,8 @@ while (!eof($fh)) {
 
                 $decoded .= $literals;
                 $match_len += 4;
+
+                # say STDERR "Total match len: $match_len\n";
 
                 if ($offset >= $match_len) {    # non-overlapping matches
                     $decoded .= substr($decoded, length($decoded) - $offset, $match_len);
