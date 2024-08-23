@@ -138,6 +138,7 @@ A nice collection of day-to-day Perl scripts.
         * [Rlzss file compression](./Compression/High-level/rlzss_file_compression.pl)
         * [Xz file compression](./Compression/High-level/xz_file_compression.pl)
         * [Zstd file compression](./Compression/High-level/zstd_file_compression.pl)
+    * [Lz4 compressor](./Compression/lz4_compressor.pl)
     * [Lz4 decompressor](./Compression/lz4_decompressor.pl)
     * [Lz77 file compression](./Compression/lz77_file_compression.pl)
     * [Lza file compression](./Compression/lza_file_compression.pl)

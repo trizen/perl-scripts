@@ -232,7 +232,6 @@ sub compression($chunk, $out_fh) {
 
         print $out_fh pack('B*', sprintf('%016b', $dist));
     }
-
 }
 
 sub decompression($fh, $out_fh) {

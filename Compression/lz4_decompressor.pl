@@ -40,6 +40,8 @@ while (!eof($fh)) {
 
     my $Block_MaxSize = $BD & 0b0_111_0000;
 
+    say STDERR "Maximum block size: $Block_MaxSize";
+
     if ($version != 0b01_00_00_00) {
         die "Error: Invalid version number";
     }
@@ -163,5 +165,4 @@ while (!eof($fh)) {
     }
 
     print $decoded;
-
 }
