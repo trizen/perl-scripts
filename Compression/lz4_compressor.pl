@@ -16,12 +16,18 @@
 use 5.036;
 use Compression::Util qw(:all);
 
-binmode(STDOUT, ':raw');
+binmode(STDIN,  ":raw");
+binmode(STDOUT, ":raw");
 
-my $file = $ARGV[0] // die "usage: $0 [file.lz4]\n";
+my $s = "abcabcabc\n";
 
-open my $fh, '<:raw', $file
-  or die "Can't open file <<$file>> for reading: $!";
+my $fh;
+if (-t STDIN) {
+    open $fh, "<:raw", \$s;
+}
+else {
+    $fh = \*STDIN;
+}
 
 my $compressed = '';
 $compressed .= int2bytes_lsb(0x184D2204, 4);    # LZ4 magic number
@@ -91,10 +97,6 @@ for (my $i = 0 ; $i <= $literals_end ; ++$i) {
 
     if ($dist == 0) {
         last;
-    }
-
-    if ($dist >= 1 << 16) {
-        die "Too large distance: $dist";
     }
 
     $block .= pack('b*', scalar reverse sprintf('%016b', $dist));

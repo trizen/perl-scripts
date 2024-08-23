@@ -17,8 +17,14 @@ use 5.036;
 use List::Util        qw(max);
 use Compression::Util qw(:all);
 
-my $s = "BZh91AY&SY\xEA\xE0\x8D\xEB\0\0\0\xC1\0\0\x100\0 \0!\x98\31\x84aw\$S\x85\t\16\xAE\b\xDE\xB0";    # "ab\n"
+local $| = 1;
 
+binmode(STDIN,  ":raw");
+binmode(STDOUT, ":raw");
+
+my $s = '';
+
+$s .= "BZh91AY&SY\xEA\xE0\x8D\xEB\0\0\0\xC1\0\0\x100\0 \0!\x98\31\x84aw\$S\x85\t\16\xAE\b\xDE\xB0";                                          # "ab\n"
 $s .= "BZh91AY&SY\x99\xAC\"V\0\0\2W\x80\0\20`\4\0@\0\x80\6\4\x90\0 \0\"\6\x81\x90\x80i\xA6\x89\30j\xCE\xA4\31o\x8B\xB9\"\x9C(HL\xD6\21+\0";  # "Hello, World!\n"
 
 $s .=
@@ -27,11 +33,6 @@ $s .=
   . "\x9C\xEA\xC4\30wWy\xE4\xD7\xC0\x95\xF9L\x89\5\x936'\xED\x95a\22o%B\x90\x93"
   . "T\xAF\xFD\xE6\xEA)\x8D\x90\x82\xB5\x9E\x89Z\xD7X\xB19\x9D0\xC9\21s\x9E\x95"
   . "\1\xB2F\xE9\x98\xFD\x8A+O\xAD\xBDi\x96s\e\0\4\xA3G\xC0\xB2\4\xA6_\x8B\xB9\"\x9C(Ht\xD3&_\0";    # some bigger string
-
-local $| = 1;
-
-binmode(STDIN,  ":raw");
-binmode(STDOUT, ":raw");
 
 my $fh;
 if (-t STDIN) {
@@ -205,7 +206,7 @@ while (!eof($fh)) {
                 warn "CRC32 error: $crc32 (stored) != $new_crc32 (actual)\n";
             }
 
-            $stream_crc32 = ($new_crc32 ^ (0xffffffff & (($stream_crc32 << 1) | ($stream_crc32 >> 31))));
+            $stream_crc32 = ($new_crc32 ^ (0xffffffff & ((0xffffffff & ($stream_crc32 << 1)) | (($stream_crc32 >> 31) & 0x1)))) & 0xffffffff;
 
             print $dec;
         }

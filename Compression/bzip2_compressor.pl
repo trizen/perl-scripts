@@ -118,7 +118,7 @@ while (!eof($fh)) {
     $crc32 = oct('0b' . int2bits_lsb($crc32, 32));
     say STDERR "Bzip2-CRC32: $crc32";
 
-    $stream_crc32 = $crc32 ^ (0xffffffff & ($stream_crc32 << 1) | ($stream_crc32 >> 31));
+    $stream_crc32 = ($crc32 ^ (0xffffffff & ((0xffffffff & ($stream_crc32 << 1)) | (($stream_crc32 >> 31) & 0x1)))) & 0xffffffff;
     $bitstring .= int2bits($crc32, 32);
     $bitstring .= '0';                    # not randomized
 

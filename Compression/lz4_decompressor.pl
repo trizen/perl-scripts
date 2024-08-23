@@ -13,16 +13,29 @@
 
 use 5.036;
 
+local $| = 1;
+
+binmode(STDIN,  ":raw");
+binmode(STDOUT, ":raw");
+
 sub bytes2int_lsb ($fh, $n) {
     my $bytes = '';
     $bytes .= getc($fh) for (1 .. $n);
     oct('0b' . reverse unpack('b*', $bytes));
 }
 
-my $file = $ARGV[0] // die "usage: $0 [file.lz4]\n";
+my $s = '';
 
-open my $fh, '<:raw', $file
-  or die "Can't open file <<$file>> for reading: $!";
+$s .= "\4\"M\30d@\xA7\16\0\0\x80Hello, World!\n\0\0\0\0\xE8C\xD0\x9E";            # uncompressed
+$s .= "\4\"M\30d@\xA7\27\0\0\0\xE5Hello, World! \16\0Prld!\n\0\0\0\0\x9FL\"T";    # compressed
+
+my $fh;
+if (-t STDIN) {
+    open $fh, "<:raw", \$s;
+}
+else {
+    $fh = \*STDIN;
+}
 
 while (!eof($fh)) {
 
