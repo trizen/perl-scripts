@@ -618,7 +618,7 @@ sub my_gzip_decompress ($in_fh, $out_fh) {
     }
 
     my $CM     = getc($in_fh) // die "error";                             # 0x08 = DEFLATE
-    my $FLAGS  = getc($in_fh) // die "error";                             # flags
+    my $FLAGS  = ord(getc($in_fh) // die "error");                        # flags
     my $MTIME  = join('', map { getc($in_fh) // die "error" } 1 .. 4);    # modification time
     my $XFLAGS = getc($in_fh) // die "error";                             # extra flags
     my $OS     = getc($in_fh) // die "error";                             # 0x03 = Unix
@@ -627,25 +627,49 @@ sub my_gzip_decompress ($in_fh, $out_fh) {
         die "Only DEFLATE compression method is supported (0x08)! Got: 0x", sprintf('%02x', ord($CM));
     }
 
-    # TODO: add support for more attributes
-    my $has_filename = 0;
-    my $has_comment  = 0;
+    # Reference:
+    #   https://web.archive.org/web/20240221024029/https://forensics.wiki/gzip/
 
-    if ((ord($FLAGS) & 0b0000_1000) != 0) {
+    my $has_filename        = 0;
+    my $has_comment         = 0;
+    my $has_header_checksum = 0;
+    my $has_extra_fields    = 0;
+
+    if ($FLAGS & 0x08) {
         $has_filename = 1;
     }
 
-    if ((ord($FLAGS) & 0b0001_0000) != 0) {
+    if ($FLAGS & 0x10) {
         $has_comment = 1;
+    }
+
+    if ($FLAGS & 0x02) {
+        $has_header_checksum = 1;
+    }
+
+    if ($FLAGS & 0x04) {
+        $has_extra_fields = 1;
+    }
+
+    if ($has_extra_fields) {
+        my $size = bytes2int_lsb($in_fh, 2);
+        read($in_fh, (my $extra_field_data), $size) // die "can't read extra field data: $!";
+        say STDERR ":: Extra field data: $extra_field_data";
     }
 
     if ($has_filename) {
         my $filename = read_null_terminated($in_fh);    # filename
-        say STDERR ":: Filename: ", $filename;
+        say STDERR ":: Filename: $filename";
     }
 
     if ($has_comment) {
-        say STDERR ":: Comment: ", read_null_terminated($in_fh);
+        my $comment = read_null_terminated($in_fh);     # comment
+        say STDERR ":: Comment: $comment";
+    }
+
+    if ($has_header_checksum) {
+        my $header_checksum = bytes2int_lsb($in_fh, 2);
+        say STDERR ":: Header checksum: $header_checksum";
     }
 
     my $crc32         = 0;

@@ -452,13 +452,11 @@ sub decode_huffman_entry ($fh) {
 }
 
 sub encode_alphabet_symbolic ($alphabet) {
-
-    # TODO: encode the alphabet more efficiently
-    return delta_encode([reverse @$alphabet]);
+    return delta_encode([@$alphabet]);
 }
 
 sub decode_alphabet_symbolic ($fh) {
-    return [reverse @{delta_decode($fh)}];
+    return delta_decode($fh);
 }
 
 sub bz2_compression_symbolic ($symbols, $out_fh) {
