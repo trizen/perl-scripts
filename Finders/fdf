@@ -3,7 +3,7 @@
 # Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 01 January 2012
-# Edit: 11 January 2018
+# Edit: 24 August 2024
 # https://github.com/trizen
 
 # Find and list duplicate files from one or more paths, with options for
@@ -13,22 +13,22 @@ use 5.005;
 use strict;
 use warnings;
 
-use File::Find qw(find);
-use File::Compare qw(compare);
+use File::Find     qw(find);
+use File::Compare  qw(compare);
 use File::Basename qw(basename);
-use Getopt::Long qw(GetOptions);
+use Getopt::Long   qw(GetOptions);
 
 my %order_callbacks = (
     path => sub { sort @_ },
     name => sub {
-        map    { $_->[1] }
-          sort { $a->[0] cmp $b->[0] }
-          map  { [basename($_), $_] } @_;
+        map  { $_->[1] }
+        sort { $a->[0] cmp $b->[0] }
+        map  { [basename($_), $_] } @_;
     },
     time => sub {
-        map    { $_->[1] }
-          sort { $a->[0] <=> $b->[0] }
-          map  { [-M $_, $_] } @_;
+        map  { $_->[1] }
+        sort { $a->[0] <=> $b->[0] }
+        map  { [-M $_, $_] } @_;
     },
 );
 
@@ -41,6 +41,7 @@ Options:
   -l, --last       : keep only the last duplicated file
   -s, --symlink    : replace duplicate files with symbolic links (with -f or -l)
   -o, --order=type : order the results by: path, name or time
+  -m, --min-size=i : minimum size in bytes (default: 0)
 
 HELP
 
@@ -48,12 +49,14 @@ my $keep_first;
 my $keep_last;
 my $create_symlinks;
 my $order_by = 'time';
+my $min_size = 0;
 
 GetOptions(
            'f|first!'           => \$keep_first,
            'l|last!'            => \$keep_last,
            's|symlink!'         => \$create_symlinks,
            'o|order|order-by=s' => \$order_by,
+           'm|min-size=i'       => \$min_size,
           )
   or die("$0: error in command line arguments\n");
 
@@ -70,7 +73,7 @@ sub find_duplicated_files (&@) {
         no_chdir => 1,
         wanted   => sub {
             lstat;
-            (-f _) && (not -l _) && push @{$files{-s _}}, $_;
+            (-f _) && (not -l _) && ((-s _) >= $min_size) && push @{$files{-s _}}, $_;
         }
     } => @_;
 
