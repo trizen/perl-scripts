@@ -15,8 +15,7 @@ use constant {
               FORMAT  => 'gz',
              };
 
-sub usage {
-    my ($code) = @_;
+sub usage ($code = 0) {
     print <<"EOH";
 usage: $0 [options] [input file] [output file]
 

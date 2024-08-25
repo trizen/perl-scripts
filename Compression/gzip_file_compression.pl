@@ -35,7 +35,7 @@ my $OS     = chr(0x03);                                        # 0x03 = Unix
 
 my ($DISTANCE_SYMBOLS, $LENGTH_SYMBOLS, $LENGTH_INDICES) = make_deflate_tables();
 
-sub usage ($code) {
+sub usage ($code = 0) {
     print <<"EOH";
 usage: $0 [options] [input file] [output file]
 
