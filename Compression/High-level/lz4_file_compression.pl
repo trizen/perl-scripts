@@ -1,29 +1,20 @@
 #!/usr/bin/perl
 
-# Author: Trizen
-# Edit: 22 August 2024
-# https://github.com/trizen
-
-# Compress/decompress files using Gzip from Compression::Util.
-
-# Reference:
-#   Data Compression (Summer 2023) - Lecture 13 - BZip2
-#   https://youtube.com/watch?v=cvoZbBZ3M2A
+# Compress files using LZ4.
 
 use 5.036;
-use Getopt::Std            qw(getopts);
-use File::Basename         qw(basename);
-use Compression::Util      qw(:all);
-use IO::Uncompress::Gunzip qw(gunzip);
+use Getopt::Std        qw(getopts);
+use File::Basename     qw(basename);
+use Compress::LZ4Frame qw();
 
 use constant {
-              PKGNAME => 'GZIP',
+              PKGNAME => 'LZ4',
               VERSION => '0.01',
-              FORMAT  => 'gz',
+              FORMAT  => 'lz4',
              };
 
-sub usage($code = 0) {
-
+sub usage {
+    my ($code) = @_;
     print <<"EOH";
 usage: $0 [options] [input file] [output file]
 
@@ -101,7 +92,12 @@ sub compress_file ($input, $output) {
       or die "Can't open file <<$output>> for write: $!";
 
     # Compress data
-    print $out_fh gzip_compress($fh, \&lzss_encode_fast);
+    print $out_fh Compress::LZ4Frame::compress(
+        do {
+            local $/;
+            <$fh>;
+        }
+    );
 
     # Close the file
     close $out_fh;
@@ -118,20 +114,12 @@ sub decompress_file ($input, $output) {
     open my $out_fh, '>:raw', $output
       or die "Can't open file <<$output>> for writing: $!";
 
-    my $enc = do {
-        local $/;
-        <$fh>;
-    };
-
-    my $dec = gzip_decompress($enc);
-
-    gunzip(\$enc, \my $dec2) or die "decompression error";
-
-    if ($dec ne $dec2) {
-        die "Failed to decompress correctly";
-    }
-
-    print $out_fh $dec;
+    print $out_fh Compress::LZ4Frame::decompress(
+        do {
+            local $/;
+            <$fh>;
+        }
+    );
 
     # Close the file
     close $fh;

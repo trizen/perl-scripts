@@ -11,9 +11,10 @@
 #   https://youtube.com/watch?v=cvoZbBZ3M2A
 
 use 5.036;
-use Getopt::Std       qw(getopts);
-use File::Basename    qw(basename);
-use Compression::Util qw(:all);
+use Getopt::Std             qw(getopts);
+use File::Basename          qw(basename);
+use Compression::Util       qw(:all);
+use IO::Uncompress::Bunzip2 qw(bunzip2);
 
 use constant {
               PKGNAME => 'BZIP2',
@@ -117,7 +118,20 @@ sub decompress_file ($input, $output) {
     open my $out_fh, '>:raw', $output
       or die "Can't open file <<$output>> for writing: $!";
 
-    print $out_fh bzip2_decompress($fh);
+    my $enc = do {
+        local $/;
+        <$fh>;
+    };
+
+    my $dec = bzip2_decompress($enc);
+
+    bunzip2(\$enc, \my $dec2) or die "decompression error";
+
+    if ($dec ne $dec2) {
+        die "Failed to decompress correctly";
+    }
+
+    print $out_fh $dec;
 
     # Close the file
     close $fh;
