@@ -27,7 +27,7 @@ binmode(STDOUT, ":raw");
 
 use constant {
               FORMAT     => 'bz2',
-              CHUNK_SIZE => 1 << 16,
+              CHUNK_SIZE => 1 << 17,
              };
 
 sub usage ($code = 0) {
@@ -84,7 +84,7 @@ sub my_bzip2_compress($fh, $out_fh) {
 
     print $out_fh "BZh";
 
-    my $level = 1;
+    my $level = 9;
 
     if ($level <= 0 or $level > 9) {
         die "Invalid level value: $level";

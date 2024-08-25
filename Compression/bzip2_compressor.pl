@@ -15,7 +15,7 @@ use POSIX             qw(ceil);
 use List::Util        qw(max);
 use Compression::Util qw(:all);
 
-use constant {CHUNK_SIZE => 1 << 16};
+use constant {CHUNK_SIZE => 1 << 17};
 
 local $| = 1;
 
@@ -92,7 +92,7 @@ else {
 
 print "BZh";
 
-my $level = 1;
+my $level = 9;
 
 if ($level <= 0 or $level > 9) {
     die "Invalid level value: $level";
