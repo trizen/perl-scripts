@@ -114,6 +114,7 @@ A nice collection of day-to-day Perl scripts.
         * [Lzbw2 file compression](./Compression/High-level/lzbw2_file_compression.pl)
         * [Lzbw3 file compression](./Compression/High-level/lzbw3_file_compression.pl)
         * [Lzbw4 file compression](./Compression/High-level/lzbw4_file_compression.pl)
+        * [Lzbw5 file compression](./Compression/High-level/lzbw5_file_compression.pl)
         * [Lzbw file compression](./Compression/High-level/lzbw_file_compression.pl)
         * [Lzbwa file compression](./Compression/High-level/lzbwa_file_compression.pl)
         * [Lzbwad file compression](./Compression/High-level/lzbwad_file_compression.pl)
