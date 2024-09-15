@@ -212,6 +212,7 @@ A nice collection of day-to-day Perl scripts.
     * [Pod2pdf](./Converters/pod2pdf.pl)
     * [Pod2text](./Converters/pod2text.pl)
     * [Recompress](./Converters/recompress.pl)
+    * [Slideshow](./Converters/slideshow.pl)
     * [Unicode2ascii](./Converters/unicode2ascii.pl)
     * [Vnt2txt simple](./Converters/vnt2txt_simple.pl)
     * [Xml2hash](./Converters/xml2hash.pl)
