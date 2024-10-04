@@ -507,6 +507,7 @@ A nice collection of day-to-day Perl scripts.
         * [HAL9000](./HAL/HAL9000/HAL9000.pl)
 * Image
     * [2x zoom](./Image/2x_zoom.pl)
+    * [Add exif info](./Image/add_exif_info.pl)
     * [Bitmap monochrome encoding decoding](./Image/bitmap_monochrome_encoding_decoding.pl)
     * [Bwt horizontal transform](./Image/bwt_horizontal_transform.pl)
     * [Bwt rgb horizontal transform](./Image/bwt_rgb_horizontal_transform.pl)
@@ -570,7 +571,6 @@ A nice collection of day-to-day Perl scripts.
     * [Vertical scrambler](./Image/vertical_scrambler.pl)
     * [Visualize binary](./Image/visualize_binary.pl)
     * [Webp2png](./Image/webp2png.pl)
-    * [Write exif](./Image/write_exif.pl)
     * [Zuper image decoder](./Image/zuper_image_decoder.pl)
     * [Zuper image encoder](./Image/zuper_image_encoder.pl)
 * JAPH
