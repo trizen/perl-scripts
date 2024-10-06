@@ -10,8 +10,9 @@ use 5.036;
 use Image::ExifTool qw();
 use Getopt::Long    qw(GetOptions);
 
-my $latitude  = 45.84692326942804;
-my $longitude = 22.796479967835673;
+my $latitude    = 45.84692326942804;
+my $longitude   = 22.796479967835673;
+my $coordinates = undef;
 
 sub usage($exit_code = 0) {
 
@@ -22,6 +23,7 @@ options:
 
     --latitude=float    : value for GPSLatitude
     --longitude=float   : value for GPSLongitude
+    --coordinates=str   : GPS coordinates as "latitude,longitude"
     --help              : print this message and exit
 EOT
 
@@ -31,11 +33,16 @@ EOT
 GetOptions(
            "latitude=f"  => \$latitude,
            "longitude=f" => \$longitude,
+           "coordinates" => \$coordinates,
            'help'        => sub { usage(0) }
           )
   or die("Error in command line arguments\n");
 
 @ARGV or usage(2);
+
+if (defined($coordinates)) {
+    ($latitude, $longitude) = split(/\s*,\s*/, $coordinates);
+}
 
 foreach my $file (@ARGV) {
 
