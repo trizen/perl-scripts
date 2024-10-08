@@ -31,10 +31,10 @@ EOT
 }
 
 GetOptions(
-           "latitude=f"  => \$latitude,
-           "longitude=f" => \$longitude,
-           "coordinates" => \$coordinates,
-           'help'        => sub { usage(0) }
+           "latitude=f"    => \$latitude,
+           "longitude=f"   => \$longitude,
+           "coordinates=s" => \$coordinates,
+           'help'          => sub { usage(0) }
           )
   or die("Error in command line arguments\n");
 
