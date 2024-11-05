@@ -191,6 +191,7 @@ A nice collection of day-to-day Perl scripts.
     * [Test compressors](./Compression/test_compressors.pl)
     * [Tzip2 file compression](./Compression/tzip2_file_compression.pl)
     * [Tzip file compression](./Compression/tzip_file_compression.pl)
+    * [Zlib compressor](./Compression/zlib_compressor.pl)
 * Converters
     * [Another notes to markdown](./Converters/another_notes_to_markdown.pl)
     * [Another notes to material notes](./Converters/another_notes_to_material_notes.pl)
