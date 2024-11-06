@@ -63,6 +63,7 @@ A nice collection of day-to-day Perl scripts.
     * [Bzip2 decompressor](./Compression/bzip2_decompressor.pl)
     * [Bzip2 file compression](./Compression/bzip2_file_compression.pl)
     * [Compress](./Compression/compress.pl)
+    * [Gzip2 file compression](./Compression/gzip2_file_compression.pl)
     * [Gzip block type 1](./Compression/gzip_block_type_1.pl)
     * [Gzip block type 1 huffman only](./Compression/gzip_block_type_1_huffman_only.pl)
     * [Gzip block type 2](./Compression/gzip_block_type_2.pl)
@@ -192,6 +193,8 @@ A nice collection of day-to-day Perl scripts.
     * [Tzip2 file compression](./Compression/tzip2_file_compression.pl)
     * [Tzip file compression](./Compression/tzip_file_compression.pl)
     * [Zlib compressor](./Compression/zlib_compressor.pl)
+    * [Zlib decompressor](./Compression/zlib_decompressor.pl)
+    * [Zlib file compression](./Compression/zlib_file_compression.pl)
 * Converters
     * [Another notes to markdown](./Converters/another_notes_to_markdown.pl)
     * [Another notes to material notes](./Converters/another_notes_to_material_notes.pl)
