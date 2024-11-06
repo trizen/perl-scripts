@@ -1,21 +1,21 @@
 #!/usr/bin/perl
 
 # Author: Trizen
-# Edit: 22 August 2024
+# Edit: 06 November 2024
 # https://github.com/trizen
 
-# Compress/decompress files using GZIP from Compression::Util.
+# Compress/decompress files using ZLIB from Compression::Util.
 
 use 5.036;
-use Getopt::Std            qw(getopts);
-use File::Basename         qw(basename);
-use Compression::Util      qw(:all);
-use IO::Uncompress::Gunzip qw(gunzip);
+use Getopt::Std       qw(getopts);
+use File::Basename    qw(basename);
+use Compression::Util qw(:all);
+use Compress::Zlib    qw();
 
 use constant {
-              PKGNAME => 'GZIP',
+              PKGNAME => 'ZLIB',
               VERSION => '0.01',
-              FORMAT  => 'gz',
+              FORMAT  => 'zlib',
              };
 
 sub usage($code = 0) {
@@ -97,7 +97,7 @@ sub compress_file ($input, $output) {
       or die "Can't open file <<$output>> for write: $!";
 
     # Compress data
-    print $out_fh gzip_compress($fh);
+    print $out_fh zlib_compress($fh);
 
     # Close the file
     close $out_fh;
@@ -119,9 +119,8 @@ sub decompress_file ($input, $output) {
         <$fh>;
     };
 
-    my $dec = gzip_decompress($enc);
-
-    gunzip(\$enc, \my $dec2) or die "decompression error";
+    my $dec  = zlib_decompress($enc);
+    my $dec2 = Compress::Zlib::uncompress($enc);
 
     if ($dec ne $dec2) {
         die "Failed to decompress correctly";

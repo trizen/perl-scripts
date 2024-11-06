@@ -1,25 +1,20 @@
 #!/usr/bin/perl
 
-# Author: Trizen
-# Edit: 22 August 2024
-# https://github.com/trizen
-
-# Compress/decompress files using GZIP from Compression::Util.
+# Compress files using Gzip.
 
 use 5.036;
-use Getopt::Std            qw(getopts);
-use File::Basename         qw(basename);
-use Compression::Util      qw(:all);
-use IO::Uncompress::Gunzip qw(gunzip);
+use Getopt::Std    qw(getopts);
+use File::Basename qw(basename);
+use Compress::Zlib qw(compress uncompress);
+use File::Slurper  qw(read_binary);
 
 use constant {
-              PKGNAME => 'GZIP',
+              PKGNAME => 'ZLIB',
               VERSION => '0.01',
-              FORMAT  => 'gz',
+              FORMAT  => 'zlib',
              };
 
-sub usage($code = 0) {
-
+sub usage ($code = 0) {
     print <<"EOH";
 usage: $0 [options] [input file] [output file]
 
@@ -89,15 +84,12 @@ sub main {
 # Compress file
 sub compress_file ($input, $output) {
 
-    open my $fh, '<:raw', $input
-      or die "Can't open file <<$input>> for reading: $!";
-
     # Open the output file for writing
     open my $out_fh, '>:raw', $output
       or die "Can't open file <<$output>> for write: $!";
 
     # Compress data
-    print $out_fh gzip_compress($fh);
+    print $out_fh compress(read_binary($input));
 
     # Close the file
     close $out_fh;
@@ -106,31 +98,12 @@ sub compress_file ($input, $output) {
 # Decompress file
 sub decompress_file ($input, $output) {
 
-    # Open and validate the input file
-    open my $fh, '<:raw', $input
-      or die "Can't open file <<$input>> for reading: $!";
-
     # Open the output file
     open my $out_fh, '>:raw', $output
       or die "Can't open file <<$output>> for writing: $!";
 
-    my $enc = do {
-        local $/;
-        <$fh>;
-    };
+    print $out_fh uncompress(read_binary($input));
 
-    my $dec = gzip_decompress($enc);
-
-    gunzip(\$enc, \my $dec2) or die "decompression error";
-
-    if ($dec ne $dec2) {
-        die "Failed to decompress correctly";
-    }
-
-    print $out_fh $dec;
-
-    # Close the file
-    close $fh;
     close $out_fh;
 }
 
