@@ -146,6 +146,7 @@ A nice collection of day-to-day Perl scripts.
         * [Myzlib file compression](./Compression/High-level/myzlib_file_compression.pl)
         * [Rablz file compression](./Compression/High-level/rablz_file_compression.pl)
         * [Rlzss file compression](./Compression/High-level/rlzss_file_compression.pl)
+        * [Sbwt file compression](./Compression/High-level/sbwt_file_compression.pl)
         * [Xz file compression](./Compression/High-level/xz_file_compression.pl)
         * [Zlib file compression](./Compression/High-level/zlib_file_compression.pl)
         * [Zstd file compression](./Compression/High-level/zstd_file_compression.pl)
