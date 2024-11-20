@@ -13,10 +13,11 @@ use 5.036;
 use Compression::Util     qw(:all);
 use File::Path            qw(make_path);
 use File::Spec::Functions qw(catfile catdir);
+use File::Basename        qw(dirname);
 
-local $Compression::Util::LZ_MIN_LEN  = 4;                # minimum match length in LZ parsing
-local $Compression::Util::LZ_MAX_LEN  = 258;              # maximum match length in LZ parsing
-local $Compression::Util::LZ_MAX_DIST = (1 << 15) - 1;    # maximum allowed back-reference distance in LZ parsing
+local $Compression::Util::LZ_MIN_LEN  = 4;        # minimum match length in LZ parsing
+local $Compression::Util::LZ_MAX_LEN  = 258;      # maximum match length in LZ parsing
+local $Compression::Util::LZ_MAX_DIST = 32768;    # maximum allowed back-reference distance in LZ parsing
 
 my $output_directory = 'OUTPUT';
 
@@ -54,7 +55,12 @@ sub extract_file($fh) {
         return 1;
     }
 
-    open my $out_fh, '>:raw', catfile($output_directory, $file_name);
+    my $out_filename = catfile($output_directory, $file_name);
+
+    my $out_dir = dirname($out_filename);
+    make_path($out_dir) if not -d $out_dir;
+
+    open my $out_fh, '>:raw', $out_filename;
 
     my $actual_crc32  = 0;
     my $buffer        = '';
