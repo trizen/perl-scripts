@@ -201,5 +201,6 @@ sub unzip($file) {
     }
 }
 
-my $input_file = $ARGV[0];
-unzip($input_file);
+foreach my $input_file (@ARGV) {
+    unzip($input_file);
+}

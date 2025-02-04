@@ -196,6 +196,7 @@ A nice collection of day-to-day Perl scripts.
     * [Tzip2 file compression](./Compression/tzip2_file_compression.pl)
     * [Tzip file compression](./Compression/tzip_file_compression.pl)
     * [Unzip](./Compression/unzip.pl)
+    * [Zip](./Compression/zip.pl)
     * [Zlib compressor](./Compression/zlib_compressor.pl)
     * [Zlib decompressor](./Compression/zlib_decompressor.pl)
     * [Zlib file compression](./Compression/zlib_file_compression.pl)
