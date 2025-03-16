@@ -6,13 +6,35 @@
 #   perl slideshow.pl 'glob_pattern*.jpg' 'output.mp4'
 
 use 5.036;
+use Getopt::Long qw(GetOptions);
 
-@ARGV == 2 or die "usage: $0 [glob pattern] [output.mp4]\n";
+my $width  = 1920;
+my $height = 1080;
+my $delay  = 2;
 
-system('ffmpeg',
-       qw(-framerate 1/2),
+GetOptions(
+           "width=i"  => \$width,
+           "height=i" => \$height,
+           "delay=i"  => \$delay
+          )
+  or die("Error in command line arguments\n");
+
+@ARGV == 2 or die <<"USAGE";
+usage: $0 [options] [glob pattern] [output.mp4]
+
+options:
+
+    --width=i   : width of the video (default: $width)
+    --height=i  : height of the video (default: $height)
+    --delay=i   : delay in seconds between pictures (default: $delay)
+USAGE
+
+system('ffmpeg', qw(-framerate),
+       join('/', 1, $delay),
        qw(-pattern_type glob -i),
        $ARGV[0], '-vf',
-       "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1929:1080:(ow-iw)/2:(oh-ih)/2",
-       qw(-c:v libx264 -s 1920x1080 -crf 18 -tune stillimage -r 24),
+       "scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2",
+       qw(-c:v libx264 -s),
+       join('x', $width, $height),
+       qw(-crf 18 -tune stillimage -r 24),
        $ARGV[1]);
