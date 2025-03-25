@@ -2,6 +2,7 @@
 
 # Daniel "Trizen" Șuteu
 # Date: 14 March 2021
+# Edit: 25 March 2025
 # https://github.com/trizen
 
 # Generate k-omega primes in range [a,b]. (not in sorted order)
@@ -14,7 +15,8 @@
 #   https://en.wikipedia.org/wiki/Prime_omega_function
 
 use 5.020;
-use ntheory qw(:all);
+use integer;
+use ntheory      qw(:all);
 use experimental qw(signatures);
 
 sub omega_prime_numbers ($A, $B, $k, $callback) {
@@ -23,17 +25,17 @@ sub omega_prime_numbers ($A, $B, $k, $callback) {
 
     sub ($m, $p, $k) {
 
-        my $s = rootint(divint($B, $m), $k);
+        my $s = rootint($B / $m, $k);
 
         foreach my $q (@{primes($p, $s)}) {
 
             my $r = next_prime($q);
 
-            for (my $v = mulint($m, $q); $v <= $B ; $v = mulint($v, $q)) {
+            for (my $v = $m * $q ; $v <= $B ; $v *= $q) {
                 if ($k == 1) {
                     $callback->($v) if ($v >= $A);
                 }
-                elsif (mulint($v, $r) <= $B) {
+                elsif ($v * $r <= $B) {
                     __SUB__->($v, $r, $k - 1);
                 }
             }

@@ -997,6 +997,7 @@ A nice collection of day-to-day Perl scripts.
     * [Omega prime divisors](./Math/omega_prime_divisors.pl)
     * [Omega prime numbers in range](./Math/omega_prime_numbers_in_range.pl)
     * [Omega prime numbers in range mpz](./Math/omega_prime_numbers_in_range_mpz.pl)
+    * [Omega prime numbers in range simple](./Math/omega_prime_numbers_in_range_simple.pl)
     * [Order factorization method](./Math/order_factorization_method.pl)
     * [Palindrome iteration](./Math/palindrome_iteration.pl)
     * [Partial sums of dedekind psi function](./Math/partial_sums_of_dedekind_psi_function.pl)
