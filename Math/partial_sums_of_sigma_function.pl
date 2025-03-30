@@ -2,6 +2,7 @@
 
 # Author: Daniel "Trizen" Șuteu
 # Date: 09 November 2018
+# Edit: 30 March 2025
 # https://github.com/trizen
 
 # A new generalized algorithm with O(sqrt(n)) complexity for computing the partial-sums of the `sigma_j(k)` function:
@@ -16,15 +17,11 @@
 #   https://en.wikipedia.org/wiki/Bernoulli_polynomials
 #   https://trizenx.blogspot.com/2018/11/partial-sums-of-arithmetical-functions.html
 
-use 5.020;
-use strict;
-use warnings;
-
-use ntheory qw(divisors);
-use experimental qw(signatures);
+use 5.036;
+use ntheory      qw(divisors);
 use Math::AnyNum qw(faulhaber_sum bernoulli sum isqrt ipow);
 
-sub sigma_partial_sum_faulhaber ($n, $m = 1) {       # using Faulhaber's formula
+sub sigma_partial_sum_faulhaber ($n, $m = 1) {    # using Faulhaber's formula
 
     my $s = isqrt($n);
     my $u = int($n / ($s + 1));
@@ -32,7 +29,7 @@ sub sigma_partial_sum_faulhaber ($n, $m = 1) {       # using Faulhaber's formula
     my $sum = 0;
 
     foreach my $k (1 .. $s) {
-        $sum += $k * (faulhaber_sum(int($n/$k), $m) - faulhaber_sum(int($n/($k+1)), $m));
+        $sum += $k * (faulhaber_sum(int($n / $k), $m) - faulhaber_sum(int($n / ($k + 1)), $m));
     }
 
     foreach my $k (1 .. $u) {
@@ -42,7 +39,22 @@ sub sigma_partial_sum_faulhaber ($n, $m = 1) {       # using Faulhaber's formula
     return $sum;
 }
 
-sub sigma_partial_sum_bernoulli ($n, $m = 1) {       # using Bernoulli polynomials
+sub sigma_partial_sum_dirichlet ($n, $m = 1) {    # using the Dirichlet hyperbola method
+
+    my $total = 0;
+    my $s     = isqrt($n);
+
+    for my $k (1 .. $s) {
+        $total += faulhaber_sum(int($n / $k), $m);
+        $total += ipow($k, $m) * int($n / $k);
+    }
+
+    $total -= $s * faulhaber_sum($s, $m);
+
+    return $total;
+}
+
+sub sigma_partial_sum_bernoulli ($n, $m = 1) {    # using Bernoulli polynomials
 
     my $s = isqrt($n);
     my $u = int($n / ($s + 1));
@@ -50,7 +62,7 @@ sub sigma_partial_sum_bernoulli ($n, $m = 1) {       # using Bernoulli polynomia
     my $sum = 0;
 
     foreach my $k (1 .. $s) {
-        $sum += $k * (bernoulli($m+1, 1+int($n/$k)) - bernoulli($m+1, 1+int($n/($k+1)))) / ($m+1);
+        $sum += $k * (bernoulli($m + 1, 1 + int($n / $k)) - bernoulli($m + 1, 1 + int($n / ($k + 1)))) / ($m + 1);
     }
 
     foreach my $k (1 .. $u) {
@@ -61,7 +73,11 @@ sub sigma_partial_sum_bernoulli ($n, $m = 1) {       # using Bernoulli polynomia
 }
 
 sub sigma_partial_sum_test ($n, $m = 1) {    # just for testing
-    sum(map { sum(map { ipow($_, $m) } divisors($_)) } 1..$n);
+    sum(
+        map {
+            sum(map { ipow($_, $m) } divisors($_))
+          } 1 .. $n
+       );
 }
 
 foreach my $m (0 .. 10) {
@@ -71,11 +87,13 @@ foreach my $m (0 .. 10) {
     my $t1 = sigma_partial_sum_test($n, $m);
     my $t2 = sigma_partial_sum_faulhaber($n, $m);
     my $t3 = sigma_partial_sum_bernoulli($n, $m);
+    my $t4 = sigma_partial_sum_dirichlet($n, $m);
 
     say "Sum_{k=1..$n} sigma_$m(k) = $t2";
 
     die "error: $t1 != $t2" if ($t1 != $t2);
     die "error: $t1 != $t3" if ($t1 != $t3);
+    die "error: $t1 != $t4" if ($t1 != $t4);
 }
 
 __END__
