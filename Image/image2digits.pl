@@ -66,19 +66,18 @@ sub img2digits {
         $img = $resized;
     }
 
-    my $avg = 0;
-    my @averages;
+    my @values;
 
     foreach my $y (0 .. $height - 1) {
         foreach my $x (0 .. $width - 1) {
             my $index = $img->getPixel($x, $y);
             my ($r, $g, $b) = $img->rgb($index);
             my $value = max($r, $g, $b);
-            push @averages, $digits[map_value($value, 0, 255, 0, $#digits)];
+            push @values, $digits[map_value($value, 0, 255, 0, $#digits)];
         }
     }
 
-    unpack("(A$width)*", join('', @averages));
+    unpack("(A$width)*", join('', @values));
 }
 
 say for img2digits($ARGV[0] // help(1));
