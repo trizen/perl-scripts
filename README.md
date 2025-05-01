@@ -39,6 +39,7 @@ A nice collection of day-to-day Perl scripts.
     * [Update summary](./Book%20tools/update_summary.pl)
 * Compression
     * [Bbwr file compression](./Compression/bbwr_file_compression.pl)
+    * [Bqof file compression](./Compression/bqof_file_compression.pl)
     * [Bwac file compression](./Compression/bwac_file_compression.pl)
     * [Bwad file compression](./Compression/bwad_file_compression.pl)
     * [Bwaz file compression](./Compression/bwaz_file_compression.pl)
@@ -187,6 +188,7 @@ A nice collection of day-to-day Perl scripts.
     * [Mrh file compression](./Compression/mrh_file_compression.pl)
     * [Mrlz file compression](./Compression/mrlz_file_compression.pl)
     * [Ppmh file compression](./Compression/ppmh_file_compression.pl)
+    * [Qof file compression](./Compression/qof_file_compression.pl)
     * [Rans file compression](./Compression/rans_file_compression.pl)
     * [Rlac file compression](./Compression/rlac_file_compression.pl)
     * [Rlh file compression](./Compression/rlh_file_compression.pl)
