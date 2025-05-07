@@ -80,7 +80,7 @@ sub partial_sums_of_euler_totient ($n, $m) {
         }
 
         foreach my $k (1 .. $s) {
-            $T -= (faulhaber_sum(int($n / $k), $m) - faulhaber_sum(int($n / ($k + 1)), $m)) * __SUB__->($k);
+            $T -= (faulhaber_sum(int($n / $k), $m) - faulhaber_sum(int($n / ($k + 1)), $m)) * $euler_sum_lookup[$k];
         }
 
         $seen{$n} = $T;

@@ -85,7 +85,7 @@ sub partial_sums_of_jordan_totient ($n, $m) {
         }
 
         foreach my $k (1 .. $s) {
-            $A -= (int($n / $k) - int($n / ($k + 1))) * __SUB__->($k);
+            $A -= (int($n / $k) - int($n / ($k + 1))) * $jordan_sum_lookup[$k];
         }
 
         $seen{$n} = $A;

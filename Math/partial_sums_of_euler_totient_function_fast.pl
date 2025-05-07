@@ -74,7 +74,7 @@ sub partial_sums_of_euler_totient($n) {
         }
 
         foreach my $k (1 .. $s) {
-            $T -= (int($n / $k) - int($n / ($k + 1))) * __SUB__->($k);
+            $T -= (int($n / $k) - int($n / ($k + 1))) * $euler_sum_lookup[$k];
         }
 
         $seen{$n} = $T;

@@ -91,7 +91,7 @@ sub partial_sums_of_euler_totient ($n) {
 
         foreach my $k (1 .. $s) {
             my $curr = triangular(divint($n, $k + 1));
-            $T    = subint($T, mulint(subint($prev, $curr), __SUB__->($k)));
+            $T    = subint($T, mulint(subint($prev, $curr), $euler_sum_lookup[$k]));
             $prev = $curr;
         }
 
