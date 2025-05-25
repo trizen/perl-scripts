@@ -41,9 +41,9 @@ use 5.020;
 use strict;
 use warnings;
 
-use Math::GMPz qw();
+use Math::GMPz   qw();
 use experimental qw(signatures);
-use ntheory qw(euler_phi moebius mertens sqrtint forsquarefree);
+use ntheory      qw(euler_phi moebius mertens sqrtint forsquarefree);
 
 sub euler_totient_partial_sum ($n) {
 
@@ -91,6 +91,23 @@ sub gcd_sum_partial_sum($n) {
     return $total / 2;
 }
 
+sub gcd_sum_partial_sum_dirichlet($n) {
+
+    my $total = Math::GMPz->new(0);
+
+    my $s = sqrtint($n);
+
+    for my $k (1 .. $s) {
+        my $t = int($n / $k);
+        $total += $k * euler_totient_partial_sum($t);
+        $total += euler_phi($k) * (($t * ($t + 1)) >> 1);
+    }
+
+    $total -= euler_totient_partial_sum($s) * (($s * ($s + 1)) >> 1);
+
+    return $total;
+}
+
 sub gcd_sum_partial_sum_test ($n) {    # just for testing
     my $sum = Math::GMPz->new(0);
 
@@ -107,9 +124,11 @@ for my $m (0 .. 10) {
     my $n = int rand 10000;
 
     my $t1 = gcd_sum_partial_sum($n);
-    my $t2 = gcd_sum_partial_sum_test($n);
+    my $t2 = gcd_sum_partial_sum_dirichlet($n);
+    my $t3 = gcd_sum_partial_sum_test($n);
 
     die "error: $t1 != $t2" if ($t1 != $t2);
+    die "error: $t1 != $t3" if ($t1 != $t3);
 
     say "Sum_{k=1..$n} G(k) = $t1";
 }
