@@ -1013,6 +1013,7 @@ A nice collection of day-to-day Perl scripts.
     * [Partial sums of gcd-sum function](./Math/partial_sums_of_gcd-sum_function.pl)
     * [Partial sums of gcd-sum function fast](./Math/partial_sums_of_gcd-sum_function_fast.pl)
     * [Partial sums of gcd-sum function faster](./Math/partial_sums_of_gcd-sum_function_faster.pl)
+    * [Partial sums of generalized gcd-sum function](./Math/partial_sums_of_generalized_gcd-sum_function.pl)
     * [Partial sums of gpf](./Math/partial_sums_of_gpf.pl)
     * [Partial sums of inverse moebius transform of dedekind function](./Math/partial_sums_of_inverse_moebius_transform_of_dedekind_function.pl)
     * [Partial sums of jordan totient function](./Math/partial_sums_of_jordan_totient_function.pl)
