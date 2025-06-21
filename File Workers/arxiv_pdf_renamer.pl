@@ -14,6 +14,7 @@ use File::Basename        qw(dirname basename);
 use File::Spec::Functions qw(catfile);
 
 my $mech = WWW::Mechanize->new(
+                               autocheck     => 0,
                                show_progress => 0,
                                stack_depth   => 10,
                                agent         => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0',
