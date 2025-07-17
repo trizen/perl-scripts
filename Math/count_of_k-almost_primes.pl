@@ -19,9 +19,8 @@
 #   https://oeis.org/A082996 -- count of 4-almost primes
 #   https://oeis.org/A126280 -- Triangle read by rows: T(k,n) is number of numbers <= 10^n that are products of k primes.
 
-use 5.020;
+use 5.036;
 use ntheory qw(:all);
-use experimental qw(signatures);
 
 sub k_prime_count ($n, $k) {
 
@@ -41,14 +40,14 @@ sub k_prime_count ($n, $k) {
 
         if ($k == 2) {
 
-            foreach my $q (@{primes($p, $s)}) {
-                $count += prime_count(divint($n, mulint($m, $q))) - $j++;
-            }
+            forprimes {
+                $count += prime_count(divint($n, mulint($m, $_))) - $j++;
+            } $p, $s;
 
             return;
         }
 
-        for (my $q = $p ; $q <= $s ; $q = next_prime($q)) {
+        foreach my $q (@{primes($p, $s)}) {
             __SUB__->($m * $q, $q, $k - 1, $j++);
         }
     }->(1, 2, $k);

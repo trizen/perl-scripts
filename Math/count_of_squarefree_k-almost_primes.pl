@@ -39,9 +39,9 @@ sub squarefree_almost_prime_count ($n, $k) {
 
         if ($k == 2) {
 
-            for (; $p <= $s ; $p = next_prime($p)) {
-                $count += prime_count(divint($n, mulint($m, $p))) - $j++;
-            }
+            forprimes {
+                $count += prime_count(divint($n, mulint($m, $_))) - $j++;
+            } $p, $s;
 
             return;
         }
@@ -63,7 +63,7 @@ foreach my $k (1 .. 7) {
     my $upto = pn_primorial($k) + int(rand(1e5));
 
     my $x = squarefree_almost_prime_count($upto, $k);
-    my $y = scalar grep { is_square_free($_) } @{almost_primes($k, $upto)};
+    my $y = scalar grep { is_square_free($_) } @{almost_primes($k, 1, $upto)};
 
     say "Testing: $k with n = $upto -> $x";
 

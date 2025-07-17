@@ -9,11 +9,8 @@
 #   S2(n) = Sum_{k=1..n} v^omega(k)
 #   S3(n) = Sum_{k=1..n} v^omega(k) * mu(k)^2
 
-use 5.020;
-use warnings;
-
+use 5.036;
 use ntheory qw(:all);
-use experimental qw(signatures);
 
 sub squarefree_almost_prime_count ($k, $n) {
 
@@ -27,29 +24,23 @@ sub squarefree_almost_prime_count ($k, $n) {
 
     my $count = 0;
 
-    sub ($m, $p, $k, $j = 0) {
+    sub ($m, $p, $k, $j = 1) {
 
         my $s = rootint(divint($n, $m), $k);
 
         if ($k == 2) {
 
-            foreach my $q (@{primes($p, $s)}) {
-
-                ++$j;
-
-                if (modint($m, $q) != 0) {
-                    $count += prime_count(divint($n, mulint($m, $q))) - $j;
-                }
-            }
+            forprimes {
+                $count += prime_count(divint($n, mulint($m, $_))) - $j++;
+            } $p, $s;
 
             return;
         }
 
-        foreach my $p (@{primes($p, $s)}) {
-            if (modint($m, $p) != 0) {
-                __SUB__->(mulint($m, $p), $p, $k - 1, $j);
-            }
-            ++$j;
+        for (; $p <= $s ; ++$j) {
+            my $r = next_prime($p);
+            __SUB__->(mulint($m, $p), $r, $k - 1, $j + 1);
+            $p = $r;
         }
     }->(1, 2, $k);
 
