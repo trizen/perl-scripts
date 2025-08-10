@@ -539,6 +539,7 @@ A nice collection of day-to-day Perl scripts.
     * [Gd star trails](./Image/gd_star_trails.pl)
     * [Gif2webp](./Image/gif2webp.pl)
     * [Horizontal scrambler](./Image/horizontal_scrambler.pl)
+    * [Image-hard-rotate](./Image/image-hard-rotate.pl)
     * [Image-unpack](./Image/image-unpack.pl)
     * [Image2ascii](./Image/image2ascii.pl)
     * [Image2audio](./Image/image2audio.pl)
