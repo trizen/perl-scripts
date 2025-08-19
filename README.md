@@ -1256,6 +1256,7 @@ A nice collection of day-to-day Perl scripts.
     * [Chat server](./Socket/chat_server.pl)
 * Sort
     * [Binsertion sorting algorithm](./Sort/binsertion_sorting_algorithm.pl)
+    * [Dream sort](./Sort/dream_sort.pl)
 * Subtitle
     * [Srt-delay](./Subtitle/srt-delay)
     * [Srt assembler](./Subtitle/srt_assembler.pl)
