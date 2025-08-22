@@ -31,7 +31,7 @@ sub make_ffmpeg_filename_entry($file) {
 }
 
 sub ffmpeg_concat_files ($filename, $output_filename) {
-    system('ffmpeg', '-loglevel', 'fatal', '-f', 'concat', '-i', $filename, '-c', 'copy', '-y', $output_filename);
+    system('ffmpeg', '-loglevel', 'fatal', '-f', 'concat', '-i', $filename, '-c:v', 'copy', '-c:a', 'aac', '-y', $output_filename);
     $? == 0 or die "Stopped with exit code = $?";
 }
 

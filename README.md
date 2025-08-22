@@ -323,6 +323,7 @@ A nice collection of day-to-day Perl scripts.
     * [Remove eof newlines](./File%20Workers/remove_eof_newlines.pl)
     * [Split to n lines](./File%20Workers/split_to_n_lines.pl)
     * [Sub renamer](./File%20Workers/sub_renamer.pl)
+    * [Timestamp rename](./File%20Workers/timestamp_rename.pl)
     * [Undir](./File%20Workers/undir.pl)
     * [Unidec renamer](./File%20Workers/unidec_renamer.pl)
 * Finders
