@@ -1,11 +1,11 @@
 #!/usr/bin/perl
 
-# Author: Trizen
-# Date: 17 July 2025
+# Author: Daniel "Trizen" Șuteu
+# Date: 27 August 2025
 # https://github.com/trizen
 
 # A sublinear algorithm for computing the Prime Counting function `pi(n)`,
-# based on the Liouville function and the number of k-almost primes <= n, for `k >= 2`.
+# based on the number of squarefree k-almost primes <= n, for `k >= 2`, which can be computed in sublinear time.
 
 # See also:
 #   https://mathworld.wolfram.com/AlmostPrime.html
@@ -13,7 +13,11 @@
 use 5.036;
 use ntheory qw(:all);
 
-sub k_prime_count ($k, $n) {
+sub squarefree_almost_prime_count ($k, $n) {
+
+    if ($k == 0) {
+        return (($n <= 0) ? 0 : 1);
+    }
 
     if ($k == 1) {
         return my_prime_count($n);
@@ -21,7 +25,7 @@ sub k_prime_count ($k, $n) {
 
     my $count = 0;
 
-    sub ($m, $p, $k, $j = 0) {
+    sub ($m, $p, $k, $j = 1) {
 
         my $s = rootint(divint($n, $m), $k);
 
@@ -35,9 +39,10 @@ sub k_prime_count ($k, $n) {
         }
 
         foreach my $q (@{primes($p, $s)}) {
-            __SUB__->($m * $q, $q, $k - 1, $j++);
+            __SUB__->(mulint($m, $q), $q + 1, $k - 1, ++$j);
         }
-    }->(1, 2, $k);
+      }
+      ->(1, 2, $k);
 
     return $count;
 }
@@ -54,16 +59,16 @@ sub my_prime_count ($n) {
         return $pi_table->[$n];
     }
 
-    my $M = sumliouville($n);
+    my $M = powerfree_count($n, 2) - 1;
 
-    foreach my $k (2 .. logint($n, 2)) {
-        $M -= (-1)**$k * k_prime_count($k, $n);
+    foreach my $k (2 .. exp(LambertW(log($n))) + 1) {
+        $M -= squarefree_almost_prime_count($k, $n);
     }
 
-    return ($pi_table->[$n] //= 1 - $M);
+    return ($pi_table->[$n] //= $M);
 }
 
-foreach my $n (1..7) {    # takes ~3 seconds
+foreach my $n (1..7) {    # takes ~1 second
     say "pi(10^$n) = ", my_prime_count(10**$n);
 }
 

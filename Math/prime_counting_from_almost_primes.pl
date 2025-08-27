@@ -1,11 +1,11 @@
 #!/usr/bin/perl
 
-# Author: Trizen
-# Date: 17 July 2025
+# Author: Daniel "Trizen" Șuteu
+# Date: 27 August 2025
 # https://github.com/trizen
 
 # A sublinear algorithm for computing the Prime Counting function `pi(n)`,
-# based on the Liouville function and the number of k-almost primes <= n, for `k >= 2`.
+# based on the number of k-almost primes <= n, for `k >= 2`, which can be computed in sublinear time.
 
 # See also:
 #   https://mathworld.wolfram.com/AlmostPrime.html
@@ -54,13 +54,13 @@ sub my_prime_count ($n) {
         return $pi_table->[$n];
     }
 
-    my $M = sumliouville($n);
+    my $M = $n - 1;
 
     foreach my $k (2 .. logint($n, 2)) {
-        $M -= (-1)**$k * k_prime_count($k, $n);
+        $M -= k_prime_count($k, $n);
     }
 
-    return ($pi_table->[$n] //= 1 - $M);
+    return ($pi_table->[$n] //= $M);
 }
 
 foreach my $n (1..7) {    # takes ~3 seconds

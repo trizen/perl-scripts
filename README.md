@@ -1067,6 +1067,8 @@ A nice collection of day-to-day Perl scripts.
     * [Prime 41](./Math/prime_41.pl)
     * [Prime abundant sequences](./Math/prime_abundant_sequences.pl)
     * [Prime count smooth sum](./Math/prime_count_smooth_sum.pl)
+    * [Prime counting from almost primes](./Math/prime_counting_from_almost_primes.pl)
+    * [Prime counting from squarefree almost primes](./Math/prime_counting_from_squarefree_almost_primes.pl)
     * [Prime counting liouville formula](./Math/prime_counting_liouville_formula.pl)
     * [Prime counting mertens formula](./Math/prime_counting_mertens_formula.pl)
     * [Prime factorization concept](./Math/prime_factorization_concept.pl)

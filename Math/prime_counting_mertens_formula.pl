@@ -62,7 +62,7 @@ sub my_prime_count ($n) {
 
     my $M = mertens($n);
 
-    foreach my $k (2 .. logint($n, 2)) {
+    foreach my $k (2 .. exp(LambertW(log($n))) + 1) {
         $M -= (-1)**$k * squarefree_almost_prime_count($k, $n);
     }
 
