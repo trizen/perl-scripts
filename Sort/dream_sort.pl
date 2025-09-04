@@ -10,6 +10,9 @@
 #   O(n * len(s))
 # where `n` is the number of strings being sorted and `s` is the longest string in the array.
 
+# See also:
+#   https://en.wikipedia.org/wiki/Radix_sort
+
 use 5.036;
 use List::Util qw(shuffle);
 use Test::More tests => 20;

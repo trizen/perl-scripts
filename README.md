@@ -930,6 +930,7 @@ A nice collection of day-to-day Perl scripts.
     * [Maximum product of parts bisection](./Math/maximum_product_of_parts_bisection.pl)
     * [Maximum square remainder](./Math/maximum_square_remainder.pl)
     * [MBE factorization method](./Math/MBE_factorization_method.pl)
+    * [Meissel lehmer prime count](./Math/meissel_lehmer_prime_count.pl)
     * [Mertens function](./Math/mertens_function.pl)
     * [Mertens function fast](./Math/mertens_function_fast.pl)
     * [Miller-rabin deterministic primality test](./Math/miller-rabin_deterministic_primality_test.pl)
