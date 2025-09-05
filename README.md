@@ -743,6 +743,7 @@ A nice collection of day-to-day Perl scripts.
     * [Count of perfect powers](./Math/count_of_perfect_powers.pl)
     * [Count of prime power](./Math/count_of_prime_power.pl)
     * [Count of rough numbers](./Math/count_of_rough_numbers.pl)
+    * [Count of rough numbers recursive](./Math/count_of_rough_numbers_recursive.pl)
     * [Count of smooth numbers](./Math/count_of_smooth_numbers.pl)
     * [Count of smooth numbers mpz](./Math/count_of_smooth_numbers_mpz.pl)
     * [Count of smooth numbers mpz 2](./Math/count_of_smooth_numbers_mpz_2.pl)

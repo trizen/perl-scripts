@@ -19,9 +19,7 @@ my %phi_cache;
 my %pi_cache;
 
 # Recursive φ(n, a): numbers <= n not divisible by first a primes
-sub recursive_rough_count ($n, $k) {
-
-    my @P = @{primes($k)};
+sub recursive_rough_count ($n, $P) {
 
     sub ($n, $a) {
 
@@ -30,13 +28,17 @@ sub recursive_rough_count ($n, $k) {
         return $phi_cache{$key}
           if exists $phi_cache{$key};
 
-        if ($a == 0) {
-            return $phi_cache{$key} = $n;
+        my $count = $n - ($n >> 1);
+
+        foreach my $j (1 .. $a - 1) {
+            my $np = divint($n, $P->[$j]);
+            last if ($np == 0);
+            $count -= __SUB__->($np, $j);
         }
 
-        $phi_cache{$key} = __SUB__->($n, $a - 1) - __SUB__->(divint($n, $P[$a - 1]), $a - 1);
+        $phi_cache{$key} = $count;
       }
-      ->($n, scalar @P);
+      ->($n, scalar @$P);
 }
 
 # P2 correction term
@@ -69,7 +71,7 @@ sub meissel_lehmer_prime_count($n) {
     my $a    = scalar @P;
     my $p_a  = $P[-1];
 
-    my $phi = recursive_rough_count($n, $p_a + 1);
+    my $phi = recursive_rough_count($n, \@P);
     my $p2  = P2($n, $a, $p_a);
 
     my $result = $phi + $a - 1 - $p2;

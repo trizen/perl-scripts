@@ -33,7 +33,8 @@ sub squarefree_almost_prime_count ($k, $n) {
 
             forprimes {
                 $count += my_prime_count(divint($n, mulint($m, $_))) - $j++;
-            } $p, $s;
+            }
+            $p, $s;
 
             return;
         }
@@ -49,14 +50,20 @@ sub squarefree_almost_prime_count ($k, $n) {
 
 sub my_prime_count ($n) {
 
-    state $pi_table = [0, 0, 1, 2, 2];      # a larger lookup table helps a lot!
+    state %cache = (    # a larger lookup table helps a lot!
+                     0 => 0,
+                     1 => 0,
+                     2 => 1,
+                     3 => 2,
+                     4 => 2,
+                   );
 
     if ($n < 0) {
         return 0;
     }
 
-    if (defined($pi_table->[$n])) {
-        return $pi_table->[$n];
+    if (exists $cache{$n}) {
+        return $cache{$n};
     }
 
     my $M = powerfree_count($n, 2) - 1;
@@ -65,10 +72,10 @@ sub my_prime_count ($n) {
         $M -= squarefree_almost_prime_count($k, $n);
     }
 
-    return ($pi_table->[$n] //= $M);
+    $cache{$n} //= $M;
 }
 
-foreach my $n (1..7) {    # takes ~1 second
+foreach my $n (1 .. 7) {    # takes ~1 second
     say "pi(10^$n) = ", my_prime_count(10**$n);
 }
 

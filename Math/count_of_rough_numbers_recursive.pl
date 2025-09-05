@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 # Daniel "Trizen" Șuteu
-# Date: 20 July 2020
+# Date: 05 September 2025
 # https://github.com/trizen
 
 # Count the number of B-rough numbers <= n.
@@ -13,48 +13,32 @@ use 5.020;
 use ntheory qw(:all);
 use experimental qw(signatures);
 
-sub my_rough_count ($n, $p) {
+sub my_rough_count($n, $k) {
+
+    my @P = @{primes($k - 1)};
+
+    return $n if (@P == 0);
 
     my %cache;
 
-    sub ($n, $p) {
+    sub ($n, $a) {
 
-        if ($p > sqrtint($n)) {
-            return 1;
-        }
-
-        if ($p == 2) {
-            return ($n >> 1);
-        }
-
-        if ($p == 3) {
-            my $t = divint($n, 3);
-            return ($t - ($t >> 1));
-        }
-
-        my $key = "$n,$p";
+        my $key = "$n,$a";
 
         return $cache{$key}
             if exists $cache{$key};
 
-        my $u = 0;
-        my $t = divint($n, $p);
+        # Initial count: odd numbers ≤ n
+        my $count = $n - ($n >> 1);
 
-        for (my $q = 2 ; $q < $p ; $q = next_prime($q)) {
-
-            my $v = __SUB__->($t - ($t % $q), $q);
-
-            if ($v == 1) {
-                $u += prime_count($q, $p - 1);
-                last;
-            }
-            else {
-                $u += $v;
-            }
+        # Inclusion-Exclusion principle
+        for my $j (1 .. $a - 1) {
+            last if ($P[$j] > $n);
+            $count -= __SUB__->(divint($n, $P[$j]), $j);
         }
 
-        $cache{$key} = $t - $u;
-    }->($n * $p, $p);
+        $cache{$key} = $count;
+    }->($n, scalar @P);
 }
 
 foreach my $p (@{primes(30)}) {
