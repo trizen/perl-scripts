@@ -17,6 +17,7 @@ my $latitude  = 45.84692326942804;
 my $longitude = 22.796479967835673;
 
 my $coordinates = undef;
+my $force       = 0;
 my $set_gps     = 0;
 my $utc_offset  = 0;
 
@@ -34,6 +35,7 @@ usage: $0 [options] [images]
 
 options:
     --gps!              : set the GPS coordinates
+    --force!            : overwrite the EXIF creation date
     --latitude=float    : value for GPSLatitude
     --longitude=float   : value for GPSLongitude
     --coordinates=str   : GPS coordinates as "latitude,longitude"
@@ -47,6 +49,7 @@ EOT
 
 GetOptions(
            "gps!"          => \$set_gps,
+           "force!"        => \$force,
            "f|formats=s"   => \$img_formats,
            "utc-offset=i"  => \$utc_offset,
            "latitude=f"    => \$latitude,
@@ -70,13 +73,22 @@ sub process_image ($file) {
         my ($year, $month, $day, $hour, $min, $sec) = ($1, $2, $3, $4, $5, $6);
 
         my $date = "$year:$month:$day $hour:$min:$sec";
+
+        my $time_format = "%Y:%m:%d %H:%M:%S";
+        my $time_obj    = Time::Piece->strptime($date, $time_format);
+
+        if ($utc_offset) {
+            $time_obj += $utc_offset * 3600;
+            $date = $time_obj->strftime($time_format);
+        }
+
         say "Setting image creation time to: $date";
 
         # Set the file modification date
         $exifTool->SetNewValue(FileModifyDate => $date, Protected => 1);
 
         # Set the EXIF creation date (unless it already exists)
-        if (not defined $exifTool->GetValue("DateTimeOriginal")) {
+        if ($force or not defined $exifTool->GetValue("DateTimeOriginal")) {
             $exifTool->SetNewValue(DateTimeOriginal => $date);
         }
 
@@ -86,12 +98,6 @@ sub process_image ($file) {
             $exifTool->SetNewValue('GPSLatitudeRef',  $latitude >= 0 ? 'N' : 'S');
             $exifTool->SetNewValue('GPSLongitude',    $longitude);
             $exifTool->SetNewValue('GPSLongitudeRef', $longitude >= 0 ? 'E' : 'W');
-        }
-
-        my $time_obj = Time::Piece->strptime($date, "%Y:%m:%d %H:%M:%S");
-
-        if ($utc_offset) {
-            $time_obj += $utc_offset * 3600;
         }
 
         my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks) = stat($file);
