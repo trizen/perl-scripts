@@ -163,18 +163,7 @@ sub resize_image ($image) {
         return;
     };
 
-    # Set the original ownership of the image
-    chown($uid, $gid, $image);
-
     if ($preserve_attr) {
-
-        # Set the original modification time
-        utime($atime, $mtime, $image)
-          or warn "Can't change timestamp: $!\n";
-
-        # Set original permissions
-        chmod($mode & 07777, $image)
-          or warn "Can't change permissions: $!\n";
 
         $exifTool = Image::ExifTool->new;
 
@@ -184,7 +173,18 @@ sub resize_image ($image) {
         }
 
         $exifTool->WriteInfo($image);
+
+        # Set the original modification time
+        utime($atime, $mtime, $image)
+          or warn "Can't change timestamp: $!\n";
+
+        # Set original permissions
+        chmod($mode & 07777, $image)
+          or warn "Can't change permissions: $!\n";
     }
+
+    # Set the original ownership of the image
+    chown($uid, $gid, $image);
 
     return 1;
 }
