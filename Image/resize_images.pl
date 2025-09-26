@@ -2,7 +2,7 @@
 
 # Author: Trizen
 # Date: 30 October 2023
-# Edit: 10 August 2024
+# Edit: 26 September 2025
 # https://github.com/trizen
 
 # Resize images to a given width or height, keeping aspect ratio.
@@ -43,7 +43,7 @@ options:
 
     -q  --quality=s   : quality of scaling: 'normal', 'preview' or 'mixing' (default: $qtype)
     -f  --formats=s,s : specify more image formats (default: @img_formats)
-    -p  --preserve!   : preserve original file timestamps and permissions
+    -p  --preserve!   : preserve file original timestamps and metadata info
     -o  --outdir=s    : create resized images into this directory
 
 examples:
@@ -143,6 +143,14 @@ sub resize_image ($image) {
         die "No --width or --height specified...";
     }
 
+    my ($exif_info, $exifTool);
+
+    if ($preserve_attr) {
+        require Image::ExifTool;
+        $exifTool  = Image::ExifTool->new;
+        $exif_info = $exifTool->SetNewValuesFromFile($image);
+    }
+
     my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks) = stat($image);
 
     # Create resized image into $outdir directory
@@ -167,6 +175,15 @@ sub resize_image ($image) {
         # Set original permissions
         chmod($mode & 07777, $image)
           or warn "Can't change permissions: $!\n";
+
+        $exifTool = Image::ExifTool->new;
+
+        foreach my $key (keys %$exif_info) {
+            my $value = $exif_info->{$key};
+            $exifTool->SetNewValue($key, $value);
+        }
+
+        $exifTool->WriteInfo($image);
     }
 
     return 1;
