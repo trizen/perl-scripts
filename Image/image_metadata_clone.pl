@@ -43,7 +43,7 @@ GetOptions("f|formats=s" => \$img_formats,
 
 sub add_exif_info($source_image, $dest_image) {
 
-    my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks) = stat($source_image);
+    my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks) = stat($dest_image);
 
     my $exifTool  = Image::ExifTool->new;
     my $exif_info = $exifTool->SetNewValuesFromFile($source_image);
