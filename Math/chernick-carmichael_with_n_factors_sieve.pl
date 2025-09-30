@@ -3,7 +3,7 @@
 # Sieve for Chernick's "universal form" Carmichael number with n prime factors.
 # Inspired by the PARI program by David A. Corneth from OEIS A372238.
 
-# Finding A318646(10) takes ~9 minutes.
+# Finding A318646(10) takes ~4 minutes.
 
 # See also:
 #   https://oeis.org/A318646
@@ -86,13 +86,7 @@ sub chernick_carmichael_factors($m, $n) {
     (6 * $m + 1, 12 * $m + 1, (map { (9 * $m << $_) + 1 } 1 .. $n - 2));
 }
 
-sub chernick_carmichael_with_n_factors($n) {
-
-    my $maxp = 11;
-
-    $maxp = 17 if ($n >= 8);
-    $maxp = 29 if ($n >= 10);
-    $maxp = 31 if ($n >= 12);
+sub chernick_carmichael_with_n_factors($n, $maxp = nth_prime($n)) {
 
     my @primes = @{primes($maxp)};
 

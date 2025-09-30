@@ -67,7 +67,7 @@ sub deltas ($integers) {
     return \@deltas;
 }
 
-sub linear_form_primes($terms, $alpha = 1, $maxp = 3 * scalar(@$terms)) {
+sub linear_form_primes($terms, $alpha = 1, $maxp = nth_prime(scalar(@$terms))) {
 
     my @primes = @{primes($maxp)};
 
