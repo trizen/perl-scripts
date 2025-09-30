@@ -12,7 +12,7 @@
 use 5.036;
 use ntheory     qw(:all);
 use List::Util  qw(all);
-use Time::HiRes qw (time);
+use Time::HiRes qw(time);
 
 sub isrem($m, $p, $terms, $alpha) {
 
@@ -29,7 +29,7 @@ sub remaindersmodp($p, $terms, $alpha) {
     grep { isrem($_, $p, $terms, $alpha) } (0 .. $p - 1);
 }
 
-sub remainders_for_primes($n, $primes, $terms, $alpha) {
+sub remainders_for_primes($primes, $terms, $alpha) {
 
     my $res = [[0, 1]];
 
@@ -54,17 +54,6 @@ sub remainders_for_primes($n, $primes, $terms, $alpha) {
     sort { $a <=> $b } map { $_->[0] } @$res;
 }
 
-sub is($m, $n) {
-
-    is_prime($m + 1) || return;
-
-    foreach my $k (2 .. $n) {
-        is_prime($k * $m + 1) || return;
-    }
-
-    return 1;
-}
-
 sub deltas ($integers) {
 
     my @deltas;
@@ -78,11 +67,11 @@ sub deltas ($integers) {
     return \@deltas;
 }
 
-sub linear_form_primes($n, $terms, $alpha = 1, $maxp = 3 * $n) {
+sub linear_form_primes($terms, $alpha = 1, $maxp = 3 * scalar(@$terms)) {
 
     my @primes = @{primes($maxp)};
 
-    my @r = remainders_for_primes($n, \@primes, $terms, $alpha);
+    my @r = remainders_for_primes(\@primes, $terms, $alpha);
     my @d = @{deltas(\@r)};
     my $s = vecprod(@primes);
 
@@ -96,6 +85,7 @@ sub linear_form_primes($n, $terms, $alpha = 1, $maxp = 3 * $n) {
     my $d_len  = scalar(@d);
     my $t0     = time;
     my $prev_m = $m;
+    my $n      = scalar(@$terms);
 
     for (my $j = 0 ; ; ++$j) {
 
@@ -126,7 +116,7 @@ sub linear_form_primes($n, $terms, $alpha = 1, $maxp = 3 * $n) {
 foreach my $n (4 .. 10) {
     my @terms = (1 .. $n);
     my $alpha = 1;
-    my $m     = linear_form_primes($n, \@terms, $alpha);
+    my $m     = linear_form_primes(\@terms, $alpha);
     say "a($n) = $m";
 }
 
