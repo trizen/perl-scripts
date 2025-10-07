@@ -79,6 +79,7 @@ sub deltas ($integers) {
         $prev = $n;
     }
 
+    CORE::shift(@deltas);
     return \@deltas;
 }
 
