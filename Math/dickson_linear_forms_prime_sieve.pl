@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Sieve for Dickson primes: primes of the form `m*k + a`, for `k = 1..n` and fixed `a`.
+# Sieve for linear forms primes of the form `a_1*m + b_1`, `a_2*m + b_2`, ..., `a_k*m + b_k`.
 # Inspired by the PARI program by David A. Corneth from OEIS A372238.
 
 # See also:
@@ -14,10 +14,11 @@ use ntheory     qw(:all);
 use List::Util  qw(all);
 use Time::HiRes qw(time);
 
-sub isrem($m, $p, $terms, $alpha) {
+sub isrem($m, $p, $terms) {
 
     foreach my $k (@$terms) {
-        if (($k * $m + $alpha) % $p == 0) {
+        my $t = $k->[0] * $m + $k->[1];
+        if ($t % $p == 0 and $t != $p) {
             return;
         }
     }
@@ -25,17 +26,17 @@ sub isrem($m, $p, $terms, $alpha) {
     return 1;
 }
 
-sub remaindersmodp($p, $terms, $alpha) {
-    grep { isrem($_, $p, $terms, $alpha) } (0 .. $p - 1);
+sub remaindersmodp($p, $terms) {
+    grep { isrem($_, $p, $terms) } (0 .. $p - 1);
 }
 
-sub remainders_for_primes($primes, $terms, $alpha) {
+sub remainders_for_primes($primes, $terms) {
 
     my $res = [[0, 1]];
 
     foreach my $p (@$primes) {
 
-        my @rems = remaindersmodp($p, $terms, $alpha);
+        my @rems = remaindersmodp($p, $terms);
 
         if (!@rems) {
             @rems = (0);
@@ -67,11 +68,11 @@ sub deltas ($integers) {
     return \@deltas;
 }
 
-sub linear_form_primes($terms, $alpha = 1, $maxp = nth_prime(scalar(@$terms))) {
+sub linear_form_primes($terms, $maxp = nth_prime(scalar(@$terms))) {
 
     my @primes = @{primes($maxp)};
 
-    my @r = remainders_for_primes(\@primes, $terms, $alpha);
+    my @r = remainders_for_primes(\@primes, $terms);
     my @d = @{deltas(\@r)};
     my $s = vecprod(@primes);
 
@@ -91,7 +92,7 @@ sub linear_form_primes($terms, $alpha = 1, $maxp = nth_prime(scalar(@$terms))) {
 
         my $ok = 1;
         foreach my $k (@$terms) {
-            if (!is_prime($k * $m + $alpha)) {
+            if (!is_prime($k->[0] * $m + $k->[1])) {
                 $ok = 0;
                 last;
             }
@@ -113,14 +114,16 @@ sub linear_form_primes($terms, $alpha = 1, $maxp = nth_prime(scalar(@$terms))) {
     }
 }
 
-foreach my $n (4 .. 10) {
-    my @terms = (1 .. $n);
-    my $alpha = 1;
-    my $m     = linear_form_primes(\@terms, $alpha);
+foreach my $n (1 .. 10) {
+    my @terms = map { [$_, 1] } (1 .. $n);
+    my $m     = linear_form_primes(\@terms);
     say "a($n) = $m";
 }
 
 __END__
+a(1) = 1
+a(2) = 1
+a(3) = 2
 a(4) = 330
 a(5) = 10830
 a(6) = 25410

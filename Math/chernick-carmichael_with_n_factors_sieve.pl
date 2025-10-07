@@ -15,12 +15,12 @@ use Time::HiRes qw (time);
 
 sub isrem($m, $p, $n) {
 
-    ( 6 * $m + 1) % $p == 0 and return;
-    (12 * $m + 1) % $p == 0 and return;
-    (18 * $m + 1) % $p == 0 and return;
+    ( 6 * $m + 1) % $p == 0 and ( 6 * $m + 1) != $p and return;
+    (12 * $m + 1) % $p == 0 and (12 * $m + 1) != $p and return;
 
-    foreach my $k (2 .. $n - 2) {
-        if (((9 * $m << $k) + 1) % $p == 0) {
+    foreach my $k (1 .. $n - 2) {
+        my $t = (9 * $m << $k) + 1;
+        if ($t % $p == 0 and $t != $p) {
             return;
         }
     }
@@ -143,10 +143,11 @@ foreach my $n (3 .. 9) {
 }
 
 __END__
-[3] m = 6
-[3] 294409
-[4] m = 56
-[4] 461574735553
+[3] m = 1
+[3] 1729
+[4] 63973
+[4] m = 1
+[4] 63973
 [5] m = 380
 [5] 26641259752490421121
 [6] 1457836374916028334162241
