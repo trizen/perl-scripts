@@ -94,7 +94,7 @@ sub chernick_carmichael_with_n_factors($n, $maxp = nth_prime($n)) {
     my @d = @{deltas(\@r)};
     my $s = vecprod(@primes);
 
-    while ($d[0] == 0) {
+    while (@d and $d[0] == 0) {
         shift @d;
     }
 
