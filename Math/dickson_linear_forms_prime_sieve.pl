@@ -18,7 +18,7 @@ sub isrem($m, $p, $terms) {
 
     foreach my $k (@$terms) {
         my $t = $k->[0] * $m + $k->[1];
-        if ($t % $p == 0 and $t != $p) {
+        if ($t % $p == 0 and $t > $p) {
             return;
         }
     }

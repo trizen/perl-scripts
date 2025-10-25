@@ -20,7 +20,7 @@ sub isrem($m, $p, $n) {
 
     foreach my $k (1 .. $n - 2) {
         my $t = (9 * $m << $k) + 1;
-        if ($t % $p == 0 and $t != $p) {
+        if ($t % $p == 0 and $t > $p) {
             return;
         }
     }
