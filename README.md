@@ -760,6 +760,7 @@ A nice collection of day-to-day Perl scripts.
     * [Definite integral numerical approximation](./Math/definite_integral_numerical_approximation.pl)
     * [Dickson linear forms prime sieve](./Math/dickson_linear_forms_prime_sieve.pl)
     * [Dickson linear forms prime sieve in range](./Math/dickson_linear_forms_prime_sieve_in_range.pl)
+    * [Dickson linear forms prime sieve in range 2](./Math/dickson_linear_forms_prime_sieve_in_range_2.pl)
     * [Difference of k powers](./Math/difference_of_k_powers.pl)
     * [Difference of powers factorization method](./Math/difference_of_powers_factorization_method.pl)
     * [Difference of three squares solutions](./Math/difference_of_three_squares_solutions.pl)

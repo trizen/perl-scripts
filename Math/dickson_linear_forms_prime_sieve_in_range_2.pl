@@ -1,7 +1,6 @@
 #!/usr/bin/perl
 
 # Sieve for linear forms primes of the form `a_1*m + b_1`, `a_2*m + b_2`, ..., `a_k*m + b_k`.
-# Inspired by the PARI program by David A. Corneth from OEIS A372238.
 
 # See also:
 #   https://oeis.org/A088250
@@ -31,35 +30,44 @@ sub remaindersmodp($p, $terms) {
     grep { isrem($_, $p, $terms) } (0 .. $p - 1);
 }
 
-sub remainders_for_primes($primes, $terms) {
+sub combine_crt($arr, $M, $p, $S_p) {
 
-    my $res = [[0, 1]];
-    my $M   = 1;
+    my @res;
+    my $Minv_mod_p = invmod($M % $p, $p);
 
-    foreach my $p (@$primes) {
-
-        my @rems = remaindersmodp($p, $terms);
-
-        if (scalar(@rems) == $p) {
-            next;    # skip trivial primes
+    foreach my $r (@$arr) {
+        foreach my $s (@$S_p) {
+            my $k = (($s - ($r % $p)) % $p);
+            $k = (($k * $Minv_mod_p) % $p);
+            my $x = (($k * $M + $r) % ($M * $p));
+            push @res, $x;
         }
-
-        if (!@rems) {
-            @rems = (0);
-        }
-
-        my @nres;
-        foreach my $r (@$res) {
-            foreach my $rem (@rems) {
-                push @nres, [chinese($r, [$rem, $p]), lcm($p, $r->[1])];
-            }
-        }
-
-        $M *= $p;
-        $res = \@nres;
     }
 
-    return ($M, [sort { $a <=> $b } map { $_->[0] } @$res]);
+    return \@res;
+}
+
+sub remainders_for_primes($primes, $terms) {
+
+    my $residues = [0];
+    my $M        = 1;
+
+    foreach my $p (@$primes) {
+        my @S_p = remaindersmodp($p, $terms);
+
+        if (scalar(@S_p) == $p) {
+            next    # skip trivial primes
+        }
+
+        if (!@S_p) {
+            @S_p = (0);
+        }
+
+        $residues = combine_crt($residues, $M, $p, \@S_p);
+        $M *= $p;
+    }
+
+    return ($M, [sort { $a <=> $b } @$residues]);
 }
 
 sub deltas ($integers) {
@@ -156,7 +164,7 @@ is_deeply(linear_form_primes_in_range(1, 500, [[17, 4], [15, +8], [19, 2]]), [5,
 
 say "\n=> The least Chernick's \"universal form\" Carmichael number with n prime factors";
 
-foreach my $n (3 .. 8) {
+foreach my $n (3 .. 9) {
 
     my $terms = [map { [$_, 1] } (6, 12, (map { 9 * (1 << $_) } 1 .. $n - 2))];
 

@@ -33,10 +33,15 @@ sub remaindersmodp($p, $terms) {
 sub remainders_for_primes($primes, $terms) {
 
     my $res = [[0, 1]];
+    my $M   = 1;
 
     foreach my $p (@$primes) {
 
         my @rems = remaindersmodp($p, $terms);
+
+        if (scalar(@rems) == $p) {
+            next;    # skip trivial primes
+        }
 
         if (!@rems) {
             @rems = (0);
@@ -50,9 +55,10 @@ sub remainders_for_primes($primes, $terms) {
         }
 
         $res = \@nres;
+        $M *= $p;
     }
 
-    sort { $a <=> $b } map { $_->[0] } @$res;
+    return ($M, [sort { $a <=> $b } map { $_->[0] } @$res]);
 }
 
 sub deltas ($integers) {
@@ -65,7 +71,7 @@ sub deltas ($integers) {
         $prev = $n;
     }
 
-    CORE::shift(@deltas);
+    shift(@deltas);
     return \@deltas;
 }
 
@@ -73,17 +79,16 @@ sub linear_form_primes($terms, $maxp = nth_prime(scalar(@$terms))) {
 
     my @primes = @{primes($maxp)};
 
-    my @r = remainders_for_primes(\@primes, $terms);
-    my @d = @{deltas(\@r)};
-    my $s = vecprod(@primes);
+    my ($M, $r) = remainders_for_primes(\@primes, $terms);
+    my @d = @{deltas($r)};
 
     while (@d and $d[0] == 0) {
         shift @d;
     }
 
-    push @d, $r[0] + $s - $r[-1];
+    push @d, $r->[0] + $M - $r->[-1];
 
-    my $m      = $r[0];
+    my $m      = $r->[0];
     my $d_len  = scalar(@d);
     my $t0     = time;
     my $prev_m = $m;

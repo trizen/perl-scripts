@@ -15,8 +15,8 @@ use Time::HiRes qw (time);
 
 sub isrem($m, $p, $n) {
 
-    ( 6 * $m + 1) % $p == 0 and ( 6 * $m + 1) != $p and return;
-    (12 * $m + 1) % $p == 0 and (12 * $m + 1) != $p and return;
+    ( 6 * $m + 1) % $p == 0 and ( 6 * $m + 1) > $p and return;
+    (12 * $m + 1) % $p == 0 and (12 * $m + 1) > $p and return;
 
     foreach my $k (1 .. $n - 2) {
         my $t = (9 * $m << $k) + 1;
@@ -35,10 +35,15 @@ sub remaindersmodp($p, $n) {
 sub remainders_for_primes($n, $primes) {
 
     my $res = [[0, 1]];
+    my $M   = 1;
 
     foreach my $p (@$primes) {
 
         my @rems = remaindersmodp($p, $n);
+
+        if (scalar(@rems) == $p) {
+            next;    # skip trivial primes
+        }
 
         if (!@rems) {
             @rems = (0);
@@ -51,9 +56,10 @@ sub remainders_for_primes($n, $primes) {
             }
         }
         $res = \@nres;
+        $M *= $p;
     }
 
-    sort { $a <=> $b } map { $_->[0] } @$res;
+    return ($M, [sort { $a <=> $b } map { $_->[0] } @$res]);
 }
 
 sub is($m, $n) {
@@ -79,7 +85,7 @@ sub deltas ($integers) {
         $prev = $n;
     }
 
-    CORE::shift(@deltas);
+    shift(@deltas);
     return \@deltas;
 }
 
@@ -91,17 +97,17 @@ sub chernick_carmichael_with_n_factors($n, $maxp = nth_prime($n)) {
 
     my @primes = @{primes($maxp)};
 
-    my @r = remainders_for_primes($n, \@primes);
-    my @d = @{deltas(\@r)};
+    my ($M, $r) = remainders_for_primes($n, \@primes);
+    my @d = @{deltas($r)};
     my $s = vecprod(@primes);
 
     while (@d and $d[0] == 0) {
         shift @d;
     }
 
-    push @d, $r[0] + $s - $r[-1];
+    push @d, $r->[0] + $M - $r->[-1];
 
-    my $m      = $r[0];
+    my $m      = $r->[0];
     my $d_len  = scalar(@d);
     my $t0     = time;
     my $prev_m = $m;
