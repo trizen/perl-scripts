@@ -35,11 +35,12 @@ sub combine_crt($arr, $M, $p, $S_p) {
     my @res;
     my $Minv_mod_p = invmod($M % $p, $p);
 
+    my ($k, $x);
     foreach my $r (@$arr) {
         foreach my $s (@$S_p) {
-            my $k = (($s - ($r % $p)) % $p);
+            $k = (($s - ($r % $p)) % $p);
             $k = (($k * $Minv_mod_p) % $p);
-            my $x = (($k * $M + $r) % ($M * $p));
+            $x = (($k * $M + $r) % ($M * $p));
             push @res, $x;
         }
     }
@@ -84,9 +85,15 @@ sub deltas ($integers) {
     return \@deltas;
 }
 
-sub linear_form_primes_in_range($A, $B, $terms, $maxp = nth_prime(scalar(@$terms))) {
+sub linear_form_primes_in_range($A, $B, $terms) {
 
-    my @primes = @{primes($maxp)};
+    return [] if ($A > $B);
+
+    my $terms_len  = scalar(@$terms);
+    my $range_size = int(exp(LambertW(log($B - $A + 1))));
+
+    my $max_p  = nth_prime(vecmin($terms_len, $range_size));
+    my @primes = @{primes($max_p)};
 
     my ($M, $r) = remainders_for_primes(\@primes, $terms);
     my @d = @{deltas($r)};

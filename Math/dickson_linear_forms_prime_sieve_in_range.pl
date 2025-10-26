@@ -76,9 +76,15 @@ sub deltas ($integers) {
     return \@deltas;
 }
 
-sub linear_form_primes_in_range($A, $B, $terms, $maxp = nth_prime(scalar(@$terms))) {
+sub linear_form_primes_in_range($A, $B, $terms) {
 
-    my @primes = @{primes($maxp)};
+    return [] if ($A > $B);
+
+    my $terms_len  = scalar(@$terms);
+    my $range_size = int(exp(LambertW(log($B - $A + 1))));
+
+    my $max_p  = nth_prime(vecmin($terms_len, $range_size));
+    my @primes = @{primes($max_p)};
 
     my ($M, $r) = remainders_for_primes(\@primes, $terms);
     my @d = @{deltas($r)};
