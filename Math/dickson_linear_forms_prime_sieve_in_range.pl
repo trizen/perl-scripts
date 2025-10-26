@@ -12,13 +12,13 @@
 use 5.036;
 use ntheory     qw(:all);
 use Time::HiRes qw(time);
-use Test::More tests => 17;
+use Test::More tests => 19;
 
 sub isrem($m, $p, $terms) {
 
     foreach my $k (@$terms) {
         my $t = $k->[0] * $m + $k->[1];
-        if ($t % $p == 0 and $t > $p) {     # FIXME: this condition can be removed (see version 2)
+        if ($t % $p == 0 and $t > $p) {     # FIXME: the second condition can be removed (see version 2)
             return;
         }
     }
@@ -160,9 +160,31 @@ is_deeply(linear_form_primes_in_range(1, 500, [[17, 4], [15, -8], [19, 2]]), [5,
 is_deeply(linear_form_primes_in_range(1, 500, [[17, 4], [15, +8], [19, 2]]), [5, 11, 45, 65, 105, 159, 161, 189, 221, 275, 291, 299, 431, 479]);
 #>>>
 
+sub A088250($n, $alpha = 1) {
+
+    my @terms = map { [$_, $alpha] } 1 .. $n;
+
+    my $A = 1;
+    my $B = 2 * $A;
+
+    while (1) {
+        my @arr = @{linear_form_primes_in_range($A, $B, \@terms)};
+
+        if (@arr) {
+            return $arr[0];
+        }
+
+        $A = $B + 1;
+        $B = 2 * $A;
+    }
+}
+
+is_deeply([map { A088250($_, 1) } 1 .. 8],  [1, 1, 2, 330, 10830, 25410,  512820,  512820]);
+is_deeply([map { A088250($_, -1) } 1 .. 8], [3, 3, 4, 6,   6,     154770, 2894220, 2894220]);   # A088651
+
 say "\n=> The least Chernick's \"universal form\" Carmichael number with n prime factors";
 
-foreach my $n (3 .. 8) {
+foreach my $n (3 .. 9) {
 
     my $terms = [map { [$_, 1] } (6, 12, (map { 9 * (1 << $_) } 1 .. $n - 2))];
 
@@ -184,26 +206,10 @@ foreach my $n (3 .. 8) {
     }
 }
 
-say "\n=> Smallest number k such that r*k + 1 is prime for all r = 1 to n\n";
+say "\n=> Smallest number k such that r*k + 1 is prime for all r = 1 to n";
 
 foreach my $n (1 .. 9) {
-
-    my $terms = [map { [$_, 1] } 1 .. $n];
-
-    my $A = 1;
-    my $B = 2 * $A;
-
-    while (1) {
-        my @arr = @{linear_form_primes_in_range($A, $B, $terms)};
-
-        if (@arr) {
-            say "a($n) = $arr[0]";
-            last;
-        }
-
-        $A = $B + 1;
-        $B = 2 * $A;
-    }
+    say "a($n) = ", A088250($n, 1);
 }
 
 __END__
