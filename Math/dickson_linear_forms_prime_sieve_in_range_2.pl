@@ -10,7 +10,6 @@
 
 use 5.036;
 use ntheory     qw(:all);
-use List::Util  qw(all);
 use Time::HiRes qw(time);
 use Test::More tests => 17;
 
@@ -18,7 +17,7 @@ sub isrem($m, $p, $terms) {
 
     foreach my $k (@$terms) {
         my $t = $k->[0] * $m + $k->[1];
-        if ($t % $p == 0 and $t > $p) {
+        if ($t % $p == 0) {
             return;
         }
     }
@@ -104,6 +103,22 @@ sub linear_form_primes_in_range($A, $B, $terms) {
 
     push @d, $r->[0] + $M - $r->[-1];
 
+    my $compute_small_values = 0;
+    my $small_values_limit   = $d[0];
+    my $original_A           = undef;
+
+    if ($A < $small_values_limit) {
+
+        $original_A           = $A;
+        $A                    = $small_values_limit + 1;
+        $compute_small_values = 1;
+
+        if ($A > $B) {
+            $A                  = $B + 1;
+            $small_values_limit = $B;
+        }
+    }
+
     my $m      = $r->[0];
     my $d_len  = scalar(@d);
     my $t0     = time;
@@ -118,12 +133,34 @@ sub linear_form_primes_in_range($A, $B, $terms) {
         $m += $d[$j++ % $d_len];
     }
 
-    my @arr;
+    my @multiples = map { $_->[0] } @$terms;
+    my @alphas    = map { $_->[1] } @$terms;
+    my @range     = (0 .. $#multiples);
 
-    while (1) {
-        my $ok = 1;
-        foreach my $k (@$terms) {
-            if (!is_prime($k->[0] * $m + $k->[1])) {
+    my ($ok, @arr);
+
+    if ($compute_small_values) {
+        foreach my $k ($original_A .. $small_values_limit) {
+
+            $ok = 1;
+            foreach my $i (@range) {
+                if (!is_prime($multiples[$i] * $k + $alphas[$i])) {
+                    $ok = 0;
+                    last;
+                }
+            }
+
+            if ($ok) {
+                push @arr, $k;
+            }
+        }
+    }
+
+    while ($m <= $B) {
+
+        $ok = 1;
+        foreach my $k (@range) {
+            if (!is_prime($multiples[$k] * $m + $alphas[$k])) {
                 $ok = 0;
                 last;
             }
@@ -142,7 +179,6 @@ sub linear_form_primes_in_range($A, $B, $terms) {
         }
 
         $m += $d[$j++ % $d_len];
-        last if ($m > $B);
     }
 
     return \@arr;
@@ -165,9 +201,10 @@ is_deeply(linear_form_primes_in_range(1, 500, [[2, -1], [4, -1], [8, -1]]),     
 is_deeply(linear_form_primes_in_range(1, 500, [[2, -1], [4, -1], [8, -1], [16, -1]]),  [3, 45, 90, 180, 255]);
 is_deeply(linear_form_primes_in_range(1, 500, [[17, 1], [23, 5]]),                     [18, 24, 66, 126, 186, 216, 378, 384, 426]);
 
-is_deeply(linear_form_primes_in_range(1, 500, [[17, 4], [15, -8], [19, 2]]),
-          [5, 9, 11, 65, 75, 105, 125, 159, 191, 221, 231, 291, 341, 369, 419, 461, 471, 479]);
+#<<<
+is_deeply(linear_form_primes_in_range(1, 500, [[17, 4], [15, -8], [19, 2]]), [5, 9, 11, 65, 75, 105, 125, 159, 191, 221, 231, 291, 341, 369, 419, 461, 471, 479]);
 is_deeply(linear_form_primes_in_range(1, 500, [[17, 4], [15, +8], [19, 2]]), [5, 11, 45, 65, 105, 159, 161, 189, 221, 275, 291, 299, 431, 479]);
+#>>>
 
 say "\n=> The least Chernick's \"universal form\" Carmichael number with n prime factors";
 
@@ -195,7 +232,7 @@ foreach my $n (3 .. 9) {
 
 say "\n=> Smallest number k such that r*k + 1 is prime for all r = 1 to n\n";
 
-foreach my $n (1 .. 8) {
+foreach my $n (1 .. 10) {
 
     my $terms = [map { [$_, 1] } 1 .. $n];
 
