@@ -32,38 +32,31 @@ sub remaindersmodp($p, $terms) {
 sub combine_crt($arr, $M, $p, $S_p) {
 
     my @res;
-    my $Minv_mod_p = invmod($M % $p, $p);
+    my $Minv    = invmod($M % $p, $p);
+    my $new_mod = $M * $p;
 
-    my ($k, $x);
     foreach my $r (@$arr) {
         foreach my $s (@$S_p) {
-            $k = (($s - ($r % $p)) % $p);
-            $k = (($k * $Minv_mod_p) % $p);
-            $x = (($k * $M + $r) % ($M * $p));
-            push @res, $x;
+            push @res, ((((($s - ($r % $p)) % $p) * $Minv) % $p) * $M + $r) % $new_mod;
         }
     }
 
     return \@res;
 }
 
-sub remainders_for_primes($primes, $terms) {
+sub remainders_for_primes($primes) {
 
     my $residues = [0];
     my $M        = 1;
 
-    foreach my $p (@$primes) {
-        my @S_p = remaindersmodp($p, $terms);
+    foreach my $pair (@$primes) {
+        my ($p, $S_p) = @$pair;
 
-        if (scalar(@S_p) == $p) {
-            next    # skip trivial primes
+        if (!@$S_p) {
+            $S_p = [0];
         }
 
-        if (!@S_p) {
-            @S_p = (0);
-        }
-
-        $residues = combine_crt($residues, $M, $p, \@S_p);
+        $residues = combine_crt($residues, $M, $p, $S_p);
         $M *= $p;
     }
 
@@ -87,7 +80,7 @@ sub deltas ($integers) {
 sub select_optimal_primes ($A, $B, $terms) {
 
     my $range = $B - $A;
-    return (2) if $range <= 0;
+    return () if $range <= 0;
 
     my $target_modulus = "$range"**(4 / 5);
 
@@ -96,14 +89,18 @@ sub select_optimal_primes ($A, $B, $terms) {
 
     for (my $p = 2 ; ; $p = next_prime($p)) {
         my @S_p = remaindersmodp($p, $terms);
-        next if scalar(@S_p) == $p;
-        push(@primes, $p);
+
+        if (scalar(@S_p) == $p) {
+            next;    # skip trivial primes
+        }
+
+        push(@primes, [$p, \@S_p]);
         $M *= $p;
         last if $M > $target_modulus;
     }
 
     if (!@primes) {
-        @primes = (2);
+        @primes = ([2, [remaindersmodp(2, $terms)]]);
     }
 
     return @primes;
@@ -114,7 +111,7 @@ sub linear_form_primes_in_range($A, $B, $terms) {
     return [] if ($A > $B);
 
     my @primes = select_optimal_primes($A, $B, $terms);
-    my ($M, $r) = remainders_for_primes(\@primes, $terms);
+    my ($M, $r) = remainders_for_primes(\@primes);
     my @d = @{deltas($r)};
 
     while (@d and $d[0] == 0) {
