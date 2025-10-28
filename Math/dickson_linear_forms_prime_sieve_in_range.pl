@@ -12,7 +12,7 @@
 use 5.036;
 use ntheory     qw(:all);
 use Time::HiRes qw(time);
-use Test::More tests => 19;
+use Test::More tests => 36;
 
 sub isrem($m, $p, $terms) {
 

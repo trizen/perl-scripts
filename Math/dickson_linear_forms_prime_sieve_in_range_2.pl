@@ -84,16 +84,36 @@ sub deltas ($integers) {
     return \@deltas;
 }
 
+sub select_optimal_primes ($A, $B, $terms) {
+
+    my $range = $B - $A;
+    return (2) if $range <= 0;
+
+    my $target_modulus = "$range"**(4 / 5);
+
+    my $M = 1;
+    my @primes;
+
+    for (my $p = 2 ; ; $p = next_prime($p)) {
+        my @S_p = remaindersmodp($p, $terms);
+        next if scalar(@S_p) == $p;
+        push(@primes, $p);
+        $M *= $p;
+        last if $M > $target_modulus;
+    }
+
+    if (!@primes) {
+        @primes = (2);
+    }
+
+    return @primes;
+}
+
 sub linear_form_primes_in_range($A, $B, $terms) {
 
     return [] if ($A > $B);
 
-    my $terms_len  = scalar(@$terms);
-    my $range_size = int(exp(LambertW(log($B - $A + 1))));
-
-    my $max_p  = nth_prime(vecmin($terms_len, $range_size));
-    my @primes = @{primes($max_p)};
-
+    my @primes = select_optimal_primes($A, $B, $terms);
     my ($M, $r) = remainders_for_primes(\@primes, $terms);
     my @d = @{deltas($r)};
 
@@ -293,3 +313,5 @@ a(5) = 10830
 a(6) = 25410
 a(7) = 512820
 a(8) = 512820
+a(9) = 12960606120
+a(10) = 434491727670
