@@ -18,7 +18,7 @@ sub isrem($m, $p, $terms) {
     foreach my $k (@$terms) {
         my $t = $k->[0] * $m + $k->[1];
         if ($t % $p == 0) {
-            return;
+            return 0;
         }
     }
 
@@ -51,11 +51,6 @@ sub remainders_for_primes($primes) {
 
     foreach my $pair (@$primes) {
         my ($p, $S_p) = @$pair;
-
-        if (!@$S_p) {
-            $S_p = [0];
-        }
-
         $residues = combine_crt($residues, $M, $p, $S_p);
         $M *= $p;
     }
@@ -79,10 +74,10 @@ sub deltas ($integers) {
 
 sub select_optimal_primes ($A, $B, $terms) {
 
-    my $range = $B - $A;
+    my $range = $B - $A + 1;
     return () if $range <= 0;
 
-    my $target_modulus = "$range"**(4 / 5);
+    my $target_modulus = (rootint($range, 5) + 1)**4;
 
     my $M = 1;
     my @primes;
@@ -97,10 +92,6 @@ sub select_optimal_primes ($A, $B, $terms) {
         push(@primes, [$p, \@S_p]);
         $M *= $p;
         last if $M > $target_modulus;
-    }
-
-    if (!@primes) {
-        @primes = ([2, [remaindersmodp(2, $terms)]]);
     }
 
     return @primes;

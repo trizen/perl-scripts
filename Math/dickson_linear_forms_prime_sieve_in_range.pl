@@ -43,10 +43,6 @@ sub remainders_for_primes($primes, $terms) {
             next;    # skip trivial primes
         }
 
-        if (!@rems) {
-            @rems = (0);
-        }
-
         my @nres;
         foreach my $r (@$res) {
             foreach my $rem (@rems) {
