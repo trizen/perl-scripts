@@ -8,36 +8,47 @@
 #   https://oeis.org/A372238/a372238.gp.txt
 #   https://en.wikipedia.org/wiki/Dickson%27s_conjecture
 
+use utf8;
 use 5.036;
 use ntheory     qw(:all);
 use Time::HiRes qw(time);
 use Test::More tests => 36;
 
-sub isrem($m, $p, $terms) {
+sub remaindersmodp($p, $terms) {
+    my @bad;  # bad[m] = 1 means m is forbidden modulo p
 
-    foreach my $k (@$terms) {
-        my $t = $k->[0] * $m + $k->[1];
-        if ($t % $p == 0) {
-            return 0;
+    foreach my $pair (@$terms) {
+        my ($m, $k) = @$pair;
+
+        $m %= $p;
+        $k %= $p;
+
+        if ($m == 0) {
+            # Term is constant mod p
+            if ($k == 0) {
+                # Always 0 mod p -> no admissible residue exists
+                return ();
+            }
+            next;  # This term forbids no residue for this p
         }
+
+        # Forbid the unique residue m ≡ -k * m^{-1} (mod p)
+        my $m_inv    = invmod($m, $p);
+        my $m_forbid = (-$k * $m_inv) % $p;
+        $bad[$m_forbid] = 1;
     }
 
-    return 1;
-}
-
-sub remaindersmodp($p, $terms) {
-    grep { isrem($_, $p, $terms) } (0 .. $p - 1);
+    return grep { !$bad[$_] } 0 .. $p-1;
 }
 
 sub combine_crt($arr, $M, $p, $S_p) {
 
     my @res;
-    my $Minv    = invmod($M % $p, $p);
-    my $new_mod = $M * $p;
+    my $Minv = invmod($M % $p, $p);
 
     foreach my $r (@$arr) {
         foreach my $s (@$S_p) {
-            push @res, ((((($s - ($r % $p)) % $p) * $Minv) % $p) * $M + $r) % $new_mod;
+            push @res, (((($s - ($r % $p)) % $p) * $Minv) % $p) * $M + $r;
         }
     }
 
@@ -75,7 +86,7 @@ sub deltas ($integers) {
 sub select_optimal_primes ($A, $B, $terms) {
 
     my $range = $B - $A + 1;
-    return () if $range <= 0;
+    return (1, []) if $range <= 0;
 
     my $target_modulus = (rootint($range, 5) + 1)**4;
 
@@ -103,6 +114,9 @@ sub linear_form_primes_in_range($A, $B, $terms) {
 
     my @primes = select_optimal_primes($A, $B, $terms);
     my ($M, $r) = remainders_for_primes(\@primes);
+
+    return [] if !@$r;
+
     my @d = @{deltas($r)};
 
     while (@d and $d[0] == 0) {
@@ -125,9 +139,8 @@ sub linear_form_primes_in_range($A, $B, $terms) {
     my $d_len  = scalar(@d);
     my $t0     = time;
     my $prev_m = $m;
-    my $d_sum  = vecsum(@d);
 
-    $m += $d_sum * divint($A, $d_sum);
+    $m += $M * divint($A, $M);
 
     my $j = 0;
 
