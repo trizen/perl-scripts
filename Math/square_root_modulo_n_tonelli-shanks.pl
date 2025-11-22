@@ -30,9 +30,11 @@ use experimental qw(signatures);
 
 use List::Util qw(uniq);
 use ntheory qw(factor_exp is_prime chinese forsetproduct);
-use Math::AnyNum qw(:overload kronecker powmod invmod valuation ipow);
+use Math::AnyNum qw(:overload kronecker powmod invmod valuation ipow mulmod);
 
 sub tonelli_shanks ($n, $p) {
+
+    $n %= $p;
 
     my $q = $p - 1;
     my $s = valuation($q, 2);
@@ -57,7 +59,7 @@ sub tonelli_shanks ($n, $p) {
     while (($t - 1) % $p != 0) {
 
         my $k = 1;
-        my $v = $t * $t % $p;
+        my $v = mulmod($t, $t, $p);
 
         for (my $i = 1 ; $i < $s ; ++$i) {
             if (($v - 1) % $p == 0) {
@@ -65,12 +67,12 @@ sub tonelli_shanks ($n, $p) {
                 $s = $i;
                 last;
             }
-            $v = $v * $v % $p;
+            $v = mulmod($v, $v, $p);
         }
 
-        $r = $r * $k % $p;
-        $c = $k * $k % $p;
-        $t = $t * $c % $p;
+        $r = mulmod($r, $k, $p);
+        $c = mulmod($k, $k, $p);
+        $t = mulmod($t, $c, $p);
     }
 
     return $r;

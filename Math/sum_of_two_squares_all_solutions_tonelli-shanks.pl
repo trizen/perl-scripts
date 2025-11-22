@@ -21,7 +21,55 @@
 
 use 5.036;
 use Math::GMPz qw();
-use ntheory    qw(factor_exp sqrtmod powint);
+use ntheory    qw(:all);
+
+# Tonelli-Shanks: modular square root of n mod p (p odd prime)
+# Returns a root r such that r^2 ≡ n (mod p), or undef if none.
+sub tonelli_shanks ($n, $p) {
+
+    return 0 if $n == 0;
+
+    # check solution existence
+    return undef if kronecker($n, $p) == -1;    # == -1 mod p
+
+    $n %= $p;
+
+    # simple case p % 4 == 3
+    if ($p % 4 == 3) {
+        return powmod($n, ($p + 1) >> 2, $p);
+    }
+
+    # Factor p-1 = q * 2^s with q odd
+    my $q = $p - 1;
+    my $s = valuation($q, 2);
+    $q >>= $s;
+
+    # find a quadratic non-residue z
+    my $z = 2;
+    while (kronecker($z, $p) != -1) { $z++; }
+
+    my $c = powmod($z,                $q, $p);
+    my $r = powmod($n, ($q + 1) >> 1, $p);
+    my $t = powmod($n,                $q, $p);
+    my $m = $s;
+
+    while ($t != 1) {
+
+        # find least i (0 < i < m) such that t^(2^i) == 1
+        my $i  = 1;
+        my $tt = mulmod($t, $t, $p);
+        while ($i < $m && $tt != 1) {
+            $tt = mulmod($tt, $tt, $p);
+            $i++;
+        }
+        my $b = powmod($c, 1 << ($m - $i - 1), $p);
+        $r = mulmod($r, $b, $p);
+        $c = mulmod($b, $b, $p);
+        $t = mulmod($t, $c, $p);
+        $m = $i;
+    }
+    return $r;
+}
 
 # Find a solution to x^2 + y^2 = p, for prime numbers `p` congruent to 1 mod 4.
 sub primitive_sum_of_two_squares ($p) {
@@ -30,7 +78,7 @@ sub primitive_sum_of_two_squares ($p) {
         return (1, 1);
     }
 
-    my $s = Math::GMPz->new(sqrtmod(-1, $p) || return);
+    my $s = Math::GMPz->new(tonelli_shanks(-1, $p) || return);
     my $q = $p;
 
     while ($s * $s > $p) {
