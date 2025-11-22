@@ -1212,6 +1212,7 @@ A nice collection of day-to-day Perl scripts.
     * [Sum of triangular numbers solutions](./Math/sum_of_triangular_numbers_solutions.pl)
     * [Sum of two primes](./Math/sum_of_two_primes.pl)
     * [Sum of two squares all solutions](./Math/sum_of_two_squares_all_solutions.pl)
+    * [Sum of two squares all solutions 2](./Math/sum_of_two_squares_all_solutions_2.pl)
     * [Sum of two squares multiple solutions](./Math/sum_of_two_squares_multiple_solutions.pl)
     * [Sum of two squares solution](./Math/sum_of_two_squares_solution.pl)
     * [Sum remainders](./Math/sum_remainders.pl)

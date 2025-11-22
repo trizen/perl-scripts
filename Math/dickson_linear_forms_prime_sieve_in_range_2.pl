@@ -165,9 +165,7 @@ sub linear_form_primes_in_range($A, $B, $terms) {
                 }
             }
 
-            if ($ok) {
-                push @arr, $k;
-            }
+            $ok && push @arr, $k;
         }
     }
 
