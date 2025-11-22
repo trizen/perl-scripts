@@ -4,7 +4,7 @@
 # Date: 22 November 2025
 # https://github.com/trizen
 
-# A recursive algorithm for finding all the non-negative integer solutions to the equation:
+# A fast algorithm for finding all the non-negative integer solutions to the equation:
 #   a^2 + b^2 = n
 # for any given positive integer `n` for which such a solution exists.
 
@@ -144,9 +144,9 @@ sub sum_of_two_squares_solutions($n) {
             next;
         }
 
-        # Representation of p = a^2 + b^2
-        my ($a, $b) = primitive_sum_of_two_squares($p);
-        my @unit = ([$a, $b]);
+        # Representation of p = x^2 + y^2
+        my ($x, $y) = primitive_sum_of_two_squares($p);
+        my @unit = ([$x, $y]);
 
         # Use binary exponentiation to get representations for p^k
         my @acc   = ([0, 1]);
