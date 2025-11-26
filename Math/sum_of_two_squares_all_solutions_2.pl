@@ -86,6 +86,10 @@ sub sum_of_two_squares_solutions($n) {
     # Start with representation of 1
     my @reps = ([0, 1]);    # (0^2 + 1^2 = 1)
 
+    # Handle primes p ≡ 3 (mod 4) with even exponent: they contribute as a perfect square factor s^2.
+    # Multiply each (x,y) by s where s = product p^{e/2} over such primes.
+    my $square_scale = Math::GMPz->new(1);
+
     foreach my $pp (@factors) {
         my ($p, $k) = @$pp;
 
@@ -96,8 +100,8 @@ sub sum_of_two_squares_solutions($n) {
             }
 
             # p^{2t} contributes factor (p^t)^2 which is a square; doesn't change reps aside from scaling
-            # We'll multiply later by p^{k/2} as a scaling factor on both coordinates.
-            # For simplicity, handle by multiplying reps by p^{k/2} at the end.
+            # We multiply by p^{k/2} as a scaling factor on both coordinates.
+            $square_scale *= powint($p, ($k >> 1));
             next;
         }
 
@@ -117,19 +121,6 @@ sub sum_of_two_squares_solutions($n) {
             $exp_k >>= 1;
         }
         @reps = multiply_sets(\@reps, \@acc);
-    }
-
-    # Handle primes p ≡ 3 (mod 4) with even exponent: they contribute as a perfect square factor s^2.
-    # Multiply each (x,y) by s where s = product p^{e/2} over such primes.
-    my $square_scale = Math::GMPz->new(1);
-    foreach my $pp (@factors) {
-        my ($p, $e) = @$pp;
-
-        if ($p % 4 != 3) {
-            next;
-        }
-
-        $square_scale *= powint($p, ($e >> 1)) if $e;
     }
 
     if ($square_scale != 1) {
