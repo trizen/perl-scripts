@@ -43,12 +43,12 @@ sub primitive_sum_of_two_squares ($p) {
 # Multiply two representations (a,b) and (c,d),
 # return all distinct sign/ordering variations.
 sub combine_pairs($A, $B, $C, $D) {
+#<<<
     return (
-            [$A * $C - $B * $D, $A * $D + $B * $C],
-            [$A * $C + $B * $D, $A * $D - $B * $C],
-            [$B * $C - $A * $D, $A * $C + $B * $D],
-            [$B * $C + $A * $D, $A * $C - $B * $D],
-           );
+        [$A * $C - $B * $D, $A * $D + $B * $C],
+        [$A * $C + $B * $D, $A * $D - $B * $C],
+    );
+#>>>
 }
 
 # Multiply two *sets* of representations
@@ -59,9 +59,14 @@ sub multiply_sets($A, $B) {
         for my $q (@$B) {
             for my $r (combine_pairs(@$p, @$q)) {
                 my ($x, $y) = @$r;
+
+                $x = -$x if ($x < 0);
+                $y = -$y if ($y < 0);
+
                 if ($x > $y) {
                     ($x, $y) = ($y, $x);
                 }
+
                 my $key = "$x,$y";
                 next if $seen{$key}++;
                 push @new, [$x, $y];
@@ -98,12 +103,12 @@ sub sum_of_two_squares_solutions($n) {
 
         # Representation of p = x^2 + y^2
         my ($x, $y) = primitive_sum_of_two_squares($p);
-        my @unit = ([$x, $y]);
 
         # Use binary exponentiation to get representations for p^k
         my @acc   = ([0, 1]);
-        my @base  = @unit;
+        my @base  = ([$x, $y]);
         my $exp_k = $k;
+
         while ($exp_k > 0) {
             if ($exp_k & 1) {
                 @acc = multiply_sets(\@acc, \@base);
@@ -111,7 +116,7 @@ sub sum_of_two_squares_solutions($n) {
             @base = multiply_sets(\@base, \@base);
             $exp_k >>= 1;
         }
-        @reps = grep { $_->[0] >= 0 and $_->[1] >= 0 } multiply_sets(\@reps, \@acc);
+        @reps = multiply_sets(\@reps, \@acc);
     }
 
     # Handle primes p ≡ 3 (mod 4) with even exponent: they contribute as a perfect square factor s^2.
