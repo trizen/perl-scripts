@@ -1123,6 +1123,7 @@ A nice collection of day-to-day Perl scripts.
     * [Reversed number triangles](./Math/reversed_number_triangles.pl)
     * [Riemann prime-counting function](./Math/riemann_prime-counting_function.pl)
     * [Riemann's J function](./Math/riemann_s_J_function.pl)
+    * [Rootmod all solutions](./Math/rootmod_all_solutions.pl)
     * [Roots on the rise](./Math/roots_on_the_rise.pl)
     * [RSA example](./Math/RSA_example.pl)
     * [RSA PRNG](./Math/RSA_PRNG.pl)
