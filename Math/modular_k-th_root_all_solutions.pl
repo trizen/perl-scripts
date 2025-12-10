@@ -2,175 +2,122 @@
 
 # Daniel "Trizen" Șuteu
 # Date: 09 December 2025
+# Edit: 10 December 2025
 # https://github.com/trizen
 
 # kth_root_mod: find all x (0 <= x < m) with x^k ≡ a (mod m)
 
 use 5.036;
-use ntheory    qw(:all);
-use List::Util qw(uniq);
 use Test::More tests => 60;
+use Math::Prime::Util qw(:all);
 
-# Lift a root r (mod p) to roots (mod p^e) for x^k ≡ A (mod p^e) via branching Hensel.
-sub hensel_lift_multi ($r, $k, $A, $p, $e) {
-    my @cur = ($r % $p);
-    my $mod = $p;
-    for (my $t = 1 ; $t < $e ; $t++) {
-        my $M = $mod * $p;
+# Solve x^k ≡ r (mod p) for prime p.
+sub solve_mod_p($k, $r, $p) {
+    die "p must be prime > 1" unless $p > 1 && is_prime($p);
+    $r %= $p;
+
+    return (0)                                           if $r == 0;    # trivial zero solution
+    return grep { powmod($_, $k, $p) == $r } 0 .. $p - 1 if $p <= 31;
+
+    my $phi = $p - 1;
+    my $d   = gcd($k, $phi);
+    return () if powmod($r, $phi / $d, $p) != 1;                        # necessary condition
+
+    return ($r) if $k == 1;
+
+    my $g = znprimroot($p) // return grep { powmod($_, $k, $p) == $r } 0 .. $p - 1;
+    my $a = znlog($r, $g, $p);
+    return () unless defined $a;
+
+    my $k1   = divint($k,   $d);
+    my $phi1 = divint($phi, $d);
+    my $a1   = divint($a,   $d);
+    my $t0   = ($a1 * invmod($k1, $phi1)) % $phi1;
+
+    return map { powmod($g, $t0 + $_ * $phi1, $p) } 0 .. $d - 1;
+}
+
+# Solve x^k ≡ r (mod p^e) for prime powers by lifting.
+sub solve_prime_power_lift($k, $r, $p, $e) {
+    my $mod = powint($p, $e);
+
+    $r %= $mod;
+
+    return () if $mod == 0;
+
+    if ($r % $mod == 0) {    # x^k ≡ 0
+        my $vx_min = divint($e + $k - 1, $k);    # ceil(e / k)
+        my $base   = powint($p, $vx_min);
+        return map { $_ * $base } 0 .. (powint($p, $e - $vx_min) - 1);
+    }
+
+    my @sol_t = solve_mod_p($k, $r, $p);         # solutions mod p
+    return () unless @sol_t;
+    return @sol_t if $e == 1;
+
+    my $t = 1;
+    while ($t < $e) {                            # lift to p^{t+1}
+        my $next_mod = powint($p, $t + 1);
         my @next;
-        for my $x (@cur) {
-            my $fx  = (powmod($x, $k, $M) - ($A % $M)) % $M;
-            my $der = ($k * powmod($x, $k - 1, $p)) % $p;
-            if (defined(my $inv_der = invmod($der, $p))) {
-                my $q    = divint($fx, $mod);
-                my $u    = ((-$q) * $inv_der) % $p;
-                my $xnew = ($x + $u * $mod) % $M;
-                push @next, $xnew;
-            }
-            else {
-                my $aM = $A % $M;
-                for my $u (0 .. $p - 1) {
-                    my $cand = ($x + $u * $mod) % $M;
-                    push @next, $cand if powmod($cand, $k, $M) == $aM;
-                }
+        for my $a (@sol_t) {
+            my $base = powint($p, $t);
+            for my $s (0 .. $p - 1) {
+                my $cand = ($a + $s * $base) % $next_mod;
+                push @next, $cand if powmod($cand, $k, $next_mod) == ($r % $next_mod);
             }
         }
-
-        # unique and advance modulus
-        @cur = uniq @next;
-        return () unless @cur;
-        $mod = $M;
+        @sol_t = @next;
+        return () unless @sol_t;
+        $t++;
     }
-    my $pp = powint($p, $e);
-    return map { $_ % $pp } @cur;
+
+    return @sol_t;
 }
 
-# Roots of x^k ≡ v (mod p), prime p.
-sub roots_mod_prime ($k, $v, $p) {
-    $v %= $p;
-    return ($v) if $k == 1;
-    if ($p == 2) {
-        return grep { powmod($_, $k, 2) == $v } 0, 1;
+# All solutions to x^k ≡ r (mod m).
+sub kth_root_mod($k, $r, $m) {
+    return () if $m == 0;
+
+    if ($k == 0 and $r == 1) {
+        return (0 .. $m - 1);
     }
-    return (0) if $v == 0;
 
-    my $g = znprimroot($p) // die "no primitive root mod $p?";
-    my $A = znlog($v, $g, $p);
-    return () unless defined $A;
+    # Support negative k: solve y^{|k|} ≡ r and invert solutions y -> x = y^{-1}
+    if ($k < 0) {
 
-    my $mod = $p - 1;
-    my $d   = gcd($k, $mod);
-    return () if $A % $d;
-
-    my $km     = divint($k,   $d);
-    my $Am     = divint($A,   $d);
-    my $mm     = divint($mod, $d);
-    my $inv_km = invmod($km, $mm) // die "unexpected no inverse";
-    my $y0     = mulmod($Am, $inv_km, $mm);
-
-    my @ys = map { muladdmod($_, $mm, $y0, $mod) } 0 .. $d - 1;
-    return uniq map { powmod($g, $_, $p) } @ys;
-}
-
-# Roots of x^k ≡ A (mod p^e), prime power.
-sub roots_mod_primepower ($k, $A, $p, $e) {
-    my $pe = powint($p, $e);
-    $A %= $pe;
-    return ($A) if $k == 1;
-
-    # modest brute force for small modulus
-    if ($pe <= 10000) {
-        my @sol;
-        for my $x (0 .. $pe - 1) {
-            push @sol, $x if ((powmod($x, $k, $pe) // next) == $A);
+        # r must be a unit modulo m to be a power of a unit
+        return () if gcd($r, $m) != 1;
+        my @yinv = kth_root_mod(-$k, $r, $m);    # recursive call with positive exponent
+        return () unless @yinv;
+        my @xs;
+        for my $y (@yinv) {
+            my $y_mod = $y % $m;
+            my $inv   = invmod($y_mod, $m);
+            push @xs, $inv if defined $inv;      # should be defined because y is a unit
         }
-        return @sol;
+        return sort { $a <=> $b } @xs;
     }
 
-    # handle valuation v_p(A)
-    my $va = valuation($A, $p) // 0;
+    my @factors = factor_exp($m);    # [p, e] pairs
+    my @current = ([0, 1]);          # [residue, modulus]
 
-    # FIXME: this part of code is broken for certain inputs
-    if ($va > 0) {
-        return () if $va % $k;    # require k*vx = va
-        my $vx    = divint($va, $k);
-        my $new_e = $e - $k * $vx;
-        if ($new_e <= 0) {
+    for my $fe (@factors) {
+        my ($p, $e) = @$fe;
+        my $mod_pe = powint($p, $e);
+        my @sol_pe = solve_prime_power_lift($k, $r % $mod_pe, $p, $e);
+        return () unless @sol_pe;
 
-            # any x with valuation >= vx is solution modulo p^e
-            my $count = powint($p, $e - $vx);
-            my @sol   = uniq map { ($_ * powint($p, $vx)) % $pe } 0 .. $count - 1;
-            return @sol;
-        }
-        else {
-            my $a2 = divint($A, powint($p, $k * $vx)) % powint($p, $new_e);
-            my @u  = roots_mod_primepower($k, $a2, $p, $new_e);
-            return uniq map { ($_ * powint($p, $vx)) % $pe } @u;
-        }
-    }
-
-    # gcd(A, p) = 1: roots mod p then Hensel lift
-    my @r0 = roots_mod_prime($k, $A, $p);
-    return () unless @r0;
-    my @all = map { hensel_lift_multi($_, $k, $A, $p, $e) } @r0;
-    return uniq map { $_ % $pe } @all;
-}
-
-# Main: roots of x^k ≡ v (mod m)
-sub kth_root_mod ($k, $v, $m) {
-
-    #die "m must be >= 1" if $m < 1;
-    #die "k must be >= 1" if $k < 1;
-
-    return () if ($m == 0);
-    $v %= $m;
-    return ($v) if $k == 1;
-    return (0)  if $m == 1 && $v == 0;
-
-    my @moduli;
-    my @solutions_lists;
-    foreach my $pp (factor_exp($m)) {
-        my ($p, $e) = @$pp;
-        my $pe  = powint($p, $e);
-        my @sol = roots_mod_primepower($k, $v, $p, $e);
-        return () unless @sol;
-        push @moduli,          $pe;
-        push @solutions_lists, \@sol;
-    }
-
-    # Combine via CRT across prime powers
-    my @results  = (0);
-    my @res_mods = (1);
-
-    for my $i (0 .. $#moduli) {
-        my ($mod_i,     $sols) = ($moduli[$i], $solutions_lists[$i]);
-        my (@next_vals, @next_mods);
-        for my $j (0 .. $#results) {
-            my ($r, $rn) = ($results[$j], $res_mods[$j]);
-            for my $s (@$sols) {
-                my $crt_val = chinese([$r, $rn], [$s, $mod_i]);
-                next unless defined $crt_val;
-                my $crt_mod = lcm($rn, $mod_i);
-                push @next_vals, $crt_val % $crt_mod;
-                push @next_mods, $crt_mod;
+        my @next;
+        for my $pe (@sol_pe) {
+            for my $cur (@current) {
+                my ($A, $mod_a) = @$cur;
+                push @next, [chinese([$A, $mod_a], [$pe, $mod_pe]), $mod_a * $mod_pe];
             }
         }
-
-        # dedupe pairs by value@mod
-        my (%seen, @uv, @um);
-        for my $kidx (0 .. $#next_vals) {
-            my $v   = $next_vals[$kidx] % $next_mods[$kidx];
-            my $key = "$v\@$next_mods[$kidx]";
-            next if $seen{$key}++;
-            push @uv, $v;
-            push @um, $next_mods[$kidx];
-        }
-        @results  = @uv;
-        @res_mods = @um;
-        return () unless @results;
+        @current = @next;
     }
 
-    return sort { $a <=> $b } uniq map { $_ % $m } @results;
+    return sort { $a <=> $b } map { $_->[0] % $m } @current;
 }
 
 is_deeply([kth_root_mod(3, 2, 101)], [26]);
