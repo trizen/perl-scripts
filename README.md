@@ -962,6 +962,7 @@ A nice collection of day-to-day Perl scripts.
     * [Modular hyperoperation](./Math/modular_hyperoperation.pl)
     * [Modular inverse](./Math/modular_inverse.pl)
     * [Modular k-th root all solutions](./Math/modular_k-th_root_all_solutions.pl)
+    * [Modular k-th root all solutions fast](./Math/modular_k-th_root_all_solutions_fast.pl)
     * [Modular k-th root all solutions mpz](./Math/modular_k-th_root_all_solutions_mpz.pl)
     * [Modular lucas numbers](./Math/modular_lucas_numbers.pl)
     * [Modular lucas sequence V](./Math/modular_lucas_sequence_V.pl)
