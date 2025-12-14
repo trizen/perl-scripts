@@ -8,8 +8,8 @@
 
 use 5.036;
 use Test::More tests => 60;
-use Math::GMPz        qw(:mpz);
-use ntheory qw(:all);
+use Math::GMPz qw(:mpz);
+use ntheory    qw(:all);
 
 # Small helper: brute-force search for solutions mod p (p is small)
 sub _bruteforce_mod_p ($k, $r, $p) {
