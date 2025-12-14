@@ -11,7 +11,7 @@ use Test::More tests => 60;
 #----------------------------------------------------------
 # Tonelli-Shanks algorithm for k-th roots modulo a prime
 #----------------------------------------------------------
-sub _tonelli_shanks($a, $k, $p, $zeta_ref = undef) {
+sub _tonelli_shanks($a, $k, $p) {
     my ($exp, $q) = (0, $p - 1);
     ($exp++, $q = divint($q, $k)) while $q % $k == 0;
 
@@ -38,8 +38,7 @@ sub _tonelli_shanks($a, $k, $p, $zeta_ref = undef) {
         }
     }
 
-    $$zeta_ref = $gen if defined $zeta_ref;
-    return $root;
+    return ($root, $gen);
 }
 
 #----------------------------------------------------------
@@ -78,12 +77,11 @@ sub _roots_mod_prime($a, $k, $p) {
     return (1, 2) if $p == 3;
 
     # Find one root and generate all others using roots of unity
-    my $zeta;
-    my $root = _tonelli_shanks($a, $k, $p, \$zeta);
-    die "Failed to find root" if $zeta == 0 || powmod($root, $k, $p) != $a;
+    my ($root, $gen) = _tonelli_shanks($a, $k, $p);
+    die "Failed to find root" if ($gen == 0 || powmod($root, $k, $p) != $a);
 
     my @roots = ($root);
-    for (my $r = mulmod($root, $zeta, $p) ; $r != $root && @roots < $k ; $r = mulmod($r, $zeta, $p)) {
+    for (my $r = mulmod($root, $gen, $p) ; $r != $root && @roots < $k ; $r = mulmod($r, $gen, $p)) {
         push @roots, $r;
     }
     return @roots;
