@@ -11,29 +11,54 @@ use 5.020;
 use strict;
 use warnings;
 
-use ntheory qw(:all);
+use ntheory      qw(:all);
 use experimental qw(signatures);
 
 sub dynamicPreimage ($N, $L, %opt) {
 
-    my %r = (1 => [1]);
+    # Phase 1: Determine which intermediate values are actually needed
+    my %needed = ($N => undef);
+    my @operations;
 
     foreach my $l (@$L) {
-        my %t;
+        my @current_ops;
 
         foreach my $pair (@$l) {
             my ($x, $y) = @$pair;
 
             foreach my $d (divisors(divint($N, $x))) {
-                if (exists $r{$d}) {
-                    my @list = @{$r{$d}};
-                    if ($opt{unitary}) {
-                        @list = grep { gcd($_, $y) == 1 } @list;
-                    }
-                    push @{$t{mulint($x, $d)}}, map { mulint($_, $y) } @list;
+                my $F = mulint($x, $d);
+
+                # Only track operations that lead to needed values
+                if (exists $needed{$F}) {
+                    undef $needed{$d};
+                    push @current_ops, [$d, $y, $F];
                 }
             }
         }
+        unshift @operations, \@current_ops if @current_ops;
+    }
+
+    undef %needed;
+
+    # Phase 2: Process operations, keeping only needed intermediate results
+    my %r = (1 => [1]);
+
+    foreach my $ops (@operations) {
+        my %t;
+
+        foreach my $op (@$ops) {
+            my ($d, $y, $F) = @$op;
+
+            if (exists $r{$d}) {
+                my @list = @{$r{$d}};
+                if ($opt{unitary}) {
+                    @list = grep { gcd($_, $y) == 1 } @list;
+                }
+                push @{$t{$F}}, map { mulint($_, $y) } @list;
+            }
+        }
+
         while (my ($k, $v) = each %t) {
             push @{$r{$k}}, @$v;
         }
@@ -81,7 +106,7 @@ sub dynamicMin ($N, $L) {
                 if (exists $r{$d}) {
 
                     my $k = mulint($x, $d);
-                    my $v = $r{$d} * $y;
+                    my $v = mulint($r{$d}, $y);
 
                     if (not defined($t{$k})) {
                         $t{$k} = $v;
@@ -119,7 +144,7 @@ sub dynamicMax ($N, $L) {
                 if (exists $r{$d}) {
 
                     my $k = mulint($x, $d);
-                    my $v = $r{$d} * $y;
+                    my $v = mulint($r{$d}, $y);
 
                     if (not defined($t{$k})) {
                         $t{$k} = $v;
@@ -168,13 +193,9 @@ sub cook_phi ($N) {
     my %L;
 
     foreach my $d (divisors($N)) {
-
         my $p = addint($d, 1);
-
         is_prime($p) || next;
-
         my $v = valuation($N, $p);
-
         push @{$L{$p}}, map { [mulint($d, powint($p, $_ - 1)), powint($p, $_)] } 1 .. $v + 1;
     }
 
@@ -185,13 +206,9 @@ sub cook_psi ($N) {
     my %L;
 
     foreach my $d (divisors($N)) {
-
         my $p = subint($d, 1);
-
         is_prime($p) || next;
-
         my $v = valuation($N, $p);
-
         push @{$L{$p}}, map { [mulint($d, powint($p, $_ - 1)), powint($p, $_)] } 1 .. $v + 1;
     }
 
@@ -286,11 +303,11 @@ sub inverse_uphi ($N) {
 
 ## Usage example
 
-say join ', ', inverse_sigma(120);    #=> [54, 56, 87, 95]
-say join ', ', inverse_usigma(120);   #=> [60, 87, 92, 95, 99]
-say join ', ', inverse_uphi(120);     #=> [121, 143, 144, 155, 164, 183, 220, 231, 240, 242, 286, 310, 366, 462]
-say join ', ', inverse_phi(120);      #=> [143, 155, 175, 183, 225, 231, 244, 248, 286, 308, 310, 350, 366, 372, 396, 450, 462]
-say join ', ', inverse_psi(120);      #=> [75, 76, 87, 95]
+say join ', ', inverse_sigma(120);         #=> [54, 56, 87, 95]
+say join ', ', inverse_usigma(120);        #=> [60, 87, 92, 95, 99]
+say join ', ', inverse_uphi(120);          #=> [121, 143, 144, 155, 164, 183, 220, 231, 240, 242, 286, 310, 366, 462]
+say join ', ', inverse_phi(120);           #=> [143, 155, 175, 183, 225, 231, 244, 248, 286, 308, 310, 350, 366, 372, 396, 450, 462]
+say join ', ', inverse_psi(120);           #=> [75, 76, 87, 95]
 say join ', ', inverse_sigma(22100, 2);    #=> [120, 130, 141]
 
 say '';

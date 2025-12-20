@@ -79,9 +79,10 @@ sub bwt_lookahead ($s) {    # O(n) space (moderately fast)
 sub bwt_balanced ($s) {    # O(n * LOOKAHEAD_LEN) space (fast)
 #<<<
     [
-     map { $_->[1] } sort {
+     map { $_->[1] }
+     sort {
               ($a->[0] cmp $b->[0])
-           || ((substr($s, $a->[1]) . substr($s, 0, $a->[1])) cmp(substr($s, $b->[1]) . substr($s, 0, $b->[1])))
+           || ((substr($s, $a->[1]) . substr($s, 0, $a->[1])) cmp (substr($s, $b->[1]) . substr($s, 0, $b->[1])))
      }
      map {
          my $t = substr($s, $_, LOOKAHEAD_LEN);
@@ -96,20 +97,51 @@ sub bwt_balanced ($s) {    # O(n * LOOKAHEAD_LEN) space (fast)
 #>>>
 }
 
+sub bwt_balanced_double ($s) {    # O(n * LOOKAHEAD_LEN) space (fast)
+#<<<
+    my $len      = length($s);
+    my $double_s = $s . $s;                  # Pre-compute doubled string
+
+    # Schwartzian transform with optimized sorting
+    return [
+        map  { $_->[1] }
+        sort {
+                ($a->[0] cmp $b->[0])
+             || (substr($double_s, $a->[1], $len) cmp substr($double_s, $b->[1], $len))
+        }
+        map {
+            my $pos = $_;
+            my $end = $pos + LOOKAHEAD_LEN;
+
+            # Handle wraparound efficiently
+            my $t =
+              ($end <= $len)
+              ? substr($s,        $pos, LOOKAHEAD_LEN)
+              : substr($double_s, $pos, LOOKAHEAD_LEN);
+
+            [$t, $pos]
+          } 0 .. $len - 1
+    ];
+#>>>
+}
+
 sub bwt_encode ($s) {
 
     #my $bwt = bwt_simple($s);
     #my $bwt = bwt_quadratic($s);
     #my $bwt = bwt_cyclic($s);
     #my $bwt = bwt_lookahead($s);
-    my $bwt = bwt_balanced($s);
+    #my $bwt = bwt_balanced($s);
+    my $bwt = bwt_balanced_double($s);
 
-    my $ret = join('', map { substr($s, $_ - 1, 1) } @$bwt);
-
+    my $ret = '';
     my $idx = 0;
-    foreach my $i (@$bwt) {
-        $i || last;
-        ++$idx;
+
+    my $i = 0;
+    foreach my $pos (@$bwt) {
+        $ret .= substr($s, $pos - 1, 1);
+        $idx = $i if !$pos;
+        ++$i;
     }
 
     return ($ret, $idx);

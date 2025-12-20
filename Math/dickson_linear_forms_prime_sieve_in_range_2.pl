@@ -14,31 +14,33 @@ use ntheory     qw(:all);
 use Time::HiRes qw(time);
 use Test::More tests => 36;
 
-sub remaindersmodp($p, $terms) {
-    my @bad;  # bad[m] = 1 means m is forbidden modulo p
+sub remainders_mod_p($p, $terms) {
+    my @bad;    # bad[m] = 1 means m is forbidden modulo p
 
     foreach my $pair (@$terms) {
-        my ($m, $k) = @$pair;
+        my ($n, $k) = @$pair;
 
-        $m %= $p;
+        $n %= $p;
         $k %= $p;
 
-        if ($m == 0) {
+        if ($n == 0) {
+
             # Term is constant mod p
             if ($k == 0) {
+
                 # Always 0 mod p -> no admissible residue exists
                 return ();
             }
-            next;  # This term forbids no residue for this p
+            next;    # This term forbids no residue for this p
         }
 
-        # Forbid the unique residue m ≡ -k * m^{-1} (mod p)
-        my $m_inv    = invmod($m, $p);
-        my $m_forbid = (-$k * $m_inv) % $p;
+        # Forbid the unique residue m ≡ -k * n^{-1} (mod p)
+        my $n_inv    = invmod($n, $p);
+        my $m_forbid = (-$k * $n_inv) % $p;
         $bad[$m_forbid] = 1;
     }
 
-    return grep { !$bad[$_] } 0 .. $p-1;
+    return grep { !$bad[$_] } 0 .. $p - 1;
 }
 
 sub combine_crt($arr, $M, $p, $S_p) {
@@ -47,8 +49,9 @@ sub combine_crt($arr, $M, $p, $S_p) {
     my $Minv = invmod($M % $p, $p);
 
     foreach my $r (@$arr) {
+        my $r_mod_p = $r % $p;
         foreach my $s (@$S_p) {
-            push @res, (((($s - ($r % $p)) % $p) * $Minv) % $p) * $M + $r;
+            push @res, (((($s - $r_mod_p) % $p) * $Minv) % $p) * $M + $r;
         }
     }
 
@@ -57,11 +60,15 @@ sub combine_crt($arr, $M, $p, $S_p) {
 
 sub remainders_for_primes($primes) {
 
-    my $residues = [0];
     my $M        = 1;
+    my $residues = [0];
 
     foreach my $pair (@$primes) {
         my ($p, $S_p) = @$pair;
+
+        # Early return if no valid residues
+        return ($M, []) unless @$S_p;
+
         $residues = combine_crt($residues, $M, $p, $S_p);
         $M *= $p;
     }
@@ -86,15 +93,15 @@ sub deltas ($integers) {
 sub select_optimal_primes ($A, $B, $terms) {
 
     my $range = $B - $A + 1;
-    return (1, []) if $range <= 0;
+    return () if $range <= 0;
 
-    my $target_modulus = (rootint($range, 5) + 1)**4;
+    my $target_modulus = (1 + rootint($range, 5))**4;
 
     my $M = 1;
     my @primes;
 
-    for (my $p = 2 ; ; $p = next_prime($p)) {
-        my @S_p = remaindersmodp($p, $terms);
+    for (my $p = 2 ; $M <= $target_modulus ; $p = next_prime($p)) {
+        my @S_p = remainders_mod_p($p, $terms);
 
         if (scalar(@S_p) == $p) {
             next;    # skip trivial primes
@@ -102,7 +109,6 @@ sub select_optimal_primes ($A, $B, $terms) {
 
         push(@primes, [$p, \@S_p]);
         $M *= $p;
-        last if $M > $target_modulus;
     }
 
     return @primes;
@@ -111,18 +117,26 @@ sub select_optimal_primes ($A, $B, $terms) {
 sub linear_form_primes_in_range($A, $B, $terms) {
 
     return [] if ($A > $B);
+    return [] if !@$terms;
 
+    # Select an optimal subset of small primes for the modular sieve
     my @primes = select_optimal_primes($A, $B, $terms);
+    return [] unless @primes;
+
     my ($M, $r) = remainders_for_primes(\@primes);
 
+    # If there are no admissible residues modulo M, there can be no solutions
     return [] if !@$r;
 
+    # Compute differences
     my @d = @{deltas($r)};
 
+    # Remove leading zeros
     while (@d and $d[0] == 0) {
         shift @d;
     }
 
+    # Add wraparound delta
     push @d, $r->[0] + $M - $r->[-1];
 
     my $compute_small_values = 0;
@@ -140,6 +154,7 @@ sub linear_form_primes_in_range($A, $B, $terms) {
     my $t0     = time;
     my $prev_m = $m;
 
+    # Jump near to the start of the range
     $m += $M * divint($A, $M);
 
     my $j = 0;
@@ -154,6 +169,7 @@ sub linear_form_primes_in_range($A, $B, $terms) {
 
     my ($ok, @arr);
 
+    # Compute small values if needed
     if ($compute_small_values) {
         foreach my $k ($original_A .. $small_values_limit) {
 
