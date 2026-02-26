@@ -133,16 +133,91 @@ sub my_bzip2_compress($fh, $out_fh) {
         say STDERR "EOB symbol: $eob";
         push @zrle, $eob;
 
-        my ($dict) = huffman_from_symbols([@zrle, 0 .. $eob - 1]);
-        my $num_sels = sprintf('%.0f', 0.5 + (scalar(@zrle) / 50));
+        # Split ZRLE data into groups of 50 symbols
+        my @groups;
+        for (my $i = 0 ; $i < @zrle ; $i += 50) {
+            my $end = $i + 49;
+            $end = $#zrle if $end > $#zrle;
+            push @groups, [@zrle[$i .. $end]];
+        }
+        my $num_groups = scalar(@groups);
+
+        # Determine number of Huffman tables based on number of groups
+        my $num_trees =
+            ($num_groups <= 1)   ? 2
+          : ($num_groups < 200)  ? 3
+          : ($num_groups < 600)  ? 4
+          : ($num_groups < 1200) ? 5
+          :                        6;
+
+        say STDERR "Number of trees: $num_trees";
+
+        # Initial assignment: distribute groups roughly evenly across tables
+        my @assignments;
+        for my $gi (0 .. $#groups) {
+            my $t = int($gi * $num_trees / $num_groups);
+            $t = $num_trees - 1 if $t >= $num_trees;
+            push @assignments, $t;
+        }
+
+        # Full symbol range to ensure complete Huffman trees
+        my @all_syms = (0 .. $eob);
+
+        # Iterative optimization of table assignments
+        my @dicts;
+        for (1 .. 4) {
+
+            # Build symbol list for each table (with full symbol range as baseline)
+            my @sym_lists;
+            for my $t (0 .. $num_trees - 1) {
+                push @sym_lists, [@all_syms];
+            }
+            for my $gi (0 .. $#groups) {
+                push @{$sym_lists[$assignments[$gi]]}, @{$groups[$gi]};
+            }
+
+            # Build Huffman tables from frequencies
+            @dicts = map { (huffman_from_symbols($_))[0] } @sym_lists;
+
+            # Re-assign each group to the best-fitting table
+            my @new_assignments;
+            for my $gi (0 .. $#groups) {
+                my ($best_t, $best_cost) = (0, 9**9**9);
+                for my $t (0 .. $num_trees - 1) {
+                    my $cost = 0;
+                    $cost += length($dicts[$t]{$_} // '') for @{$groups[$gi]};
+                    ($best_t, $best_cost) = ($t, $cost) if $cost < $best_cost;
+                }
+                push @new_assignments, $best_t;
+            }
+
+            last if "@new_assignments" eq "@assignments";
+            @assignments = @new_assignments;
+        }
+
+        my $num_sels = $num_groups;
         say STDERR "Number of selectors: $num_sels";
 
-        $bitstring .= int2bits(2,         3);
-        $bitstring .= int2bits($num_sels, 15);
-        $bitstring .= '0' x $num_sels;
+        $bitstring .= int2bits($num_trees, 3);
+        $bitstring .= int2bits($num_sels,  15);
 
-        $bitstring .= encode_code_lengths($dict) x 2;
-        $bitstring .= join('', @{$dict}{@zrle});
+        # MTF-encode selectors and write as unary codes
+        my @mtf_list = (0 .. $num_trees - 1);
+        for my $sel (@assignments) {
+            my $pos = 0;
+            $pos++ while $mtf_list[$pos] != $sel;
+            $bitstring .= '1' x $pos . '0';
+            splice(@mtf_list, $pos, 1);
+            unshift @mtf_list, $sel;
+        }
+
+        # Write all Huffman tables
+        $bitstring .= encode_code_lengths($_) for @dicts;
+
+        # Encode symbols group by group using the assigned tables
+        for my $gi (0 .. $#groups) {
+            $bitstring .= join('', @{$dicts[$assignments[$gi]]}{@{$groups[$gi]}});
+        }
 
         print $out_fh pack('B*', substr($bitstring, 0, length($bitstring) - (length($bitstring) % 8), ''));
     }
