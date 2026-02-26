@@ -165,7 +165,7 @@ sub my_bzip2_compress($fh, $out_fh) {
 
         # Iterative optimization of table assignments
         my @dicts;
-        for (1 .. 4) {
+        for (1 .. 10) {
 
             # Build symbol list for each table (with full symbol range as baseline)
             my @sym_lists;
