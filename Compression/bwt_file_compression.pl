@@ -375,7 +375,7 @@ sub bwt_sort ($s) {    # O(n * LOOKAHEAD_LEN) space (fast)
         sort {
             ($a->[0] cmp $b->[0])
               || do {
-                my ($cmp, $s_len) = (0, LOOKAHEAD_LEN << 1);
+                my ($cmp, $s_len) = (0, LOOKAHEAD_LEN << 2);
                 while (1) {
                     ($cmp = substr($double_s, $a->[1], $s_len) cmp substr($double_s, $b->[1], $s_len)) && last;
                     $s_len <<= 1;

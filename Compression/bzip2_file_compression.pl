@@ -27,7 +27,7 @@ binmode(STDOUT, ":raw");
 
 use constant {
               FORMAT     => 'bz2',
-              CHUNK_SIZE => 1 << 17,
+              CHUNK_SIZE => 900_000,    # 900KB blocks for level 9 (standard bzip2)
              };
 
 sub usage ($code = 0) {
@@ -170,10 +170,12 @@ sub my_bzip2_compress($fh, $out_fh) {
             # Build symbol list for each table (with full symbol range as baseline)
             my @sym_lists;
             for my $t (0 .. $num_trees - 1) {
-                push @sym_lists, [@all_syms];
+                push @sym_lists, [@all_syms];    # Start with all symbols for complete tree
             }
             for my $gi (0 .. $#groups) {
-                push @{$sym_lists[$assignments[$gi]]}, @{$groups[$gi]};
+
+                # Add symbols multiple times to increase their weight in frequency calculation
+                push @{$sym_lists[$assignments[$gi]]}, (@{$groups[$gi]}) x 2;    # Double weight
             }
 
             # Build Huffman tables from frequencies
