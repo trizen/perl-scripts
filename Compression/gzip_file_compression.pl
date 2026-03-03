@@ -18,13 +18,13 @@ use Getopt::Std       qw(getopts);
 
 use constant {
               FORMAT     => 'gz',
-              CHUNK_SIZE => (1 << 15) - 1,
+              CHUNK_SIZE => (1 << 16) - 1,    # increased for better LZ matching
              };
 
-local $Compression::Util::LZ_MIN_LEN       = 4;                # minimum match length in LZ parsing
+local $Compression::Util::LZ_MIN_LEN       = 3;                # minimum match length in LZ parsing (DEFLATE supports 3)
 local $Compression::Util::LZ_MAX_LEN       = 258;              # maximum match length in LZ parsing
 local $Compression::Util::LZ_MAX_DIST      = (1 << 15) - 1;    # maximum allowed back-reference distance in LZ parsing
-local $Compression::Util::LZ_MAX_CHAIN_LEN = 64;               # how many recent positions to remember in LZ parsing
+local $Compression::Util::LZ_MAX_CHAIN_LEN = 128;              # more thorough match search
 
 my $MAGIC  = pack('C*', 0x1f, 0x8b);                           # magic MIME type
 my $CM     = chr(0x08);                                        # 0x08 = DEFLATE
@@ -34,6 +34,17 @@ my $XFLAGS = chr(0x00);                                        # extra flags
 my $OS     = chr(0x03);                                        # 0x03 = Unix
 
 my ($DISTANCE_SYMBOLS, $LENGTH_SYMBOLS, $LENGTH_INDICES) = make_deflate_tables();
+
+my @DISTANCE_INDICES;
+foreach my $i (0 .. $#$DISTANCE_SYMBOLS) {
+    my $min = $DISTANCE_SYMBOLS->[$i][0];
+    my $max = ($i < $#$DISTANCE_SYMBOLS)
+            ? $DISTANCE_SYMBOLS->[$i + 1][0] - 1
+            : $Compression::Util::LZ_MAX_DIST;
+    foreach my $d ($min .. $max) {
+        $DISTANCE_INDICES[$d] = $i;
+    }
+}
 
 sub usage ($code = 0) {
     print <<"EOH";
@@ -87,16 +98,16 @@ sub code_length_encoding ($dict) {
 
             if ($run >= 11) {
                 push @CL_symbols, 18;
-                $run -= 11;
-                $offset_bits .= int2bits_lsb(min($run, 127), 7);
-                $run -= 127;
+                my $extra = min($run - 11, 127);
+                $offset_bits .= int2bits_lsb($extra, 7);
+                $run -= 11 + $extra;
             }
 
             if ($run >= 3 and $run < 11) {
                 push @CL_symbols, 17;
-                $run -= 3;
-                $offset_bits .= int2bits_lsb(min($run, 7), 3);
-                $run -= 7;
+                my $extra = min($run - 3, 7);
+                $offset_bits .= int2bits_lsb($extra, 3);
+                $run -= 3 + $extra;
             }
         }
 
@@ -110,9 +121,9 @@ sub code_length_encoding ($dict) {
 
         while ($run >= 3) {
             push @CL_symbols, 16;
-            $run -= 3;
-            $offset_bits .= int2bits_lsb(min($run, 3), 2);
-            $run -= 3;
+            my $extra = min($run - 3, 3);
+            $offset_bits .= int2bits_lsb($extra, 2);
+            $run -= 3 + $extra;
         }
 
         push(@CL_symbols, ($v) x $run) if ($run > 0);
@@ -171,7 +182,8 @@ sub block_type_2 ($literals, $distances, $lengths) {
 
     my @CL_order = (16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15);
 
-    my $bitstring = '01';
+    my @parts;
+    push @parts, '01';
 
     my @len_symbols;
     my @dist_symbols;
@@ -196,7 +208,7 @@ sub block_type_2 ($literals, $distances, $lengths) {
         }
 
         {
-            my $dist_idx = find_deflate_index($dist, $DISTANCE_SYMBOLS);
+            my $dist_idx = $DISTANCE_INDICES[$dist];
             my ($min, $bits) = @{$DISTANCE_SYMBOLS->[$dist_idx]};
 
             push @dist_symbols, [$dist_idx - 1, $bits];
@@ -245,29 +257,31 @@ sub block_type_2 ($literals, $distances, $lengths) {
     # (4 bits) HCLEN = (number of CL code entries present) - 4
     my $HCLEN = scalar(@CL_code_lenghts) - 4;
 
-    $bitstring .= int2bits_lsb($HLIT,  5);
-    $bitstring .= int2bits_lsb($HDIST, 5);
-    $bitstring .= int2bits_lsb($HCLEN, 4);
+    push @parts, int2bits_lsb($HLIT,  5);
+    push @parts, int2bits_lsb($HDIST, 5);
+    push @parts, int2bits_lsb($HCLEN, 4);
 
-    $bitstring .= $CL_code_lengths_bitstring;
-    $bitstring .= $LL_code_lengths_bitstring;
-    $bitstring .= $distance_code_lengths_bitstring;
+    push @parts, $CL_code_lengths_bitstring;
+    push @parts, $LL_code_lengths_bitstring;
+    push @parts, $distance_code_lengths_bitstring;
 
     foreach my $symbol (@len_symbols) {
         if (ref($symbol) eq 'ARRAY') {
 
             my ($len, $len_offset) = @$symbol;
-            $bitstring .= $dict->{$len};
-            $bitstring .= substr($offset_bits, 0, $len_offset, '') if ($len_offset > 0);
+            push @parts, $dict->{$len};
+            push @parts, substr($offset_bits, 0, $len_offset, '') if ($len_offset > 0);
 
             my ($dist, $dist_offset) = @{shift(@dist_symbols)};
-            $bitstring .= $dist_dict->{$dist};
-            $bitstring .= substr($offset_bits, 0, $dist_offset, '') if ($dist_offset > 0);
+            push @parts, $dist_dict->{$dist};
+            push @parts, substr($offset_bits, 0, $dist_offset, '') if ($dist_offset > 0);
         }
         else {
-            $bitstring .= $dict->{$symbol};
+            push @parts, $dict->{$symbol};
         }
     }
+
+    my $bitstring = join('', @parts);
 
     return $bitstring;
 }
@@ -297,12 +311,13 @@ sub block_type_1 ($literals, $distances, $lengths) {
         ($dist_dict) = huffman_from_code_lengths([(5) x 32]);
     }
 
-    my $bitstring = '10';
+    my @parts;
+    push @parts, '10';
 
     foreach my $k (0 .. $#$literals) {
 
         if ($lengths->[$k] == 0) {
-            $bitstring .= $dict->{$literals->[$k]};
+            push @parts, $dict->{$literals->[$k]};
             next;
         }
 
@@ -313,20 +328,22 @@ sub block_type_1 ($literals, $distances, $lengths) {
             my $len_idx = $LENGTH_INDICES->[$len];
             my ($min, $bits) = @{$LENGTH_SYMBOLS->[$len_idx]};
 
-            $bitstring .= $dict->{$len_idx + 256 - 1};
-            $bitstring .= int2bits_lsb($len - $min, $bits) if ($bits > 0);
+            push @parts, $dict->{$len_idx + 256 - 1};
+            push @parts, int2bits_lsb($len - $min, $bits) if ($bits > 0);
         }
 
         {
-            my $dist_idx = find_deflate_index($dist, $DISTANCE_SYMBOLS);
+            my $dist_idx = $DISTANCE_INDICES[$dist];
             my ($min, $bits) = @{$DISTANCE_SYMBOLS->[$dist_idx]};
 
-            $bitstring .= $dist_dict->{$dist_idx - 1};
-            $bitstring .= int2bits_lsb($dist - $min, $bits) if ($bits > 0);
+            push @parts, $dist_dict->{$dist_idx - 1};
+            push @parts, int2bits_lsb($dist - $min, $bits) if ($bits > 0);
         }
     }
 
-    $bitstring .= $dict->{256};    # end-of-block symbol
+    push @parts, $dict->{256};    # end-of-block symbol
+
+    my $bitstring = join('', @parts);
 
     return $bitstring;
 }
@@ -362,13 +379,12 @@ sub my_gzip_compress ($in_fh, $out_fh) {
 
         $bitstring .= eof($in_fh) ? '1' : '0';
 
+        my $bt0_size      = (length($chunk) + 5) * 8;    # type 0 cost in bits
         my $bt1_bitstring = block_type_1($literals, $distances, $lengths);
 
-        # When block type 1 is larger than the input, then we have random uncompressible data: use block type 0
-        if ((length($bt1_bitstring) >> 3) > length($chunk) + 5) {
-
+        if ($bt0_size <= length($bt1_bitstring)) {
+            # Block type 0 is cheapest — skip computing type 2
             say STDERR ":: Using block type: 0";
-
             $bitstring .= '00';
 
             print $out_fh pack('b*', $bitstring);             # pads to a byte
@@ -480,8 +496,10 @@ sub decode_huffman($in_fh, $buffer, $rev_dict, $dist_rev_dict, $search_window) {
                     $$search_window .= substr($$search_window, length($$search_window) - $dist, $length);
                 }
                 else {                        # overlapping matches
+                    my $sw_len = length($$search_window);
                     foreach my $i (1 .. $length) {
-                        $$search_window .= substr($$search_window, length($$search_window) - $dist, 1);
+                        $$search_window .= substr($$search_window, $sw_len - $dist, 1);
+                        $sw_len++;
                     }
                 }
 
