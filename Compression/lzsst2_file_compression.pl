@@ -113,11 +113,17 @@ sub main {
 }
 
 sub find_distance_index ($dist, $distance_symbols) {
-    foreach my $i (0 .. $#{$distance_symbols}) {
-        if ($distance_symbols->[$i][0] > $dist) {
-            return $i - 1;
+    my ($lo, $hi) = (0, $#{$distance_symbols});
+    while ($lo < $hi) {
+        my $mid = ($lo + $hi + 1) >> 1;
+        if ($distance_symbols->[$mid][0] <= $dist) {
+            $lo = $mid;
+        }
+        else {
+            $hi = $mid - 1;
         }
     }
+    return $lo;
 }
 
 sub make_deflate_symbols ($size) {
@@ -177,6 +183,7 @@ sub find_match ($str_ref, $la, $min_len, $max_len, $end, $table, $symbols) {
             if ($n > $best_n) {
                 $best_p = $p;
                 $best_n = $n;
+                last if ($best_n > $max_len);    # can't do better
             }
         }
     }
@@ -209,7 +216,7 @@ sub lz77_compression($str) {
             ($n1, $p1) = find_match(\$str, $la, $min_len, $max_len, $end, \%table, \@symbols);
         }
 
-        if (exists($table{$lookahead2})) {
+        if ($n1 > 1 and exists($table{$lookahead2})) {
             ($n2, $p2) = find_match(\$str, $la + 1, $min_len, $max_len, $end, \%table, \@symbols);
         }
 
