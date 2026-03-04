@@ -294,9 +294,9 @@ sub lz77_decompression ($literals, $distances, $lengths) {
             $data .= substr($data, -1) x $length;
         }
         else {                     # overlapping matches
-            foreach my $i (1 .. $length) {
-                $data .= substr($data, $data_len + $i - $dist - 1, 1);
-            }
+            my $pattern   = substr($data, $data_len - $dist, $dist);
+            my $full_reps = int(($length + $dist - 1) / $dist) + 1;
+            $data .= substr($pattern x $full_reps, 0, $length);
         }
 
         $data_len += $length;
@@ -405,25 +405,47 @@ sub walk ($node, $code, $h, $rev_h) {
     return ($h, $rev_h);
 }
 
-# make a tree, and return resulting dictionaries
+# Heap helpers
+
+sub _heap_push ($heap, $item) {
+    push @$heap, $item;
+    my $i = $#$heap;
+    while ($i > 0) {
+        my $p = ($i - 1) >> 1;
+        last if $heap->[$p][1] <= $heap->[$i][1];
+        @{$heap}[$p, $i] = @{$heap}[$i, $p];
+        $i = $p;
+    }
+}
+
+sub _heap_pop ($heap) {
+    return pop @$heap if @$heap == 1;
+    my $min = $heap->[0];
+    $heap->[0] = pop @$heap;
+    my ($i, $n) = (0, scalar @$heap);
+    while (1) {
+        my ($l, $r, $s) = ($i * 2 + 1, $i * 2 + 2, $i);
+        $s = $l if $l < $n && $heap->[$l][1] < $heap->[$s][1];
+        $s = $r if $r < $n && $heap->[$r][1] < $heap->[$s][1];
+        last if $s == $i;
+        @{$heap}[$i, $s] = @{$heap}[$s, $i];
+        $i = $s;
+    }
+    return $min;
+}
+
 sub mktree_from_freq ($freq) {
 
-    my @nodes = map { [$_, $freq->{$_}] } sort { $a <=> $b } keys %$freq;
+    my @heap;
+    _heap_push(\@heap, [$_, $freq->{$_}]) for sort { $a <=> $b } keys %$freq;
 
-    do {    # poor man's priority queue
-        @nodes = sort { $a->[1] <=> $b->[1] } @nodes;
-        my ($x, $y) = splice(@nodes, 0, 2);
-        if (defined($x)) {
-            if (defined($y)) {
-                push @nodes, [[$x, $y], $x->[1] + $y->[1]];
-            }
-            else {
-                push @nodes, [[$x], $x->[1]];
-            }
-        }
-    } while (@nodes > 1);
+    while (@heap > 1) {
+        my $x = _heap_pop(\@heap);
+        my $y = _heap_pop(\@heap);
+        _heap_push(\@heap, [[$x, $y], $x->[1] + $y->[1]]);
+    }
 
-    walk($nodes[0], '', {}, {});
+    walk($heap[0], '', {}, {});
 }
 
 sub huffman_encode ($bytes, $dict) {
