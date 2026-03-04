@@ -28,7 +28,7 @@ use constant {
     VERSION => '0.01',
     FORMAT  => 'lzsst2',
 
-    CHUNK_SIZE => 1 << 19,    # higher value = better compression
+    CHUNK_SIZE => 1 << 21,    # higher value = better compression
 };
 
 # Container signature
@@ -113,11 +113,17 @@ sub main {
 }
 
 sub find_distance_index ($dist, $distance_symbols) {
-    foreach my $i (0 .. $#{$distance_symbols}) {
-        if ($distance_symbols->[$i][0] > $dist) {
-            return $i - 1;
+    my ($lo, $hi) = (0, $#{$distance_symbols});
+    while ($lo < $hi) {
+        my $mid = ($lo + $hi + 1) >> 1;
+        if ($distance_symbols->[$mid][0] <= $dist) {
+            $lo = $mid;
+        }
+        else {
+            $hi = $mid - 1;
         }
     }
+    return $lo;
 }
 
 sub make_deflate_symbols ($size) {
@@ -177,6 +183,7 @@ sub find_match ($str_ref, $la, $min_len, $max_len, $end, $table, $symbols) {
             if ($n > $best_n) {
                 $best_p = $p;
                 $best_n = $n;
+                last if ($best_n > $max_len);  # can't do better
             }
         }
     }
@@ -193,7 +200,7 @@ sub lz77_compression($str) {
 
     my $min_len       = 4;      # minimum match length
     my $max_len       = 258;    # maximum match length
-    my $max_chain_len = 48;     # how many recent positions to keep track of
+    my $max_chain_len = 64;     # how many recent positions to keep track of
 
     my (@literals, @distances, @lengths, %table);
 
@@ -209,7 +216,7 @@ sub lz77_compression($str) {
             ($n1, $p1) = find_match(\$str, $la, $min_len, $max_len, $end, \%table, \@symbols);
         }
 
-        if (exists($table{$lookahead2})) {
+        if ($n1 > 1 and exists($table{$lookahead2})) {
             ($n2, $p2) = find_match(\$str, $la + 1, $min_len, $max_len, $end, \%table, \@symbols);
         }
 
@@ -236,13 +243,24 @@ sub lz77_compression($str) {
 
         my $matched = substr($str, $la, $best_n);
 
-        foreach my $i (0 .. length($matched) - $min_len) {
-
-            my $key = substr($matched, $i, $min_len);
-            unshift @{$table{$key}}, $la + $i;
-
-            if (scalar(@{$table{$key}}) > $max_chain_len) {
-                pop @{$table{$key}};
+        # Only insert boundary positions for long matches to save time
+        if ($best_n > 32) {
+            foreach my $i (0 .. 3, $best_n - $min_len - 3 .. $best_n - $min_len) {
+                next if $i < 0 or $i > length($matched) - $min_len;
+                my $key = substr($matched, $i, $min_len);
+                unshift @{$table{$key}}, $la + $i;
+                if (scalar(@{$table{$key}}) > $max_chain_len) {
+                    pop @{$table{$key}};
+                }
+            }
+        }
+        else {
+            foreach my $i (0 .. length($matched) - $min_len) {
+                my $key = substr($matched, $i, $min_len);
+                unshift @{$table{$key}}, $la + $i;
+                if (scalar(@{$table{$key}}) > $max_chain_len) {
+                    pop @{$table{$key}};
+                }
             }
         }
 
@@ -409,19 +427,38 @@ sub walk ($node, $code, $h, $rev_h) {
 sub mktree_from_freq ($freq) {
 
     my @nodes = map { [$_, $freq->{$_}] } sort { $a <=> $b } keys %$freq;
+    @nodes = sort { $a->[1] <=> $b->[1] } @nodes;
 
-    do {    # poor man's priority queue
-        @nodes = sort { $a->[1] <=> $b->[1] } @nodes;
+    # Ensure single-symbol case gets code '0' (at least 1 bit), matching original behavior
+    if (@nodes == 1) {
+        my $x = $nodes[0];
+        @nodes = ([[$x], $x->[1]]);
+    }
+
+    while (@nodes > 1) {
         my ($x, $y) = splice(@nodes, 0, 2);
-        if (defined($x)) {
-            if (defined($y)) {
-                push @nodes, [[$x, $y], $x->[1] + $y->[1]];
+        my $new_node;
+        if (defined($y)) {
+            $new_node = [[$x, $y], $x->[1] + $y->[1]];
+        }
+        else {
+            $new_node = [[$x], $x->[1]];
+        }
+
+        # Binary search for insertion position
+        my $weight = $new_node->[1];
+        my ($lo, $hi) = (0, scalar(@nodes));
+        while ($lo < $hi) {
+            my $mid = ($lo + $hi) >> 1;
+            if ($nodes[$mid][1] < $weight) {
+                $lo = $mid + 1;
             }
             else {
-                push @nodes, [[$x], $x->[1]];
+                $hi = $mid;
             }
         }
-    } while (@nodes > 1);
+        splice(@nodes, $lo, 0, $new_node);
+    }
 
     walk($nodes[0], '', {}, {});
 }
