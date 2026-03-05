@@ -1,22 +1,22 @@
 #!/usr/bin/perl
 
-use 5.036;
-use ntheory qw(:all);
-
 # Pohlig-Hellman with Pollard's rho for each prime-power factor.
 
 # Pollard's rho algorithm for logarithms
 # https://en.wikipedia.org/wiki/Pollard%27s_rho_algorithm_for_logarithms
 
+use 5.036;
+use ntheory qw(:all);
+
 # Pollard's rho for groups of prime order p
-sub __prime_order_log__($g, $h, $p, $n, $max_tries = 100) {
+sub _pollard_rho_log($g, $h, $p, $n, $max_tries = 10) {
 
     # Trivial cases
     return 0 if ($h == 1);
     return 1 if ($g == $h);
 
     # For very small prime orders, brute force is simpler and reliable
-    if ($p <= 1000) {
+    if ($p <= 100) {
         my $t = 1;
         for my $i (0 .. $p - 1) {
             return $i if $t == $h;
@@ -89,7 +89,7 @@ sub __prime_order_log__($g, $h, $p, $n, $max_tries = 100) {
 
 # Solve g^x = a (mod n) where g has order exactly p^e * r,
 # and we want x modulo p^e.
-sub __prime_power_log__($a, $g, $n, $p, $e, $full_order) {
+sub _prime_power_log($a, $g, $n, $p, $e, $full_order) {
 
     my $L = $full_order;
     my $r = divint($L, powint($p, $e));    # co-factor
@@ -111,14 +111,14 @@ sub __prime_power_log__($a, $g, $n, $p, $e, $full_order) {
         my $sub_a = powmod($cur_a, $exp, $n);    # corresponding element
 
         # Solve the discrete log in the prime-order subgroup
-        my $d = __prime_order_log__($sub_g, $sub_a, $p, $n) // return (undef, 0);
+        my $d = _pollard_rho_log($sub_g, $sub_a, $p, $n) // return (undef, 0);
 
         $x += ($d * $f);
         $f *= $p;
 
         # Remove the already found part
         $cur_a = mulmod($cur_a, powmod($cur_g, -$d, $n), $n);
-        $cur_g = powmod($cur_g, $p, $n);    # next generator, order p^{e-1-i}
+        $cur_g = powmod($cur_g, $p, $n);                        # next generator, order p^{e-1-i}
     }
 
     return ($x, 1);
@@ -126,7 +126,7 @@ sub __prime_power_log__($a, $g, $n, $p, $e, $full_order) {
 
 # Solve g^x = a (mod n) where gcd(g, n) = 1, using Pohlig-Hellman over order of g.
 # Suitable when n is a prime power (or when called per prime-power factor of n).
-sub __dlog_coprime_prime_power_mod__($a, $g, $n) {
+sub _dlog_coprime_prime_power_mod($a, $g, $n) {
 
     my $order = znorder($g, $n) // return undef;
 
@@ -146,7 +146,7 @@ sub __dlog_coprime_prime_power_mod__($a, $g, $n) {
 
     foreach my $pp (@factors) {
         my ($p, $e)  = @$pp;
-        my ($x, $ok) = __prime_power_log__($a, $g, $n, $p, $e, $order);
+        my ($x, $ok) = _prime_power_log($a, $g, $n, $p, $e, $order);
         $ok || return undef;
         push @residues, [$x, powint($p, $e)];
     }
@@ -161,16 +161,16 @@ sub __dlog_coprime_prime_power_mod__($a, $g, $n) {
 sub discrete_log($a, $g, $n, $order = undef) {
 
     # Normalise inputs
-    $a %= $n;
-    $g %= $n;
+    $a = modint($a, $n);
+    $g = modint($g, $n);
 
     # Handle non-coprime case: gcd(g, n) > 1
     if (gcd($g, $n) != 1) {
 
-        my $g_pow = 1;    # g^k mod n (original n), for direct equality check
-        my $n_red = $n;   # modulus being reduced
-        my $a_red = $a;   # target being reduced
-        my $d_acc = 1;    # accumulated product: (g/D_1)*(g/D_2)*...*(g/D_k) mod n_red
+        my $g_pow = 1;     # g^k mod n (original n), for direct equality check
+        my $n_red = $n;    # modulus being reduced
+        my $a_red = $a;    # target being reduced
+        my $d_acc = 1;     # accumulated product: (g/D_1)*(g/D_2)*...*(g/D_k) mod n_red
         my $k     = 0;
 
         while (gcd($g, $n_red) != 1) {
@@ -203,42 +203,16 @@ sub discrete_log($a, $g, $n, $order = undef) {
     # Factor n into prime powers
     my @n_factors = factor_exp($n);
 
-    # For a single prime-power modulus, use Pohlig-Hellman directly
-    if (@n_factors == 1) {
-        my $ord = $order // znorder($g, $n) // return undef;
-
-        if (powmod($a, $ord, $n) != 1) {
-            return undef;
-        }
-
-        if ($ord == 1) {
-            return ($a == 1 ? 0 : undef);
-        }
-
-        my @factors  = factor_exp($ord);
-        my @residues = ();
-
-        foreach my $pp (@factors) {
-            my ($p, $e)  = @$pp;
-            my ($x, $ok) = __prime_power_log__($a, $g, $n, $p, $e, $ord);
-            $ok || return undef;
-            push @residues, [$x, powint($p, $e)];
-        }
-
-        my $x = chinese(@residues);
-        return (defined($x) && powmod($g, $x, $n) == $a) ? $x : undef;
-    }
-
     # Composite n: solve g^x = a (mod p^e) for each prime-power factor, then CRT
     my @residues = ();
 
     foreach my $pp (@n_factors) {
         my ($p, $e) = @$pp;
-        my $pe      = powint($p, $e);
-        my $g_i     = $g % $pe;
-        my $a_i     = $a % $pe;
+        my $pe  = powint($p, $e);
+        my $g_i = modint($g, $pe);
+        my $a_i = modint($a, $pe);
 
-        my $r = __dlog_coprime_prime_power_mod__($a_i, $g_i, $pe);
+        my $r = _dlog_coprime_prime_power_mod($a_i, $g_i, $pe);
         return undef unless defined $r;
 
         my $ord_i = znorder($g_i, $pe) // return undef;
@@ -251,11 +225,9 @@ sub discrete_log($a, $g, $n, $order = undef) {
     (powmod($g, $x, $n) == $a) ? $x : undef;
 }
 
-use Test::More tests => 14;
+use Test::More tests => 1309;
 
 is(discrete_log(5678, 5, 10007), 8620);
-
-#is(discrete_log(Math::GMPz->new("232752345212475230211680"), Math::GMPz->new("23847293847923847239847098123812075234"), Math::GMPz->new("804842536444911030681947")), 13);
 
 foreach my $test (
                   [[5675,              5,      10000019],          2003974],            # 5675 = 5^2003974 mod 10000019
@@ -290,4 +262,107 @@ is(discrete_log(130, 85, 177), 15);    # 177 = 3*59, gcd(85,177)=1
 is(discrete_log(100, 52, 209), 10);    # 209 = 11*19, 52^10 = 100 (mod 209)
 
 # Verify no-solution cases still return undef
-is(discrete_log(3, 4, 6), undef);    # no solution exists
+is(discrete_log(3, 4, 6), undef);      # no solution exists
+
+is(discrete_log(1, 2, 7), 0);
+is(discrete_log(2, 2, 7), 1);
+is(discrete_log(4, 2, 7), 2);
+is(discrete_log(1, 3, 7), 0);
+
+is(discrete_log(3, 2, 5), 3);          # 2^3 mod 5 = 3
+is(discrete_log(4, 2, 5), 2);
+
+is(discrete_log(2,     4,     7),      2);
+is(discrete_log(4,     5,     7),      2);
+is(discrete_log(5,     3,     7),      5);
+is(discrete_log(130,   85,    177),    15);
+is(discrete_log(79,    92,    129),    2);
+is(discrete_log(115,   116,   141),    26);
+is(discrete_log(67741, 90737, 120309), 146);
+is(discrete_log(12,    42,    122),    13);
+is(discrete_log(36,    44,    50),     2);
+is(discrete_log(34,    170,   187),    5);
+
+# Small modulus cycles
+
+is(discrete_log(8, 2, 11), 3);
+is(discrete_log(5, 2, 11), 4);
+is(discrete_log(9, 3, 11), 2);
+
+# Edge cases
+
+is(discrete_log(1, 1, 13), 0);
+is(discrete_log(1, 5, 13), 0);
+
+# g == a
+is(discrete_log(7, 7, 19), 1);
+
+# modulus 2
+is(discrete_log(1, 1, 2), 0);
+
+# Non-prime modulus
+
+is(discrete_log(4, 2, 15), 2);    # 2^2 = 4 mod 15
+is(discrete_log(1, 4, 9),  0);
+
+# Cases where solution may not exist
+
+is(discrete_log(3, 4, 7), undef);
+is(discrete_log(3, 2, 4), undef);
+is(discrete_log(6, 4, 8), undef);
+
+# Verify correctness by recomputing power
+
+for my $n (7, 11, 13, 17) {
+    for my $g (2 .. $n - 1) {
+        for my $k (0 .. $n - 1) {
+
+            my $a = powmod($g, $k, $n);
+            my $r = discrete_log($a, $g, $n);
+
+            ok(defined($r), "discrete_log($a, $g, $n)");
+            is(powmod($g, $r, $n), $a) if defined($r);
+        }
+    }
+}
+
+# Randomized tests
+
+for (1 .. 100) {
+    my $n = urandomm(200000 - 50000) + 50000;
+    my $g = urandomm($n - 2) + 2;
+    my $k = urandomm(50000);
+
+    my $a = powmod($g, $k, $n);
+    my $r = discrete_log($a, $g, $n);
+
+    ok(defined($r), "discrete_log($a, $g, $n)");
+    is(powmod($g, $r, $n), $a) if defined($r);
+}
+
+# Computationally intensive tests
+
+my $p = 1000003;
+my $g = 2;
+my $k = 123456;
+
+my $a = powmod($g, $k, $p);
+
+is(powmod($g, discrete_log($a, $g, $p), $p), $a);
+
+# Larger exponent
+
+my $k2 = 654321;
+my $a2 = powmod($g, $k2, $p);
+
+is(powmod($g, discrete_log($a2, $g, $p), $p), $a2);
+
+# Large prime modulus stress test
+
+my $p2 = 10000019;
+my $g2 = 2;
+my $k3 = 777777;
+
+my $a3 = powmod($g2, $k3, $p2);
+
+is(powmod($g2, discrete_log($a3, $g2, $p2), $p2), $a3);
