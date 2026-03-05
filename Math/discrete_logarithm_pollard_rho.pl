@@ -8,17 +8,22 @@ use ntheory qw(:all);
 # Pollard's rho algorithm for logarithms
 # https://en.wikipedia.org/wiki/Pollard%27s_rho_algorithm_for_logarithms
 
-# Integer exponentiation and division (not exported by ntheory 0.73)
-sub powint($b, $e) { my $r = 1; $r *= $b for 1 .. $e; $r }
-sub divint($a, $b) { int($a / $b) }
-sub submod($a, $b, $n) { ($a - $b) % $n }
-
 # Pollard's rho for groups of prime order p
 sub __prime_order_log__($g, $h, $p, $n, $max_tries = 100) {
 
     # Trivial cases
     return 0 if ($h == 1);
     return 1 if ($g == $h);
+
+    # For very small prime orders, brute force is simpler and reliable
+    if ($p <= 1000) {
+        my $t = 1;
+        for my $i (0 .. $p - 1) {
+            return $i if $t == $h;
+            $t = mulmod($t, $g, $n);
+        }
+        return undef;
+    }
 
     foreach my $attempt (1 .. $max_tries) {
 
