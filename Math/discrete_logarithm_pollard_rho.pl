@@ -103,18 +103,19 @@ sub _prime_power_log($a, $g, $n, $p, $e, $full_order) {
     my $cur_a = $a0;                       # current element
     my $f     = 1;                         # current digit multiplier
 
+    my $sub_g = powmod($g0, powint($p, $e - 1), $n);    # generator of order p
+
     foreach my $i (0 .. $e - 1) {
 
         # Create an element of order p by raising to p^{e-1-i}
         my $exp   = powint($p, $e - $i - 1);
-        my $sub_g = powmod($cur_g, $exp, $n);    # generator of order p
-        my $sub_a = powmod($cur_a, $exp, $n);    # corresponding element
+        my $sub_a = powmod($cur_a, $exp, $n);           # corresponding element
 
         # Solve the discrete log in the prime-order subgroup
         my $d = _pollard_rho_log($sub_g, $sub_a, $p, $n) // return (undef, 0);
 
-        $x += ($d * $f);
-        $f *= $p;
+        $x = addint($x, mulint($d, $f));
+        $f = mulint($f, $p);
 
         # Remove the already found part
         $cur_a = mulmod($cur_a, powmod($cur_g, -$d, $n), $n);
