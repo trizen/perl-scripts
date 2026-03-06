@@ -5,10 +5,8 @@ use Math::GMPz;
 use ntheory qw(:all);
 
 # Pollard's rho for discrete logarithm in a group of prime order
-# Returns x such that g^x = h (mod n) where g has order p (prime)
 sub _znlog_pollard_rho($g, $h, $p, $n, $max_tries = 10) {
 
-    # Trivial cases
     if (Math::GMPz::Rmpz_cmp_ui($h, 1) == 0) {
         return Math::GMPz::Rmpz_init_set_ui(0);
     }
@@ -16,7 +14,6 @@ sub _znlog_pollard_rho($g, $h, $p, $n, $max_tries = 10) {
         return Math::GMPz::Rmpz_init_set_ui(1);
     }
 
-    # For very small prime orders, use brute-force
     if (Math::GMPz::Rmpz_cmp_ui($p, 100) <= 0) {
         my $t = Math::GMPz::Rmpz_init_set_ui(1);
         for my $i (0 .. Math::GMPz::Rmpz_get_ui($p) - 1) {
@@ -31,78 +28,82 @@ sub _znlog_pollard_rho($g, $h, $p, $n, $max_tries = 10) {
 
     state $rng = Math::GMPz::zgmp_randinit_default_nobless();
 
-    state $tmp = Math::GMPz::Rmpz_init_nobless();
-    state $a1  = Math::GMPz::Rmpz_init_nobless();
-    state $b1  = Math::GMPz::Rmpz_init_nobless();
-    state $x1  = Math::GMPz::Rmpz_init_nobless();
-    state $a2  = Math::GMPz::Rmpz_init_nobless();
-    state $b2  = Math::GMPz::Rmpz_init_nobless();
-    state $x2  = Math::GMPz::Rmpz_init_nobless();
-
-    state $da = Math::GMPz::Rmpz_init_nobless();
-    state $db = Math::GMPz::Rmpz_init_nobless();
-
+    state $tmp   = Math::GMPz::Rmpz_init_nobless();
+    state $a1    = Math::GMPz::Rmpz_init_nobless();
+    state $b1    = Math::GMPz::Rmpz_init_nobless();
+    state $x1    = Math::GMPz::Rmpz_init_nobless();
+    state $a2    = Math::GMPz::Rmpz_init_nobless();
+    state $b2    = Math::GMPz::Rmpz_init_nobless();
+    state $x2    = Math::GMPz::Rmpz_init_nobless();
+    state $da    = Math::GMPz::Rmpz_init_nobless();
+    state $db    = Math::GMPz::Rmpz_init_nobless();
     state $invdb = Math::GMPz::Rmpz_init_nobless();
-
-    # Floyd's cycle detection
-    my $iter = sub {
-        my ($a, $b, $x) = @_;
-        my $r = Math::GMPz::Rmpz_mod_ui($tmp, $x, 3);
-        if ($r == 0) {
-            Math::GMPz::Rmpz_add_ui($a, $a, 1);
-            Math::GMPz::Rmpz_mul($x, $x, $g);
-            Math::GMPz::Rmpz_mod($x, $x, $n);
-        }
-        elsif ($r == 1) {
-            Math::GMPz::Rmpz_add_ui($b, $b, 1);
-            Math::GMPz::Rmpz_mul($x, $x, $h);
-            Math::GMPz::Rmpz_mod($x, $x, $n);
-        }
-        else {
-            Math::GMPz::Rmpz_mul_2exp($a, $a, 1);
-            Math::GMPz::Rmpz_mul_2exp($b, $b, 1);
-            Math::GMPz::Rmpz_mod($a, $a, $p);
-            Math::GMPz::Rmpz_mod($b, $b, $p);
-            Math::GMPz::Rmpz_powm_ui($x, $x, 2, $n);
-        }
-    };
 
     foreach my $attempt (1 .. $max_tries) {
 
-        # Random starting point (a,b) with X = g^a * h^b
-        Math::GMPz::Rmpz_urandomm($a1, $b1, $rng, $p, 2);    # 0 <= a1 < p
+        Math::GMPz::Rmpz_urandomm($a1, $b1, $rng, $p, 2);
 
-        Math::GMPz::Rmpz_powm($x1,  $g, $a1, $n);            # g^a1 mod n
-        Math::GMPz::Rmpz_powm($tmp, $h, $b1, $n);            # h^b1 mod n
+        Math::GMPz::Rmpz_powm($x1,  $g, $a1, $n);
+        Math::GMPz::Rmpz_powm($tmp, $h, $b1, $n);
         Math::GMPz::Rmpz_mul($x1, $x1, $tmp);
         Math::GMPz::Rmpz_mod($x1, $x1, $n);
 
-        # Hare starts same as tortoise
         Math::GMPz::Rmpz_set($a2, $a1);
         Math::GMPz::Rmpz_set($b2, $b1);
         Math::GMPz::Rmpz_set($x2, $x1);
 
         while (1) {
 
-            # Tortoise step
-            $iter->($a1, $b1, $x1);
+            # Tortoise step (Inlined)
+            my $r1 = Math::GMPz::Rmpz_mod_ui($tmp, $x1, 3);
+            if ($r1 == 0) {
+                Math::GMPz::Rmpz_add_ui($a1, $a1, 1);
+                Math::GMPz::Rmpz_mul($x1, $x1, $g);
+                Math::GMPz::Rmpz_mod($x1, $x1, $n);
+            }
+            elsif ($r1 == 1) {
+                Math::GMPz::Rmpz_add_ui($b1, $b1, 1);
+                Math::GMPz::Rmpz_mul($x1, $x1, $h);
+                Math::GMPz::Rmpz_mod($x1, $x1, $n);
+            }
+            else {
+                Math::GMPz::Rmpz_mul_2exp($a1, $a1, 1);
+                Math::GMPz::Rmpz_mul_2exp($b1, $b1, 1);
+                Math::GMPz::Rmpz_mod($a1, $a1, $p);
+                Math::GMPz::Rmpz_mod($b1, $b1, $p);
+                Math::GMPz::Rmpz_powm_ui($x1, $x1, 2, $n);
+            }
 
-            # Hare step (two iterations)
-            $iter->($a2, $b2, $x2);
-            $iter->($a2, $b2, $x2);
+            # Hare step (Inlined, two iterations)
+            for (1 .. 2) {
+                my $r2 = Math::GMPz::Rmpz_mod_ui($tmp, $x2, 3);
+                if ($r2 == 0) {
+                    Math::GMPz::Rmpz_add_ui($a2, $a2, 1);
+                    Math::GMPz::Rmpz_mul($x2, $x2, $g);
+                    Math::GMPz::Rmpz_mod($x2, $x2, $n);
+                }
+                elsif ($r2 == 1) {
+                    Math::GMPz::Rmpz_add_ui($b2, $b2, 1);
+                    Math::GMPz::Rmpz_mul($x2, $x2, $h);
+                    Math::GMPz::Rmpz_mod($x2, $x2, $n);
+                }
+                else {
+                    Math::GMPz::Rmpz_mul_2exp($a2, $a2, 1);
+                    Math::GMPz::Rmpz_mul_2exp($b2, $b2, 1);
+                    Math::GMPz::Rmpz_mod($a2, $a2, $p);
+                    Math::GMPz::Rmpz_mod($b2, $b2, $p);
+                    Math::GMPz::Rmpz_powm_ui($x2, $x2, 2, $n);
+                }
+            }
 
             if (Math::GMPz::Rmpz_cmp($x1, $x2) == 0) {
-
-                # Collision: g^{a1} h^{b1} = g^{a2} h^{b2}
                 Math::GMPz::Rmpz_sub($da, $a1, $a2);
                 Math::GMPz::Rmpz_mod($da, $da, $p);
 
                 Math::GMPz::Rmpz_sub($db, $b2, $b1);
                 Math::GMPz::Rmpz_mod($db, $db, $p);
 
-                if (Math::GMPz::Rmpz_sgn($db) == 0) {
-                    last;    # degenerate case, restart
-                }
+                last if Math::GMPz::Rmpz_sgn($db) == 0;    # Degenerate case
 
                 Math::GMPz::Rmpz_invert($invdb, $db, $p) || last;
 
@@ -110,26 +111,21 @@ sub _znlog_pollard_rho($g, $h, $p, $n, $max_tries = 10) {
                 Math::GMPz::Rmpz_mul($x, $da, $invdb);
                 Math::GMPz::Rmpz_mod($x, $x, $p);
 
-                # Verify
                 Math::GMPz::Rmpz_powm($tmp, $g, $x, $n);
-                if (Math::GMPz::Rmpz_cmp($tmp, $h) == 0) {
-                    return $x;
-                }
-                last;    # verification failed, restart
+                return $x if Math::GMPz::Rmpz_cmp($tmp, $h) == 0;
+
+                last;                                      # Verification failed, restart
             }
         }
     }
     return undef;
 }
 
-# Solve g^x = a (mod n) where g has order exactly p^e * r,
-# and we want x modulo p^e.
 sub _znlog_prime_power($a, $g, $n, $p, $e, $full_order) {
-
     my $L = $full_order;
     state $r = Math::GMPz::Rmpz_init_nobless();
-    Math::GMPz::Rmpz_pow_ui($r, $p, $e);    # p^e
-    Math::GMPz::Rmpz_tdiv_q($r, $L, $r);    # r = L / p^e
+    Math::GMPz::Rmpz_pow_ui($r, $p, $e);
+    Math::GMPz::Rmpz_tdiv_q($r, $L, $r);
 
     state $g0 = Math::GMPz::Rmpz_init_nobless();
     state $a0 = Math::GMPz::Rmpz_init_nobless();
@@ -143,64 +139,50 @@ sub _znlog_prime_power($a, $g, $n, $p, $e, $full_order) {
     Math::GMPz::Rmpz_set($cur_g, $g0);
     Math::GMPz::Rmpz_set($cur_a, $a0);
 
-    state $f = Math::GMPz::Rmpz_init_nobless();    # multiplier for current digit
+    state $f = Math::GMPz::Rmpz_init_nobless();
     Math::GMPz::Rmpz_set_ui($f, 1);
 
     state $tmp   = Math::GMPz::Rmpz_init_nobless();
     state $sub_g = Math::GMPz::Rmpz_init();
     state $sub_a = Math::GMPz::Rmpz_init();
 
-    foreach my $i (0 .. $e - 1) {
+    # OPTIMIZATION: Subgroup generator of order p is strictly constant
+    Math::GMPz::Rmpz_pow_ui($tmp, $p, $e - 1);
+    Math::GMPz::Rmpz_powm($sub_g, $g0, $tmp, $n);
 
-        Math::GMPz::Rmpz_pow_ui($tmp, $p, $e - $i - 1);    # p^(e-1-i)
-        Math::GMPz::Rmpz_powm($sub_g, $cur_g, $tmp, $n);
+    foreach my $i (0 .. $e - 1) {
+        Math::GMPz::Rmpz_pow_ui($tmp, $p, $e - $i - 1);
         Math::GMPz::Rmpz_powm($sub_a, $cur_a, $tmp, $n);
 
         my $d = _znlog_pollard_rho($sub_g, $sub_a, $p, $n) // return undef;
 
-        # x += d * f
         Math::GMPz::Rmpz_mul($tmp, $d, $f);
         Math::GMPz::Rmpz_add($x, $x, $tmp);
-
-        # f *= p
         Math::GMPz::Rmpz_mul($f, $f, $p);
 
-        # Remove the found part: cur_a = cur_a * inv(cur_g^d) mod n
         Math::GMPz::Rmpz_powm($tmp, $cur_g, $d, $n);
         Math::GMPz::Rmpz_invert($tmp, $tmp, $n) || return undef;
         Math::GMPz::Rmpz_mul($cur_a, $cur_a, $tmp);
         Math::GMPz::Rmpz_mod($cur_a, $cur_a, $n);
 
-        # Next generator: cur_g = cur_g^p mod n
         Math::GMPz::Rmpz_powm($cur_g, $cur_g, $p, $n);
     }
     return $x;
 }
 
-# Solve g^x = a (mod n) where gcd(g, n) = 1, using Pohlig-Hellman over order of g.
-# Suitable when n is a prime power (or when called per prime-power factor of n).
 sub _znlog_coprime_prime_power($a, $g, $n) {
-
     my $order = Math::GMPz->new((znorder($g, $n) // return undef));
 
     state $tmp   = Math::GMPz::Rmpz_init_nobless();
     state $p_mpz = Math::GMPz::Rmpz_init_nobless();
 
-    # Quick necessary condition: a must lie in the subgroup generated by g
     Math::GMPz::Rmpz_powm($tmp, $a, $order, $n);
-    if (Math::GMPz::Rmpz_cmp_ui($tmp, 1) != 0) {
-        return undef;
-    }
+    return undef if Math::GMPz::Rmpz_cmp_ui($tmp, 1) != 0;
 
-    # Trivial case
     if (Math::GMPz::Rmpz_cmp_ui($order, 1) == 0) {
-        if (Math::GMPz::Rmpz_cmp_ui($a, 1) == 0) {
-            return 0;
-        }
-        return undef;
+        return (Math::GMPz::Rmpz_cmp_ui($a, 1) == 0) ? 0 : undef;
     }
 
-    # Factor the order into prime powers and solve for each
     my @factors  = factor_exp($order);
     my @residues = ();
 
@@ -211,45 +193,34 @@ sub _znlog_coprime_prime_power($a, $g, $n) {
         push @residues, [$x, powint($p, $e)];
     }
 
-    # Combine via CRT
     my $x = chinese(@residues) // return undef;
 
-    # Verify
     Math::GMPz::Rmpz_set_str($tmp, $x, 10);
     Math::GMPz::Rmpz_powm($tmp, $g, $tmp, $n);
-    if (Math::GMPz::Rmpz_cmp($tmp, $a) == 0) {
-        return $x;
-    }
-    return undef;
+    return (Math::GMPz::Rmpz_cmp($tmp, $a) == 0) ? $x : undef;
 }
 
 sub _znlog_pohlig_hellman {
     my ($a, $g, $n, $order) = @_;
 
-    state $tmp = Math::GMPz::Rmpz_init_nobless();
+    # Use 'my' instead of 'state' to avoid clobbering during recursion
+    my $tmp = Math::GMPz::Rmpz_init_nobless();
 
     Math::GMPz::Rmpz_gcd($tmp, $g, $n);
 
-    # Handle non-coprime case: gcd(g, n) > 1
     if (Math::GMPz::Rmpz_cmp_ui($tmp, 1) != 0) {
-
-        my $g_pow = Math::GMPz::Rmpz_init_set_ui(1);    # g^k mod n (original n), for direct equality check
-        my $n_red = Math::GMPz::Rmpz_init_set($n);      # modulus being reduced
-        my $a_red = Math::GMPz::Rmpz_init_set($a);      # target being reduced
-        my $d_acc = Math::GMPz::Rmpz_init_set_ui(1);    # accumulated product: (g/D_1)*(g/D_2)*...*(g/D_k) mod n_red
+        my $g_pow = Math::GMPz::Rmpz_init_set_ui(1);
+        my $n_red = Math::GMPz::Rmpz_init_set($n);
+        my $a_red = Math::GMPz::Rmpz_init_set($a);
+        my $d_acc = Math::GMPz::Rmpz_init_set_ui(1);
 
         my $k = 0;
         while (1) {
-
             Math::GMPz::Rmpz_gcd($tmp, $g, $n_red);
-            Math::GMPz::Rmpz_cmp_ui($tmp, 1) == 0 and last;
+            last if Math::GMPz::Rmpz_cmp_ui($tmp, 1) == 0;
 
-            # Check if g^k already equals a (mod n)
-            if (Math::GMPz::Rmpz_cmp($g_pow, $a) == 0) {
-                return $k;
-            }
-
-            Math::GMPz::Rmpz_divisible_p($a_red, $tmp) || return undef;
+            return $k if Math::GMPz::Rmpz_cmp($g_pow, $a) == 0;
+            return undef unless Math::GMPz::Rmpz_divisible_p($a_red, $tmp);
 
             Math::GMPz::Rmpz_div($n_red, $n_red, $tmp);
             Math::GMPz::Rmpz_div($a_red, $a_red, $tmp);
@@ -263,12 +234,8 @@ sub _znlog_pohlig_hellman {
             ++$k;
         }
 
-        # Final direct check after stripping
-        if (Math::GMPz::Rmpz_cmp($g_pow, $a) == 0) {
-            return $k;
-        }
+        return $k if Math::GMPz::Rmpz_cmp($g_pow, $a) == 0;
 
-        # Phase 2: gcd(g, n_red) = 1 now; solve g^y = a_red * inv(d_acc) (mod n_red)
         Math::GMPz::Rmpz_invert($tmp, $d_acc, $n_red) || return undef;
         Math::GMPz::Rmpz_mul($tmp, $tmp, $a_red);
 
@@ -279,21 +246,15 @@ sub _znlog_pohlig_hellman {
         Math::GMPz::Rmpz_mod($new_g, $g,   $n_red);
 
         my $y = __SUB__->($new_a, $new_g, $n_red) // return undef;
-
         return ($y + $k);
     }
 
-    # Coprime case: gcd(g, n) = 1
-
-    # Factor n into prime powers
     my @n_factors = factor_exp($n);
+    my @residues  = ();
 
-    # Composite n: solve g^x = a (mod p^e) for each prime-power factor, then CRT
-    my @residues = ();
-
-    state $pe  = Math::GMPz::Rmpz_init();
-    state $g_i = Math::GMPz::Rmpz_init();
-    state $a_i = Math::GMPz::Rmpz_init();
+    my $pe  = Math::GMPz::Rmpz_init();
+    my $g_i = Math::GMPz::Rmpz_init();
+    my $a_i = Math::GMPz::Rmpz_init();
 
     foreach my $pp (@n_factors) {
         my ($p, $e) = @$pp;
@@ -311,11 +272,10 @@ sub _znlog_pohlig_hellman {
 
     my $x = Math::GMPz::Rmpz_init_set_str((chinese(@residues) // return undef), 10);
 
-    # Verify the result
-    Math::GMPz::Rmpz_set_str($tmp, $x, 10);
-    Math::GMPz::Rmpz_powm($tmp, $g, $tmp, $n);
+    Math::GMPz::Rmpz_powm($tmp, $g, $x, $n);
+
     if (Math::GMPz::Rmpz_cmp($tmp, $a) == 0) {
-        return Math::GMPz::Rmpz_init_set_str($x, 10);
+        return $x;
     }
 
     return undef;
@@ -335,18 +295,15 @@ sub discrete_log {
         Math::GMPz::Rmpz_abs($n, $n);
     }
 
-    if (Math::GMPz::Rmpz_cmp_ui($n, 1) == 0) {
-        return 0;
-    }
+    return 0 if Math::GMPz::Rmpz_cmp_ui($n, 1) == 0;
 
-    $a = Math::GMPz::Rmpz_init_set($a);    # copy
-    $g = Math::GMPz::Rmpz_init_set($g);    # copy
+    $a = Math::GMPz::Rmpz_init_set($a);
+    $g = Math::GMPz::Rmpz_init_set($g);
 
     Math::GMPz::Rmpz_mod($a, $a, $n);
     Math::GMPz::Rmpz_mod($g, $g, $n);
 
-    if (   Math::GMPz::Rmpz_cmp_ui($a, 1) == 0
-        or Math::GMPz::Rmpz_cmp_ui($g, 0) == 0) {
+    if (Math::GMPz::Rmpz_cmp_ui($a, 1) == 0 or Math::GMPz::Rmpz_cmp_ui($g, 0) == 0) {
         return 0;
     }
 
