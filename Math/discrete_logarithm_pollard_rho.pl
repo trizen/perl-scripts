@@ -8,7 +8,7 @@
 use 5.036;
 use ntheory qw(:all);
 
-# Pollard's rho for groups of prime order p
+# Pollard's rho for discrete logarithm in a group of prime order
 sub _pollard_rho_log($g, $h, $p, $n, $max_tries = 10) {
 
     # Trivial cases
@@ -112,7 +112,7 @@ sub _prime_power_log($a, $g, $n, $p, $e, $full_order) {
         my $sub_a = powmod($cur_a, $exp, $n);           # corresponding element
 
         # Solve the discrete log in the prime-order subgroup
-        my $d = _pollard_rho_log($sub_g, $sub_a, $p, $n) // return (undef, 0);
+        my $d = _pollard_rho_log($sub_g, $sub_a, $p, $n) // return undef;
 
         $x = addint($x, mulint($d, $f));
         $f = mulint($f, $p);
@@ -122,7 +122,7 @@ sub _prime_power_log($a, $g, $n, $p, $e, $full_order) {
         $cur_g = powmod($cur_g, $p, $n);                        # next generator, order p^{e-1-i}
     }
 
-    return ($x, 1);
+    return $x;
 }
 
 # Solve g^x = a (mod n) where gcd(g, n) = 1, using Pohlig-Hellman over order of g.
@@ -146,9 +146,8 @@ sub _dlog_coprime_prime_power_mod($a, $g, $n) {
     my @residues = ();
 
     foreach my $pp (@factors) {
-        my ($p, $e)  = @$pp;
-        my ($x, $ok) = _prime_power_log($a, $g, $n, $p, $e, $order);
-        $ok || return undef;
+        my ($p, $e) = @$pp;
+        my $x = _prime_power_log($a, $g, $n, $p, $e, $order) // return undef;
         push @residues, [$x, powint($p, $e)];
     }
 
@@ -159,7 +158,7 @@ sub _dlog_coprime_prime_power_mod($a, $g, $n) {
     (defined($x) && powmod($g, $x, $n) == $a) ? $x : undef;
 }
 
-sub discrete_log($a, $g, $n, $order = undef) {
+sub discrete_log($a, $g, $n) {
 
     # Normalise inputs
     $a = modint($a, $n);
@@ -220,6 +219,7 @@ sub discrete_log($a, $g, $n, $order = undef) {
         push @residues, [$r, $ord_i];
     }
 
+    # Combine via CRT
     my $x = chinese(@residues) // return undef;
 
     # Verify the result
