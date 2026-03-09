@@ -37,13 +37,16 @@ sub carmichael_numbers_in_range ($A, $B, $k) {
 
         my $hi = rootint(divint($B, $m), $k);
 
-        # Pinch's bound for the second to last prime.
+        $lo > $hi && return;
+
+        # Pinch's bound for the second to last prime
         if ($k == 2 and $m < 1_000) {
             my $bound = 2 * $m * $m - 3 * $m + 2;
-            $hi = $bound if $hi > $bound;
+            if ($hi > $bound) {
+                $hi = $bound;
+                $lo > $hi && return;
+            }
         }
-
-        $lo > $hi && return;
 
         if ($k == 1) {
 
@@ -91,12 +94,12 @@ sub carmichael_numbers_in_range ($A, $B, $k) {
                 __SUB__->($m * $p, lcm($L, $p - 1), $p + 1, $k - 1);
             }
         }
-    }->(1, 1, 3, $k);
+      }
+      ->(1, 1, 3, $k);
 
     return sort { $a <=> $b } @list;
 }
 
-my $k    = 3;
 my $from = 1;
 my $upto = powint(10, 10);
 

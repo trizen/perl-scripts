@@ -26,7 +26,7 @@ sub carmichael_numbers_in_range ($A, $B, $k, $primes, $callback) {
     $A = vecmax($A, pn_primorial($k));
 
     # Largest possisble prime factor for Carmichael numbers <= B
-    my $max_p = (1 + sqrtint(8*$B + 1))>>2;
+    my $max_p = (1 + sqrtint(8 * $B + 1)) >> 2;
 
     my @P   = sort { $a <=> $b } grep { $_ <= $max_p } uniq(@$primes);
     my $end = $#P;

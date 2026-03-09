@@ -51,15 +51,16 @@ sub carmichael_numbers_in_range ($A, $B, $k) {
 
         my $hi = Math::GMPz::Rmpz_get_ui($u);
 
+        $lo > $hi && return;
+
         # Pinch's bound for the second to last prime
         if ($k == 2 and Math::GMPz::Rmpz_cmp_ui($m, 1_000) <= 0) {
             my $m_ui  = Math::GMPz::Rmpz_get_ui($m);
             my $bound = 2 * $m_ui * $m_ui - 3 * $m_ui + 2;
-            $hi = $bound if $hi > $bound;
-        }
-
-        if ($lo > $hi) {
-            return;
+            if ($hi > $bound) {
+                $hi = $bound;
+                $lo > $hi && return;
+            }
         }
 
         if ($k == 1) {
@@ -123,12 +124,12 @@ sub carmichael_numbers_in_range ($A, $B, $k) {
 
             __SUB__->($z, $lcm, $p + 1, $k - 1);
         }
-    }->(Math::GMPz->new(1), Math::GMPz->new(1), 3, $k);
+      }
+      ->(Math::GMPz->new(1), Math::GMPz->new(1), 3, $k);
 
     return sort { $a <=> $b } @list;
 }
 
-my $k    = 3;
 my $from = 1;
 my $upto = powint(10, 10);
 
