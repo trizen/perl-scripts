@@ -2,9 +2,10 @@
 
 # Daniel "Trizen" Șuteu
 # Date: 27 August 2022
+# Edit: 09 March 2026
 # https://github.com/trizen
 
-# Generate all the Carmichael numbers with n prime factors in a given range [a,b]. (not in sorted order)
+# Generate all the Carmichael numbers with n prime factors in a given range [a,b].
 
 # See also:
 #   https://en.wikipedia.org/wiki/Almost_prime
@@ -20,15 +21,8 @@
 #   carmichael(A, B, k) = A=max(A, vecprod(primes(k+1))\2); my(max_p=(1+sqrtint(8*B+1))\4); (f(m, l, lo, k) = my(list=List()); my(hi=min(max_p, sqrtnint(B\m, k))); if(lo > hi, return(list)); if(k==1, lo=max(lo, ceil(A/m)); my(t=lift(1/Mod(m,l))); while(t < lo, t += l); forstep(p=t, hi, l, if(isprime(p), my(n=m*p); if((n-1)%(p-1) == 0, listput(list, n)))), forprime(p=lo, hi, if(gcd(m, p-1) == 1, list=concat(list, f(m*p, lcm(l, p-1), p+1, k-1))))); list); f(1, 1, 3, k);
 #   upto(n) = my(list=List()); for(k=3, oo, if(vecprod(primes(k+1))\2 > n, break); list=concat(list, carmichael(1, n, k))); vecsort(Vec(list));
 
-use 5.020;
-use warnings;
-
-use ntheory      qw(:all);
-use experimental qw(signatures);
-
-sub divceil ($x, $y) {    # ceil(x/y)
-    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
-}
+use 5.036;
+use ntheory 0.74 qw(:all);
 
 sub carmichael_numbers_in_range ($A, $B, $k) {
 
@@ -43,23 +37,49 @@ sub carmichael_numbers_in_range ($A, $B, $k) {
 
         my $hi = rootint(divint($B, $m), $k);
 
-        if ($lo > $hi) {
-            return;
+        # Pinch's bound for the second to last prime.
+        if ($k == 2 and $m < 1_000) {
+            my $bound = 2 * $m * $m - 3 * $m + 2;
+            $hi = $bound if $hi > $bound;
         }
+
+        $lo > $hi && return;
 
         if ($k == 1) {
 
-            $hi = $max_p if ($hi > $max_p);
-            $lo = vecmax($lo, divceil($A, $m));
+            $hi = $m     if ($m < $hi);       # the last prime p_k must be <= m
+            $hi = $max_p if ($max_p < $hi);
+            $lo = vecmax($lo, cdivint($A, $m));
             $lo > $hi && return;
 
-            my $t = invmod($m, $L);
-            $t > $hi && return;
-            $t += $L * divceil($lo - $t, $L) if ($t < $lo);
+            my $inv_m = invmod($m, $L);
+            $inv_m > $hi && return;
 
-            for (my $p = $t ; $p <= $hi ; $p += $L) {
-                if (($m * $p - 1) % ($p - 1) == 0 and is_prime($p)) {
-                    push @list, $m * $p;
+            my $t = $inv_m;
+            $t += $L * cdivint($lo - $t, $L) if ($t < $lo);
+            $t > $hi && return;
+
+            if (divint($hi - $t, $L) < 1_000) {
+
+                # Approach 1: Fast linear scan for small search spaces
+                for (my $p = $t ; $p <= $hi ; $p += $L) {
+                    if (($m * $p - 1) % ($p - 1) == 0 and is_prime($p)) {
+                        push @list, $m * $p;
+                    }
+                }
+            }
+            else {
+                # Approach 2: Combinatorial divisor extraction for large spaces
+                foreach my $d (divisors($m - 1, $hi)) {
+                    my $p = $d + 1;
+
+                    next if $p < $lo;
+                    last if $p > $hi;
+
+                    # Only check the congruence and primality
+                    if ($p % $L == $inv_m and is_prime($p)) {
+                        push @list, $m * $p;
+                    }
                 }
             }
 
@@ -71,20 +91,23 @@ sub carmichael_numbers_in_range ($A, $B, $k) {
                 __SUB__->($m * $p, lcm($L, $p - 1), $p + 1, $k - 1);
             }
         }
-      }
-      ->(1, 1, 3, $k);
+    }->(1, 1, 3, $k);
 
     return sort { $a <=> $b } @list;
 }
 
-# Generate all the 5-Carmichael numbers in the range [100, 10^8]
+my $k    = 3;
+my $from = 1;
+my $upto = powint(10, 10);
 
-my $k    = 5;
-my $from = 100;
-my $upto = 1e8;
-
-my @arr = carmichael_numbers_in_range($from, $upto, $k);
-say join(', ', @arr);
+foreach my $k (3 .. 7) {
+    my @arr = carmichael_numbers_in_range($from, $upto, $k);
+    say "There are: ", scalar(@arr), " Carmichael numbers <= $upto with $k prime factors";
+}
 
 __END__
-825265, 1050985, 9890881, 10877581, 12945745, 13992265, 16778881, 18162001, 27336673, 28787185, 31146661, 36121345, 37167361, 40280065, 41298985, 41341321, 41471521, 47006785, 67371265, 67994641, 69331969, 74165065, 75151441, 76595761, 88689601, 93614521, 93869665
+There are: 335 Carmichael numbers <= 10000000000 with 3 prime factors
+There are: 619 Carmichael numbers <= 10000000000 with 4 prime factors
+There are: 492 Carmichael numbers <= 10000000000 with 5 prime factors
+There are: 99 Carmichael numbers <= 10000000000 with 6 prime factors
+There are: 2 Carmichael numbers <= 10000000000 with 7 prime factors
