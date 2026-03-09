@@ -10,16 +10,9 @@
 #   https://en.wikipedia.org/wiki/Almost_prime
 #   https://trizenx.blogspot.com/2020/08/pseudoprimes-construction-methods-and.html
 
-use 5.020;
-use warnings;
-
-use ntheory      qw(:all);
-use experimental qw(signatures);
-use List::Util   qw(uniq);
-
-sub divceil ($x, $y) {    # ceil(x/y)
-    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
-}
+use 5.036;
+use Math::GMPz;
+use ntheory 0.74 qw(:all);
 
 sub carmichael_numbers_in_range ($A, $B, $k, $primes, $callback) {
 
@@ -28,7 +21,7 @@ sub carmichael_numbers_in_range ($A, $B, $k, $primes, $callback) {
     # Largest possisble prime factor for Carmichael numbers <= B
     my $max_p = (1 + sqrtint(8 * $B + 1)) >> 2;
 
-    my @P   = sort { $a <=> $b } grep { $_ <= $max_p } uniq(@$primes);
+    my @P   = sort { $a <=> $b } grep { $_ <= $max_p } vecuniq(@$primes);
     my $end = $#P;
 
     sub ($m, $lambda, $j, $k) {
@@ -37,7 +30,7 @@ sub carmichael_numbers_in_range ($A, $B, $k, $primes, $callback) {
 
         if ($k == 1) {
 
-            my $x = divceil($A, $m);
+            my $x = cdivint($A, $m);
 
             if ($P[-1] < $x) {
                 return;
