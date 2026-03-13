@@ -2,6 +2,7 @@
 
 # Daniel "Trizen" Șuteu
 # Date: 05 September 2025
+# Edit: 13 March 2026
 # https://github.com/trizen
 
 # Count the number of B-rough numbers <= n.
@@ -9,9 +10,8 @@
 # See also:
 #   https://en.wikipedia.org/wiki/Rough_number
 
-use 5.020;
-use ntheory qw(:all);
-use experimental qw(signatures);
+use 5.036;
+use ntheory 0.74 qw(:all);
 
 sub my_rough_count($n, $k) {
 
@@ -23,10 +23,13 @@ sub my_rough_count($n, $k) {
 
     sub ($n, $a) {
 
-        my $key = "$n,$a";
+        # Meissel-Lehmer truncation (The Sublinear Secret)
+        if ($P[$a - 1] > sqrt($n)) {
+            return prime_count($n) - $a + 1;
+        }
 
-        return $cache{$key}
-            if exists $cache{$key};
+        return $cache{$a}{$n}
+          if exists $cache{$a}{$n};
 
         # Initial count: odd numbers ≤ n
         my $count = $n - ($n >> 1);
@@ -37,7 +40,7 @@ sub my_rough_count($n, $k) {
             $count -= __SUB__->(divint($n, $P[$j]), $j);
         }
 
-        $cache{$key} = $count;
+        $cache{$a}{$n} = $count;
     }->($n, scalar @P);
 }
 
