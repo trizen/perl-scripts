@@ -10,16 +10,9 @@
 #   https://en.wikipedia.org/wiki/Almost_prime
 #   https://trizenx.blogspot.com/2020/08/pseudoprimes-construction-methods-and.html
 
-use 5.020;
-use warnings;
-
-use ntheory      qw(:all);
-use experimental qw(signatures);
-use List::Util   qw(uniq);
-
-sub divceil ($x, $y) {    # ceil(x/y)
-    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
-}
+use 5.036;
+use ntheory 0.74 qw(:all);
+use List::Util qw(uniq);
 
 sub lucas_carmichael_numbers_in_range ($A, $B, $k, $primes, $callback) {
 
@@ -37,7 +30,7 @@ sub lucas_carmichael_numbers_in_range ($A, $B, $k, $primes, $callback) {
 
         if ($k == 1) {
 
-            my $x = divceil($A, $m);
+            my $x = cdivint($A, $m);
 
             if ($P[-1] < $x) {
                 return;

@@ -21,12 +21,7 @@
 #   fermat_psp(A, B, k, base) = A=max(A, vecprod(primes(k))); (f(m, l, lo, k) = my(list=List()); my(hi=sqrtnint(B\m, k)); if(lo > hi, return(list)); if(k==1, forstep(p=lift(1/Mod(m, l)), hi, l, if(isprimepower(p) && gcd(m*base, p) == 1, my(n=m*p); if(n >= A && (n-1) % znorder(Mod(base, p)) == 0, listput(list, n)))), forprime(p=lo, hi, base%p == 0 && next; my(z=znorder(Mod(base, p))); gcd(m,z) == 1 || next; my(q=p, v=m*p); while(v <= B, list=concat(list, f(v, lcm(l, z), p+1, k-1)); q *= p; Mod(base, q)^z == 1 || break; v *= p))); list); vecsort(Set(f(1, 1, 2, k)));
 
 use 5.036;
-use warnings;
-use ntheory qw(:all);
-
-sub divceil ($x, $y) {    # ceil(x/y)
-    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
-}
+use ntheory 0.74 qw(:all);
 
 sub fermat_pseudoprimes_in_range ($A, $B, $k, $base) {
 
@@ -61,7 +56,7 @@ sub fermat_pseudoprimes_in_range ($A, $B, $k, $base) {
 
             my $t = invmod($m, $L);
             $t > $hi && return;
-            $t += $L * divceil($lo - $t, $L) if ($t < $lo);
+            $t += $L * cdivint($lo - $t, $L) if ($t < $lo);
 
             for (my $p = $t ; $p <= $hi ; $p += $L) {
                 if (is_prime_power($p) and gcd($m, $p) == 1 and gcd($base, $p) == 1) {

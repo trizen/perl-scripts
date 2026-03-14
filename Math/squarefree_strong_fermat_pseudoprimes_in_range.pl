@@ -10,15 +10,8 @@
 #   https://en.wikipedia.org/wiki/Almost_prime
 #   https://trizenx.blogspot.com/2020/08/pseudoprimes-construction-methods-and.html
 
-use 5.020;
-use warnings;
-
-use ntheory      qw(:all);
-use experimental qw(signatures);
-
-sub divceil ($x, $y) {    # ceil(x/y)
-    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
-}
+use 5.036;
+use ntheory 0.74 qw(:all);
 
 sub squarefree_strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base) {
 
@@ -40,12 +33,12 @@ sub squarefree_strong_fermat_pseudoprimes_in_range ($A, $B, $k, $base) {
 
         if ($k == 1) {
 
-            $lo = vecmax($lo, divceil($A, $m));
+            $lo = vecmax($lo, cdivint($A, $m));
             $lo > $hi && return;
 
             my $t = invmod($m, $L);
             $t > $hi && return;
-            $t += $L * divceil($lo - $t, $L) if ($t < $lo);
+            $t += $L * cdivint($lo - $t, $L) if ($t < $lo);
 
             for (my $p = $t ; $p <= $hi ; $p += $L) {
 

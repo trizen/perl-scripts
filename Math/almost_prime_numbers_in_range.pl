@@ -9,13 +9,8 @@
 # See also:
 #   https://en.wikipedia.org/wiki/Almost_prime
 
-use 5.020;
-use ntheory qw(:all);
-use experimental qw(signatures);
-
-sub divceil ($x, $y) {    # ceil(x/y)
-    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
-}
+use 5.036;
+use ntheory 0.74 qw(:all);
 
 sub almost_prime_numbers ($A, $B, $k, $callback) {
 
@@ -27,7 +22,7 @@ sub almost_prime_numbers ($A, $B, $k, $callback) {
 
             forprimes {
                 $callback->(mulint($m, $_));
-            } vecmax($p, divceil($A, $m)), divint($B, $m);
+            } vecmax($p, cdivint($A, $m)), divint($B, $m);
 
             return;
         }
@@ -38,7 +33,7 @@ sub almost_prime_numbers ($A, $B, $k, $callback) {
 
             my $t = mulint($m, $p);
 
-            if (divceil($A, $t) <= divint($B, $t)) {
+            if (cdivint($A, $t) <= divint($B, $t)) {
                 __SUB__->($t, $p, $k - 1);
             }
 

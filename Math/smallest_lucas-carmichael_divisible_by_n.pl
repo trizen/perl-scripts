@@ -7,12 +7,7 @@
 #   https://oeis.org/A253598
 
 use 5.036;
-use warnings;
-use ntheory qw(:all);
-
-sub divceil ($x, $y) {    # ceil(x/y)
-    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
-}
+use ntheory 0.74 qw(:all);
 
 sub lucas_carmichael_from_multiple ($A, $B, $m, $L, $lo, $k, $callback) {
 
@@ -24,12 +19,12 @@ sub lucas_carmichael_from_multiple ($A, $B, $m, $L, $lo, $k, $callback) {
 
     if ($k == 1) {
 
-        $lo = vecmax($lo, divceil($A, $m));
+        $lo = vecmax($lo, cdivint($A, $m));
         $lo > $hi && return;
 
         my $t = mulmod(invmod($m, $L) // (return), -1, $L);
         $t > $hi && return;
-        $t += $L * divceil($lo - $t, $L) if ($t < $lo);
+        $t += $L * cdivint($lo - $t, $L) if ($t < $lo);
 
         for (my $p = $t ; $p <= $hi ; $p += $L) {
             if ($m % $p != 0 and is_prime($p)) {

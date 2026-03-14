@@ -2,6 +2,7 @@
 
 # Daniel "Trizen" Șuteu
 # Date: 10 March 2021
+# Edit: 14 March 2026
 # https://github.com/trizen
 
 # Generate squarefree k-almost prime numbers in range [a,b]. (not in sorted order)
@@ -9,13 +10,8 @@
 # See also:
 #   https://en.wikipedia.org/wiki/Almost_prime
 
-use 5.020;
-use ntheory qw(:all);
-use experimental qw(signatures);
-
-sub divceil ($x, $y) {    # ceil(x/y)
-    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
-}
+use 5.036;
+use ntheory 0.074 qw(:all);
 
 sub squarefree_almost_primes ($A, $B, $k, $callback) {
 
@@ -31,7 +27,7 @@ sub squarefree_almost_primes ($A, $B, $k, $callback) {
 
         if ($k == 1) {
 
-            $lo = vecmax($lo, divceil($A, $m));
+            $lo = vecmax($lo, cdivint($A, $m));
 
             if ($lo > $hi) {
                 return;

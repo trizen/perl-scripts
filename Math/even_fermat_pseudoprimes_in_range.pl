@@ -23,15 +23,8 @@
 
 # FIXME: it doesn't generate all the terms for bases > 2.
 
-use 5.020;
-use warnings;
-
-use ntheory      qw(:all);
-use experimental qw(signatures);
-
-sub divceil ($x, $y) {    # ceil(x/y)
-    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
-}
+use 5.036;
+use ntheory 0.74 qw(:all);
 
 sub even_fermat_pseudoprimes_in_range ($A, $B, $k, $base) {
 
@@ -71,7 +64,7 @@ sub even_fermat_pseudoprimes_in_range ($A, $B, $k, $base) {
 
             my $t = invmod($m, $L);
             $t > $hi && return;
-            $t += $L * divceil($lo - $t, $L) if ($t < $lo);
+            $t += $L * cdivint($lo - $t, $L) if ($t < $lo);
 
             for (my $p = $t ; $p <= $hi ; $p += $L) {
                 if (is_prime_power($p) and gcd($m, $p) == 1 and gcd($base, $p) == 1) {

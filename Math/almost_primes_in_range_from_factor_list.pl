@@ -6,13 +6,8 @@
 
 # Generate all the possible k-almost primes in a given range [A, B], using a given list of prime factors.
 
-use 5.020;
-use ntheory      qw(:all);
-use experimental qw(signatures);
-
-sub divceil ($x, $y) {    # ceil(x/y)
-    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
-}
+use 5.036;
+use ntheory 0.74 qw(:all);
 
 sub almost_primes_in_range ($A, $B, $k, $factors, $squarefree = 0) {
 
@@ -37,7 +32,7 @@ sub almost_primes_in_range ($A, $B, $k, $factors, $squarefree = 0) {
 
         if ($k == 1) {
 
-            $lo = vecmax($lo, divceil($A, $m));
+            $lo = vecmax($lo, cdivint($A, $m));
 
             if ($lo > $hi) {
                 return;

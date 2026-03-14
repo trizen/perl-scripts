@@ -24,11 +24,7 @@
 #   https://oeis.org/A118896 -- Number of powerful numbers <= 10^n.
 
 use 5.036;
-use ntheory qw(:all);
-
-sub divceil ($x, $y) {    # ceil(x/y)
-    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
-}
+use ntheory 0.74 qw(:all);
 
 sub powerful_count_in_range ($A, $B, $k = 2) {
 
@@ -46,7 +42,7 @@ sub powerful_count_in_range ($A, $B, $k = 2) {
             if ($A > $m) {
 
                 # Optimization by Dana Jacobsen (from Math::Prime::Util::PP)
-                my $l = divceil($A, $m);
+                my $l = cdivint($A, $m);
                 if (($l >> $r) == 0) {
                     $from = 2;
                 }

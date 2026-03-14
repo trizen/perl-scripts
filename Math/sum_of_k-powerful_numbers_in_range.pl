@@ -24,12 +24,8 @@
 #   https://oeis.org/A118896 -- Number of powerful numbers <= 10^n.
 
 use 5.036;
-use ntheory      qw(:all);
+use ntheory 0.74 qw(:all);
 use Math::AnyNum qw(faulhaber_sum);
-
-sub divceil ($x, $y) {    # ceil(x/y)
-    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
-}
 
 sub powerful_sum_in_range ($A, $B, $k = 2) {
 
@@ -47,7 +43,7 @@ sub powerful_sum_in_range ($A, $B, $k = 2) {
             if ($A > $m) {
 
                 # Optimization by Dana Jacobsen (from Math::Prime::Util::PP)
-                my $l = divceil($A, $m);
+                my $l = cdivint($A, $m);
                 if (($l >> $r) == 0) {
                     $from = 2;
                 }

@@ -18,11 +18,7 @@
 
 use 5.036;
 use Math::GMPz;
-use ntheory qw(:all);
-
-sub divceil ($x, $y) {    # ceil(x/y)
-    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
-}
+use ntheory 0.74 qw(:all);
 
 sub lucas_carmichael_numbers_in_range ($A, $B, $k) {
 
@@ -86,7 +82,7 @@ sub lucas_carmichael_numbers_in_range ($A, $B, $k) {
 
             my $t = Math::GMPz::Rmpz_get_ui($v);
             $t > $hi && return;
-            $t += $L * divceil($lo - $t, $L) if ($t < $lo);
+            $t += $L * cdivint($lo - $t, $L) if ($t < $lo);
 
             for (my $p = $t ; $p <= $hi ; $p += $L) {
                 if (is_prime($p)) {

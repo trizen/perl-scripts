@@ -21,13 +21,9 @@
 #   https://oeis.org/A069493 -- 6-powerful numbers
 
 use 5.036;
-use ntheory qw(:all);
+use ntheory 0.74 qw(:all);
 
-sub divceil ($x, $y) {    # ceil(x/y)
-    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
-}
-
-sub powerful_numbers ($A, $B, $k = 2) {
+sub my_powerful_numbers ($A, $B, $k = 2) {
 
     my @powerful;
 
@@ -41,7 +37,7 @@ sub powerful_numbers ($A, $B, $k = 2) {
             if ($A > $m) {
 
                 # Optimization by Dana Jacobsen (from Math::Prime::Util::PP)
-                my $l = divceil($A, $m);
+                my $l = cdivint($A, $m);
                 if (($l >> $r) == 0) {
                     $from = 2;
                 }
@@ -71,18 +67,16 @@ sub powerful_numbers ($A, $B, $k = 2) {
     sort { $a <=> $b } @powerful;
 }
 
-require Math::Sidef;
-
 my $A = int rand 1e5;
 my $B = int rand 1e7;
 
 foreach my $k (2 .. 5) {
     say "Testing: k = $k";
-    my @a1 = powerful_numbers($A, $B, $k);
-    my @a2 = Math::Sidef::powerful($k, $A, $B);
-    my @a3 = grep { $_ >= $A } powerful_numbers(1, $B, $k);
+    my @a1 = my_powerful_numbers($A, $B, $k);
+    my @a2 = @{powerful_numbers($A, $B, $k)};
+    my @a3 = grep { $_ >= $A } my_powerful_numbers(1, $B, $k);
     "@a1" eq "@a2" or die "error for: powerful_numbers($A, $B, $k)";
     "@a1" eq "@a3" or die "error for: powerful_numbers($A, $B, $k)";
 }
 
-say join(', ', powerful_numbers(1e6 - 1e4, 1e6, 2));    #=> 990025, 990125, 990584, 991232, 992016, 994009, 995328, 996004, 996872, 998001, 998784, 1000000
+say join(', ', my_powerful_numbers(1e6 - 1e4, 1e6, 2));    #=> 990025, 990125, 990584, 991232, 992016, 994009, 995328, 996004, 996872, 998001, 998784, 1000000

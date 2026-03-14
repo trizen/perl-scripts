@@ -11,18 +11,11 @@
 #   https://en.wikipedia.org/wiki/Almost_prime
 #   https://trizenx.blogspot.com/2020/08/pseudoprimes-construction-methods-and.html
 
-use 5.020;
-use warnings;
-
-use ntheory      qw(:all);
-use experimental qw(signatures);
-use Memoize      qw(memoize);
+use 5.036;
+use ntheory 0.74 qw(:all);
+use Memoize qw(memoize);
 
 memoize('inverse_znorder_primes');
-
-sub divceil ($x, $y) {    # ceil(x/y)
-    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
-}
 
 sub inverse_znorder_primes ($base, $lambda) {
     my %seen;
@@ -45,7 +38,7 @@ sub iterate_over_primes ($x, $y, $base, $lambda, $callback) {
     }
 
     if ($lambda > 1) {
-        for (my $w = $lambda * divceil($x - 1, $lambda) ; $w <= $y ; $w += $lambda) {
+        for (my $w = $lambda * cdivint($x - 1, $lambda) ; $w <= $y ; $w += $lambda) {
             if (is_prime($w + 1) and powmod($base, $lambda, $w + 1) == 1) {
                 $callback->($w + 1);
             }
@@ -73,7 +66,7 @@ sub squarefree_fermat_overpseudoprimes_in_range ($A, $B, $k, $base, $callback) {
 
         if ($k == 1) {
 
-            $lo = vecmax($lo, divceil($A, $m));
+            $lo = vecmax($lo, cdivint($A, $m));
 
             if ($lo > $hi) {
                 return;

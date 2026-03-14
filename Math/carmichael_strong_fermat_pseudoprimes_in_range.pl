@@ -18,12 +18,7 @@ carmichael_strong_psp(A, B, k, base) = A=max(A, vecprod(primes(k+1))\2); (f(m, l
 =cut
 
 use 5.036;
-use warnings;
-use ntheory qw(:all);
-
-sub divceil ($x, $y) {    # ceil(x/y)
-    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
-}
+use ntheory 0.74 qw(:all);
 
 sub carmichael_strong_fermat_in_range ($A, $B, $k, $base) {
 
@@ -48,12 +43,12 @@ sub carmichael_strong_fermat_in_range ($A, $B, $k, $base) {
 
         if ($k == 1) {
 
-            $lo = vecmax($lo, divceil($A, $m));
+            $lo = vecmax($lo, cdivint($A, $m));
             $lo > $hi && return;
 
             my $t = invmod($m, $L);
             $t > $hi && return;
-            $t += $L * divceil($lo - $t, $L) if ($t < $lo);
+            $t += $L * cdivint($lo - $t, $L) if ($t < $lo);
 
             for (my $p = $t ; $p <= $hi ; $p += $L) {
                 if (($m * $p - 1) % ($p - 1) == 0 and is_prime($p) and $base % $p != 0) {

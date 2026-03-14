@@ -12,12 +12,7 @@
 #   https://trizenx.blogspot.com/2020/08/pseudoprimes-construction-methods-and.html
 
 use 5.036;
-use warnings;
-use ntheory qw(:all);
-
-sub divceil ($x, $y) {    # ceil(x/y)
-    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
-}
+use ntheory 0.74 qw(:all);
 
 sub lucas_znorder ($P, $Q, $D, $n) {
 
@@ -48,14 +43,14 @@ sub squarefree_lucas_U_pseudoprimes_in_range ($A, $B, $k, $P, $Q) {
 
         if ($k == 1) {
 
-            $lo = vecmax($lo, divceil($A, $m));
+            $lo = vecmax($lo, cdivint($A, $m));
             $lo > $hi && return;
 
             foreach my $j (1, -1) {
 
                 my $t = mulmod(invmod($m, $L), $j, $L);
                 $t > $hi && next;
-                $t += $L * divceil($lo - $t, $L) if ($t < $lo);
+                $t += $L * cdivint($lo - $t, $L) if ($t < $lo);
 
                 for (my $p = $t ; $p <= $hi ; $p += $L) {
                     if (is_prime($p)) {

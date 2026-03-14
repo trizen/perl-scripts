@@ -10,13 +10,8 @@
 #   https://trizenx.blogspot.com/2020/08/pseudoprimes-construction-methods-and.html
 
 use 5.036;
-use warnings;
 use Math::GMPz;
-use ntheory qw(:all);
-
-sub divceil ($x, $y) {    # ceil(x/y)
-    (($x % $y == 0) ? 0 : 1) + divint($x, $y);
-}
+use ntheory 0.74 qw(:all);
 
 sub k_squarefree_strong_fermat_pseudoprimes_in_range ($A, $B, $k, $bases) {
 
@@ -74,7 +69,7 @@ sub k_squarefree_strong_fermat_pseudoprimes_in_range ($A, $B, $k, $bases) {
 
             my $t = Math::GMPz::Rmpz_get_ui($v);
             $t > $hi && return;
-            $t += $L * divceil($lo - $t, $L) if ($t < $lo);
+            $t += $L * cdivint($lo - $t, $L) if ($t < $lo);
 
             for (my $p = $t ; $p <= $hi ; $p += $L) {
 
