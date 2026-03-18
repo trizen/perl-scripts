@@ -15,13 +15,8 @@
 # See also:
 #   https://home.gwu.edu/~maxal/gpscripts/
 
-use 5.020;
-use strict;
-use warnings;
-
-use ntheory qw(:all);
-use Math::AnyNum qw(ilog);
-use experimental qw(signatures);
+use 5.036;
+use ntheory 0.74 qw(:all);
 
 sub factorial_without_prime ($n, $p, $pk, $from, $count, $res) {
     return 1 if ($n <= 1);
@@ -132,8 +127,7 @@ sub modular_binomial ($n, $k, $m) {
             next;
         }
 
-        #my $d = logint($n, $p) + 1;        # incorrect for large p
-        my $d = ilog($n, $p) + 1;
+        my $d = logint($n, $p) + 1;
 
         my (@np, @kp);
 
