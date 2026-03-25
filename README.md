@@ -949,6 +949,7 @@ A nice collection of day-to-day Perl scripts.
     * [Modular binomial fast](./Math/modular_binomial_fast.pl)
     * [Modular binomial faster](./Math/modular_binomial_faster.pl)
     * [Modular binomial faster mpz](./Math/modular_binomial_faster_mpz.pl)
+    * [Modular binomial faster mpz 2](./Math/modular_binomial_faster_mpz_2.pl)
     * [Modular binomial ntheory](./Math/modular_binomial_ntheory.pl)
     * [Modular binomial small k](./Math/modular_binomial_small_k.pl)
     * [Modular binomial small k faster](./Math/modular_binomial_small_k_faster.pl)

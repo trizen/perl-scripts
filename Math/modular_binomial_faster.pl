@@ -222,7 +222,7 @@ sub modular_binomial ($n, $k, $m) {
             }
         };
 
-        if (($p > 2 or $rq < 3) and $q <= scalar(@e)) {
+        if (($p > 2 or $rq < 3) and $rq <= scalar(@e)) {
             $v = mulmod($v, powint(-1, $e[$rq - 1]), $pq);
         }
 
