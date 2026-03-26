@@ -10,7 +10,7 @@ use warnings;
 
 use bigint try => 'GMP';
 use experimental qw(signatures);
-use ntheory qw(random_prime rootint gcd);
+use ntheory      qw(random_prime rootint gcd);
 
 use Math::Polynomial;
 use Math::ModInt qw(mod);
@@ -30,11 +30,26 @@ sub pollard_strassen_factorization ($n, $d = 1 + rootint($n, 4), $tries = $d) {
 
     my $x = Math::Polynomial::ModInt->new(mod(0, $n), mod(1, $n));
     my @f = map { $x - $_ } @baby_steps;
-    my $f = Math::Polynomial::ModInt->new(mod(1, $n));
 
-    while (@f) {
-        $f = $f->mul(shift(@f));
+    # --- Divide-and-Conquer Polynomial Multiplication ---
+    while (@f > 1) {
+        my @next_level;
+
+        # Multiply adjacent pairs in the current level
+        while (@f >= 2) {
+            my $p1 = shift @f;
+            my $p2 = shift @f;
+            push @next_level, $p1->mul($p2);
+        }
+
+        # If there's an odd polynomial left over, promote it to the next level
+        push @next_level, shift @f if @f;
+
+        @f = @next_level;
     }
+
+    # Extract the final product, or return a constant polynomial of 1 if empty
+    my $f = @f ? $f[0] : Math::Polynomial::ModInt->new(mod(1, $n));
 
     my $r = mod($a, $n);
 
