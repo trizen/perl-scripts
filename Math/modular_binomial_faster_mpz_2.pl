@@ -134,8 +134,7 @@ sub _factorial_without_prime {
 
     # Fast path for pk = p^2: Harmonic-number expansion, O(p) cost
     # instead of the naive O(p^2).
-    if ($p > 2
-        && cmpint($pk, mulint($p, $p)) == 0) {
+    if ($p > 2 && cmpint($pk, mulint($p, $p)) == 0) {
         my $a = divint($n, $p);
         my $b = modint($n, $p);
 
@@ -145,17 +144,11 @@ sub _factorial_without_prime {
             $Hb = addmod($Hb, invmod($_, $p), $p) for 1 .. $b;
         }
 
-        my $r = mulmod(powmod(factorialmod(subint($p, 1), $pk), $a, $pk,), factorialmod($b, $pk), $pk,);
+        my $r = mulmod(powmod(factorialmod(subint($p, 1), $pk), $a, $pk), factorialmod($b, $pk), $pk);
 
         # Correction term: multiply by (1 + a*p*H_b) mod pk
         if ($a > 0 && $Hb) {
-            $r = mulmod($r, addmod(1, mulmod(mulmod($a, $p, $pk), $Hb, $pk,), $pk,), $pk,);
-        }
-
-        # Divide out the cached prefix if applicable
-        if ($$from > 0) {
-            my $prev = _factorial_without_prime($$from, $p, $pk, \(my $f = 0), \(my $pv = 1));
-            $r = mulmod($$res, divmod($r, $prev, $pk), $pk,);
+            $r = mulmod($r, addmod(1, mulmod(mulmod($a, $p, $pk), $Hb, $pk), $pk), $pk);
         }
 
         ($$from, $$res) = ($n, $r);
@@ -164,19 +157,9 @@ sub _factorial_without_prime {
 
     # Fast path for pk = p^e, e >= 3: Granville polynomial method
     {
-        my ($e, $tmp) = (0, $pk);
-        while (modint($tmp, $p) == 0) {
-            $tmp = divint($tmp, $p);
-            ++$e;
-        }
-
-        if ($e >= 3 && $tmp == 1) {
+        my $e = valuation($pk, $p);
+        if ($e >= 3) {
             my $r = _factorial_without_prime_pe($n, $p, $e, $pk);
-
-            if ($$from > 0) {
-                $r = mulmod($$res, divmod($r, _factorial_without_prime_pe($$from, $p, $e, $pk), $pk), $pk,);
-            }
-
             ($$from, $$res) = ($n, $r);
             return $r;
         }
