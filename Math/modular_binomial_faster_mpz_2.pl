@@ -490,7 +490,7 @@ sub test_binomialmod($n, $k, $m) {
 ## Run some tests
 #
 
-use Test::More tests => 76;
+use Test::More tests => 103;
 
 for my $e (1 .. 5) {
     my $n = powint(2,                33) + int rand 1234;
@@ -591,5 +591,33 @@ is(modular_binomial(1e7,  1e5, (powint(2, 128) - 1)**2), test_binomialmod(1e7,  
 is(modular_binomial(4294967291 + 1, 1e5, powint(4294967291, 2)), test_binomialmod(4294967291 + 1, 1e5, powint(4294967291, 2)));
 is(modular_binomial(powint(2, 60) - 99, 1e5, prev_prime(1e9)),           test_binomialmod(powint(2, 60) - 99, 1e5, prev_prime(1e9)));
 is(modular_binomial(powint(2, 60) - 99, 1e5, next_prime(powint(2, 64))), test_binomialmod(powint(2, 60) - 99, 1e5, next_prime(powint(2, 64))));
+
+is(binomialmod(0,0,7), 1);
+is(modular_binomial(0,1,7), 0);
+is(modular_binomial(0,2,7), 0);
+is(modular_binomial(3,0,7), 1);
+is(modular_binomial(7,5,11), 10);
+is(modular_binomial(950,100,123456), 24942);
+is(modular_binomial(950,100,7), 2);
+is(modular_binomial(8100,4000,1155), 924);
+is(modular_binomial(950,100,1000000007), 640644226);
+is(modular_binomial(189,34,877), 81);
+is(modular_binomial(189,34,253009), 47560);
+is(modular_binomial(189,34,36481), 14169);
+is(modular_binomial(1900,17,41), 0);
+is(modular_binomial(5000,654,101223721), 59171352);
+is(modular_binomial(-112,5,351), 313);
+is(modular_binomial(-189,34,877), 141);
+is(modular_binomial(-23,-29,377), 117);
+is(modular_binomial(189,-34,877), 0);
+is(modular_binomial(100000000,87654321,1005973), 937361);
+is(modular_binomial(100000000,7654321,1299709), 582708);
+is(modular_binomial(100000000,7654321,12345678), 4152168);
+is(modular_binomial(100000,7654,32768), 12288);
+is(modular_binomial(100000,7654,196608), 110592);
+is(modular_binomial(100000,7654,101223721), 5918452);
+is(modular_binomial(100000000,7654321,32768), 24576);
+is(modular_binomial(100000000,7654321,196608), 122880);
+is(modular_binomial(100000000,7654321,101223721), 5463123);
 
 say("binomial(10^10, 10^5) mod 13! = ", modular_binomial(1e10, 1e5, factorial(13)));
