@@ -393,7 +393,7 @@ sub _modular_binomial {
         my $rq  = $q - $e[0];
         my $prq = powint($p, $rq);
 
-        if (_is_small_k_binomialmod($n, $k, $pq)) {
+        if (_is_small_k_binomialmod($n, $k, mulint($p, $q))) {
             push @F, [_small_k_binomialmod($n, $k, $pq), $pq];
             next;
         }
