@@ -326,7 +326,7 @@ sub _modular_binomial {
         @K = map { $_->[1] } @NKR;
         @R = map { $_->[2] } @NKR;
 
-        my @acc  = (1);
+        my %acc  = (0 => 1);
         my $nfac = 1;
 
         if ($prq < ~0 and $p < $n) {
@@ -338,7 +338,7 @@ sub _modular_binomial {
                 else {
                     $nfac = mulmod($nfac, $k, $prq);
                 }
-                push @acc, $nfac;
+                $acc{$k} = $nfac;
             }
         }
 
@@ -354,9 +354,9 @@ sub _modular_binomial {
                 my @pairs;
                 my ($x, $y, $z);
 
-                ($x = $acc[$N[$j]]) // push(@pairs, [\$x, $N[$j]]);
-                ($y = $acc[$K[$j]]) // push(@pairs, [\$y, $K[$j]]);
-                ($z = $acc[$R[$j]]) // push(@pairs, [\$z, $R[$j]]);
+                ($x = $acc{$N[$j]}) // push(@pairs, [\$x, $N[$j]]);
+                ($y = $acc{$K[$j]}) // push(@pairs, [\$y, $K[$j]]);
+                ($z = $acc{$R[$j]}) // push(@pairs, [\$z, $R[$j]]);
 
                 foreach my $pair (sort { $a->[1] <=> $b->[1] } @pairs) {
                     ## say "Factorial($pair->[1]) mod $prq with p = $p";

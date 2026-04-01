@@ -182,7 +182,7 @@ sub modular_binomial ($n, $k, $m) {
         @K = map { $_->[1] } @NKR;
         @R = map { $_->[2] } @NKR;
 
-        my @acc  = (1);
+        my %acc  = (0 => 1);
         my $nfac = 1;
 
         if ($prq < ~0 and $p < $n) {
@@ -194,7 +194,7 @@ sub modular_binomial ($n, $k, $m) {
                 else {
                     $nfac = mulmod($nfac, $k, $prq);
                 }
-                push @acc, $nfac;
+                $acc{$k} = $nfac;
             }
         }
 
@@ -210,9 +210,9 @@ sub modular_binomial ($n, $k, $m) {
                 my @pairs;
                 my ($x, $y, $z);
 
-                ($x = $acc[$N[$j]]) // push(@pairs, [\$x, $N[$j]]);
-                ($y = $acc[$K[$j]]) // push(@pairs, [\$y, $K[$j]]);
-                ($z = $acc[$R[$j]]) // push(@pairs, [\$z, $R[$j]]);
+                ($x = $acc{$N[$j]}) // push(@pairs, [\$x, $N[$j]]);
+                ($y = $acc{$K[$j]}) // push(@pairs, [\$y, $K[$j]]);
+                ($z = $acc{$R[$j]}) // push(@pairs, [\$z, $R[$j]]);
 
                 foreach my $pair (sort { $a->[1] <=> $b->[1] } @pairs) {
                     ${$pair->[0]} = factorial_without_prime($pair->[1], $p, $prq, \$from, \$count, \$res);

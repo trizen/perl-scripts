@@ -420,12 +420,12 @@ sub _modular_binomial {
         }
 
         # Precompute small factorial-without-p values into a lookup table
-        my @acc  = (1);
+        my %acc  = ('0' => 1);
         my $nfac = 1;
         if ($prq < ~0 && $p < $n) {
             for my $v (1 .. vecmin(vecmax(@N, @K, @R), 1e3)) {
                 $nfac = mulmod($nfac, $v, $prq) if $v % $p;
-                push @acc, $nfac;
+                $acc{$v} = $nfac;
             }
         }
 
@@ -438,9 +438,9 @@ sub _modular_binomial {
                 my @pairs;
                 my ($x, $y, $z);
 
-                ($x = $acc[$N[$j]]) // push @pairs, [\$x, $N[$j]];
-                ($y = $acc[$K[$j]]) // push @pairs, [\$y, $K[$j]];
-                ($z = $acc[$R[$j]]) // push @pairs, [\$z, $R[$j]];
+                ($x = $acc{$N[$j]}) // push @pairs, [\$x, $N[$j]];
+                ($y = $acc{$K[$j]}) // push @pairs, [\$y, $K[$j]];
+                ($z = $acc{$R[$j]}) // push @pairs, [\$z, $R[$j]];
 
                 # Process missing entries in ascending order to benefit the cache
                 for my $pair (sort { $a->[1] <=> $b->[1] } @pairs) {
@@ -502,10 +502,10 @@ for my $e (1 .. 5) {
 
 is(modular_binomial(8589934703, 4294966460, 4182119424),        4133348352);
 is(modular_binomial(8589934823, 4294966769, 52521875),          26643750);
-is(modular_binomial(8589935272, 429496,     97656250000000000), 57900778336640000);
-is(modular_binomial(8589935272, 4294965,    97656250000000000), 96886205280000000);
-is(modular_binomial(8589935272, 4294966820, 97656250000000000), 55077260000000000);
-is(modular_binomial(8589935272, 42949658,   97656250000000000), 46773145040000000);
+is(modular_binomial(8589935272, 429496,     "97656250000000000"), "57900778336640000");
+is(modular_binomial(8589935272, 4294965,    "97656250000000000"), "96886205280000000");
+is(modular_binomial(8589935272, 4294966820, "97656250000000000"), "55077260000000000");
+is(modular_binomial(8589935272, 42949658,   "97656250000000000"), "46773145040000000");
 
 is(modular_binomial(10, 2, 43), 2);
 is(modular_binomial(10, 8, 43), 2);
