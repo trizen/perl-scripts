@@ -24,7 +24,7 @@ sub _poly_mul {
         next unless $A->[$i];
         for my $j (0 .. $e - 1 - $i) {
             next unless $B->[$j];
-            $C[$i + $j] = addmod($C[$i + $j], mulmod($A->[$i], $B->[$j], $pk), $pk,);
+            $C[$i + $j] = addmod($C[$i + $j], mulmod($A->[$i], $B->[$j], $pk), $pk);
         }
     }
     return \@C;
@@ -32,14 +32,13 @@ sub _poly_mul {
 
 # Compute B(x) = A(x + h) mod pk, dropping all terms of degree >= e.
 sub _poly_shift {
-    my ($A, $h, $pk, $e) = @_;
-    my @B    = (0) x $e;
-    my $h_gz = Math::GMPz->new("$h");
+    my ($A, $h_gz, $pk, $e) = @_;
+    my @B = (0) x $e;
     for my $j (0 .. $e - 1) {
         next unless $A->[$j];
         my $h_pow = Math::GMPz->new(1);
         for my $i (reverse 0 .. $j) {
-            my $term = mulmod(mulmod(binomial($j, $i), $h_pow, $pk,), $A->[$j], $pk,);
+            my $term = mulmod(mulmod(binomial($j, $i), $h_pow, $pk), $A->[$j], $pk);
             $B[$i] = addmod($B[$i], $term, $pk);
             $h_pow = mulmod($h_pow, $h_gz, $pk) if $i > 0;
         }
@@ -50,23 +49,23 @@ sub _poly_shift {
 # Compute P(x, q) = product_{i=0}^{q-1} Poly(x + i) mod pk (degree < e),
 # using divide-and-conquer in q.
 sub _get_P {
-    my ($q, $Poly, $pk, $e) = @_;
+    my ($q_gz, $Poly, $pk, $e) = @_;
 
-    return do { my @r = (0) x $e; $r[0] = 1; \@r } if $q == 0;
-    return $Poly                                   if $q == 1;
+    return do { my @r = (0) x $e; $r[0] = 1; \@r } if Math::GMPz::Rmpz_cmp_ui($q_gz, 0) == 0;
+    return $Poly                                   if Math::GMPz::Rmpz_cmp_ui($q_gz, 1) == 0;
 
-    my $q_gz = Math::GMPz->new("$q");
     my $h_gz = Math::GMPz->new(0);
     Math::GMPz::Rmpz_fdiv_q_2exp($h_gz, $q_gz, 1);    # h = floor(q/2)
-    my $h = Math::GMPz::Rmpz_get_str($h_gz, 10);
 
-    my $P_h  = _get_P($h, $Poly, $pk, $e);
-    my $P_2h = _poly_mul($P_h, _poly_shift($P_h, $h, $pk, $e), $pk, $e);
+    my $P_h  = _get_P($h_gz, $Poly, $pk, $e);
+    my $P_2h = _poly_mul($P_h, _poly_shift($P_h, $h_gz, $pk, $e), $pk, $e);
 
     # If q is odd (q = 2h+1), multiply by the extra factor Poly(x + 2h)
-    return Math::GMPz::Rmpz_odd_p($q_gz)
-      ? _poly_mul($P_2h, _poly_shift($Poly, Math::GMPz::Rmpz_get_str($h_gz * 2, 10), $pk, $e), $pk, $e)
-      : $P_2h;
+    if (Math::GMPz::Rmpz_odd_p($q_gz)) {
+        return _poly_mul($P_2h, _poly_shift($Poly, 2 * $h_gz, $pk, $e), $pk, $e);
+    }
+
+    return $P_2h;
 }
 
 #--------------------------------------------------------------------------
@@ -95,14 +94,14 @@ sub _factorial_without_prime_pe {
         $fact = mulmod($fact, $j, $pk);
         my $inv = invmod($j, $pk);
         for my $k (reverse 1 .. $e - 1) {
-            $c[$k] = addmod($c[$k], mulmod($c[$k - 1], $inv, $pk), $pk,) if $c[$k - 1];
+            $c[$k] = addmod($c[$k], mulmod($c[$k - 1], $inv, $pk), $pk) if $c[$k - 1];
         }
     }
 
     my @Poly  = (0) x $e;
     my $p_pow = 1;
     for my $k (0 .. $e - 1) {
-        $Poly[$k] = mulmod(mulmod($c[$k], $fact, $pk), $p_pow, $pk,);
+        $Poly[$k] = mulmod(mulmod($c[$k], $fact, $pk), $p_pow, $pk);
         $p_pow = mulmod($p_pow, $p, $pk);
     }
 
@@ -110,12 +109,13 @@ sub _factorial_without_prime_pe {
     my $r = modint($n, $p);
 
     # Step 2: The constant term of P(0, q) gives the main factor.
-    my $res = _get_P("$q", \@Poly, $pk, $e)->[0];
+    my $q_gz = Math::GMPz::Rmpz_init_set_str("$q", 10);
+    my $res  = _get_P($q_gz, \@Poly, $pk, $e)->[0];
 
     # Step 3: Multiply by the tail (pq+1)(pq+2)...(pq+r).
     if ("$r") {
         my $pq = mulint($q, $p);
-        $res = mulmod($res, addint($pq, $_), $pk,) for 1 .. "$r";
+        $res = mulmod($res, addint($pq, $_), $pk) for 1 .. "$r";
     }
 
     return $res;
@@ -281,8 +281,8 @@ sub _lucas_theorem {
             else {
                 my $nf = factorialmod($np, $p);
                 my $df =
-                  mulmod(factorialmod($kp, $p), factorialmod($np - $kp, $p), $p,);
-                $r = mulmod($r, $df ne '1' ? divmod($nf, $df, $p) : $nf, $p,);
+                  mulmod(factorialmod($kp, $p), factorialmod($np - $kp, $p), $p);
+                $r = mulmod($r, ($df ne '1' ? divmod($nf, $df, $p) : $nf), $p);
             }
         }
 
@@ -317,7 +317,7 @@ sub _modular_binomial {
         Math::GMPz::Rmpz_neg($abs_n, $n);
         Math::GMPz::Rmpz_add($abs_n, $abs_n, $k);
         Math::GMPz::Rmpz_sub_ui($abs_n, $abs_n, 1);
-        return modint(mulint($sign, __SUB__->($abs_n, $k, $m)), $m,);
+        return modint(mulint($sign, __SUB__->($abs_n, $k, $m)), $m);
     }
 
     return 0 if Math::GMPz::Rmpz_cmp($k, $n) > 0;
@@ -444,7 +444,7 @@ sub _modular_binomial {
 
                 # Process missing entries in ascending order to benefit the cache
                 for my $pair (sort { $a->[1] <=> $b->[1] } @pairs) {
-                    ${$pair->[0]} = _factorial_without_prime($pair->[1], $p, $prq, \$from, \$res_cache,);
+                    ${$pair->[0]} = _factorial_without_prime($pair->[1], $p, $prq, \$from, \$res_cache);
                 }
 
                 $y = mulmod($y, $z, $pq);
@@ -500,8 +500,8 @@ for my $e (1 .. 5) {
     is(modular_binomial($n, $k, $m), test_binomialmod($n, $k, $m));
 }
 
-is(modular_binomial(8589934703, 4294966460, 4182119424),        4133348352);
-is(modular_binomial(8589934823, 4294966769, 52521875),          26643750);
+is(modular_binomial(8589934703, 4294966460, 4182119424),          4133348352);
+is(modular_binomial(8589934823, 4294966769, 52521875),            26643750);
 is(modular_binomial(8589935272, 429496,     "97656250000000000"), "57900778336640000");
 is(modular_binomial(8589935272, 4294965,    "97656250000000000"), "96886205280000000");
 is(modular_binomial(8589935272, 4294966820, "97656250000000000"), "55077260000000000");
@@ -592,32 +592,32 @@ is(modular_binomial(4294967291 + 1, 1e5, powint(4294967291, 2)), test_binomialmo
 is(modular_binomial(powint(2, 60) - 99, 1e5, prev_prime(1e9)),           test_binomialmod(powint(2, 60) - 99, 1e5, prev_prime(1e9)));
 is(modular_binomial(powint(2, 60) - 99, 1e5, next_prime(powint(2, 64))), test_binomialmod(powint(2, 60) - 99, 1e5, next_prime(powint(2, 64))));
 
-is(binomialmod(0,0,7), 1);
-is(modular_binomial(0,1,7), 0);
-is(modular_binomial(0,2,7), 0);
-is(modular_binomial(3,0,7), 1);
-is(modular_binomial(7,5,11), 10);
-is(modular_binomial(950,100,123456), 24942);
-is(modular_binomial(950,100,7), 2);
-is(modular_binomial(8100,4000,1155), 924);
-is(modular_binomial(950,100,1000000007), 640644226);
-is(modular_binomial(189,34,877), 81);
-is(modular_binomial(189,34,253009), 47560);
-is(modular_binomial(189,34,36481), 14169);
-is(modular_binomial(1900,17,41), 0);
-is(modular_binomial(5000,654,101223721), 59171352);
-is(modular_binomial(-112,5,351), 313);
-is(modular_binomial(-189,34,877), 141);
-is(modular_binomial(-23,-29,377), 117);
-is(modular_binomial(189,-34,877), 0);
-is(modular_binomial(100000000,87654321,1005973), 937361);
-is(modular_binomial(100000000,7654321,1299709), 582708);
-is(modular_binomial(100000000,7654321,12345678), 4152168);
-is(modular_binomial(100000,7654,32768), 12288);
-is(modular_binomial(100000,7654,196608), 110592);
-is(modular_binomial(100000,7654,101223721), 5918452);
-is(modular_binomial(100000000,7654321,32768), 24576);
-is(modular_binomial(100000000,7654321,196608), 122880);
-is(modular_binomial(100000000,7654321,101223721), 5463123);
+is(binomialmod(0, 0, 7), 1);
+is(modular_binomial(0,         1,        7),          0);
+is(modular_binomial(0,         2,        7),          0);
+is(modular_binomial(3,         0,        7),          1);
+is(modular_binomial(7,         5,        11),         10);
+is(modular_binomial(950,       100,      123456),     24942);
+is(modular_binomial(950,       100,      7),          2);
+is(modular_binomial(8100,      4000,     1155),       924);
+is(modular_binomial(950,       100,      1000000007), 640644226);
+is(modular_binomial(189,       34,       877),        81);
+is(modular_binomial(189,       34,       253009),     47560);
+is(modular_binomial(189,       34,       36481),      14169);
+is(modular_binomial(1900,      17,       41),         0);
+is(modular_binomial(5000,      654,      101223721),  59171352);
+is(modular_binomial(-112,      5,        351),        313);
+is(modular_binomial(-189,      34,       877),        141);
+is(modular_binomial(-23,       -29,      377),        117);
+is(modular_binomial(189,       -34,      877),        0);
+is(modular_binomial(100000000, 87654321, 1005973),    937361);
+is(modular_binomial(100000000, 7654321,  1299709),    582708);
+is(modular_binomial(100000000, 7654321,  12345678),   4152168);
+is(modular_binomial(100000,    7654,     32768),      12288);
+is(modular_binomial(100000,    7654,     196608),     110592);
+is(modular_binomial(100000,    7654,     101223721),  5918452);
+is(modular_binomial(100000000, 7654321,  32768),      24576);
+is(modular_binomial(100000000, 7654321,  196608),     122880);
+is(modular_binomial(100000000, 7654321,  101223721),  5463123);
 
 say("binomial(10^10, 10^5) mod 13! = ", modular_binomial(1e10, 1e5, factorial(13)));
