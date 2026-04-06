@@ -746,6 +746,7 @@ A nice collection of day-to-day Perl scripts.
     * [Count of rough numbers](./Math/count_of_rough_numbers.pl)
     * [Count of rough numbers recursive](./Math/count_of_rough_numbers_recursive.pl)
     * [Count of smooth numbers](./Math/count_of_smooth_numbers.pl)
+    * [Count of smooth numbers memoized](./Math/count_of_smooth_numbers_memoized.pl)
     * [Count of smooth numbers mpz](./Math/count_of_smooth_numbers_mpz.pl)
     * [Count of smooth numbers mpz 2](./Math/count_of_smooth_numbers_mpz_2.pl)
     * [Count of smooth numbers with k factors](./Math/count_of_smooth_numbers_with_k_factors.pl)

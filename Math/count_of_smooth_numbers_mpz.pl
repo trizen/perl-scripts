@@ -9,13 +9,12 @@
 # See also:
 #   https://en.wikipedia.org/wiki/Smooth_number
 
-use 5.020;
+use 5.036;
 use ntheory qw(:all);
-use experimental qw(signatures);
 
 use Math::GMPz;
 
-sub smooth_count ($n, $k) {
+sub my_smooth_count ($n, $k) {
 
     if (ref($n) ne 'Math::GMPz') {
         $n = Math::GMPz->new("$n");
@@ -62,7 +61,7 @@ sub smooth_count ($n, $k) {
 }
 
 foreach my $p (@{primes(50)}) {
-    say "Ψ(10^n, $p) for n <= 10: [", join(', ', map { smooth_count(powint(10, $_), $p) } 0 .. 10), "]";
+    say "Ψ(10^n, $p) for n <= 10: [", join(', ', map { my_smooth_count(powint(10, $_), $p) } 0 .. 10), "]";
 }
 
 __END__

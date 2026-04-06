@@ -1,12 +1,10 @@
 #!/usr/bin/perl
 
 # Daniel "Trizen" Șuteu
-# Date: 19 July 2020
+# Date: 06 April 2026
 # https://github.com/trizen
 
-# Count the number of B-smooth numbers <= n.
-
-# Inspired by Dana Jacobsen's "smooth_count(n,k)" algorithm from Math::Prime::Util::PP.
+# Count the number of B-smooth numbers <= n. (memoized version)
 
 # See also:
 #   https://en.wikipedia.org/wiki/Smooth_number
@@ -14,48 +12,23 @@
 use 5.036;
 use ntheory qw(:all);
 
-use Math::GMPz;
+sub my_smooth_count ($n, $p) {
 
-sub my_smooth_count ($n, $k) {
+    my @cache;
+    my @P = @{primes($p)};
 
-    if (ref($n) ne 'Math::GMPz') {
-        $n = Math::GMPz->new("$n");
-    }
+    sub ($x, $i) {
 
-    if ($k < 2 or Math::GMPz::Rmpz_sgn($n) <= 0) {
-        return 0;
-    }
+        $x || return 0;
 
-    if (Math::GMPz::Rmpz_cmp_ui($n, $k) <= 0) {
-        return $n;
-    }
+        # Count powers of 2 in [1..$x] = number of bits in $x.
+        $i || return 1 + logint($x, 2);
 
-    my $count = sub ($n, $k) {
+        # All of 1..$x are P[$i]-smooth when $x < P[$i]
+        return $x if $x < $P[$i];
 
-        my $sum = Math::GMPz::Rmpz_sizeinbase($n, 2);
-
-        if ($k == 2) {
-            return $sum;
-        }
-
-        my $t = Math::GMPz::Rmpz_init();
-
-        for (my $p = 3 ; $p <= $k ; $p = next_prime($p)) {
-
-            Math::GMPz::Rmpz_tdiv_q_ui($t, $n, $p);
-
-            if (Math::GMPz::Rmpz_cmp_ui($t, $p) <= 0) {
-                $sum += Math::GMPz::Rmpz_get_ui($t);
-            }
-            else {
-                $sum += __SUB__->($t, $p);
-            }
-        }
-
-        $sum;
-    }->($n, prev_prime($k + 1));
-
-    return $count;
+        $cache[$i]{$x} //= __SUB__->($x, $i - 1) + __SUB__->(divint($x, $P[$i]), $i);
+    }->($n, $#P);
 }
 
 foreach my $p (@{primes(50)}) {
@@ -63,10 +36,10 @@ foreach my $p (@{primes(50)}) {
 }
 
 __END__
-Ψ(10^n,  2) for n <= 10: [1, 4, 7, 10, 14, 17, 20, 24, 27, 30, 34]
-Ψ(10^n,  3) for n <= 10: [1, 7, 20, 40, 67, 101, 142, 190, 244, 306, 376]
-Ψ(10^n,  5) for n <= 10: [1, 9, 34, 86, 175, 313, 507, 768, 1105, 1530, 2053]
-Ψ(10^n,  7) for n <= 10: [1, 10, 46, 141, 338, 694, 1273, 2155, 3427, 5194, 7575]
+Ψ(10^n, 2) for n <= 10: [1, 4, 7, 10, 14, 17, 20, 24, 27, 30, 34]
+Ψ(10^n, 3) for n <= 10: [1, 7, 20, 40, 67, 101, 142, 190, 244, 306, 376]
+Ψ(10^n, 5) for n <= 10: [1, 9, 34, 86, 175, 313, 507, 768, 1105, 1530, 2053]
+Ψ(10^n, 7) for n <= 10: [1, 10, 46, 141, 338, 694, 1273, 2155, 3427, 5194, 7575]
 Ψ(10^n, 11) for n <= 10: [1, 10, 55, 192, 522, 1197, 2432, 4520, 7838, 12867, 20193]
 Ψ(10^n, 13) for n <= 10: [1, 10, 62, 242, 733, 1848, 4106, 8289, 15519, 27365, 45914]
 Ψ(10^n, 17) for n <= 10: [1, 10, 67, 287, 945, 2579, 6179, 13389, 26809, 50351, 89679]
