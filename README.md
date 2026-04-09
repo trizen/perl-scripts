@@ -772,6 +772,8 @@ A nice collection of day-to-day Perl scripts.
     * [Discrete logarithm pollard rho](./Math/discrete_logarithm_pollard_rho.pl)
     * [Discrete logarithm pollard rho mpz](./Math/discrete_logarithm_pollard_rho_mpz.pl)
     * [Discrete root](./Math/discrete_root.pl)
+    * [Divisors descending lazy](./Math/divisors_descending_lazy.pl)
+    * [Divisors lazy](./Math/divisors_lazy.pl)
     * [Divisors less than k](./Math/divisors_less_than_k.pl)
     * [Divisors of factorial below limit](./Math/divisors_of_factorial_below_limit.pl)
     * [Divisors of factorial in range iterator](./Math/divisors_of_factorial_in_range_iterator.pl)
