@@ -792,6 +792,7 @@ A nice collection of day-to-day Perl scripts.
     * [Even fermat pseudoprimes in range](./Math/even_fermat_pseudoprimes_in_range.pl)
     * [Even squarefree fermat pseudoprimes in range](./Math/even_squarefree_fermat_pseudoprimes_in_range.pl)
     * [Exponential divisors](./Math/exponential_divisors.pl)
+    * [Factorial difference of prime squares](./Math/factorial_difference_of_prime_squares.pl)
     * [Factorial dsc algorithm](./Math/factorial_dsc_algorithm.pl)
     * [Factorial expansion of reciprocals](./Math/factorial_expansion_of_reciprocals.pl)
     * [Factorial from primes](./Math/factorial_from_primes.pl)
