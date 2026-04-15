@@ -42,5 +42,6 @@ sub sum_of_primes ($n, $k = 1) {
     $S{$n} - 1;
 }
 
+say sum_of_primes(100, 0);      #=> 25
 say sum_of_primes(1e8);         #=> 279209790387276
 say sum_of_primes(1e8, 2);      #=> 18433608754948081174274

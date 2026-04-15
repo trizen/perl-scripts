@@ -3,20 +3,19 @@
 # Author: Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 21 August 2016
+# Edit: 15 April 2026
 # Website: https://github.com/trizen
 
 # An efficient algorithm for computing factorial of a large number, modulo a larger number.
 
-use 5.020;
-use strict;
-use integer;
-use warnings;
-
-use experimental qw(signatures);
-use ntheory qw(invmod powmod forprimes random_prime todigits vecsum);
+use 5.036;
+use ntheory 0.74 qw(
+    invmod powmod forprimes random_prime
+    todigits vecsum divint mulmod addmod vecprod
+);
 
 sub factorial_power ($n, $p) {
-    ($n - vecsum(todigits($n, $p))) / ($p - 1);
+    divint($n - vecsum(todigits($n, $p)), $p - 1);
 }
 
 # This algorithm uses powers of primes to efficiently
@@ -29,17 +28,15 @@ sub facmod2 ($n, $mod) {
 
     forprimes {
         if ($p == 1) {
-            $f *= $_;
-            $f %= $mod;
+            $f = mulmod($f, $_, $mod);
         }
         else {
             $p = factorial_power($n, $_);
-            $f *= powmod($_ % $mod, $p, $mod);
-            $f %= $mod;
+            $f = mulmod($f, powmod($_, $p, $mod), $mod);
         }
     } $n;
 
-    $f;
+    return $f;
 }
 
 # This algorithm is fast and correct only when `mod`
@@ -50,18 +47,21 @@ sub facmod2 ($n, $mod) {
 
 sub facmod1 ($n, $mod) {
 
-    if ($n <= $mod / 2 or $mod <= $n) {
+    if ($n <= divint($mod, 2) or $mod <= $n) {
         return facmod2($n, $mod);
     }
 
     my $f = 1;
     foreach my $k ($n + 1 .. $mod - 1) {
-        $f *= $k;
-        $f %= $mod;
+        $f = mulmod($f, $k, $mod);
     }
 
-    (-1 * (invmod($f, $mod) // 0) + $mod) % $mod;
+    addmod(mulmod(-1, (invmod($f, $mod) // 0), $mod), $mod, $mod);
 }
+
+my $n = 1000000;
+my $m = vecprod(503, 503, 863, 1000000007);
+say facmod2($n, $m);           #=> 51017729998226472
 
 foreach my $n (100000 .. 100000 + 10) {
     my $p = random_prime($n, $n * 2 - 1);
