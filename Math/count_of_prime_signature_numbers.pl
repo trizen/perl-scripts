@@ -20,13 +20,9 @@ sub count_prime_signature_numbers($n, $prime_signature) {
 
     my $count = 0;
 
-    my $generate = sub ($m, $lo, $k, $P, $j = 0) {
+    my $generate = sub ($m, $lo, $k, $P, $sum_e, $j = 0) {
 
         my $e = $P->[$k - 1];
-
-        # Sum all remaining exponents for a tight upper bound
-        my $sum_e = vecsum(@{$P}[0 .. $k - 1]);
-
         my $hi = rootint(divint($n, $m), $sum_e);
 
         if ($lo > $hi) {
@@ -48,19 +44,21 @@ sub count_prime_signature_numbers($n, $prime_signature) {
             return;
         }
 
-        for(my $p = $lo; $p <= $hi; ) {
+        for (my $p = $lo; $p <= $hi; ) {
             my $t = mulint($m, powint($p, $e));
             my $r = next_prime($p);
-            __SUB__->($t, $r, $k - 1, $P, ++$j);
+            __SUB__->($t, $r, $k - 1, $P, $sum_e - $e, ++$j);
             $p = $r;
         }
     };
 
     my %seen;
+    my $sum_e = vecsum(@$prime_signature);
+
     forperm {
         my @perm = @{$prime_signature}[@_];
         if (!$seen{join(' ', @perm)}++) {
-            $generate->(1, 2, scalar(@perm), \@perm);
+            $generate->(1, 2, scalar(@perm), \@perm, $sum_e);
         }
     } $k;
 

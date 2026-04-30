@@ -26,13 +26,9 @@ sub prime_signature_numbers_in_range($A, $B, $prime_signature) {
     # The smallest possible number with k distinct prime factors
     $A = vecmax(pn_primorial($k), $A);
 
-    my $generate = sub ($m, $lo, $k, $P) {
+    my $generate = sub ($m, $lo, $k, $P, $sum_e) {
 
         my $e = $P->[$k - 1];
-
-        # Sum all remaining exponents for a tight upper bound
-        my $sum_e = vecsum(@{$P}[0 .. $k - 1]);
-
         my $hi = rootint(divint($B, $m), $sum_e);
 
         if ($lo > $hi) {
@@ -55,16 +51,18 @@ sub prime_signature_numbers_in_range($A, $B, $prime_signature) {
         for (my $p = $lo; $p <= $hi; ) {
             my $t = mulint($m, powint($p, $e));
             my $r = next_prime($p);
-            __SUB__->($t, $r, $k - 1, $P);
+            __SUB__->($t, $r, $k - 1, $P, $sum_e - $e);
             $p = $r;
         }
     };
 
     my %seen;
+    my $sum_e = vecsum(@$prime_signature);
+
     forperm {
         my @perm = @{$prime_signature}[@_];
         if (!$seen{join(' ', @perm)}++) {
-            $generate->(1, 2, scalar(@perm), \@perm);
+            $generate->(1, 2, scalar(@perm), \@perm, $sum_e);
         }
     } $k;
 
