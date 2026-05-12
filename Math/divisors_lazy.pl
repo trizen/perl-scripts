@@ -47,7 +47,7 @@ sub heap_pop($heap) {
     return $top;
 }
 
-sub lazy_divisors ($n, $callback) {
+sub divisors_lazy ($n, $callback) {
 
     # Build factor chains from the prime factorisation of f
     my @chains;
@@ -102,4 +102,4 @@ sub lazy_divisors ($n, $callback) {
     return;
 }
 
-lazy_divisors(5040, sub($d) { say $d });
+divisors_lazy(5040, sub ($d) { say $d });
