@@ -95,25 +95,29 @@ sub prime_signature_numbers_in_range($A, $B, $prime_signature) {
 sub multiplicative_partitions($n) {
 
     my @results;
+    my @divs = divisors($n);
 
-    sub ($target, $min_factor, $path) {
+    shift(@divs);   # remove divisor '1'
 
-        for my $d (divisors($target)) {
+    my $end = $#divs;
+    sub ($target, $min_idx, $path) {
 
-            next if $d < $min_factor;
-            my $quotient = divint($target, $d);
+        if ($target == 1) {
+            push @results, $path;
+            return;
+        }
 
-            if ($quotient == 1) {
-                push @results, [sort { $a <=> $b } (@$path, $d)];
-            }
-            elsif ($quotient >= $d) {
-                __SUB__->($quotient, $d, [@$path, $d]);
+        for my $i ($min_idx .. $end) {
+            my $d = $divs[$i];
+
+            # Prune branch if the divisor exceeds the remaining target
+            last if $d > $target;
+
+            if ($target % $d == 0) {
+                __SUB__->(divint($target, $d), $i, [@$path, $d]);
             }
         }
-      }
-      ->($n, 2, []);
-
-    @results = sort { scalar(@$a) <=> scalar(@$b) } @results;
+    }->($n, 0, []);
 
     return @results;
 }

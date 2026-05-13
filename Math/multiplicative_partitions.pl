@@ -12,36 +12,42 @@ use ntheory 0.74 qw(:all);
 sub multiplicative_partitions($n) {
 
     my @results;
+    my @divs = divisors($n);
 
-    sub ($target, $min_factor, $path) {
+    shift(@divs);   # remove divisor '1'
 
-        for my $d (divisors($target)) {
+    my $end = $#divs;
+    sub ($target, $min_idx, $path) {
 
-            next if $d < $min_factor;
-            my $quotient = divint($target, $d);
+        if ($target == 1) {
+            push @results, $path;
+            return;
+        }
 
-            if ($quotient == 1) {
-                push @results, [sort { $a <=> $b } (@$path, $d)];
-            }
-            elsif ($quotient >= $d) {
-                __SUB__->($quotient, $d, [@$path, $d]);
+        for my $i ($min_idx .. $end) {
+            my $d = $divs[$i];
+
+            # Prune branch if the divisor exceeds the remaining target
+            last if $d > $target;
+
+            if ($target % $d == 0) {
+                __SUB__->(divint($target, $d), $i, [@$path, $d]);
             }
         }
-      }
-      ->($n, 2, []);
+    }->($n, 0, []);
 
-    @results = sort { scalar(@$a) <=> scalar(@$b) } @results;
+    @results = sort { @$a <=> @$b } @results;
 
-    return \@results;
+    return @results;
 }
 
 # --- Execution and Output ---
 my $n            = 48;
-my $combinations = multiplicative_partitions($n);
+my @combinations = multiplicative_partitions($n);
 
 # Format and print the output
 my @formatted;
-for my $combo (@$combinations) {
+for my $combo (@combinations) {
     push @formatted, "[" . join(", ", @$combo) . "]";
 }
 
