@@ -8,6 +8,9 @@
 #   URI
 #   IO::Socket::SSL
 
+# Inspired by:
+#   https://github.com/faissaloo/SponSkrub
+
 use 5.036;
 
 use URI;
