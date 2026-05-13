@@ -21,6 +21,9 @@ use File::Temp   qw(tempfile);
 # Configuration & CLI Parsing
 # ==============================================================================
 
+my $appname = 'sponsor-free';
+my $version = '0.01';
+
 my %cfg = (
            action     => 'cut',                        # 'cut' or 'chapter'
            categories => 'sponsor',                    # comma-separated
@@ -33,8 +36,13 @@ my %cfg = (
 
 my $remove_all = 0;
 
+my @available_categories = qw(
+  sponsor intro outro interaction selfpromo music_offtopic
+);
+
 GetOptions(
            'h|help'         => sub { show_help(0) },
+           'v|version'      => sub { show_version() },
            'a|action=s'     => \$cfg{action},
            'c|categories=s' => \$cfg{categories},
            'all'            => \$remove_all,
@@ -45,10 +53,6 @@ GetOptions(
            'keep-date'      => \$cfg{keep_date},
           )
   or show_help(1);
-
-my @available_categories = qw(
-  sponsor intro outro interaction selfpromo music_offtopic
-);
 
 if ($remove_all) {
     $cfg{categories} = join(',', @available_categories);
@@ -319,6 +323,11 @@ sub create_temp_file ($content) {
     print $fh $content;
     close $fh;
     return $file;
+}
+
+sub show_version {
+    print "$appname $version\n";
+    exit 0;
 }
 
 sub show_help ($code) {
