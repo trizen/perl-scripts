@@ -872,6 +872,7 @@ A nice collection of day-to-day Perl scripts.
     * [Inverse of sigma function fast](./Math/inverse_of_sigma_function_fast.pl)
     * [Inverse of sigma function generalized](./Math/inverse_of_sigma_function_generalized.pl)
     * [Inverse of usigma function](./Math/inverse_of_usigma_function.pl)
+    * [Inverse tau in range](./Math/inverse_tau_in_range.pl)
     * [Invert transform of factorials](./Math/invert_transform_of_factorials.pl)
     * [Is absolute euler pseudoprime](./Math/is_absolute_euler_pseudoprime.pl)
     * [Is almost prime](./Math/is_almost_prime.pl)
