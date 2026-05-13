@@ -1314,6 +1314,7 @@ A nice collection of day-to-day Perl scripts.
     * [Calendar](./Time/calendar.pl)
     * [Contdown](./Time/contdown.pl)
 * Video
+    * [Sponsor-free](./Video/sponsor-free.pl)
     * [Video concat ffmpeg](./Video/video_concat_ffmpeg.pl)
     * [Video split ffmpeg](./Video/video_split_ffmpeg.pl)
 * Visualisators
