@@ -101,7 +101,7 @@ else {    # cut
     my @keep = grep { $_->{type} eq 'content' } @merged;
     my $meta = build_ffmpeg_metadata(recalculate_kept_chapters(@keep));
 
-    my $streams = ffprobe($input_file, qw(-show_entries stream=codec_type -print_format default=noprint_wrappers=1:nokey=1));
+    my $streams = extract_streams($input_file);
     my $has_vid = $streams =~ /video/;
     my $has_aud = $streams =~ /audio/;
 
@@ -261,6 +261,10 @@ sub extract_bitrate ($file) {
 
 sub extract_duration ($file) {
     ffprobe($file, qw(-show_entries format=duration -of default=noprint_wrappers=1:nokey=1));
+}
+
+sub extract_streams ($file) {
+    ffprobe($file, qw(-show_entries stream=codec_type -print_format default=noprint_wrappers=1:nokey=1));
 }
 
 sub run_ffmpeg_metadata_pass ($in, $out, $meta) {

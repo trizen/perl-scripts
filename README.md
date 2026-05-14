@@ -359,6 +359,7 @@ A nice collection of day-to-day Perl scripts.
     * [Word columner](./Formatters/word_columner.pl)
 * Game solvers
     * [Asciiplanes-player](./Game%20solvers/asciiplanes-player.pl)
+    * [Asciiplanes-player-v2](./Game%20solvers/asciiplanes-player-v2.pl)
     * [Dice game solver](./Game%20solvers/dice_game_solver.pl)
     * [Peg-solitaire-solver](./Game%20solvers/peg-solitaire-solver)
     * [Reaction time test](./Game%20solvers/reaction_time_test.pl)

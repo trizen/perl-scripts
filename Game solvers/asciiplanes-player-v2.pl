@@ -16,14 +16,14 @@ use utf8;
 use 5.036;
 
 use Text::ASCIITable;
-use List::Util qw(any all shuffle max sum zip);
-use Getopt::Long;
+use Getopt::Long qw(GetOptions);
+use List::Util   qw(any all shuffle max sum zip);
 
 binmode(STDOUT, ':utf8');
 
 ## Package variables
 my $pkgname = 'asciiplanes-player';
-my $version = 0.01;
+my $version = 0.02;
 
 use constant {
               AIR   => '`',    # cell that is known to be empty sky
@@ -72,237 +72,200 @@ if (@ARGV) {
 
 srand($seed) if $seed;
 
-## Plane Direction Shapes
-#<<<
-my $UP = [
-              [+0, +0],
-    [+1, -1], [+1, +0], [+1, +1],
-              [+2, +0],
-    [+3, -1], [+3, +0], [+3, +1],
-];
+## Plane Direction Shapes (Coordinate Offsets)
+my @DIRECTIONS = (
 
-my $DOWN = [
-    [-3, -1], [-3, +0], [-3, +1],
-              [-2, +0],
-    [-1, -1], [-1, +0], [-1, +1],
-              [+0, +0],
-];
+    # UP
+    [[0, 0], [1, -1], [1, 0], [1, 1], [2, 0], [3, -1], [3, 0], [3, 1]],
 
-my $LEFT = [
-              [-1, +1],           [-1, +3],
-    [+0, +0], [+0, +1], [+0, +2], [+0, +3],
-              [+1, +1],           [+1, +3],
-];
+    # DOWN
+    [[-3, -1], [-3, 0], [-3, 1], [-2, 0], [-1, -1], [-1, 0], [-1, 1], [0, 0]],
 
-my $RIGHT = [
-    [-1, -3],           [-1, -1],
-    [+0, -3], [+0, -2], [+0, -1], [+0, +0],
-    [+1, -3],           [+1, -1],
-];
-#>>>
+    # LEFT
+    [[-1, 1], [-1, 3], [0, 0], [0, 1], [0, 2], [0, 3], [1, 1], [1, 3]],
 
-my @DIRECTIONS   = ($UP, $DOWN, $LEFT, $RIGHT);
-my @PAIR_INDICES = map {
-    my $i = $_;
-    map { [$i, $_] } 0 .. $BOARD_SIZE - 1
-} 0 .. $BOARD_SIZE - 1;
+    # RIGHT
+    [[-1, -3], [-1, -1], [0, -3], [0, -2], [0, -1], [0, 0], [1, -3], [1, -1]]
+);
+
+my $TOTAL_CELLS = $BOARD_SIZE * $BOARD_SIZE;
 
 ## Mapping Utilities
-my %letters2indices = get_letters();
-my %indices2letters = reverse %letters2indices;
-
-## --- Core Game Logic ---
-
-# Given a board, a head position (x, y), and a direction (array of offsets),
-# return references to the board cells that the plane would occupy.
-# Returns an empty list if any cell is out of bounds (unless $wrap_plane is set).
-sub pointers ($board, $x, $y, $indices) {
-    my @refs;
-    for my $offset (@$indices) {
-        my ($row, $col) = ($x + $offset->[0], $y + $offset->[1]);
-
-        if ($wrap_plane) {
-            $row %= $BOARD_SIZE;
-            $col %= $BOARD_SIZE;
-        }
-
-        return () if $row < 0 or $row >= $BOARD_SIZE;
-        return () if $col < 0 or $col >= $BOARD_SIZE;
-
-        push @refs, \$board->[$row][$col];
+my %letters2indices;
+my %indices2letters;
+{
+    my $char = 'a';
+    for my $i (0 .. $BOARD_SIZE - 1) {
+        $letters2indices{$char} = $i;
+        $indices2letters{$i}    = $char;
+        $char++;
     }
-    return @refs;
 }
 
-# Try to place a plane on $board with its head at ($x, $y) facing $dir.
-# All cells must currently be BLANK (unless $force is true).
-# Returns 1 on success, undef on failure.
-sub assign ($board, $dir, $x, $y, $force = 0) {
-    my @plane = pointers($board, $x, $y, $dir);
-    return unless @plane;
+## --- Ahead-of-Time Precomputation ---
+# Precompute valid plane indices for every cell and direction.
+# $PRECOMPUTED_PLANES->[$pos][$dir] = [ idx1, idx2, ... ] or undef
+
+my $PRECOMPUTED_PLANES = [];
+
+sub init_planes {
+    for my $x (0 .. $BOARD_SIZE - 1) {
+        for my $y (0 .. $BOARD_SIZE - 1) {
+            my $pos = $x * $BOARD_SIZE + $y;
+
+            for my $dir (0 .. $#DIRECTIONS) {
+                my @indices;
+                my $valid = 1;
+
+                for my $offset (@{$DIRECTIONS[$dir]}) {
+                    my $nx = $x + $offset->[0];
+                    my $ny = $y + $offset->[1];
+
+                    if ($wrap_plane) {
+                        $nx %= $BOARD_SIZE;
+                        $ny %= $BOARD_SIZE;
+                    }
+                    elsif ($nx < 0 || $nx >= $BOARD_SIZE || $ny < 0 || $ny >= $BOARD_SIZE) {
+                        $valid = 0;
+                        last;
+                    }
+                    push @indices, $nx * $BOARD_SIZE + $ny;
+                }
+                $PRECOMPUTED_PLANES->[$pos][$dir] = $valid ? \@indices : undef;
+            }
+        }
+    }
+}
+
+init_planes();
+
+## --- Core Game Logic (1D Arrays) ---
+
+sub make_play_board {
+    return [(BLANK) x $TOTAL_CELLS];
+}
+
+sub assign ($board, $pos, $dir, $force = 0) {
+    my $indices = $PRECOMPUTED_PLANES->[$pos][$dir] or return;
 
     if (!$force) {
-        for my $point (@plane) {
-            return unless $$point eq BLANK;
+        for my $idx (@$indices) {
+            return unless $board->[$idx] eq BLANK;
         }
     }
 
-    $$_ = HIT for @plane;
-    $board->[$x][$y] = HEAD;
+    $board->[$_]   = HIT for @$indices;
+    $board->[$pos] = HEAD;
     return 1;
 }
 
-# ---------------------------------------------------------------------------
-# Board validation
-# ---------------------------------------------------------------------------
-
-# Return true if $play_board is consistent with $info_board.
-# In strict mode ($extra true), HIT/HEAD cells must also match.
 sub valid_assignment ($play_board, $info_board, $extra = 0) {
-    for my $i (0 .. $BOARD_SIZE - 1) {
-        for my $j (0 .. $BOARD_SIZE - 1) {
-            my $play = $play_board->[$i][$j];
-            my $info = $info_board->[$i][$j];
-
-            if ($info eq AIR) {
-                return 0 if $play ne BLANK;
-            }
-            elsif ($extra && $info ne BLANK) {
-                return 0 if $info ne $play;
-            }
+    for my $i (0 .. $TOTAL_CELLS - 1) {
+        my $info = $info_board->[$i];
+        if ($info eq AIR) {
+            return 0 if $play_board->[$i] ne BLANK;
+        }
+        elsif ($extra && $info ne BLANK) {
+            return 0 if $info ne $play_board->[$i];
         }
     }
     return 1;
 }
 
-# ---------------------------------------------------------------------------
-# Plane generation (for simulation mode)
-# ---------------------------------------------------------------------------
-
-# Place $PLANES_NUM non-overlapping planes randomly on $play_board.
 sub create_planes ($play_board) {
     my $count     = 0;
     my $max_tries = $BOARD_SIZE**4;
 
     while ($count != $PLANES_NUM) {
-        my $x   = int rand($BOARD_SIZE);
-        my $y   = int rand($BOARD_SIZE);
-        my $dir = $DIRECTIONS[rand @DIRECTIONS];
-
         die "FATAL ERROR: try to increase the size of the grid (--size=x).\n" if --$max_tries <= 0;
 
-        ++$count if assign($play_board, $dir, $x, $y);
+        my $pos = int rand($TOTAL_CELLS);
+        my $dir = int rand(4);
+        ++$count if assign($play_board, $pos, $dir);
     }
     return 1;
 }
 
-# Speculatively fill $play_board with the remaining unconfirmed planes,
-# trying random blank positions and directions compatible with $info_board.
 sub guess ($info_board, $play_board, $plane_count) {
     my $count     = 0;
-    my $max_tries = $BOARD_SIZE * $BOARD_SIZE;
-    my @indices   = shuffle(@PAIR_INDICES);
+    my $max_tries = $TOTAL_CELLS;
+    my @indices   = shuffle(0 .. $TOTAL_CELLS - 1);
 
     while ($count != ($PLANES_NUM - $plane_count)) {
-        my ($x, $y);
-
+        my $pos;
         while (@indices) {
-            ($x, $y) = @{pop(@indices)};
-            last if $play_board->[$x][$y] eq BLANK && $info_board->[$x][$y] eq BLANK;
-            undef $x;
+            $pos = pop @indices;
+            last if $play_board->[$pos] eq BLANK && $info_board->[$pos] eq BLANK;
+            undef $pos;
         }
-        return unless defined $x;
+        return unless defined $pos;
         return if --$max_tries <= 0;
 
-        my @good_directions = grep {
-            my @plane = pointers($info_board, $x, $y, $_);
-            @plane && all { $$_ ne AIR } @plane;
-        } @DIRECTIONS;
+        my @good_dirs;
+        for my $dir (0 .. 3) {
+            my $indices = $PRECOMPUTED_PLANES->[$pos][$dir];
+            push @good_dirs, $dir if $indices && all { $info_board->[$_] ne AIR } @$indices;
+        }
 
-        ++$count if any { assign($play_board, $_, $x, $y) } shuffle(@good_directions);
+        ++$count if any { assign($play_board, $pos, $_) } shuffle(@good_dirs);
     }
     return 1;
 }
 
-# Return a list of [row, col] pairs for every HEAD cell on the board.
 sub get_head_positions ($board) {
     my @headshots;
-    for my $i (0 .. $#{$board}) {
-        for my $j (0 .. $#{$board->[$i]}) {
-            push @headshots, [$i, $j] if $board->[$i][$j] eq HEAD;
-        }
-    }
+    push @headshots, $_ for grep { $board->[$_] eq HEAD } 0 .. $TOTAL_CELLS - 1;
     return @headshots;
 }
 
-sub make_play_board {
-    [map { [(BLANK) x $BOARD_SIZE] } 1 .. $BOARD_SIZE];
-}
-
-sub clone_board ($board) {
-    [map { [@$_] } @$board];
-}
-
-# ---------------------------------------------------------------------------
-# Hypothesis management
-# ---------------------------------------------------------------------------
-
-# Build all possible board configurations consistent with $info_board,
-# anchoring any confirmed HEAD positions from the info board.
 sub make_play_boards ($info_board) {
     my @headshots = get_head_positions($info_board);
     my @boards    = ([make_play_board(), 0]);
 
     for my $pos (@headshots) {
-        for my $dir (@DIRECTIONS) {
-            for my $board (map { [clone_board($_->[0]), $_->[1]] } @boards) {
-                next unless assign($board->[0], $dir, $pos->[0], $pos->[1]);
-                push @boards, [$board->[0], $board->[1] + 1];
+        for my $dir (0 .. 3) {
+            for my $board_entry (map { [[@{$_->[0]}], $_->[1]] } @boards) {
+                next unless assign($board_entry->[0], $pos, $dir);
+                push @boards, [$board_entry->[0], $board_entry->[1] + 1];
             }
         }
     }
 
-    my $max_count = max(map { $_->[1] } @boards);
+    my $max_count = max(0, map { $_->[1] } @boards);
     return grep { valid_assignment($_->[0], $info_board) }
       grep { $_->[1] == $max_count } @boards;
 }
 
 ## --- Solver Heuristics ---
 
-# Sort HEAD positions: descending by number of HIT cells in viable directions
-# (prefer planes with the most confirmed body cells), then ascending by
-# distance from board centre (prefer central cells as a tiebreaker).
-sub _sort_by_center_distance (@head_positions) {
+sub _sort_by_center_distance (@positions) {
     my $center = ($BOARD_SIZE - 1) / 2;
     return map { $_->[0] }
       sort { $a->[1] <=> $b->[1] }
       map {
-        my ($x, $y) = @$_;
+        my $x = int($_ / $BOARD_SIZE);
+        my $y = $_ % $BOARD_SIZE;
         [$_, ($center - $x)**2 + ($center - $y)**2]
-      } @head_positions;
+      } @positions;
 }
 
-# Annotate each HEAD position with the directions still viable from it
-# (no AIR cell in the way) and the number of HIT cells they collectively cover.
-sub _score_and_sort_by_hits ($info_board, @head_positions) {
+sub _score_and_sort_by_hits ($info_board, @positions) {
     my @scored;
 
-    for my $pos (@head_positions) {
-        my ($x, $y) = @$pos;
-        next unless $info_board->[$x][$y] eq BLANK;
+    for my $pos (@positions) {
+        next unless $info_board->[$pos] eq BLANK;
 
         my @valid_planes;
-        for my $dir (@DIRECTIONS) {
-            my @plane = pointers($info_board, $x, $y, $dir);
-            push @valid_planes, \@plane if @plane && all { $$_ ne AIR } @plane;
+        for my $dir (0 .. 3) {
+            my $indices = $PRECOMPUTED_PLANES->[$pos][$dir];
+            push @valid_planes, $indices if $indices && all { $info_board->[$_] ne AIR } @$indices;
         }
 
         if (@valid_planes) {
             my $hits = sum(
                 0,
                 map {
-                    scalar grep { $$_ eq HIT }
-                      @$_
+                    scalar grep { $info_board->[$_] eq HIT } @$_
                   } @valid_planes
             );
             push @scored, [$pos, $hits];
@@ -312,14 +275,6 @@ sub _score_and_sort_by_hits ($info_board, @head_positions) {
     return map { $_->[0] } sort { $b->[1] <=> $a->[1] } @scored;
 }
 
-# ---------------------------------------------------------------------------
-# Main solver loop
-# ---------------------------------------------------------------------------
-
-# Drive the solving process.  For each turn, pick the best cell to probe and
-# invoke $callback->($row, $col, $play_board, $info_board).
-# The callback returns the score (AIR/HIT/HEAD) or undef to abort.
-# Returns the total number of probes on success.
 sub solve ($callback) {
     my $tries      = 0;
     my $info_board = make_play_board();
@@ -328,14 +283,11 @@ sub solve ($callback) {
     while (1) {
         for my $board_entry (@boards) {
             my ($board, $plane_count) = @$board_entry;
-
-            # Build a full speculative board from this hypothesis.
-            my $play_board = clone_board($board);
+            my $play_board = [@$board];    # Native ultra-fast shallow copy
 
             next unless guess($info_board, $play_board, $plane_count);
             next unless valid_assignment($play_board, $info_board, 1);
 
-            # Apply Heuristics: Center proximity first, then filter and rank by potential hits
             my @head_pos = _sort_by_center_distance(get_head_positions($play_board));
             @head_pos = _score_and_sort_by_hits($info_board, @head_pos);
 
@@ -343,28 +295,21 @@ sub solve ($callback) {
             my $new_info = 0;
 
             for my $pos (@head_pos) {
-                my ($i, $j) = @$pos;
-                next if $info_board->[$i][$j] ne BLANK;
+                next if $info_board->[$pos] ne BLANK;
 
                 $all_dead = 0;
-
-                # Ask the human (or simulator) for the result of probing this cell.
-                my $score = $callback->($i, $j, $play_board, $info_board) // return;
+                my $score = $callback->($pos, $play_board, $info_board) // return;
                 $score = AIR if $score eq BLANK;
 
                 ++$tries;
-                $info_board->[$i][$j] = $score;
+                $info_board->[$pos] = $score;
 
                 if ($score eq HEAD) {
-
-                    # A confirmed head -- rebuild all hypotheses.
                     $new_info = 1;
                     @boards   = make_play_boards($info_board);
                     next;
                 }
                 elsif ($score eq AIR) {
-
-                    # A miss -- prune inconsistent hypotheses.
                     $new_info = 1;
                     @boards   = reverse(grep { valid_assignment($_->[0], $info_board) } @boards);
                 }
@@ -379,14 +324,6 @@ sub solve ($callback) {
 
 ## --- IO and Main Execution ---
 
-sub get_letters {
-    my %letters;
-    my $char = 'a';
-    $letters{$char++} = $_ for 0 .. $BOARD_SIZE - 1;
-    return %letters;
-}
-
-# Print one or more boards side by side.
 sub print_ascii_table (@boards) {
     my @ascii_tables;
 
@@ -395,8 +332,11 @@ sub print_ascii_table (@boards) {
         $table->setCols(' ', 1 .. $BOARD_SIZE);
 
         my $char = 'a';
-        for my $row (@$board) {
-            $table->addRow([$char++, @$row]);
+        for my $x (0 .. $BOARD_SIZE - 1) {
+
+            # Extract 2D row from 1D board
+            my @row = @{$board}[$x * $BOARD_SIZE .. ($x + 1) * $BOARD_SIZE - 1];
+            $table->addRow([$char++, @row]);
             $table->addRowLine();
         }
 
@@ -420,14 +360,13 @@ sub print_ascii_table (@boards) {
     }
 }
 
-# ---------------------------------------------------------------------------
-# Interactive mode
-# ---------------------------------------------------------------------------
-
-sub process_user_input ($i, $j, $play_board, $info_board) {
+sub process_user_input ($pos, $play_board, $info_board) {
 
     require Term::ReadLine;
     state $term = Term::ReadLine->new("ASCII Planes Player");
+
+    my $i = int($pos / $BOARD_SIZE);
+    my $j = $pos % $BOARD_SIZE;
 
     print_ascii_table($play_board, $info_board);
 
@@ -486,9 +425,9 @@ if ($simulate) {
     create_planes($board);
 
     my $tries = solve(
-        sub ($i, $j, $play_board, $info_board) {
+        sub ($pos, $play_board, $info_board) {
             print_ascii_table($play_board, $info_board);
-            $board->[$i][$j];
+            $board->[$pos];
         }
     );
 
