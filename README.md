@@ -636,6 +636,7 @@ A nice collection of day-to-day Perl scripts.
     * [1 over n is finite](./Math/1_over_n_is_finite.pl)
     * [1 over n period length](./Math/1_over_n_period_length.pl)
     * [Additive binomial](./Math/additive_binomial.pl)
+    * [Additive partitions](./Math/additive_partitions.pl)
     * [Alexandrian integers](./Math/alexandrian_integers.pl)
     * [Almost prime divisors](./Math/almost_prime_divisors.pl)
     * [Almost prime divisors recursive](./Math/almost_prime_divisors_recursive.pl)

@@ -18,6 +18,8 @@ sub count_prime_signature_numbers($n, $prime_signature) {
         return 0;
     }
 
+    $n >= 1 || return 0;
+
     my $count = 0;
 
     my $generate = sub ($m, $lo, $k, $P, $sum_e, $j = 0) {
@@ -53,7 +55,11 @@ sub count_prime_signature_numbers($n, $prime_signature) {
     };
 
     my %seen;
-    my $sum_e = vecsum(@$prime_signature);
+    my $sum_e = vecsum(@$prime_signature) || return 0;
+
+    if ($sum_e > logint($n, 2)) {
+        return 0;
+    }
 
     forperm {
         my @perm = @{$prime_signature}[@_];

@@ -9,12 +9,12 @@
 use 5.036;
 use ntheory 0.74 qw(:all);
 
-sub multiplicative_partitions($n) {
+sub multiplicative_partitions($n, $max_part = $n) {
 
     my @results;
     my @divs = divisors($n);
 
-    shift(@divs);   # remove divisor '1'
+    shift(@divs);    # remove divisor '1'
 
     my $end = $#divs;
     sub ($target, $min_idx, $path) {
@@ -29,6 +29,7 @@ sub multiplicative_partitions($n) {
 
             # Prune branch if the divisor exceeds the remaining target
             last if $d > $target;
+            last if $d > $max_part;
 
             if ($target % $d == 0) {
                 __SUB__->(divint($target, $d), $i, [@$path, $d]);
@@ -42,8 +43,9 @@ sub multiplicative_partitions($n) {
 }
 
 # --- Execution and Output ---
-my $n            = 48;
-my @combinations = multiplicative_partitions($n);
+my $n            = shift(@ARGV) // 48;
+my $max_part     = shift(@ARGV) // $n;
+my @combinations = multiplicative_partitions($n, $max_part);
 
 # Format and print the output
 my @formatted;

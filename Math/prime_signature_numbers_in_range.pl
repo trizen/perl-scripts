@@ -59,6 +59,10 @@ sub prime_signature_numbers_in_range($A, $B, $prime_signature) {
     my %seen;
     my $sum_e = vecsum(@$prime_signature);
 
+    if ($sum_e > logint($B, 2)) {
+        return;
+    }
+
     forperm {
         my @perm = @{$prime_signature}[@_];
         if (!$seen{join(' ', @perm)}++) {
