@@ -80,7 +80,11 @@ sub prime_signature_numbers_in_range($A, $B, $prime_signature) {
         }
     };
 
-    my $sum_e = vecsum(@$prime_signature);
+    my $sum_e = vecsum(@$prime_signature) || return;
+
+    if ($sum_e > logint($B, 2)) {
+        return;
+    }
 
     unique_permutations(
         $prime_signature,
@@ -92,7 +96,7 @@ sub prime_signature_numbers_in_range($A, $B, $prime_signature) {
     return @list;
 }
 
-sub multiplicative_partitions($n) {
+sub multiplicative_partitions($n, $max_sum = $n) {
 
     my @results;
     my @divs = divisors($n);
@@ -100,7 +104,7 @@ sub multiplicative_partitions($n) {
     shift(@divs);   # remove divisor '1'
 
     my $end = $#divs;
-    sub ($target, $min_idx, $path) {
+    sub ($target, $min_idx, $curr_sum, $path) {
 
         if ($target == 1) {
             push @results, $path;
@@ -112,12 +116,13 @@ sub multiplicative_partitions($n) {
 
             # Prune branch if the divisor exceeds the remaining target
             last if $d > $target;
+            last if ($curr_sum + $d > $max_sum);
 
             if ($target % $d == 0) {
-                __SUB__->(divint($target, $d), $i, [@$path, $d]);
+                __SUB__->(divint($target, $d), $i, $curr_sum + $d, [@$path, $d]);
             }
         }
-    }->($n, 0, []);
+    }->($n, 0, 0, []);
 
     return @results;
 }
@@ -126,7 +131,7 @@ sub inverse_tau($A, $B, $n) {
 
     my @signatures = map {
         [map { $_ - 1 } @$_]
-    } multiplicative_partitions($n);
+    } multiplicative_partitions($n, logint($B, 2));
 
     my @list;
     foreach my $sig (@signatures) {
@@ -137,6 +142,8 @@ sub inverse_tau($A, $B, $n) {
 
     return @list;
 }
+
+scalar(inverse_tau(1, powint(2, 40), 5040)) == 103 or die "error";
 
 my @arr = inverse_tau(1e5, 1e5 + 500, 48);
 say "@arr";    #=> 100050 100128 100152 100200 100254 100296 100380 100386 100485 100500
