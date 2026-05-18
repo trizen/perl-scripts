@@ -738,6 +738,7 @@ A nice collection of day-to-day Perl scripts.
     * [Count of cube-full numbers](./Math/count_of_cube-full_numbers.pl)
     * [Count of integers with gpf of n equals p](./Math/count_of_integers_with_gpf_of_n_equals_p.pl)
     * [Count of integers with lpf of n equals p](./Math/count_of_integers_with_lpf_of_n_equals_p.pl)
+    * [Count of inverse tau in range](./Math/count_of_inverse_tau_in_range.pl)
     * [Count of k-almost primes](./Math/count_of_k-almost_primes.pl)
     * [Count of k-omega primes](./Math/count_of_k-omega_primes.pl)
     * [Count of k-powerfree numbers](./Math/count_of_k-powerfree_numbers.pl)
