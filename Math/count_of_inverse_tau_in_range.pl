@@ -4,7 +4,7 @@
 # Date: 14 May 2026
 # https://github.com/trizen
 
-# Generate all the numbers in a given range [A,B] that have exactly `n` divisors.
+# Count the numbers in a given range [A,B] that have exactly `n` divisors.
 
 use 5.036;
 use ntheory 0.74 qw(:all);
@@ -78,7 +78,6 @@ sub count_prime_signature_numbers($n, $prime_signature) {
         }
     };
 
-    my %seen;
     my $sum_e = vecsum(@$prime_signature) || return 0;
 
     if ($sum_e > logint($n, 2)) {
@@ -101,7 +100,7 @@ sub count_prime_signature_numbers_in_range($A, $B, $signature) {
     $term_2 - $term_1;
 }
 
-sub multiplicative_partitions($n, $max_sum = $n) {
+sub multiplicative_partitions($n, $max_value = $n) {
 
     my @results;
     my @divs = divisors($n);
@@ -109,7 +108,7 @@ sub multiplicative_partitions($n, $max_sum = $n) {
     shift(@divs);    # remove divisor '1'
 
     my $end = $#divs;
-    sub ($target, $min_idx, $curr_sum, $path) {
+    sub ($target, $min_idx, $path) {
 
         if ($target == 1) {
             push @results, $path;
@@ -121,13 +120,13 @@ sub multiplicative_partitions($n, $max_sum = $n) {
 
             # Prune branch if the divisor exceeds the remaining target
             last if $d > $target;
-            last if ($curr_sum + $d > $max_sum);
+            last if $d > $max_value;
 
             if ($target % $d == 0) {
-                __SUB__->(divint($target, $d), $i, $curr_sum + $d, [@$path, $d]);
+                __SUB__->(divint($target, $d), $i, [@$path, $d]);
             }
         }
-    }->($n, 0, 0, []);
+    }->($n, 0, []);
 
     return @results;
 }
@@ -146,9 +145,11 @@ sub count_inverse_tau($A, $B, $n) {
     vecsum(@counts);
 }
 
+count_inverse_tau(1, 462, 16) == 16 or die "error";
 count_inverse_tau(1,   powint(2, 9),  10) == 13    or die "error";
 count_inverse_tau(1,   powint(2, 40), 5040) == 103 or die "error";
 count_inverse_tau(1e5, 1e5 + 500, 48) == 10 or die "error";
+count_inverse_tau(100050, 100500, 48) == 10 or die "error";
 
 # Number of k <= 2^(n-1) such that tau(k) = n
 # https://oeis.org/A393179

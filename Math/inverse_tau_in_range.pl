@@ -96,7 +96,7 @@ sub prime_signature_numbers_in_range($A, $B, $prime_signature) {
     return @list;
 }
 
-sub multiplicative_partitions($n, $max_sum = $n) {
+sub multiplicative_partitions($n, $max_value = $n) {
 
     my @results;
     my @divs = divisors($n);
@@ -104,7 +104,7 @@ sub multiplicative_partitions($n, $max_sum = $n) {
     shift(@divs);   # remove divisor '1'
 
     my $end = $#divs;
-    sub ($target, $min_idx, $curr_sum, $path) {
+    sub ($target, $min_idx, $path) {
 
         if ($target == 1) {
             push @results, $path;
@@ -116,13 +116,13 @@ sub multiplicative_partitions($n, $max_sum = $n) {
 
             # Prune branch if the divisor exceeds the remaining target
             last if $d > $target;
-            last if ($curr_sum + $d > $max_sum);
+            last if $d > $max_value;
 
             if ($target % $d == 0) {
-                __SUB__->(divint($target, $d), $i, $curr_sum + $d, [@$path, $d]);
+                __SUB__->(divint($target, $d), $i, [@$path, $d]);
             }
         }
-    }->($n, 0, 0, []);
+    }->($n, 0, []);
 
     return @results;
 }
@@ -143,6 +143,7 @@ sub inverse_tau($A, $B, $n) {
     return @list;
 }
 
+scalar(inverse_tau(1, 462, 16)) == 16 or die "error";
 scalar(inverse_tau(1, powint(2, 9), 10)) == 13 or die "error";
 scalar(inverse_tau(1, powint(2, 40), 5040)) == 103 or die "error";
 
