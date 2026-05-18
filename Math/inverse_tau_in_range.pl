@@ -131,7 +131,7 @@ sub inverse_tau($A, $B, $n) {
 
     my @signatures = map {
         [map { $_ - 1 } @$_]
-    } multiplicative_partitions($n, logint($B, 2));
+    } multiplicative_partitions($n, logint($B, 2) + 1);
 
     my @list;
     foreach my $sig (@signatures) {
@@ -143,6 +143,7 @@ sub inverse_tau($A, $B, $n) {
     return @list;
 }
 
+scalar(inverse_tau(1, powint(2, 9), 10)) == 13 or die "error";
 scalar(inverse_tau(1, powint(2, 40), 5040)) == 103 or die "error";
 
 my @arr = inverse_tau(1e5, 1e5 + 500, 48);
