@@ -9,6 +9,8 @@
 use 5.036;
 use ntheory 0.74 qw(:all);
 
+prime_precalc(1e7);
+
 sub count_prime_signature_numbers($n, $prime_signature) {
 
     my $k = scalar(@$prime_signature);

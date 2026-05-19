@@ -17,10 +17,12 @@ sub multiplicative_partitions($n, $max_part = $n) {
     shift(@divs);    # remove divisor '1'
 
     my $end = $#divs;
-    sub ($target, $min_idx, $path) {
+    my @path;
+
+    sub ($target, $min_idx) {
 
         if ($target == 1) {
-            push @results, $path;
+            push @results, [@path];
             return;
         }
 
@@ -32,10 +34,12 @@ sub multiplicative_partitions($n, $max_part = $n) {
             last if $d > $max_part;
 
             if ($target % $d == 0) {
-                __SUB__->(divint($target, $d), $i, [@$path, $d]);
+                push @path, $d;
+                __SUB__->(divint($target, $d), $i);
+                pop @path;
             }
         }
-    }->($n, 0, []);
+    }->($n, 0);
 
     @results = sort { @$a <=> @$b } @results;
 
