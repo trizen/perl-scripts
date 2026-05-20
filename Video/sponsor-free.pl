@@ -15,17 +15,20 @@ use 5.036;
 
 use URI;
 use HTTP::Tiny;
-use Getopt::Long qw(:config no_ignore_case bundling);
-use JSON::PP     qw(decode_json encode_json);
-use Digest::SHA  qw(sha256_hex);
-use File::Temp   qw(tempfile);
+use Getopt::Long          qw(:config no_ignore_case bundling);
+use JSON::PP              qw(decode_json encode_json);
+use Digest::SHA           qw(sha256_hex);
+use File::Temp            qw(tempfile tempdir);
+use File::Basename        qw(basename);
+use File::Spec::Functions qw(catfile);
+use File::Copy            qw(move);
 
 # ==============================================================================
 # Configuration & CLI Parsing
 # ==============================================================================
 
 my $appname = 'sponsor-free';
-my $version = '0.01';
+my $version = '0.02';
 
 my %cfg = (
            action     => 'cut',                        # 'cut' or 'chapter'
@@ -33,8 +36,13 @@ my %cfg = (
            api_url    => 'https://sponsor.ajay.app',
            direct     => 0,                            # Use direct videoID lookup instead of hash
            proxy      => $ENV{HTTP_PROXY} // '',
-           keep_date  => 0,
+           preserve   => 0,                            # preserve file metadata
            tolerance  => 1,                            # tolerance in seconds for video duration (local vs server)
+           bitrate    => undef,
+           batch      => 0,                            # batch mode
+           audio_only => 0,                            # process only audio files
+           video_only => 0,                            # process only video files
+           verbose    => 0,                            # verbose mode
           );
 
 my $remove_all = 0;
@@ -48,73 +56,22 @@ GetOptions(
            'v|version'      => sub { show_version() },
            'a|action=s'     => \$cfg{action},
            'c|categories=s' => \$cfg{categories},
-           'all'            => \$remove_all,
+           'p|preserve!'    => \$cfg{preserve},
+           'all!'           => \$remove_all,
+           'audio!'         => \$cfg{audio_only},
+           'video!'         => \$cfg{video_only},
+           'batch!'         => \$cfg{batch},
            'api-url=s'      => \$cfg{api_url},
-           'direct'         => \$cfg{direct},
+           'direct!'        => \$cfg{direct},
            'proxy=s'        => \$cfg{proxy},
            'tolerance=f'    => \$cfg{tolerance},
-           'keep-date'      => \$cfg{keep_date},
+           'verbose!'       => \$cfg{verbose},
           )
   or show_help(1);
 
 if ($remove_all) {
     $cfg{categories} = join(',', @available_categories);
 }
-
-my ($video_id, $input_file, $output_file) = @ARGV;
-
-show_help(1)
-  unless ($video_id && $input_file && $output_file);
-
-die "Invalid action: $cfg{action}\n" unless $cfg{action} =~ /^(cut|chapter)$/;
-
-# ==============================================================================
-# Main Execution
-# ==============================================================================
-
-my $duration = extract_duration($input_file);
-my $bitrate  = extract_bitrate($input_file);
-
-die "Could not determine video duration. Is FFmpeg installed?\n" unless $duration;
-
-say "Fetching SponsorBlock data...";
-my @categories = split(',', $cfg{categories});
-my @sponsors   = fetch_sponsor_data($video_id, \@categories, $duration);
-
-unless (@sponsors) {
-    say "No matching segments found. Nothing to do.";
-    exit 0;
-}
-
-say "Found " . scalar(@sponsors) . " segment(s).";
-
-my @chapters = get_existing_chapters($input_file, $duration);
-my @merged   = merge_segments(\@sponsors, \@chapters);
-
-if ($cfg{action} eq 'chapter') {
-    say "Injecting chapters...";
-    my $meta = build_ffmpeg_metadata(@merged);
-    run_ffmpeg_metadata_pass($input_file, $output_file, $meta);
-}
-else {    # cut
-    say "Removing segments...";
-    my @keep = grep { $_->{type} eq 'content' } @merged;
-    my $meta = build_ffmpeg_metadata(recalculate_kept_chapters(@keep));
-
-    my $streams = extract_streams($input_file);
-    my $has_vid = $streams =~ /video/;
-    my $has_aud = $streams =~ /audio/;
-
-    run_ffmpeg_cut_pass($input_file, $output_file, \@keep, $has_vid, $has_aud, $meta);
-}
-
-if ($cfg{keep_date}) {
-    my @s = stat($input_file);
-    utime($s[8], $s[9], $output_file);
-}
-
-say "Success! Output saved to: $output_file";
-exit 0;
 
 # ==============================================================================
 # API Client
@@ -304,11 +261,10 @@ sub run_ffmpeg_cut_pass ($in, $out, $clips, $has_v, $has_a, $meta) {
     push @cmd, '-map', '[a]' if $has_a;
 
     if ($has_v) {
-
-        # push @cmd, '-b:v', $bitrate;   # for better quality, let ffmpeg decide
+        ## push @cmd, '-b:v', $bitrate;   # for better quality, let ffmpeg decide
     }
-    elsif ($has_a) {
-        push @cmd, '-b:a', $bitrate;
+    elsif ($has_a and defined($cfg{bitrate})) {
+        push @cmd, '-b:a', $cfg{bitrate};
     }
 
     push @cmd, '-map_metadata', '1', '-map_chapters', '1', $out;
@@ -343,16 +299,193 @@ sub show_help ($code) {
 Usage: $0 [options] <video_id> <input> <output>
 
 Options:
-  -a, --action <type>      Action to perform: 'cut' (default) or 'chapter'.
+  -a, --action <type>      Action to perform: 'cut' (default) or 'chapter'
   -c, --categories <list>  Comma-separated categories to target. (default: $cfg{categories})
                            Available: @available_categories
-  --all                    Remove all categories
+  -p, --preserve           Preserve original file modification timestamp
+  --batch                  Run in batch mode
+  --audio                  Process only audio files
+  --video                  Process only video files
+  --all                    Remove sponsored segments from all categories
   --tolerance <value>      Tolerance, in seconds, for the duration of the video (default: $cfg{tolerance})
-  --direct                 Bypass privacy hash and query API directly via Video ID.
-  --proxy <url>            Route requests through a proxy.
-  --api-url <url>          Override SponsorBlock API URL.
-  --keep-date              Preserve original file modification timestamp.
-  -h, --help               Show this help message.
+  --direct                 Bypass privacy hash and query API directly via Video ID
+  --proxy <url>            Route requests through a proxy
+  --api-url <url>          Override SponsorBlock API URL
+  -h, --help               Show this help message
+
+Batch mode:
+  When enabled with `--batch` option, the script can take a given directory
+  or a list of files and automatically tries to extract the YouTube ID from
+  the filename and make the file sponsor-free, *OVERWRITING* the original file.
+
+  It tries to extract the YouTube ID from the end of the filename.
+
+  Directories are browsed recursively.
+
+Example:
+
+    $0 --batch 'file1 - youtubeID.webm' 'file2 [youtubeID].mp4'
+    $0 --batch ~/Music --audio
+
 USAGE
     exit $code;
 }
+
+sub is_valid_type($file) {
+
+    require Image::ExifTool;
+    my $info = Image::ExifTool::ImageInfo($file);
+    my ($type) = split(/\//, $info->{MIMEType});
+
+    if ($cfg{audio_only} and $type ne 'audio') {
+        return;
+    }
+
+    if ($cfg{video_only} and $type ne 'video') {
+        return;
+    }
+
+    if (!($type eq 'audio' or $type eq 'video')) {
+        return;
+    }
+
+    return $type;
+}
+
+sub process_file ($video_id, $input_file, $output_file) {
+
+    is_valid_type($input_file) || return;
+
+    my $duration = extract_duration($input_file);
+    my $bitrate  = extract_bitrate($input_file);
+
+    $cfg{bitrate} = $bitrate;
+
+    if (!$duration) {
+        warn "Could not determine video duration. Is FFmpeg installed?\n";
+        return;
+    }
+
+    say "Fetching SponsorBlock data...";
+    my @categories = split(',', $cfg{categories});
+    my @sponsors   = fetch_sponsor_data($video_id, \@categories, $duration);
+
+    unless (@sponsors) {
+        say "No matching segments found. Nothing to do.";
+        return;
+    }
+
+    say "Found " . scalar(@sponsors) . " segment(s).";
+
+    my @chapters = get_existing_chapters($input_file, $duration);
+    my @merged   = merge_segments(\@sponsors, \@chapters);
+
+    if ($cfg{action} eq 'chapter') {
+        say "Injecting chapters...";
+        my $meta = build_ffmpeg_metadata(@merged);
+        run_ffmpeg_metadata_pass($input_file, $output_file, $meta);
+    }
+    else {    # cut
+        say "Removing segments...";
+        my @keep = grep { $_->{type} eq 'content' } @merged;
+        my $meta = build_ffmpeg_metadata(recalculate_kept_chapters(@keep));
+
+        my $streams = extract_streams($input_file);
+        my $has_vid = $streams =~ /video/;
+        my $has_aud = $streams =~ /audio/;
+
+        run_ffmpeg_cut_pass($input_file, $output_file, \@keep, $has_vid, $has_aud, $meta);
+    }
+
+    if ($cfg{preserve}) {
+        my @s = stat($input_file);
+        utime($s[8], $s[9], $output_file);
+    }
+
+    say "Success! Output saved to: $output_file" if $cfg{verbose};
+    return 1;
+}
+
+sub process_batch_file($file) {
+
+    my $video_id    = undef;
+    my $video_id_re = qr/([-_0-9a-z]{11})/i;
+
+    if ($file =~ /\[$video_id_re\]\.\w+\z/) {
+        $video_id = $1;
+    }
+    elsif ($file =~ / - $video_id_re\.\w+\z/) {
+        $video_id = $1;
+    }
+
+    $video_id // do {
+        warn "Could not extract videoID from file: <<$file>>. Skipping...\n" if $cfg{verbose};
+        return;
+    };
+
+    is_valid_type($file) || return;
+
+    state $tmpdir = tempdir(CLEANUP => 1);
+
+    my $basename = basename($file);
+    my $tmpfile  = catfile($tmpdir, $basename);
+
+    say ":: Processing: $file";
+    my $success = process_file($video_id, $file, $tmpfile);
+
+    if (!$success) {
+        warn "[FAIL] Couldn't process <<$file>>. Skipping...\n" if $cfg{verbose};
+        return;
+    }
+
+    move($tmpfile, $file) or do {
+        warn "Failed to move file: <<$tmpfile>> to <<$file>>\n";
+        return;
+    };
+
+    return 1;
+}
+
+sub batch_mode {
+
+    require File::Find;
+
+    my @dirs = @ARGV;
+    @dirs || show_help(1);
+
+    my @files;
+    File::Find::find(
+        {
+         no_chdir => 1,
+         wanted   => sub {
+             if (-f $_) {
+                 push @files, $_;
+             }
+         },
+        },
+        @dirs
+    );
+
+    foreach my $file (@files) {
+        process_batch_file($file);
+    }
+
+    return 1;
+}
+
+if ($cfg{batch}) {    # batch mode
+    batch_mode();
+    exit 0;
+}
+
+my ($video_id, $input_file, $output_file) = @ARGV;
+
+show_help(1)
+  unless ($video_id && $input_file && $output_file);
+
+die "Invalid action: $cfg{action}\n"
+  unless $cfg{action} =~ /^(cut|chapter)$/;
+
+process_file($video_id, $input_file, $output_file);
+
+exit 0;
