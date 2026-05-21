@@ -311,6 +311,7 @@ Options:
   --direct                 Bypass privacy hash and query API directly via Video ID
   --proxy <url>            Route requests through a proxy
   --api-url <url>          Override SponsorBlock API URL
+  --verbose                Print extra debugging info
   -h, --help               Show this help message
 
 Batch mode:

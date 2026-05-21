@@ -995,6 +995,7 @@ A nice collection of day-to-day Perl scripts.
     * [Multi sqrt nums](./Math/multi_sqrt_nums.pl)
     * [Multinomial coefficient](./Math/multinomial_coefficient.pl)
     * [Multinomial coefficient from binomial](./Math/multinomial_coefficient_from_binomial.pl)
+    * [Multiplicative order](./Math/multiplicative_order.pl)
     * [Multiplicative partitions](./Math/multiplicative_partitions.pl)
     * [Multisets](./Math/multisets.pl)
     * [Multivariate gamma function](./Math/multivariate_gamma_function.pl)
