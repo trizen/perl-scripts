@@ -4,28 +4,23 @@ use 5.036;
 use strict;
 use warnings;
 
-use Math::Prime::Util      qw(factor_exp forprimes);
+use Math::Prime::Util      qw(factor_exp);
 use Math::Prime::Util::GMP qw(:all);
 
 # Multiplicative order mod prime p (p odd prime, gcd(a,p)=1)
-sub ord_mod_prime {
-    my ($a, $p) = @_;
+sub ord_mod_prime ($a, $p) {
 
     my $phi = subint($p, 1);
     my $ord = $phi;
 
     # Reduce ord by prime factors of phi
-    for my $f (factor_exp($phi)) {
-        my ($q, $e) = @$f;
-        for (1 .. $e) {
-            last if modint($ord, $q) ne '0';
+    for my $fe (factor_exp($ord)) {
+        my ($q, undef) = @$fe;
+
+        while (modint($ord, $q) == 0) {
             my $cand = divint($ord, $q);
-            if (powmod($a, $cand, $p) eq '1') {
-                $ord = $cand;
-            }
-            else {
-                last;
-            }
+            last if powmod($a, $cand, $p) != 1;
+            $ord = $cand;
         }
     }
 
@@ -33,15 +28,20 @@ sub ord_mod_prime {
 }
 
 # Multiplicative order mod p^e for odd prime p, using LTE
-sub ord_mod_odd_prime_power {
-    my ($a, $p, $e) = @_;
+sub ord_mod_odd_prime_power($a, $p, $e) {
 
     my $t = ord_mod_prime($a, $p);
 
-    # Compute s = v_p(a^t - 1), but only up to e is needed.
-    my $mod = powint($p, $e);
-    my $x   = powmod($a, $t, $mod);
-    my $s   = ($x == 1) ? $e : valuation(subint($x, 1), $p);
+    # Find s = v_p(a^t - 1) up to e.
+    # We increment the exponent rather than doing one massive powmod,
+    # keeping the modulus extremely small (usually p^2 or p^3).
+    my $s = 1;
+    my $p_pow = mulint($p, $p);
+
+    while ($s < $e && powmod($a, $t, $p_pow) eq '1') {
+        $s++;
+        $p_pow = mulint($p_pow, $p);
+    }
 
     my $k = ($e > $s) ? ($e - $s) : 0;
     return mulint($t, powint($p, $k));
@@ -49,8 +49,7 @@ sub ord_mod_odd_prime_power {
 
 # Multiplicative order mod 2^e for odd a
 # (special handling; LTE on odd prime powers is the main use-case)
-sub ord_mod_2_power {
-    my ($a, $e) = @_;
+sub ord_mod_2_power($a, $e) {
 
     return 1 if cmpint($a, 1) <= 0;
     return 1 if $e <= 1;
@@ -77,13 +76,13 @@ sub ord_mod_2_power {
     }
 }
 
-sub multiplicative_order_mod_m {
-    my ($a, $m) = @_;
+sub multiplicative_order_mod_m($a, $m) {
 
     my $ord = 1;
 
     for my $fe (factor_exp($m)) {
         my ($p, $e) = @$fe;
+
         my $local =
           ($p == 2)
           ? ord_mod_2_power($a, $e)
