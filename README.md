@@ -984,6 +984,7 @@ A nice collection of day-to-day Perl scripts.
     * [Modular lucas numbers](./Math/modular_lucas_numbers.pl)
     * [Modular lucas sequence V](./Math/modular_lucas_sequence_V.pl)
     * [Modular lucas sequences U V](./Math/modular_lucas_sequences_U_V.pl)
+    * [Modular multiplicative order](./Math/modular_multiplicative_order.pl)
     * [Modular pseudo square root](./Math/modular_pseudo_square_root.pl)
     * [Modular pseudo square root 2](./Math/modular_pseudo_square_root_2.pl)
     * [Modular sigma of unitary divisors of factorial](./Math/modular_sigma_of_unitary_divisors_of_factorial.pl)
