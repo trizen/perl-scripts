@@ -84,7 +84,7 @@ sub count_prime_signature_numbers_in_range($A, $B, $signature) {
     subint($term_2, $term_1);
 }
 
-sub multiplicative_partitions($n, $max_sum_e) {
+sub tau_partitions($n, $max_sum_e) {
 
     my @results;
     my @divs = divisors($n);
@@ -109,7 +109,7 @@ sub multiplicative_partitions($n, $max_sum_e) {
             last if ($curr_sum_e + $e > $max_sum_e);
 
             if ($target % $d == 0) {
-                push @path, $d;
+                push @path, $e;
                 __SUB__->(divint($target, $d), $i, $curr_sum_e + $e);
                 pop @path;
             }
@@ -121,9 +121,7 @@ sub multiplicative_partitions($n, $max_sum_e) {
 
 sub count_inverse_tau($A, $B, $n) {
 
-    my @signatures = map {
-        [map { $_ - 1 } @$_]
-    } multiplicative_partitions($n, logint($B, 2));
+    my @signatures = tau_partitions($n, logint($B, 2));
 
     my @counts;
     foreach my $sig (@signatures) {

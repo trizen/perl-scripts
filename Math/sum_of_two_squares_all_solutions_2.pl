@@ -20,8 +20,8 @@
 #   https://oeis.org/A001481
 
 use 5.036;
-use Math::GMPz qw();
-use ntheory    qw(factor_exp sqrtmod powint);
+use Math::GMPz   qw();
+use ntheory 0.74 qw(:all);
 
 # Find a solution to x^2 + y^2 = p, for prime numbers `p` congruent to 1 mod 4.
 sub primitive_sum_of_two_squares ($p) {
@@ -43,10 +43,16 @@ sub primitive_sum_of_two_squares ($p) {
 # Multiply two representations (a,b) and (c,d),
 # return all distinct sign/ordering variations.
 sub combine_pairs($A, $B, $C, $D) {
+
+    my $AC = $A * $C;
+    my $AD = $A * $D;
+    my $BD = $B * $D;
+    my $BC = $B * $C;
+
 #<<<
     return (
-        [$A * $C - $B * $D, $A * $D + $B * $C],
-        [$A * $C + $B * $D, $A * $D - $B * $C],
+        [$AC - $BD, $AD + $BC],
+        [$AC + $BD, $AD - $BC],
     );
 #>>>
 }
@@ -87,7 +93,6 @@ sub sum_of_two_squares_solutions($n) {
     my @reps = ([0, 1]);    # (0^2 + 1^2 = 1)
 
     # Handle primes p ≡ 3 (mod 4) with even exponent: they contribute as a perfect square factor s^2.
-    # Multiply each (x,y) by s where s = product p^{e/2} over such primes.
     my $square_scale = Math::GMPz->new(1);
 
     foreach my $pp (@factors) {
@@ -99,9 +104,7 @@ sub sum_of_two_squares_solutions($n) {
                 return;    # no solutions
             }
 
-            # p^{2t} contributes factor (p^t)^2 which is a square; doesn't change reps aside from scaling
-            # We multiply by p^{k/2} as a scaling factor on both coordinates.
-            $square_scale *= powint($p, ($k >> 1));
+            $square_scale *= powint($p, $k >> 1);
             next;
         }
 
@@ -128,9 +131,7 @@ sub sum_of_two_squares_solutions($n) {
     }
 
     # Sort final reps
-    @reps = sort { $a->[0] <=> $b->[0] } map {
-        [sort { $a <=> $b } @$_]
-    } @reps;
+    @reps = sort { $a->[0] <=> $b->[0] } @reps;
 
     return @reps;
 }

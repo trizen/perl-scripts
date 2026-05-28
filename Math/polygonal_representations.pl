@@ -18,7 +18,7 @@ use warnings;
 
 use experimental qw(signatures);
 
-use ntheory qw(divisors);
+use ntheory 0.74 qw(divisors divint);
 use Math::AnyNum qw(:overload polygonal);
 
 sub polygonal_representations ($n) {
@@ -32,10 +32,10 @@ sub polygonal_representations ($n) {
     foreach my $d (@divisors) {
 
         my $t = $d - 1;
-        my $k = (2*$n / $d + 2*$d - 4);
+        my $k = divint(2*$n, $d) + 2*$d - 4;
 
         if ($k % $t == 0) {
-            push @representations, [$d, $k / $t];
+            push @representations, [$d, divint($k, $t)];
         }
     }
 

@@ -1235,6 +1235,7 @@ A nice collection of day-to-day Perl scripts.
     * [Sum of the sum of divisors](./Math/sum_of_the_sum_of_divisors.pl)
     * [Sum of three cubes problem](./Math/sum_of_three_cubes_problem.pl)
     * [Sum of triangular numbers solutions](./Math/sum_of_triangular_numbers_solutions.pl)
+    * [Sum of two polygonals all solutions](./Math/sum_of_two_polygonals_all_solutions.pl)
     * [Sum of two primes](./Math/sum_of_two_primes.pl)
     * [Sum of two squares all solutions](./Math/sum_of_two_squares_all_solutions.pl)
     * [Sum of two squares all solutions 2](./Math/sum_of_two_squares_all_solutions_2.pl)
