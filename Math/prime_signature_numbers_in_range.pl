@@ -26,51 +26,54 @@ sub prime_signature_numbers_in_range($A, $B, $prime_signature) {
     # The smallest possible number with k distinct prime factors
     $A = vecmax(pn_primorial($k), $A);
 
-    my $generate = sub ($m, $lo, $k, $P, $sum_e) {
-
-        my $e = $P->[$k - 1];
-        my $hi = rootint(divint($B, $m), $sum_e);
-
-        if ($lo > $hi) {
-            return;
-        }
-
-        # Base case
-        if ($k == 1) {
-
-            # Tighten the lower bound based on A
-            my $lo_tight = vecmax($lo, rootint_ceil(cdivint($A, $m), $e));
-
-            foreach my $p (@{primes($lo_tight, $hi)}) {
-                push @list, mulint($m, powint($p, $e));
-            }
-
-            return;
-        }
-
-        for (my $p = $lo; $p <= $hi; ) {
-            my $t = mulint($m, powint($p, $e));
-            my $r = next_prime($p);
-            __SUB__->($t, $r, $k - 1, $P, $sum_e - $e);
-            $p = $r;
-        }
-    };
-
-    my %seen;
-    my $sum_e = vecsum(@$prime_signature);
+    my $sum_e = vecsum(@$prime_signature) || return;
 
     if ($sum_e > logint($B, 2)) {
         return;
     }
 
-    forperm {
-        my @perm = @{$prime_signature}[@_];
-        if (!$seen{join(' ', @perm)}++) {
-            $generate->(1, 2, scalar(@perm), \@perm, $sum_e);
-        }
-    } $k;
+    my @sorted_sig = sort { $b <=> $a } @$prime_signature;
 
-    return sort { $a <=> $b } @list;
+    sub ($m, $lo, $rem_sig, $rem_sum) {
+
+        my $k  = scalar(@$rem_sig);
+        my $hi = rootint(divint($B, $m), $rem_sum);
+
+        if ($lo > $hi) {
+            return;
+        }
+
+        my @seen;
+        for my $i (0 .. $#$rem_sig) {
+            my $e = $rem_sig->[$i];
+
+            next if $seen[$e]++;
+
+            my @new_sig = @$rem_sig;
+            splice(@new_sig, $i, 1);
+
+            if ($k == 1) {
+                my $lo_tight = vecmax($lo, rootint_ceil(cdivint($A, $m), $e));
+
+                forprimes {
+                    push @list, mulint($m, powint($_, $e));
+                } $lo_tight, $hi;
+            }
+            else {
+                my $new_sum = $rem_sum - $e;
+                for (my $p = $lo ; $p <= $hi ;) {
+                    my $t = mulint($m, powint($p, $e));
+                    my $r = next_prime($p);
+                    __SUB__->($t, $r, \@new_sig, $new_sum);
+                    $p = $r;
+                }
+            }
+        }
+    }->(1, 2, \@sorted_sig, $sum_e);
+
+    @list = sort { $a <=> $b } @list;
+
+    return @list;
 }
 
 # Example

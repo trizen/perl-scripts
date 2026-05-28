@@ -4,7 +4,7 @@
 # Date: 22 April 2026
 # https://github.com/trizen
 
-# Count the number of k-omega numbers <= n that have a given prime signature.
+# Count the numbers <= n that have a given prime signature.
 
 use 5.036;
 use ntheory 0.74 qw(:all);
@@ -22,53 +22,58 @@ sub count_prime_signature_numbers($n, $prime_signature) {
 
     $n >= 1 || return 0;
 
-    my $count = 0;
-
-    my $generate = sub ($m, $lo, $k, $P, $sum_e, $j = 0) {
-
-        my $e = $P->[$k - 1];
-        my $hi = rootint(divint($n, $m), $sum_e);
-
-        if ($lo > $hi) {
-            return;
-        }
-
-        if ($k == 1) {
-            $count += prime_count($hi) - $j;
-            return;
-        }
-
-        if ($k == 2) {
-            my $e2 = $P->[0];
-            foreach my $p (@{primes($lo, $hi)}) {
-                my $t = mulint($m, powint($p, $e));
-                my $u = rootint(divint($n, $t), $e2);
-                $count += prime_count($u) - ++$j;
-            }
-            return;
-        }
-
-        for (my $p = $lo; $p <= $hi; ) {
-            my $t = mulint($m, powint($p, $e));
-            my $r = next_prime($p);
-            __SUB__->($t, $r, $k - 1, $P, $sum_e - $e, ++$j);
-            $p = $r;
-        }
-    };
-
-    my %seen;
     my $sum_e = vecsum(@$prime_signature) || return 0;
 
     if ($sum_e > logint($n, 2)) {
         return 0;
     }
 
-    forperm {
-        my @perm = @{$prime_signature}[@_];
-        if (!$seen{join(' ', @perm)}++) {
-            $generate->(1, 2, scalar(@perm), \@perm, $sum_e);
+    my $count      = 0;
+    my @sorted_sig = sort { $b <=> $a } @$prime_signature;
+
+    sub ($m, $lo, $rem_sig, $rem_sum, $j = 0) {
+
+        my $k  = scalar(@$rem_sig);
+        my $hi = rootint(divint($n, $m), $rem_sum);
+
+        if ($lo > $hi) {
+            return;
         }
-    } $k;
+
+        if ($k == 1) {
+            $count = addint($count, prime_count($hi) - $j);
+            return;
+        }
+
+        my @seen;
+        for my $i (0 .. $#$rem_sig) {
+
+            my $e = $rem_sig->[$i];
+            next if $seen[$e]++;
+
+            my $local_j = $j;
+            my @new_sig = @$rem_sig;
+            splice(@new_sig, $i, 1);
+
+            if ($k == 2) {
+                my $e2 = $new_sig[0];
+                forprimes {
+                    my $t = mulint($m, powint($_, $e));
+                    my $u = rootint(divint($n, $t), $e2);
+                    $count = addint($count, prime_count($u) - ++$local_j);
+                } $lo, $hi;
+            }
+            else {
+                my $new_sum = $rem_sum - $e;
+                for (my $p = $lo ; $p <= $hi ;) {
+                    my $t = mulint($m, powint($p, $e));
+                    my $r = next_prime($p);
+                    __SUB__->($t, $r, \@new_sig, $new_sum, ++$local_j);
+                    $p = $r;
+                }
+            }
+        }
+    }->(1, 2, \@sorted_sig, $sum_e);
 
     return $count;
 }

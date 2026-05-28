@@ -13,30 +13,6 @@ sub rootint_ceil($n, $k) {
     rootint($n, $k) + (is_power($n, $k) ? 0 : 1);
 }
 
-sub unique_permutations($array, $callback) {
-    sub ($items, $current_perm) {
-
-        if (!@$items) {
-            $callback->($current_perm);
-            return;
-        }
-
-        my %level_seen;
-        for my $i (0 .. $#$items) {
-            my $item = $items->[$i];
-
-            # Skip iterations for duplicate elements in the same level
-            next if $level_seen{$item}++;
-
-            my @new_items = @$items;
-            splice(@new_items, $i, 1);
-
-            my @new_perm = (@$current_perm, $item);
-            __SUB__->(\@new_items, \@new_perm);
-        }
-    }->($array, []);
-}
-
 sub prime_signature_numbers_in_range($A, $B, $prime_signature) {
 
     my @list;
@@ -50,79 +26,85 @@ sub prime_signature_numbers_in_range($A, $B, $prime_signature) {
     # The smallest possible number with k distinct prime factors
     $A = vecmax(pn_primorial($k), $A);
 
-    my $generate = sub ($m, $lo, $k, $P, $sum_e) {
-
-        my $e  = $P->[$k - 1];
-        my $hi = rootint(divint($B, $m), $sum_e);
-
-        if ($lo > $hi) {
-            return;
-        }
-
-        # Base case
-        if ($k == 1) {
-
-            # Tighten the lower bound based on A
-            my $lo_tight = vecmax($lo, rootint_ceil(cdivint($A, $m), $e));
-
-            foreach my $p (@{primes($lo_tight, $hi)}) {
-                push @list, mulint($m, powint($p, $e));
-            }
-
-            return;
-        }
-
-        for (my $p = $lo ; $p <= $hi ;) {
-            my $t = mulint($m, powint($p, $e));
-            my $r = next_prime($p);
-            __SUB__->($t, $r, $k - 1, $P, $sum_e - $e);
-            $p = $r;
-        }
-    };
-
     my $sum_e = vecsum(@$prime_signature) || return;
 
     if ($sum_e > logint($B, 2)) {
         return;
     }
 
-    unique_permutations(
-        $prime_signature,
-        sub ($perm) {
-            $generate->(1, 2, scalar(@$perm), $perm, $sum_e);
+    my @sorted_sig = sort { $b <=> $a } @$prime_signature;
+
+    sub ($m, $lo, $rem_sig, $rem_sum) {
+
+        my $k  = scalar(@$rem_sig);
+        my $hi = rootint(divint($B, $m), $rem_sum);
+
+        if ($lo > $hi) {
+            return;
         }
-    );
+
+        my @seen;
+        for my $i (0 .. $#$rem_sig) {
+            my $e = $rem_sig->[$i];
+
+            next if $seen[$e]++;
+
+            my @new_sig = @$rem_sig;
+            splice(@new_sig, $i, 1);
+
+            if ($k == 1) {
+                my $lo_tight = vecmax($lo, rootint_ceil(cdivint($A, $m), $e));
+
+                forprimes {
+                    push @list, mulint($m, powint($_, $e));
+                } $lo_tight, $hi;
+            }
+            else {
+                my $new_sum = $rem_sum - $e;
+                for (my $p = $lo ; $p <= $hi ;) {
+                    my $t = mulint($m, powint($p, $e));
+                    my $r = next_prime($p);
+                    __SUB__->($t, $r, \@new_sig, $new_sum);
+                    $p = $r;
+                }
+            }
+        }
+    }->(1, 2, \@sorted_sig, $sum_e);
 
     return @list;
 }
 
-sub multiplicative_partitions($n, $max_value = $n) {
+sub multiplicative_partitions($n, $max_sum_e) {
 
     my @results;
     my @divs = divisors($n);
 
-    shift(@divs);   # remove divisor '1'
+    shift(@divs);    # remove divisor '1'
 
     my $end = $#divs;
-    sub ($target, $min_idx, $path) {
+    my @path;
+
+    sub ($target, $min_idx, $curr_sum_e) {
 
         if ($target == 1) {
-            push @results, $path;
+            push @results, [@path];
             return;
         }
 
         for my $i ($min_idx .. $end) {
             my $d = $divs[$i];
+            my $e = $d - 1;
 
-            # Prune branch if the divisor exceeds the remaining target
             last if $d > $target;
-            last if $d > $max_value;
+            last if ($curr_sum_e + $e > $max_sum_e);
 
             if ($target % $d == 0) {
-                __SUB__->(divint($target, $d), $i, [@$path, $d]);
+                push @path, $d;
+                __SUB__->(divint($target, $d), $i, $curr_sum_e + $e);
+                pop @path;
             }
         }
-    }->($n, 0, []);
+    }->($n, 0, 0);
 
     return @results;
 }
@@ -131,7 +113,7 @@ sub inverse_tau($A, $B, $n) {
 
     my @signatures = map {
         [map { $_ - 1 } @$_]
-    } multiplicative_partitions($n, logint($B, 2) + 1);
+    } multiplicative_partitions($n, logint($B, 2));
 
     my @list;
     foreach my $sig (@signatures) {
@@ -144,7 +126,7 @@ sub inverse_tau($A, $B, $n) {
 }
 
 scalar(inverse_tau(1, 462, 16)) == 16 or die "error";
-scalar(inverse_tau(1, powint(2, 9), 10)) == 13 or die "error";
+scalar(inverse_tau(1, powint(2, 9),  10)) == 13    or die "error";
 scalar(inverse_tau(1, powint(2, 40), 5040)) == 103 or die "error";
 
 my @arr = inverse_tau(1e5, 1e5 + 500, 48);
