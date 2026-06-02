@@ -13,9 +13,37 @@ use File::Temp            qw(tempfile tempdir);
 use File::Path            qw(make_path);
 use File::Spec::Functions qw(catfile curdir);
 use Image::ExifTool       qw(ImageInfo);
+use Getopt::Long          qw(GetOptions);
 
+my $portrait        = 0;
+my $landscape       = 0;
 my $output_filename = "CONCATENATED.mp4";
 my $output_dir      = tempdir(CLEANUP => 1, DIR => curdir());
+
+GetOptions(
+           'p|portrait!'  => \$portrait,
+           'l|landscape!' => \$landscape,
+           'o|output=s'   => \$output_filename,
+           'h|help'       => sub { usage(0) },
+          )
+  or die("Error in command line arguments\n");
+
+sub usage ($exit_code = 0) {
+    print <<"HELP";
+usage: $0 [options] [MP4 files]
+
+options:
+    -o --out=s      : output filename (default: $output_filename)
+    -p --portrait   : video portrait mode
+    -l --landscape  : video landscape mode
+    -h --help       : print this message and exit
+
+example:
+
+    $0 --landscape *.mp4
+HELP
+    exit($exit_code);
+}
 
 sub new_tempfile {
     my ($fh, $filename) = tempfile("tmpfileXXXXX", SUFFIX => '.txt', UNLINK => 1);
@@ -35,6 +63,16 @@ sub ffmpeg_concat_files ($filename, $output_filename) {
     $? == 0 or die "Stopped with exit code = $?";
 }
 
+if (!@ARGV) {
+    warn "\nERROR: No input filenames given!\n\n";
+    usage(2);
+}
+
+if (!$portrait and !$landscape) {
+    warn "\nERROR: Specify a video mode with `--portrait` or `--landscape` options!\n\n";
+    usage(1);
+}
+
 my $mp4_version = undef;
 
 my $i = 1;
@@ -42,8 +80,22 @@ my ($fh, $filename) = new_tempfile();
 
 foreach my $file (@ARGV) {
 
-    my $info    = ImageInfo($file);
-    my $version = $info->{'MajorBrand'};
+    my $info     = ImageInfo($file);
+    my $version  = $info->{'MajorBrand'} // die "Not an MP4 file: $file\n";
+    my $rotation = $info->{'Rotation'};
+
+    if ($landscape) {
+        $rotation eq '0' or do {
+            warn "Skipping file: <<$file>> (has rotation $rotation)\n";
+            next;
+        };
+    }
+    elsif ($portrait) {
+        $rotation eq '90' or $rotation eq '270' or do {
+            warn "Skipping file: <<$file>> (has rotation $rotation)\n";
+            next;
+        };
+    }
 
     $mp4_version //= $version;
 
