@@ -3,12 +3,11 @@
 # Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 13 May 2017
+# Edit: 05 June 2026 (precision optimizations)
 # https://github.com/trizen
 
-# Computation of the nth-Bernoulli number, using prime numbers.
-
-# Algorithm due to Kevin J. McGown (December 8, 2005)
-# See his paper: "Computing Bernoulli Numbers Quickly"
+# Computation of the n-th Bernoulli number using prime numbers.
+# Algorithm: Kevin J. McGown, "Computing Bernoulli Numbers Quickly" (2005)
 
 use 5.010;
 use strict;
@@ -23,69 +22,75 @@ use ntheory qw(is_prob_prime forprimes fordivisors);
 sub bern_from_primes {
     my ($n) = @_;
 
-    $n == 0 and return Math::GMPq->new('1');
-    $n == 1 and return Math::GMPq->new('1/2');
-    $n <  0 and return undef;
-    $n %  2 and return Math::GMPq->new('0');
+    return Math::GMPq->new('1')   if $n == 0;
+    return Math::GMPq->new('1/2') if $n == 1;
+    return undef                  if $n < 0;
+    return Math::GMPq->new('0')   if $n % 2;
 
-    my $round = Math::MPFR::MPFR_RNDN();
+    my $TAU = 6.28318530717958647692528676655900576839433879875021;
 
-    my $tau   = 6.28318530717958647692528676655900576839433879875;
-    my $log2B = (log(4 * $tau * $n) / 2 + $n * log($n) - $n * log($tau) - $n) / log(2);
-
-    my $prec = int($n + $log2B) + ($n <= 90 ? 18 : 0);
-
-    my $d = Math::GMPz::Rmpz_init();
-    Math::GMPz::Rmpz_fac_ui($d, $n);                      # d = n!
-
-    my $K = Math::MPFR::Rmpfr_init2($prec);
-    Math::MPFR::Rmpfr_const_pi($K, $round);               # K = pi
-    Math::MPFR::Rmpfr_pow_ui($K, $K, $n, $round);         # K = K^n
-    Math::MPFR::Rmpfr_mul_2ui($K, $K, $n - 1, $round);    # K = K * 2^(n-1)
-    Math::MPFR::Rmpfr_div_z($K, $K, $d, $round);          # K = K / d
-    Math::MPFR::Rmpfr_ui_div($K, 1, $K, $round);          # K = 1 / K
-
-    Math::GMPz::Rmpz_set_ui($d, 1);                       # d = 1
-
-    fordivisors {                                         # divisors of n
-        if (is_prob_prime($_ + 1)) {
-            Math::GMPz::Rmpz_mul_ui($d, $d, $_ + 1);      # d = d * p, where (p-1)|n
-        }
+    # von Staudt-Clausen denominator
+    # d = ∏ { p prime : (p−1) | n }
+    # Computing d first lets us measure its exact bit-length for the precision.
+    my $d = Math::GMPz::Rmpz_init_set_ui(1);
+    fordivisors {
+        Math::GMPz::Rmpz_mul_ui($d, $d, $_ + 1) if is_prob_prime($_ + 1);
     } $n;
 
-    my $N = Math::MPFR::Rmpfr_init2(64);
-    Math::MPFR::Rmpfr_mul_z($N, $K, $d, $round);          # N = K * d
-    Math::MPFR::Rmpfr_rootn_ui($N, $N, $n - 1, $round);   # N = K^(1/(n-1))
-    Math::MPFR::Rmpfr_ceil($N, $N);                       # N = ceil(N)
+    # We need enough bits to represent |numerator of B_n| = |B_n| · d exactly,
+    # then round correctly. Use Stirling to bound log₂|B_n|, and the exact
+    # bit-length of d (always ≤ n, but usually far smaller in practice).
+    my $log2B = (log(4 * $TAU * $n) / 2 + $n * (log($n) - log($TAU)) - $n) / log(2);
+    my $prec  = int($log2B) + Math::GMPz::Rmpz_sizeinbase($d, 2) + 64;
 
-    $N = Math::MPFR::Rmpfr_get_ui($N, $round);
+    # K = 2·n! / (2π)^n ---
+    # This is the conversion factor B_n = K · ζ(n).
+    my $fac = Math::GMPz::Rmpz_init();
+    Math::GMPz::Rmpz_fac_ui($fac, $n);
 
-    my $z = Math::MPFR::Rmpfr_init2($prec);               # zeta(n)
-    my $u = Math::GMPz::Rmpz_init();                      # p^n
+    my $K = Math::MPFR::Rmpfr_init2($prec);
+    Math::MPFR::Rmpfr_const_pi($K, 2);
+    Math::MPFR::Rmpfr_pow_ui($K, $K, $n, 0);         # π^n
+    Math::MPFR::Rmpfr_mul_2ui($K, $K, $n - 1, 0);    # 2^(n−1) · π^n
+    Math::MPFR::Rmpfr_div_z($K, $K, $fac, 0);        # ÷ n!
+    Math::MPFR::Rmpfr_ui_div($K, 1, $K, 0);          # K = n! / (2^(n−1)·π^n)
 
-    Math::MPFR::Rmpfr_set_ui($z, 1, $round);              # z = 1
+    # Upper bound N for the truncated Euler product
+    my $Nf = Math::MPFR::Rmpfr_init2(64);
+    Math::MPFR::Rmpfr_mul_z($Nf, $K, $d, 0);            # Nf = K·d
+    Math::MPFR::Rmpfr_rootn_ui($Nf, $Nf, $n - 1, 0);    # Nf = (K·d)^(1/(n−1))
+    Math::MPFR::Rmpfr_ceil($Nf, $Nf);
+    my $N = Math::MPFR::Rmpfr_get_ui($Nf, 0);
 
-    forprimes {                                           # primes <= N
-        Math::GMPz::Rmpz_ui_pow_ui($u, $_, $n);           # u = p^n
-        Math::MPFR::Rmpfr_mul_z($z, $z, $u, $round);      # z = z*u
-        Math::GMPz::Rmpz_sub_ui($u, $u, 1);               # u = u-1
-        Math::MPFR::Rmpfr_div_z($z, $z, $u, $round);      # z = z/u
+    # Truncated Euler product ≈ ζ(n)
+    # z = ∏_{p ≤ N} p^n / (p^n − 1)
+    my $z   = Math::MPFR::Rmpfr_init2($prec);
+    my $tmp = Math::GMPz::Rmpz_init();
+    Math::MPFR::Rmpfr_set_ui($z, 1, 0);
+
+    forprimes {
+        Math::GMPz::Rmpz_ui_pow_ui($tmp, $_, $n);    # tmp = p^n
+        Math::MPFR::Rmpfr_mul_z($z, $z, $tmp, 0);    # z  *= p^n
+        Math::GMPz::Rmpz_sub_ui($tmp, $tmp, 1);      # tmp = p^n − 1
+        Math::MPFR::Rmpfr_div_z($z, $z, $tmp, 0);    # z  /= (p^n − 1)
     } $N;
 
-    Math::MPFR::Rmpfr_mul($z, $z, $K, $round);            # z = z * K
-    Math::MPFR::Rmpfr_mul_z($z, $z, $d, $round);          # z = z * d
-    Math::MPFR::Rmpfr_ceil($z, $z);                       # z = ceil(z)
+    # z · K · d  →  |B_n · d|  =  |numerator of B_n|
+    Math::MPFR::Rmpfr_mul($z, $z, $K, 0);
+    Math::MPFR::Rmpfr_mul_z($z, $z, $d, 0);
+    Math::MPFR::Rmpfr_ceil($z, $z);
+
+    # Sign: B_n < 0 iff n ≡ 0 (mod 4).
+    Math::MPFR::Rmpfr_get_z($fac, $z, 0);
+    Math::GMPz::Rmpz_neg($fac, $fac) if $n % 4 == 0;
 
     my $q = Math::GMPq::Rmpq_init();
+    Math::GMPq::Rmpq_set_num($q, $fac);
+    Math::GMPq::Rmpq_set_den($q, $d);
 
-    Math::GMPq::Rmpq_set_den($q, $d);                     # denominator
-    Math::MPFR::Rmpfr_get_z($d, $z, $round);
-    Math::GMPz::Rmpz_neg($d, $d) if $n % 4 == 0;          # d = -d, iff 4|n
-    Math::GMPq::Rmpq_set_num($q, $d);                     # numerator
-
-    return $q;                                            # Bn
+    return $q;
 }
 
-foreach my $i (0 .. 50) {
+for my $i (0 .. 50) {
     printf "B%-3d = %s\n", 2 * $i, bern_from_primes(2 * $i);
 }
