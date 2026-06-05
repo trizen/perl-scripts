@@ -3,7 +3,7 @@
 # Daniel "Trizen" Șuteu
 # License: GPLv3
 # Date: 13 May 2017
-# Edit: 05 June 2026 (precision optimizations)
+# Edit: 05 June 2026 (precision optimization)
 # https://github.com/trizen
 
 # Computation of the n-th Bernoulli number using prime numbers.
@@ -40,7 +40,7 @@ sub bern_from_primes {
     # We need enough bits to represent |numerator of B_n| = |B_n| · d exactly,
     # then round correctly. Use Stirling to bound log₂|B_n|, and the exact
     # bit-length of d (always ≤ n, but usually far smaller in practice).
-    my $log2B = (log(4 * $TAU * $n) / 2 + $n * (log($n) - log($TAU)) - $n) / log(2);
+    my $log2B = (log(4 * $TAU * $n) / 2 + $n * (log($n) - log($TAU) - 1)) / log(2);
     my $prec  = int($log2B) + Math::GMPz::Rmpz_sizeinbase($d, 2) + 64;
 
     # K = 2·n! / (2π)^n ---
