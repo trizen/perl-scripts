@@ -1096,6 +1096,7 @@ A nice collection of day-to-day Perl scripts.
     * [Powers of primes modulus in factorial](./Math/powers_of_primes_modulus_in_factorial.pl)
     * [Prime 41](./Math/prime_41.pl)
     * [Prime abundant sequences](./Math/prime_abundant_sequences.pl)
+    * [Prime count inclusion-exclusion formula](./Math/prime_count_inclusion-exclusion_formula.pl)
     * [Prime count smooth sum](./Math/prime_count_smooth_sum.pl)
     * [Prime counting from almost primes](./Math/prime_counting_from_almost_primes.pl)
     * [Prime counting from squarefree almost primes](./Math/prime_counting_from_squarefree_almost_primes.pl)

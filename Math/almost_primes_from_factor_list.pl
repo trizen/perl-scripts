@@ -10,7 +10,7 @@ use 5.020;
 use ntheory qw(:all);
 use experimental qw(signatures);
 
-sub almost_primes ($n, $k, $factors, $squarefree = 0) {
+sub almost_primes_from_factors ($n, $k, $factors, $squarefree = 0) {
 
     my $factors_end = $#{$factors};
 
@@ -55,7 +55,7 @@ my $n       = 1e3;              # limit
 my @factors = @{primes(11)};    # prime list
 
 foreach my $k (0 .. scalar(@factors)) {
-    my @divisors = almost_primes($n, $k, \@factors);
+    my @divisors = almost_primes_from_factors($n, $k, \@factors);
     printf("%2d-almost primes <= %s: [%s]\n", $k, $n, join(', ', @divisors));
 }
 
