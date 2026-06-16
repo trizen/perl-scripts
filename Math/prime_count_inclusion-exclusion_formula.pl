@@ -9,13 +9,8 @@
 # Inspired by the Veritasium video:
 #   https://youtube.com/watch?v=8HBDE-msUjw
 
-# For example, prime_count(100) is computed as:
-#   100 - ([100/2] + [100/3] + [100/5] + [100/7])
-#       + ([100/(2*3)] + [100/(2*5)] + [100/(2*7)] + [100/(3*5)] + [100/(3*7)] + [100/(5*7)])
-#       - ([100/(2*3*5)] + [100/(2*3*7)] + [100/(2*5*7)] + [100/(3*5*7)])
-#       + ([100/(2*3*5*7)])
-#       + 4 (numbers of primes <= sqrt(100))
-#       - 1 (because 1 is not prime)
+# Formula:
+#    π(n) = n - Σ⌊n/p⌋ + Σ⌊n/(p·q)⌋ - ... + π(√n) - 1
 
 use 5.036;
 use ntheory 0.74 qw(:all);
