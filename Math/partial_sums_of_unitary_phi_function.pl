@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 # Author: Daniel "Trizen" Șuteu
-# Date: 24 June
+# Date: 25 June 2026
 # https://github.com/trizen
 
 # A sublinear algorithm for computing the partial-sums of `uphi(k)`, for `1 <= k <= n`:

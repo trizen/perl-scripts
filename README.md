@@ -1065,6 +1065,7 @@ A nice collection of day-to-day Perl scripts.
     * [Partial sums of sigma function times k to the m](./Math/partial_sums_of_sigma_function_times_k_to_the_m.pl)
     * [Partial sums of unitary phi function](./Math/partial_sums_of_unitary_phi_function.pl)
     * [Partial sums of usigma function](./Math/partial_sums_of_usigma_function.pl)
+    * [Partial sums of usigma function fast](./Math/partial_sums_of_usigma_function_fast.pl)
     * [Partitions count](./Math/partitions_count.pl)
     * [Partitions count abs](./Math/partitions_count_abs.pl)
     * [Partitions count simple](./Math/partitions_count_simple.pl)

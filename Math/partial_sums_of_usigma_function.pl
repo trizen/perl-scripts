@@ -18,8 +18,10 @@
 #   https://trizenx.blogspot.com/2018/11/partial-sums-of-arithmetical-functions.html
 
 use 5.036;
-use Math::AnyNum qw(faulhaber_sum);
-use ntheory      qw(sqrtint rootint factor_exp moebius powint divint mulint vecprod addint);
+use Math::GMPz;
+use Math::Prime::Util 0.74 qw(:all);
+
+prime_set_config(bigint => 'Math::GMPz');
 
 sub usigma0_sum ($n) {
 
@@ -34,7 +36,7 @@ sub usigma0_sum ($n) {
             $tmp += int($n / $j / $k / $k);
         }
 
-        $total += $mu * (2 * $tmp - sqrtint(int($n / $k / $k))**2);
+        $total += $mu * (2 * $tmp - powint(sqrtint(int($n / $k / $k)), 2));
     }
 
     return $total;
@@ -56,11 +58,11 @@ sub usigma_sum ($n, $s) {
 
         my $term = 0;
         foreach my $j (1 .. $sqrtN) {
-            $term += faulhaber_sum(divint($N, $j), $s);
-            $term += mulint(powint($j, $s), divint($N, $j));
+            $term = addint($term, powersum(divint($N, $j), $s));
+            $term = addint($term, mulint(powint($j, $s), divint($N, $j)));
         }
 
-        my $inner_sum = $term - mulint(faulhaber_sum($sqrtN, $s), $sqrtN);
+        my $inner_sum = subint($term, mulint(powersum($sqrtN, $s), $sqrtN));
         $total = addint($total, vecprod($mu, powint($k, $s), $inner_sum));
     }
 
@@ -68,7 +70,7 @@ sub usigma_sum ($n, $s) {
 }
 
 my $k = 1;
-foreach my $n (1 .. 8) {
+foreach my $n (1 .. 10) {    # takes ~1s
     say "S(10^$n, $k) = ", usigma_sum(powint(10, $n), $k);
 }
 
