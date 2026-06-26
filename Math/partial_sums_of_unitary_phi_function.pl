@@ -14,7 +14,10 @@
 #   https://oeis.org/A047994
 
 use 5.036;
-use ntheory qw(:all);
+use Math::GMPz;
+use ntheory 0.74 qw(:all);
+
+prime_set_config(bigint => 'Math::GMPz');
 
 sub uphi_powerful($n) {
 
@@ -31,28 +34,29 @@ sub uphi_powerful($n) {
 
 sub uphi_sum($n) {
 
-    my $sqrt_n = sqrtint($n);
-
+    my $s = sqrtint($n);
     my $P = powerful_numbers(1, $n);
-    my @F = map { uphi_powerful($_) } @$P;
 
+    my @F = ();
     my @S = (0);
-    for my $i (0 .. $#F) {
-        $S[$i + 1] = $S[$i] + $F[$i];
+
+    for my $i (0 .. $#$P) {
+        my $p = $P->[$i];
+        my $t = uphi_powerful($p);
+        push @F, $t if !($p > $s);
+        push @S, addint($S[-1], $t);
     }
 
     my $A = 0;
-    for my $i (0 .. $#$P) {
-        my $k = $P->[$i];
-        last if ($k > $sqrt_n);
-        $A = addint($A, mulint($F[$i], sumtotient(divint($n, $k))));
+    for my $i (0 .. $#F) {
+        $A = addint($A, mulint($F[$i], sumtotient(divint($n, $P->[$i]))));
     }
 
-    for my $k (1 .. $sqrt_n) {
+    for my $k (1 .. $s) {
         $A = addint($A, mulint($S[powerful_count(divint($n, $k))], euler_phi($k)));
     }
 
-    my $B = mulint(sumtotient($sqrt_n), $S[powerful_count($sqrt_n)]);
+    my $B = mulint(sumtotient($s), $S[powerful_count($s)]);
 
     return subint($A, $B);
 }
