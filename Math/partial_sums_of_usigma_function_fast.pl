@@ -39,14 +39,25 @@ sub usigma_sum ($n, $j = 1) {
     my @M = (0);
     my @F = (0);
 
+    my @moebius = moebius(0, $s);
+
     for my $k (1 .. $s) {
-        my $t = mulint(moebius($k), ($j == 1 ? $k : powint($k, $j)));
+        my $mu = $moebius[$k];
+
+        if ($mu == 0) {
+            push @F, 0;
+            push @M, $M[-1];
+            next;
+        }
+
+        my $t = mulint($mu, ($j == 1 ? $k : powint($k, $j)));
         push @F, $t;
         push @M, addint($M[-1], $t);
     }
 
     my $A = 0;
     for my $k (1 .. $ss) {
+        $F[$k] || next;
         $A = addint($A, mulint($F[$k], sigma_sum(divint($n, $k * $k), $j)));
     }
 
