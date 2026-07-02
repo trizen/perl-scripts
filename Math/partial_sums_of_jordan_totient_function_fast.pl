@@ -2,6 +2,7 @@
 
 # Daniel "Trizen" Șuteu
 # Date: 04 February 2019
+# Edit: 02 July 2026
 # https://github.com/trizen
 
 # A sublinear algorithm for computing the partial sums of the Jordan totient function.
@@ -45,24 +46,20 @@
 #   https://en.wikipedia.org/wiki/Dirichlet_hyperbola_method
 #   https://trizenx.blogspot.com/2018/11/partial-sums-of-arithmetical-functions.html
 
-use 5.020;
-use strict;
-use warnings;
-
-use experimental qw(signatures);
-
+use 5.036;
 use Math::GMPz qw();
-use Math::AnyNum qw(faulhaber_sum);
-use ntheory qw(sqrtint rootint jordan_totient);
+use ntheory 0.74 qw(:all);
+
+prime_set_config(bigint => 'Math::GMPz');
 
 sub partial_sums_of_jordan_totient ($n, $m) {
     my $s = sqrtint($n);
 
     my $lookup_size       = 2 * rootint($n, 3)**2;
-    my @jordan_sum_lookup = (Math::GMPz->new(0));
+    my @jordan_sum_lookup = (0);
 
     foreach my $i (1 .. $lookup_size) {
-        $jordan_sum_lookup[$i] = $jordan_sum_lookup[$i - 1] + jordan_totient($m, $i);
+        $jordan_sum_lookup[$i] = addint($jordan_sum_lookup[$i - 1], jordan_totient($m, $i));
     }
 
     my %seen;
@@ -78,7 +75,7 @@ sub partial_sums_of_jordan_totient ($n, $m) {
         }
 
         my $s = sqrtint($n);
-        my $A = ${faulhaber_sum($n, $m)};
+        my $A = powersum($n, $m);
 
         foreach my $k (2 .. int($n / ($s + 1))) {
             $A -= __SUB__->(int($n / $k));
@@ -93,6 +90,6 @@ sub partial_sums_of_jordan_totient ($n, $m) {
     }->($n);
 }
 
-foreach my $n (1 .. 8) {    # takes ~1.5 seconds
+foreach my $n (1 .. 8) {    # takes ~0.5 seconds
     say "a_2(10^$n) = ", partial_sums_of_jordan_totient(10**$n, 2);
 }
