@@ -161,9 +161,9 @@ sub CohenH ($r, $N) {
 
     $N = Z($N);
 
-    # N = 0 case: H(r, 0) = zeta(1 - 2r) / 2 = -B_{2r} / (4r)
+    # N = 0 case: H(r, 0) = zeta(1 - 2r) = -B_{2r} / (2r)
     if ($N == 0) {
-        return (-bernoulli(2 * $r) / (4 * $r));
+        return (-bernoulli(2 * $r) / (2 * $r));
     }
 
     # Parity check: (-1)^r * N mod 4
@@ -226,9 +226,9 @@ unless (caller) {
     is(join('', r7(87178291200)), "42042033202847447350924289856");
 
     say "\n--- Testing CohenH(r, N) Values ---";
-    is(join('', CohenH(1, 0)), "-1/24");
-    is(join('', CohenH(2, 0)), "1/240");
-    is(join('', CohenH(3, 0)), "-1/504");
+    is(join('', CohenH(1, 0)), "-1/12");
+    is(join('', CohenH(2, 0)), "1/120");
+    is(join('', CohenH(3, 0)), "-1/252");
     is(join('', CohenH(2, 4)), "-7/12");
     is(join('', CohenH(3, 8)), "-3");
 
