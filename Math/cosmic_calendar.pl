@@ -38,9 +38,10 @@ sub output {
     printf "\n=> In the cosmic scale, that happened about %.2f %s ago!\n\n", $value, $type;
 }
 
+my $term  = Term::ReadLine->new('Cosmic Calendar');
+
 BLOCK: {
-    my $term  = Term::ReadLine->new('Cosmic Calendar');
-    my $value = eval $term->readline("How long ago? (any expression, in years): ");
+    my $value = eval $term->readline("How long ago? (any expression, in years): ") // last;
 
     foreach my $bit (@cosmic_year) {
         $value >= $bit->[0]
