@@ -1322,6 +1322,7 @@ A nice collection of day-to-day Perl scripts.
     * [Search by prefix](./Text/search_by_prefix.pl)
     * [Sim end words](./Text/sim_end_words.pl)
     * [SmartWordWrap](./Text/smartWordWrap.pl)
+    * [SmartWordWrap DP](./Text/smartWordWrap_DP.pl)
     * [SmartWordWrap lazy](./Text/smartWordWrap_lazy.pl)
     * [SmartWordWrap simple](./Text/smartWordWrap_simple.pl)
     * [Unique prefixes](./Text/unique_prefixes.pl)
