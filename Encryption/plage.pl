@@ -1400,7 +1400,12 @@ sub wrap_x25519 ($file_key, $recipient_x_pub) {
     $shared eq ZERO32 and fail("Invalid recipient key (low-order point).");
 
     my $wrap_key = hkdf($shared, $eph_pub . $recipient_x_pub, 'SHA256', KEY_SIZE, 'plage-v1 x25519 wrap');
-    my ($ct, $tag) = chacha20poly1305_encrypt_authenticate($wrap_key, ZERO12, '', $file_key);
+
+    # --- CONTEXTUAL AAD BINDING ---
+    # Bind the stanza type, ephemeral public key, and recipient public key as AAD
+    my $aad = pack('C', STANZA_X25519) . $eph_pub . $recipient_x_pub;
+
+    my ($ct, $tag) = chacha20poly1305_encrypt_authenticate($wrap_key, ZERO12, $aad, $file_key);
 
     return pack('C', STANZA_X25519) . $eph_pub . $ct . $tag;
 }
@@ -1416,7 +1421,11 @@ sub unwrap_x25519 ($stanza, $x_private_key) {
     my $my_pub   = $x_private_key->export_key_raw('public');
     my $wrap_key = hkdf($shared, $eph_pub . $my_pub, 'SHA256', KEY_SIZE, 'plage-v1 x25519 wrap');
 
-    return aead_open($wrap_key, ZERO12, '', $wrapped);
+    # --- CONTEXTUAL AAD BINDING ---
+    # Reconstruct the exact same AAD using the decrypting recipient's public key
+    my $aad = pack('C', STANZA_X25519) . $eph_pub . $my_pub;
+
+    return aead_open($wrap_key, ZERO12, $aad, $wrapped);
 }
 
 sub wrap_passphrase ($file_key, $passphrase) {
@@ -1425,20 +1434,30 @@ sub wrap_passphrase ($file_key, $passphrase) {
     my $salt = random_bytes(16);
     my $key  = hkdf(derive_key($passphrase, $salt, $kdf, $p1, $p2, $p3), $salt, 'SHA256', KEY_SIZE, 'plage-v1 passphrase wrap');
 
-    my ($ct, $tag) = chacha20poly1305_encrypt_authenticate($key, ZERO12, '', $file_key);
+    # --- CONTEXTUAL AAD BINDING ---
+    # Bind the stanza type, KDF configuration parameters, and salt as AAD
+    my $stanza_header = pack('C C N N C', STANZA_PASSPHRASE, $kdf, $p1, $p2, $p3) . $salt;
 
-    return pack('C C N N C', STANZA_PASSPHRASE, $kdf, $p1, $p2, $p3) . $salt . $ct . $tag;
+    my ($ct, $tag) = chacha20poly1305_encrypt_authenticate($key, ZERO12, $stanza_header, $file_key);
+
+    return $stanza_header . $ct . $tag;
 }
 
 sub unwrap_passphrase ($stanza, $passphrase) {
 
-    my ($kdf, $p1, $p2, $p3) = unpack('C N N C', substr($stanza->{body}, 0, 10));
-    my $salt    = substr($stanza->{body}, 10, 16);
-    my $wrapped = substr($stanza->{body}, 26);
+    my $body = $stanza->{body};
+
+    # Extract the exact stanza header fields used during wrapping for AAD verification
+    my $stanza_header = substr($body, 0, 1 + 1 + 4 + 4 + 1 + 16);
+
+    my ($kdf, $p1, $p2, $p3) = unpack('C N N C', substr($body, 0, 10));
+    my $salt    = substr($body, 10, 16);
+    my $wrapped = substr($body, 26);
 
     my $key = hkdf(derive_key($passphrase, $salt, $kdf, $p1, $p2, $p3), $salt, 'SHA256', KEY_SIZE, 'plage-v1 passphrase wrap');
 
-    return aead_open($key, ZERO12, '', $wrapped);
+    # --- CONTEXTUAL AAD BINDING ---
+    return aead_open($key, ZERO12, $stanza_header, $wrapped);
 }
 
 sub build_header ($flags, $compression_id, $chunk_log2, $nonce, $file_key, @stanzas) {
