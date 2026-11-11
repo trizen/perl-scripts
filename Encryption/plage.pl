@@ -234,16 +234,20 @@ sub read_secret ($prompt) {
         return ($LAST_PASSFD_LINE // fail("No passphrase available on the given file descriptor."));
     }
 
+    # If STDIN is not a TTY (e.g. piped or redirected) on Windows, Term::ReadKey will fail.
+    # Fall back to asking via ask_line if we aren't on an interactive console.
+    if ($^O eq 'MSWin32' && !-t STDIN) {
+        return ask_line($prompt);
+    }
+
     require Term::ReadKey;
 
-    # On Windows, Term::ReadKey requires STDIN instead of a separate CONIN$ handle
     my $term_in = ($^O eq 'MSWin32') ? \*STDIN : do { open_tty(); $TTY_IN };
 
     unless ($^O eq 'MSWin32') {
         open_tty();
     }
     else {
-        # Ensure output handle is initialized for printing prompts/newlines on Windows
         open_tty() unless defined $TTY_OUT;
     }
 
