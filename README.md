@@ -295,12 +295,13 @@ A nice collection of day-to-day Perl scripts.
 * Encryption
     * [Age-lf](./Encryption/age-lf.pl)
     * [Backdoored rsa with x25519](./Encryption/backdoored_rsa_with_x25519.pl)
-    * [Cbc+xor file encrypter](./Encryption/cbc+xor_file_encrypter.pl)
+    * [Cbc+xor file encrypter-unsecure](./Encryption/cbc+xor_file_encrypter-unsecure.pl)
     * [Crypt rsa](./Encryption/crypt_rsa.pl)
     * [One-time pad](./Encryption/one-time_pad.pl)
     * [Plage](./Encryption/plage.pl)
     * [Plage-unsecure](./Encryption/plage-unsecure.pl)
     * [RSA encryption](./Encryption/RSA_encryption.pl)
+    * [Secure-file-encryption](./Encryption/secure-file-encryption.pl)
     * [Simple XOR cipher](./Encryption/simple_XOR_cipher.pl)
 * File Readers
     * [Concat files](./File%20Readers/concat_files.pl)
