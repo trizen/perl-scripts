@@ -299,6 +299,7 @@ A nice collection of day-to-day Perl scripts.
     * [Crypt rsa](./Encryption/crypt_rsa.pl)
     * [One-time pad](./Encryption/one-time_pad.pl)
     * [Plage](./Encryption/plage.pl)
+    * [Plage-unsecure](./Encryption/plage-unsecure.pl)
     * [RSA encryption](./Encryption/RSA_encryption.pl)
     * [Simple XOR cipher](./Encryption/simple_XOR_cipher.pl)
 * File Readers
