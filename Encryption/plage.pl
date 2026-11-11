@@ -30,76 +30,76 @@ use warnings;
 
 use experimental qw(signatures);
 
-use Fcntl qw(O_WRONLY O_CREAT O_EXCL);
+use Fcntl                 qw(O_WRONLY O_CREAT O_EXCL);
 use File::Spec::Functions qw(catdir catfile curdir);
-use Getopt::Long qw(GetOptions :config no_ignore_case bundling);
-use JSON::PP ();
-use MIME::Base64 qw(encode_base64 decode_base64);
+use Getopt::Long          qw(GetOptions :config no_ignore_case bundling);
+use JSON::PP              ();
+use MIME::Base64          qw(encode_base64 decode_base64);
 
 use Crypt::AuthEnc::ChaCha20Poly1305 qw(chacha20poly1305_encrypt_authenticate chacha20poly1305_decrypt_verify);
-use Crypt::Digest::BLAKE2b_512 qw(blake2b_512);
-use Crypt::Digest::SHA256 qw(sha256 sha256_hex);
-use Crypt::KeyDerivation qw(hkdf pbkdf2);
-use Crypt::Mac::HMAC qw(hmac);
-use Crypt::Misc qw(slow_eq);
+use Crypt::Digest::BLAKE2b_512       qw(blake2b_512);
+use Crypt::Digest::SHA256            qw(sha256 sha256_hex);
+use Crypt::KeyDerivation             qw(hkdf pbkdf2);
+use Crypt::Mac::HMAC                 qw(hmac);
+use Crypt::Misc                      qw(slow_eq);
 use Crypt::PK::Ed25519;
 use Crypt::PK::X25519;
 use Crypt::PRNG qw(random_bytes);
 
 use constant {
-              APPNAME => 'plage',
-              VERSION => '1.0',
+    APPNAME => 'plage',
+    VERSION => '1.0',
 
-              MAGIC          => 'PLAGE',
-              FORMAT_VERSION => 1,
+    MAGIC          => 'PLAGE',
+    FORMAT_VERSION => 1,
 
-              FLAG_SIGNED => 0x01,
+    FLAG_SIGNED => 0x01,
 
-              STANZA_X25519     => 1,
-              STANZA_PASSPHRASE => 2,
-              X25519_BODY_SIZE  => 32 + 48,
-              PASS_BODY_SIZE    => 1 + 4 + 4 + 1 + 16 + 48,
+    STANZA_X25519     => 1,
+    STANZA_PASSPHRASE => 2,
+    X25519_BODY_SIZE  => 32 + 48,
+    PASS_BODY_SIZE    => 1 + 4 + 4 + 1 + 16 + 48,
 
-              KDF_ARGON2ID => 1,
-              KDF_PBKDF2   => 2,
+    KDF_ARGON2ID => 1,
+    KDF_PBKDF2   => 2,
 
-              KEY_SIZE   => 32,
-              TAG_SIZE   => 16,
-              NONCE_SIZE => 16,
-              MAC_SIZE   => 32,
-              ED_SIZE    => 32,
-              SIG_SIZE   => 64,
-              TIME_SIZE  => 8,
+    KEY_SIZE   => 32,
+    TAG_SIZE   => 16,
+    NONCE_SIZE => 16,
+    MAC_SIZE   => 32,
+    ED_SIZE    => 32,
+    SIG_SIZE   => 64,
+    TIME_SIZE  => 8,
 
-              CHUNK_LOG2_MIN     => 12,
-              CHUNK_LOG2_MAX     => 24,
-              CHUNK_LOG2_DEFAULT => 16,
-              MAX_STANZAS        => 128,
+    CHUNK_LOG2_MIN     => 12,
+    CHUNK_LOG2_MAX     => 24,
+    CHUNK_LOG2_DEFAULT => 16,
+    MAX_STANZAS        => 128,
 
-              # signature types (domain separation)
-              SIG_ENCRYPTED => 1,
-              SIG_DETACHED  => 2,
-              SIG_CLEAR     => 3,
-              HASH_BLAKE2B  => 1,
+    # signature types (domain separation)
+    SIG_ENCRYPTED => 1,
+    SIG_DETACHED  => 2,
+    SIG_CLEAR     => 3,
+    HASH_BLAKE2B  => 1,
 
-              SIGNATURE_MAGIC     => 'PLSG',
+    SIGNATURE_MAGIC => 'PLSG',
 
-              ARMOR_COLUMNS    => 64,
-              PUBKEY_PREFIX    => 'plage1',
-              PUBKEY_VERSION   => 1,
-              FP_DISPLAY_HEX   => 40,
+    ARMOR_COLUMNS  => 64,
+    PUBKEY_PREFIX  => 'plage1',
+    PUBKEY_VERSION => 1,
+    FP_DISPLAY_HEX => 40,
 
-              ARGON2_T       => 3,
-              ARGON2_M_KIB   => 65536,
-              ARGON2_P       => 1,
-              PBKDF2_ITER    => 600_000,
-              MAX_ARGON2_M   => 1_048_576,
-              MAX_ARGON2_T   => 16,
-              MAX_ARGON2_P   => 16,
-              MAX_PBKDF2_ITER => 20_000_000,
+    ARGON2_T        => 3,
+    ARGON2_M_KIB    => 65536,
+    ARGON2_P        => 1,
+    PBKDF2_ITER     => 600_000,
+    MAX_ARGON2_M    => 1_048_576,
+    MAX_ARGON2_T    => 16,
+    MAX_ARGON2_P    => 16,
+    MAX_PBKDF2_ITER => 20_000_000,
 
-              READ_SIZE => 1 << 18,
-             };
+    READ_SIZE => 1 << 18,
+};
 
 use constant {
               ZERO12             => "\0" x 12,
@@ -108,7 +108,7 @@ use constant {
               DETACHED_BLOB_SIZE => 4 + 3 + TIME_SIZE + ED_SIZE + SIG_SIZE,
              };
 
-my %COMPRESSION_ID = (none => 0, zlib => 1, bzip2 => 2, xz => 3);
+my %COMPRESSION_ID   = (none => 0, zlib => 1, bzip2 => 2, xz => 3);
 my %COMPRESSION_NAME = reverse %COMPRESSION_ID;
 
 my $JSON = JSON::PP->new->ascii->canonical->pretty;
@@ -172,7 +172,10 @@ sub get_config_dir {
         return $xdg_config_home;
     }
 
-    my $home_dir = $ENV{HOME} || $ENV{LOGDIR} || (getpwuid($<))[7];
+    my $home_dir = $ENV{HOME} || $ENV{LOGDIR} || do {
+        require File::HomeDir;
+        File::HomeDir->my_home;
+    };
 
     if (not defined($home_dir) or not -d -w $home_dir) {
         $home_dir = curdir();
@@ -189,8 +192,14 @@ my ($TTY_IN, $TTY_OUT, $PASSFD, $LAST_PASSFD_LINE);
 
 sub open_tty {
     if (not defined $TTY_IN) {
-        open($TTY_IN,  '+<', '/dev/tty') or fail("No terminal available for interactive input (see --passphrase-fd).");
-        open($TTY_OUT, '>&', $TTY_IN)    or fail("Can't duplicate the terminal handle: $!");
+        if ($^O eq 'MSWin32') {
+            open($TTY_IN,  '<', 'CONIN$')  or fail("No terminal available for interactive input (see --passphrase-fd).");
+            open($TTY_OUT, '>', 'CONOUT$') or fail("Can't open console output handle: $!");
+        }
+        else {
+            open($TTY_IN,  '+<', '/dev/tty') or fail("No terminal available for interactive input (see --passphrase-fd).");
+            open($TTY_OUT, '>&', $TTY_IN)    or fail("Can't duplicate the terminal handle: $!");
+        }
         select((select($TTY_OUT), $| = 1)[0]);
     }
     return 1;
@@ -226,14 +235,24 @@ sub read_secret ($prompt) {
     }
 
     require Term::ReadKey;
-    open_tty();
 
-    my $restore = sub { Term::ReadKey::ReadMode('restore', $TTY_IN) };
+    # On Windows, Term::ReadKey requires STDIN instead of a separate CONIN$ handle
+    my $term_in = ($^O eq 'MSWin32') ? \*STDIN : do { open_tty(); $TTY_IN };
+
+    unless ($^O eq 'MSWin32') {
+        open_tty();
+    }
+    else {
+        # Ensure output handle is initialized for printing prompts/newlines on Windows
+        open_tty() unless defined $TTY_OUT;
+    }
+
+    my $restore = sub { Term::ReadKey::ReadMode('restore', $term_in) };
     local $SIG{INT} = sub { $restore->(); print $TTY_OUT "\n"; exit 130 };
 
     print $TTY_OUT $prompt;
-    Term::ReadKey::ReadMode('noecho', $TTY_IN);
-    my $line = <$TTY_IN>;
+    Term::ReadKey::ReadMode('noecho', $term_in);
+    my $line = <$term_in>;
     $restore->();
     print $TTY_OUT "\n";
 
@@ -273,9 +292,9 @@ sub default_kdf {
 
 sub check_kdf_params ($kdf, $p1, $p2, $p3) {
     if ($kdf == KDF_ARGON2ID) {
-        ($p1 >= 1 and $p1 <= MAX_ARGON2_T)            or fail("Unacceptable Argon2id time cost.");
-        ($p3 >= 1 and $p3 <= MAX_ARGON2_P)            or fail("Unacceptable Argon2id parallelism.");
-        ($p2 >= 8 * $p3 and $p2 <= MAX_ARGON2_M)      or fail("Unacceptable Argon2id memory cost.");
+        ($p1 >= 1       and $p1 <= MAX_ARGON2_T) or fail("Unacceptable Argon2id time cost.");
+        ($p3 >= 1       and $p3 <= MAX_ARGON2_P) or fail("Unacceptable Argon2id parallelism.");
+        ($p2 >= 8 * $p3 and $p2 <= MAX_ARGON2_M) or fail("Unacceptable Argon2id memory cost.");
     }
     elsif ($kdf == KDF_PBKDF2) {
         ($p1 >= 1 and $p1 <= MAX_PBKDF2_ITER) or fail("Unacceptable PBKDF2 iteration count.");
@@ -427,7 +446,7 @@ sub load_keyring {
 
     my $data = eval { $JSON->decode($content) };
     ref($data) eq 'HASH' && ref($data->{keys}) eq 'HASH' or fail("The keyring file is corrupted: $file");
-    $data->{version} == 1 or fail("Unsupported keyring version: $data->{version}");
+    $data->{version} == 1                                or fail("Unsupported keyring version: $data->{version}");
 
     return ($KEYRING = $data);
 }
@@ -450,7 +469,7 @@ sub save_keyring {
         write_all($fh, $JSON->encode($KEYRING));
         $fh->flush;
         $fh->sync;
-        close($fh) or die "close: $!\n";
+        close($fh)          or die "close: $!\n";
         rename($tmp, $file) or die "rename: $!\n";
         1;
     };
@@ -549,7 +568,7 @@ sub protect_private_keys ($passphrase, $x_pub, $ed_pub, $x_priv, $ed_priv) {
             p1   => $p1,
             p2   => $p2,
             p3   => $p3,
-            salt => encode_base64($salt, ''),
+            salt => encode_base64($salt,      ''),
             data => encode_base64($ct . $tag, ''),
            };
 }
@@ -655,7 +674,7 @@ sub print_key ($rec, $full) {
     say "Public key  : ", export_public_key(pack('H*', $rec->{x_pub}), pack('H*', $rec->{ed_pub}));
     say "Created on  : ", scalar localtime($rec->{created});
     if ($full) {
-        say "Passphrase  : ", ($rec->{private}{kdf} eq 'none' ? 'No' : "Yes ($rec->{private}{kdf})");
+        say "Passphrase  : ", ($rec->{private}{kdf} eq 'none'                    ? 'No'  : "Yes ($rec->{private}{kdf})");
         say "Default     : ", (((load_keyring()->{default} // '') eq $rec->{fp}) ? 'Yes' : 'No');
     }
     say '';
@@ -929,7 +948,7 @@ package Plage::ArmorReader {
             }
 
             # optional short last line, then END line
-            if ($self->{text} =~ /\A((?:[A-Za-z0-9+\/]{4})*(?:[A-Za-z0-9+\/]{2}==|[A-Za-z0-9+\/]{3}=)?)\n-----END \Q$label\E-----[ \t]*\n/
+            if (   $self->{text} =~ /\A((?:[A-Za-z0-9+\/]{4})*(?:[A-Za-z0-9+\/]{2}==|[A-Za-z0-9+\/]{3}=)?)\n-----END \Q$label\E-----[ \t]*\n/
                 or $self->{text} =~ /\A()-----END \Q$label\E-----[ \t]*\n/) {
 
                 my $last = $1;
@@ -1117,11 +1136,12 @@ sub make_compressor ($algo, $level, $emit) {
 
     if ($algo eq 'xz') {
         require Compress::Raw::Lzma;
-        my ($z, $st) = Compress::Raw::Lzma::EasyEncoder->new(
-                                                             AppendOutput => 1,
-                                                             Preset       => $level // 6,
-                                                             Check        => Compress::Raw::Lzma::LZMA_CHECK_CRC64(),
-                                                            );
+        my ($z, $st) =
+          Compress::Raw::Lzma::EasyEncoder->new(
+                                                AppendOutput => 1,
+                                                Preset       => $level // 6,
+                                                Check        => Compress::Raw::Lzma::LZMA_CHECK_CRC64(),
+                                               );
         $st == Compress::Raw::Lzma::LZMA_OK() or fail("xz initialization failed.");
         return (
             sub ($data) {
@@ -1199,7 +1219,7 @@ sub make_decompressor ($algo, $emit) {
                 $is_ok->($status) or fail("Corrupt data: decompression failed.");
 
                 # No progress at all means that more input is needed.
-                last if (!length($data) and !length($out));
+                last if (!length($data)           and !length($out));
                 last if (length($data) == $before and !length($out));
             }
         },
@@ -1235,7 +1255,7 @@ sub pack_detached_signature ($type, $time, $ed_pub, $sig) {
 
 sub unpack_detached_signature ($blob, $want_type) {
 
-    length($blob) == DETACHED_BLOB_SIZE or fail("Invalid signature: bad length.");
+    length($blob) == DETACHED_BLOB_SIZE    or fail("Invalid signature: bad length.");
     substr($blob, 0, 4) eq SIGNATURE_MAGIC or fail("Invalid signature: bad magic.");
 
     my ($version, $type, $hash) = unpack('CCC', substr($blob, 4, 3));
@@ -1244,8 +1264,8 @@ sub unpack_detached_signature ($blob, $want_type) {
     $hash == HASH_BLAKE2B      or fail("Unsupported signature hash function: $hash");
     $type == $want_type        or fail("Invalid signature: wrong signature type.");
 
-    my $time   = unpack('Q>', substr($blob, 7,  TIME_SIZE));
-    my $ed_pub = substr($blob, 15, ED_SIZE);
+    my $time   = unpack('Q>', substr($blob, 7, TIME_SIZE));
+    my $ed_pub = substr($blob, 15,           ED_SIZE);
     my $sig    = substr($blob, 15 + ED_SIZE, SIG_SIZE);
 
     return ($time, $ed_pub, $sig);
@@ -1267,7 +1287,9 @@ sub check_signer ($ed_pub, $strict) {
     }
 
     if (not defined $info and $strict) {
-        fail("The signature is valid, but the signing key is not in your keyring\n  (signer Ed25519 key: " . unpack('H*', $ed_pub) . ").\nImport the key, or pass --signer=KEY.");
+        fail(  "The signature is valid, but the signing key is not in your keyring\n  (signer Ed25519 key: "
+             . unpack('H*', $ed_pub)
+             . ").\nImport the key, or pass --signer=KEY.");
     }
 
     return $info;
@@ -1328,7 +1350,7 @@ sub output_writer ($out) {
 sub commit_output ($out) {
 
     if ($out->{tmp}) {
-        close($out->{fh}) or fail("Error closing the output file: $!");
+        close($out->{fh})                 or fail("Error closing the output file: $!");
         rename($out->{tmp}, $out->{path}) or fail("Can't rename <<$out->{tmp}>> to <<$out->{path}>>: $!");
         delete $out->{tmp};
     }
@@ -1437,11 +1459,11 @@ sub parse_header ($reader) {
 
     my ($version, $flags, $comp, $chunk_log2, $count) = unpack('CCCCC', $get->(5));
 
-    $version == FORMAT_VERSION or fail("Unsupported plage format version: $version");
-    ($flags & ~FLAG_SIGNED) == 0 or fail("Unsupported flags in header.");
-    defined($COMPRESSION_NAME{$comp}) or fail("Unsupported compression method in header: $comp");
+    $version == FORMAT_VERSION                                        or fail("Unsupported plage format version: $version");
+    ($flags & ~FLAG_SIGNED) == 0                                      or fail("Unsupported flags in header.");
+    defined($COMPRESSION_NAME{$comp})                                 or fail("Unsupported compression method in header: $comp");
     ($chunk_log2 >= CHUNK_LOG2_MIN and $chunk_log2 <= CHUNK_LOG2_MAX) or fail("Invalid chunk size in header.");
-    ($count >= 1 and $count <= MAX_STANZAS) or fail("Invalid number of recipients in header.");
+    ($count >= 1 and $count <= MAX_STANZAS)                           or fail("Invalid number of recipients in header.");
 
     my $nonce = $get->(NONCE_SIZE);
 
@@ -1687,7 +1709,7 @@ sub decrypt_file ($opt) {
         length($hold) == TRAILER_SIZE or fail("Decryption failed: the signature trailer is missing.");
 
         my $time   = unpack('Q>', substr($hold, 0, TIME_SIZE));
-        my $ed_pub = substr($hold, TIME_SIZE, ED_SIZE);
+        my $ed_pub = substr($hold, TIME_SIZE,           ED_SIZE);
         my $sig    = substr($hold, TIME_SIZE + ED_SIZE, SIG_SIZE);
 
         verify_signature(SIG_ENCRYPTED, $time, $ed_pub, $sig, blake2b_512($header->{raw}), $hasher->digest)
@@ -1720,7 +1742,7 @@ sub hash_stream ($fh) {
 }
 
 sub armor_small ($label, $blob) {
-    my $text = '';
+    my $text  = '';
     my $armor = Plage::ArmorWriter->new($label, sub ($d) { $text .= $d });
     $armor->add($blob);
     $armor->finish;
@@ -1784,7 +1806,10 @@ sub cmd_clear_sign ($opt) {
     my $text = canonicalize_text(slurp(open_input($opt->{file})));
     my ($time, $ed_pub, $sig) = create_signature($ed_key, SIG_CLEAR, '', blake2b_512($text));
 
-    my $message = "-----BEGIN PLAGE SIGNED MESSAGE-----\n" . ($text =~ s/^-/- -/mgr) . armor_small('PLAGE SIGNATURE', pack_detached_signature(SIG_CLEAR, $time, $ed_pub, $sig));
+    my $message =
+        "-----BEGIN PLAGE SIGNED MESSAGE-----\n"
+      . ($text =~ s/^-/- -/mgr)
+      . armor_small('PLAGE SIGNATURE', pack_detached_signature(SIG_CLEAR, $time, $ed_pub, $sig));
 
     my $out = open_output($opt->{output});
     push @PENDING_OUTPUTS, $out;
@@ -1842,11 +1867,11 @@ sub cmd_verify_clear ($opt) {
 
 sub version {
     my $w = 22;
-    printf("%-*s %s\n", $w, APPNAME, VERSION);
-    printf("%-*s %s\n", $w, 'format',            FORMAT_VERSION);
-    printf("%-*s %s\n", $w, 'CryptX',            $CryptX::VERSION // '?');
-    printf("%-*s %s\n", $w, 'argon2id',          eval { require Crypt::Argon2; 'yes' } // 'no (PBKDF2 fallback)');
-    printf("%-*s %s\n", $w, 'compression',       join(', ', available_compression()));
+    printf("%-*s %s\n", $w, APPNAME,       VERSION);
+    printf("%-*s %s\n", $w, 'format',      FORMAT_VERSION);
+    printf("%-*s %s\n", $w, 'CryptX',      $CryptX::VERSION                      // '?');
+    printf("%-*s %s\n", $w, 'argon2id',    eval { require Crypt::Argon2; 'yes' } // 'no (PBKDF2 fallback)');
+    printf("%-*s %s\n", $w, 'compression', join(', ', available_compression()));
     exit 0;
 }
 
@@ -1921,37 +1946,37 @@ $OPT{signer}    = [];
 $OPT{compress}  = 'none';
 
 GetOptions(
-           'e|encrypt'            => \$OPT{encrypt},
-           'd|decrypt'            => \$OPT{decrypt},
-           'r|recipient=s'        => $OPT{recipient},
-           'c|symmetric'          => \$OPT{symmetric},
-           's|sign'               => \$OPT{sign},
-           'a|armor'              => \$OPT{armor},
-           'o|output=s'           => \$OPT{output},
-           'f|force'              => \$OPT{force},
-           'z'                    => sub { $OPT{compress} = 'zlib' },
-           'compress=s'           => \$OPT{compress},
-           'level=i'              => \$OPT{level},
-           'clear-sign'           => \$OPT{clear_sign},
-           'detach-sign'          => \$OPT{detach_sign},
-           'verify'               => \$OPT{verify},
-           'verify-detached=s'    => \$OPT{verify_detached},
-           'signer=s'             => $OPT{signer},
-           'require-signed'       => \$OPT{require_signed},
-           'g|generate-key'       => \$OPT{generate_key},
-           'name=s'               => \$OPT{name},
-           'l|list-keys'          => \$OPT{list_keys},
-           'list-mine'            => \$OPT{list_mine},
-           'i|import-key=s'       => \$OPT{import_key},
-           'export-key=s'         => \$OPT{export_key},
-           'remove-key=s'         => \$OPT{remove_key},
-           'change-passphrase=s'  => \$OPT{change_passphrase},
-           'default-user=s'       => \$OPT{default_user},
-           'u|user=s'             => \$OPT{user},
-           'passphrase-fd=i'      => \$OPT{passphrase_fd},
-           'q|quiet'              => \$OPT{quiet},
-           'v|version'            => \&version,
-           'h|help'               => sub { help(0) },
+           'e|encrypt'           => \$OPT{encrypt},
+           'd|decrypt'           => \$OPT{decrypt},
+           'r|recipient=s'       => $OPT{recipient},
+           'c|symmetric'         => \$OPT{symmetric},
+           's|sign'              => \$OPT{sign},
+           'a|armor'             => \$OPT{armor},
+           'o|output=s'          => \$OPT{output},
+           'f|force'             => \$OPT{force},
+           'z'                   => sub { $OPT{compress} = 'zlib' },
+           'compress=s'          => \$OPT{compress},
+           'level=i'             => \$OPT{level},
+           'clear-sign'          => \$OPT{clear_sign},
+           'detach-sign'         => \$OPT{detach_sign},
+           'verify'              => \$OPT{verify},
+           'verify-detached=s'   => \$OPT{verify_detached},
+           'signer=s'            => $OPT{signer},
+           'require-signed'      => \$OPT{require_signed},
+           'g|generate-key'      => \$OPT{generate_key},
+           'name=s'              => \$OPT{name},
+           'l|list-keys'         => \$OPT{list_keys},
+           'list-mine'           => \$OPT{list_mine},
+           'i|import-key=s'      => \$OPT{import_key},
+           'export-key=s'        => \$OPT{export_key},
+           'remove-key=s'        => \$OPT{remove_key},
+           'change-passphrase=s' => \$OPT{change_passphrase},
+           'default-user=s'      => \$OPT{default_user},
+           'u|user=s'            => \$OPT{user},
+           'passphrase-fd=i'     => \$OPT{passphrase_fd},
+           'q|quiet'             => \$OPT{quiet},
+           'v|version'           => \&version,
+           'h|help'              => sub { help(0) },
           )
   or exit 2;
 
@@ -1978,21 +2003,21 @@ push @actions, grep { defined $OPT{$_} } qw(verify_detached import_key export_ke
 
 @actions <= 1 or fail("Conflicting actions given: " . join(', ', @actions));
 
-if ($OPT{generate_key})                { cmd_generate_key($OPT{name});                exit 0 }
-if ($OPT{list_keys})                   { cmd_list_keys(0);                            exit 0 }
-if ($OPT{list_mine})                   { cmd_list_keys(1);                            exit 0 }
-if (defined $OPT{import_key})          { cmd_import_key($OPT{import_key}, $OPT{name}); exit 0 }
-if (defined $OPT{export_key})          { cmd_export_key($OPT{export_key});            exit 0 }
-if (defined $OPT{remove_key})          { cmd_remove_key($OPT{remove_key});            exit 0 }
-if (defined $OPT{change_passphrase})   { cmd_change_passphrase($OPT{change_passphrase}); exit 0 }
-if (defined $OPT{default_user})        { cmd_default_user($OPT{default_user});        exit 0 }
+if ($OPT{generate_key})              { cmd_generate_key($OPT{name});                   exit 0 }
+if ($OPT{list_keys})                 { cmd_list_keys(0);                               exit 0 }
+if ($OPT{list_mine})                 { cmd_list_keys(1);                               exit 0 }
+if (defined $OPT{import_key})        { cmd_import_key($OPT{import_key}, $OPT{name});   exit 0 }
+if (defined $OPT{export_key})        { cmd_export_key($OPT{export_key});               exit 0 }
+if (defined $OPT{remove_key})        { cmd_remove_key($OPT{remove_key});               exit 0 }
+if (defined $OPT{change_passphrase}) { cmd_change_passphrase($OPT{change_passphrase}); exit 0 }
+if (defined $OPT{default_user})      { cmd_default_user($OPT{default_user});           exit 0 }
 
-if ($OPT{encrypt})                     { encrypt_file(\%OPT);                         exit 0 }
-if ($OPT{decrypt})                     { decrypt_file(\%OPT);                         exit 0 }
-if ($OPT{clear_sign})                  { cmd_clear_sign(\%OPT);                       exit 0 }
-if ($OPT{detach_sign})                 { cmd_detach_sign(\%OPT);                      exit 0 }
-if ($OPT{verify})                      { cmd_verify_clear(\%OPT);                     exit 0 }
-if (defined $OPT{verify_detached})     { cmd_verify_detached(\%OPT);                  exit 0 }
+if ($OPT{encrypt})                 { encrypt_file(\%OPT);        exit 0 }
+if ($OPT{decrypt})                 { decrypt_file(\%OPT);        exit 0 }
+if ($OPT{clear_sign})              { cmd_clear_sign(\%OPT);      exit 0 }
+if ($OPT{detach_sign})             { cmd_detach_sign(\%OPT);     exit 0 }
+if ($OPT{verify})                  { cmd_verify_clear(\%OPT);    exit 0 }
+if (defined $OPT{verify_detached}) { cmd_verify_detached(\%OPT); exit 0 }
 
 help(1);
 
@@ -2108,3 +2133,4 @@ Keyring
   $XDG_CONFIG_HOME/plage/keyring.json (or ~/.config/plage/keyring.json), mode 0600, written atomically.
   Private keys (x25519_priv || ed25519_priv) are sealed with ChaCha20-Poly1305 under
   KDF(passphrase, random 16-byte salt); the public keys are authenticated as associated data.
+
