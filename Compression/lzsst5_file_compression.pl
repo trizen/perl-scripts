@@ -150,109 +150,133 @@ sub make_deflate_symbols ($size) {
     return (\@DISTANCE_SYMBOLS, \@LENGTH_INDICES, \@LENGTH_SYMBOLS);
 }
 
-sub find_match ($symbols, $la, $min_len, $max_len, $end, $head_ref, $prev_ref, $max_chain, $hash_mask) {
-    my $best_n    = $min_len - 1;
-    my $best_p    = $la;
-    my $chain_len = 0;
+# Fast 4-byte bitwise hash function
+sub _hash4 ($sym, $p, $mask) {
+    return (($sym->[$p] << 15) ^ ($sym->[$p + 1] << 10) ^ ($sym->[$p + 2] << 5) ^ $sym->[$p + 3]) & $mask;
+}
 
-    return (1, $la) if $la + 2 > $end;
+# Find the longest matching substring in the sliding window
+sub find_match ($sym, $la, $end, $min_len, $max_len, $max_dist, $max_chain, $head, $prev, $hash_mask) {
+    return (1, $la) if ($la + $min_len - 1 > $end);
 
-    my $b0 = $symbols->[$la];
-    my $b1 = $symbols->[$la + 1];
-    my $b2 = $symbols->[$la + 2];
-    my $h  = (($b0 << 10) ^ ($b1 << 5) ^ $b2) & $hash_mask;
+    my $h = _hash4($sym, $la, $hash_mask);
 
-    my $p     = $head_ref->[$h];
-    my $limit = $la > CHUNK_SIZE ? $la - CHUNK_SIZE : 0;
+    my $best_n = $min_len - 1;
+    my $best_p = $la;
+    my $chain  = 0;
 
-    while ($p >= $limit && $chain_len++ < $max_chain) {
-        if ($la + $best_n <= $end and $symbols->[$p + $best_n] == $symbols->[$la + $best_n]) {
+    my $p     = $head->[$h];
+    my $limit = ($la > $max_dist) ? ($la - $max_dist) : 0;
+
+    while ($p >= $limit && $chain++ < $max_chain) {
+
+        # Quick byte-match rejection
+        if ($la + $best_n <= $end and $sym->[$p + $best_n] == $sym->[$la + $best_n]) {
             my $n = 0;
-            while ($la + $n <= $end && $p + $n <= $end && $symbols->[$la + $n] == $symbols->[$p + $n]) {
+
+            while (   $n < $max_len
+                   && $la + $n <= $end
+                   && $p + $n <= $end
+                   && $sym->[$la + $n] == $sym->[$p + $n]) {
                 ++$n;
-                last if $n >= $max_len;
             }
+
             if ($n > $best_n) {
                 $best_n = $n;
                 $best_p = $p;
-                last if $best_n >= $max_len;
+
+                # Early exit for exceptionally long matches
+                last if ($best_n >= 128);
             }
         }
-        $p = $prev_ref->[$p & (CHUNK_SIZE - 1)];
+
+        $p = $prev->[$p & (CHUNK_SIZE - 1)];
     }
 
-    return ($best_n >= $min_len ? $best_n : 1, $best_p);
+    return ($best_n >= $min_len) ? ($best_n, $best_p) : (1, $la);
 }
 
-sub lz77_compression ($str, %params) {
-    my $la      = 0;
-    my $str_len = length($str);
-    my $end     = $str_len - 1;
-    my @symbols = unpack('C*', $str);
+# Main LZ77 Compression Routine
+sub lz77_compression ($str) {
+    my $min_len   = 4;
+    my $max_len   = 258;
+    my $max_dist  = 1 << 19;
+    my $max_chain = 64;
+    my $max_width = 1024;      # Limit chain insertions for long matches
 
-    my $min_len         = $params{min_len}         // 4;
-    my $max_len         = $params{max_len}         // 258;
-    my $max_chain_len   = $params{max_chain_len}   // 64;
-    my $max_chain_width = $params{max_chain_width} // 32;
-
-    my $HASH_BITS = 16;
+    my $HASH_BITS = 17;
     my $HASH_SIZE = 1 << $HASH_BITS;
     my $HASH_MASK = $HASH_SIZE - 1;
+
+    my @symbols = unpack('C*', $str);
+    my $end     = $#symbols;
 
     my @head = (-1) x $HASH_SIZE;
     my @prev = (0) x CHUNK_SIZE;
 
-    my (@literals, @distances, @lengths);
+    my (@literals, @lengths, @distances);
+    my $la = 0;
 
     while ($la <= $end) {
-        my ($n1, $p1) = find_match(\@symbols, $la, $min_len, $max_len, $end, \@head, \@prev, $max_chain_len, $HASH_MASK);
+        my ($n1, $p1) = find_match(\@symbols, $la, $end, $min_len, $max_len, $max_dist, $max_chain, \@head, \@prev, $HASH_MASK);
+
+        my ($n2, $p2);
+        if ($la + 1 <= $end) {
+            ($n2, $p2) = find_match(\@symbols, $la + 1, $end, $min_len, $max_len, $max_dist, $max_chain, \@head, \@prev, $HASH_MASK);
+        }
+        else {
+            ($n2, $p2) = (1, $la + 1);
+        }
 
         my $best_n = $n1;
         my $best_p = $p1;
 
-        my $matched_len = ($la + $best_n <= $str_len) ? $best_n : ($str_len - $la);
+        # Lazy matching decision
+        if ($n2 > $n1) {
+            push @lengths,   0;
+            push @distances, 0;
+            push @literals,  $symbols[$la];
 
-        # Smart Chain Population
-        if ($best_n >= $min_len) {
-            my $insert_limit = ($best_n - $min_len < $best_n - 2) ? ($best_n - $min_len) : ($best_n - 2);
-            $insert_limit = $max_chain_width if $insert_limit > $max_chain_width;
+            if ($la + 3 <= $end) {
+                my $h = _hash4(\@symbols, $la, $HASH_MASK);
+                $prev[$la & (CHUNK_SIZE - 1)] = $head[$h];
+                $head[$h] = $la;
+            }
 
-            for (my $i = 0 ; $i <= $insert_limit ; ++$i) {
-                my $curr = $la + $i;
-                if ($curr + 2 <= $end) {
-                    my $b0 = $symbols[$curr];
-                    my $b1 = $symbols[$curr + 1];
-                    my $b2 = $symbols[$curr + 2];
-                    my $h  = (($b0 << 10) ^ ($b1 << 5) ^ $b2) & $HASH_MASK;
-                    $prev[$curr & (CHUNK_SIZE - 1)] = $head[$h];
-                    $head[$h] = $curr;
-                }
-            }
-        }
-        else {
-            # Standard single-step update for non-matches
-            my $curr = $la;
-            if ($curr + 2 <= $end) {
-                my $b0 = $symbols[$curr];
-                my $b1 = $symbols[$curr + 1];
-                my $b2 = $symbols[$curr + 2];
-                my $h  = (($b0 << 10) ^ ($b1 << 5) ^ $b2) & $HASH_MASK;
-                $prev[$curr & (CHUNK_SIZE - 1)] = $head[$h];
-                $head[$h] = $curr;
-            }
+            ++$la;
+            $best_n = $n2;
+            $best_p = $p2;
         }
 
+        # Insert positions into the hash chains (up to $max_width)
+        my $insert_end =
+            ($best_n > 1)
+          ? (($best_n < $max_width) ? $best_n : $max_width)
+          : 1;
+
+        for my $i (0 .. $insert_end - 1) {
+            my $pos = $la + $i;
+            last if ($pos + 3 > $end);
+
+            my $h = _hash4(\@symbols, $pos, $HASH_MASK);
+            $prev[$pos & (CHUNK_SIZE - 1)] = $head[$h];
+            $head[$h] = $pos;
+        }
+
+        # Emit match or literal token
         if ($best_n >= $min_len) {
             push @lengths,   $best_n;
             push @distances, $la - $best_p;
             push @literals,  undef;
+
             $la += $best_n;
         }
         else {
-            push @lengths,   (0) x $best_n;
-            push @distances, (0) x $best_n;
-            push @literals, $symbols[$la];
-            $la += 1;
+            push @lengths,   0;
+            push @distances, 0;
+            push @literals,  $symbols[$la];
+
+            ++$la;
         }
     }
 
@@ -416,7 +440,8 @@ sub _heap_pop ($heap) {
 
 sub mktree_from_freq ($freq) {
     my @heap;
-    _heap_push(\@heap, [$_, $freq->{$_}]) for sort { $a <=> $b } keys %$freq;
+    _heap_push(\@heap, [$_, $freq->{$_}])
+      for sort { $a <=> $b } keys %$freq;
 
     while (@heap > 1) {
         my $x = _heap_pop(\@heap);
@@ -466,7 +491,8 @@ sub decode_huffman_entry ($fh) {
     }
 
     my (undef, $rev_dict) = mktree_from_freq(\%freq);
-    my $enc_len = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
+    my $enc_len =
+      unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
 
     if ($enc_len > 0) {
         return huffman_decode(read_bits($fh, $enc_len), $rev_dict);
@@ -521,7 +547,8 @@ sub deflate_encode ($size, $literals, $distances, $lengths, $out_fh) {
 }
 
 sub deflate_decode ($fh) {
-    my $size = unpack('N', join('', map { getc($fh) // return undef } 1 .. 4));
+    my $size =
+      unpack('N', join('', map { getc($fh) // return undef } 1 .. 4));
     my ($DISTANCE_SYMBOLS, $LENGTH_INDICES, $LENGTH_SYMBOLS) = make_deflate_symbols($size);
 
     my $len_symbols  = decode_huffman_entry($fh);
@@ -586,7 +613,8 @@ sub decompress_file ($input, $output) {
     open my $fh, '<:raw', $input
       or die "Can't open file <<$input>> for reading: $!";
 
-    valid_archive($fh) || die "$0: file `$input' is not a \U${\FORMAT}\E archive!\n";
+    valid_archive($fh)
+      || die "$0: file `$input' is not a \U${\FORMAT}\E archive!\n";
 
     open my $out_fh, '>:raw', $output
       or die "Can't open file <<$output>> for writing: $!";
