@@ -181,6 +181,7 @@ A nice collection of day-to-day Perl scripts.
     * [Lzsst2 file compression](./Compression/lzsst2_file_compression.pl)
     * [Lzsst3 file compression](./Compression/lzsst3_file_compression.pl)
     * [Lzsst4 file compression](./Compression/lzsst4_file_compression.pl)
+    * [Lzsst5 file compression](./Compression/lzsst5_file_compression.pl)
     * [Lzsst file compression](./Compression/lzsst_file_compression.pl)
     * [Lzt2 file compression](./Compression/lzt2_file_compression.pl)
     * [Lzt file compression](./Compression/lzt_file_compression.pl)
