@@ -708,6 +708,7 @@ A nice collection of day-to-day Perl scripts.
     * [Carmichael numbers in range](./Math/carmichael_numbers_in_range.pl)
     * [Carmichael numbers in range from prime factors](./Math/carmichael_numbers_in_range_from_prime_factors.pl)
     * [Carmichael numbers in range mpz](./Math/carmichael_numbers_in_range_mpz.pl)
+    * [Carmichael numbers in range mpz fast](./Math/carmichael_numbers_in_range_mpz_fast.pl)
     * [Carmichael numbers random](./Math/carmichael_numbers_random.pl)
     * [Carmichael strong fermat pseudoprimes in range](./Math/carmichael_strong_fermat_pseudoprimes_in_range.pl)
     * [Carmichael strong fermat pseudoprimes in range mpz](./Math/carmichael_strong_fermat_pseudoprimes_in_range_mpz.pl)
