@@ -222,7 +222,9 @@ sub generate_carmichael ($A_input, $B_input, $k_input, $force_bits = 64, $force_
         return 0 if Rmpz_cmp_ui($q, 1) <= 0;
         ++$factorizations;
 
-        my @factors = factor_exp(Math::GMPz::Rmpz_get_str($q, 10));
+        my $q_str = Rmpz_fits_ulong_p($q) ? Rmpz_get_ui($q) : Rmpz_get_str($q, 10);
+        Math::Prime::Util::is_omega_prime($remaining, $q_str) || return 0;
+        my @factors = factor_exp($q_str);
 
         for my $pp (@factors) {
             my ($factor, $exponent) = @$pp;
@@ -503,8 +505,8 @@ sub generate_carmichael ($A_input, $B_input, $k_input, $force_bits = 64, $force_
 
     if ($verbose) {
         my $elapsed = time() - $started;
-        printf STDERR
-          "k=%d, sieve=%s, nodes=%d, forced=%d, factorizations=%d, terminal=%d, results=%d, time=%.3f s\n", $k, $sieve_max, $visited_nodes, $forced_nodes,
+        printf STDERR "k=%d, sieve=%s, nodes=%d, forced=%d, factorizations=%d, terminal=%d, results=%d, time=%.3f s\n", $k, $sieve_max, $visited_nodes,
+          $forced_nodes,
           $factorizations, $terminal_nodes, scalar(@results), $elapsed;
     }
 
