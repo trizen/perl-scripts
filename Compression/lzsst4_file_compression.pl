@@ -28,7 +28,8 @@ use constant {
     VERSION => '0.04',
     FORMAT  => 'lzsst4',
 
-    CHUNK_SIZE => 1 << 19,    # 512 KB per chunk
+    CHUNK_SIZE  => 1 << 19,    # 512 KB per chunk
+    WINDOW_SIZE => 1 << 19,    # 512 KB search window
 };
 
 use constant SIGNATURE => uc(FORMAT) . chr(1);
@@ -163,7 +164,7 @@ sub find_match ($str, $la, $min_len, $max_len, $end, $head_ref, $prev_ref, $max_
     my $h  = (($b0 << 10) ^ ($b1 << 5) ^ $b2) & $hash_mask;
 
     my $p     = $head_ref->[$h];
-    my $limit = $la > 32768 ? $la - 32768 : 0;
+    my $limit = $la > WINDOW_SIZE ? $la - WINDOW_SIZE : 0;
 
     while ($p >= $limit && $chain_len++ < $max_chain) {
         if (ord(substr($str, $p + $best_n, 1)) == ord(substr($str, $la + $best_n, 1))) {
