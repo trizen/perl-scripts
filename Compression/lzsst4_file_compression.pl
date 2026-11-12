@@ -1,85 +1,40 @@
 #!/usr/bin/perl
 
 # Author: Trizen
-# Refactored: November 2026 (v0.08 - Fixed LZ77 Matching, Constant Usage & Symbol Pipeline)
+# Date: 17 June 2023
+# Refactored: November 2026
+# https://github.com/trizen
+
+# Compress/decompress files using LZ77 compression (LZSS variant with hash tables and lazy matching) + Huffman coding.
+
+# Encoding the literals and the pointers using a DEFLATE-like approach.
+# This version is memory-friendly, supporting arbitrary large chunk sizes.
+
+# References:
+#   Data Compression (Summer 2023) - Lecture 11 - DEFLATE (gzip)
+#   https://youtube.com/watch?v=SJPvNi4HrWQ
+#
+#   DEFLATE Compressed Data Format Specification version 1.3
+#   https://datatracker.ietf.org/doc/html/rfc1951
 
 use 5.036;
 
 use Getopt::Std    qw(getopts);
 use File::Basename qw(basename);
-use List::Util     qw(max sum);
+use List::Util     qw(max);
 
 use constant {
-    PKGNAME    => 'LZSST3',
-    VERSION    => '0.08',
-    FORMAT     => 'lzs3',
-    CHUNK_SIZE => 1 << 19,    # 512 KB chunks
-    SIGNATURE  => "LZS3\x01",
+    PKGNAME => 'LZSST4',
+    VERSION => '0.04',
+    FORMAT  => 'lzsst4',
+
+    CHUNK_SIZE => 1 << 19,    # 512 KB per chunk
 };
 
-# Stateful LSB-First BitWriter
-package BitWriter {
-    sub new ($class, $fh) {
-        bless { fh => $fh, buf => 0, cnt => 0 }, $class;
-    }
-    sub write ($self, $val, $n) {
-        return if $n == 0;
-        $self->{buf} |= (($val & ((1 << $n) - 1)) << $self->{cnt});
-        $self->{cnt} += $n;
-        while ($self->{cnt} >= 8) {
-            print {$self->{fh}} chr($self->{buf} & 0xFF);
-            $self->{buf} >>= 8;
-            $self->{cnt} -= 8;
-        }
-    }
-    sub write_bitstring ($self, $bitstr) {
-        foreach my $bit (split('', $bitstr)) {
-            $self->write($bit + 0, 1);
-        }
-    }
-    sub flush ($self) {
-        if ($self->{cnt} > 0) {
-            print {$self->{fh}} chr($self->{buf} & 0xFF);
-            $self->{buf} = 0;
-            $self->{cnt} = 0;
-        }
-    }
-}
+use constant SIGNATURE => uc(FORMAT) . chr(1);
 
-# Stateful LSB-First BitReader
-package BitReader {
-    sub new ($class, $data_ref) {
-        bless { data => $data_ref, pos => 0, buf => 0, cnt => 0 }, $class;
-    }
-    sub read ($self, $n) {
-        return 0 if $n == 0;
-        while ($self->{cnt} < $n) {
-            if ($self->{pos} >= length(${ $self->{data} })) {
-                return undef;
-            }
-            my $byte = ord(substr(${ $self->{data} }, $self->{pos}++, 1));
-            $self->{buf} |= ($byte << $self->{cnt});
-            $self->{cnt} += 8;
-        }
-        my $val = $self->{buf} & ((1 << $n) - 1);
-        $self->{buf} >>= $n;
-        $self->{cnt} -= $n;
-        return $val;
-    }
-    sub read_bitstring ($self, $n) {
-        my $res = '';
-        for (1 .. $n) {
-            my $bit = $self->read(1);
-            return undef if !defined $bit;
-            $res .= $bit;
-        }
-        return $res;
-    }
-}
-
-package main;
-
-sub usage ($code) {
+sub usage {
+    my ($code) = @_;
     print <<"EOH";
 usage: $0 [options] [input file] [output file]
 
@@ -101,7 +56,7 @@ EOH
 }
 
 sub version {
-    printf("%s v%s\n", PKGNAME, VERSION);
+    printf("%s %s\n", PKGNAME, VERSION);
     exit;
 }
 
@@ -149,6 +104,20 @@ sub main {
     }
 }
 
+sub find_distance_index ($dist, $distance_symbols) {
+    my ($lo, $hi) = (0, $#{$distance_symbols});
+    while ($lo < $hi) {
+        my $mid = ($lo + $hi + 1) >> 1;
+        if ($distance_symbols->[$mid][0] <= $dist) {
+            $lo = $mid;
+        }
+        else {
+            $hi = $mid - 1;
+        }
+    }
+    return $lo;
+}
+
 sub make_deflate_symbols ($size) {
     my @DISTANCE_SYMBOLS = map { [$_, 0] } (0 .. 4);
 
@@ -181,23 +150,9 @@ sub make_deflate_symbols ($size) {
     return (\@DISTANCE_SYMBOLS, \@LENGTH_INDICES, \@LENGTH_SYMBOLS);
 }
 
-sub find_distance_index ($dist, $distance_symbols) {
-    my ($lo, $hi) = (0, $#{$distance_symbols});
-    while ($lo < $hi) {
-        my $mid = ($lo + $hi + 1) >> 1;
-        if ($distance_symbols->[$mid][0] <= $dist) {
-            $lo = $mid;
-        }
-        else {
-            $hi = $mid - 1;
-        }
-    }
-    return $lo;
-}
-
 sub find_match ($str, $la, $min_len, $max_len, $end, $head_ref, $prev_ref, $max_chain, $hash_mask) {
-    my $best_n = $min_len - 1;
-    my $best_p = $la;
+    my $best_n    = $min_len - 1;
+    my $best_p    = $la;
     my $chain_len = 0;
 
     return (1, $la) if $la + 2 > $end;
@@ -207,7 +162,7 @@ sub find_match ($str, $la, $min_len, $max_len, $end, $head_ref, $prev_ref, $max_
     my $b2 = ord(substr($str, $la + 2, 1));
     my $h  = (($b0 << 10) ^ ($b1 << 5) ^ $b2) & $hash_mask;
 
-    my $p = $head_ref->[$h];
+    my $p     = $head_ref->[$h];
     my $limit = $la > 32768 ? $la - 32768 : 0;
 
     while ($p >= $limit && $chain_len++ < $max_chain) {
@@ -230,9 +185,9 @@ sub find_match ($str, $la, $min_len, $max_len, $end, $head_ref, $prev_ref, $max_
 }
 
 sub lz77_compression ($str) {
-    my $la        = 0;
-    my $str_len   = length($str);
-    my $end       = $str_len - 1;
+    my $la      = 0;
+    my $str_len = length($str);
+    my $end     = $str_len - 1;
 
     my $min_len       = 4;
     my $max_len       = 258;
@@ -296,7 +251,7 @@ sub lz77_compression ($str) {
         else {
             push @lengths,   (0) x $best_n;
             push @distances, (0) x $best_n;
-            push @literals,  map { ord($_) } split('', substr($str, $la, $best_n));
+            push @literals, map { ord($_) } split('', substr($str, $la, $best_n));
             $la += $best_n;
         }
     }
@@ -336,9 +291,33 @@ sub lz77_decompression ($literals, $distances, $lengths) {
     return $data;
 }
 
+sub read_bit ($fh, $bitstring) {
+    if (($$bitstring // '') eq '') {
+        $$bitstring = unpack('b*', getc($fh) // return undef);
+    }
+    return chop($$bitstring);
+}
+
+sub read_bits ($fh, $bits_len) {
+    my $data = '';
+    read($fh, $data, $bits_len >> 3);
+    $data = unpack('B*', $data);
+
+    while (length($data) < $bits_len) {
+        $data .= unpack('B*', getc($fh) // return undef);
+    }
+
+    if (length($data) > $bits_len) {
+        $data = substr($data, 0, $bits_len);
+    }
+
+    return $data;
+}
+
 sub delta_encode ($integers) {
     my @deltas;
     my $prev = 0;
+
     unshift(@$integers, scalar(@$integers));
 
     while (@$integers) {
@@ -357,47 +336,32 @@ sub delta_encode ($integers) {
             $bitstring .= '1' . (($d < 0) ? '0' : '1') . ('1' x (length($t) - 1)) . '0' . substr($t, 1);
         }
     }
-    return $bitstring;
+
+    return pack('B*', $bitstring);
 }
 
-sub delta_decode ($br) {
+sub delta_decode ($fh) {
     my @deltas;
-    my $len = 0;
-    my $k = 0;
+    my $buffer = '';
+    my $len    = 0;
 
-    while (1) {
-        my $bit = $br->read(1);
-        return [] if !defined $bit;
+    for (my $k = 0 ; $k <= $len ; ++$k) {
+        my $bit = read_bit($fh, \$buffer);
 
-        if ($bit == 0) {
+        if ($bit eq '0') {
             push @deltas, 0;
         }
         else {
-            my $sign_bit = $br->read(1);
-            my $n = 0;
-            while (1) {
-                my $b = $br->read(1);
-                last if !defined $b;
-                if ($b == 1) {
-                    ++$n;
-                }
-                else {
-                    last;
-                }
-            }
-            my $val = 1;
-            for (1 .. $n) {
-                $val = ($val << 1) | $br->read(1);
-            }
-            push @deltas, ($sign_bit == 1 ? $val : -$val);
+            my $sign_bit = read_bit($fh, \$buffer);
+            my $n        = 0;
+            ++$n while (read_bit($fh, \$buffer) eq '1');
+            my $d = oct('0b1' . join('', map { read_bit($fh, \$buffer) } 1 .. $n));
+            push @deltas, ($sign_bit eq '1' ? $d : -$d);
         }
 
         if ($k == 0) {
             $len = pop(@deltas);
-            last if !defined $len;
         }
-        last if $k >= $len;
-        ++$k;
     }
 
     my @acc;
@@ -416,12 +380,13 @@ sub walk ($node, $code, $h, $rev_h) {
         walk($c->[$_], $code . $_, $h, $rev_h) for ('0', '1');
     }
     else {
-        $h->{$c} = $code;
+        $h->{$c}        = $code;
         $rev_h->{$code} = $c;
     }
     return ($h, $rev_h);
 }
 
+# Min-heap functions
 sub _heap_push ($heap, $item) {
     push @$heap, $item;
     my $i = $#$heap;
@@ -462,62 +427,64 @@ sub mktree_from_freq ($freq) {
     return walk($heap[0], '', {}, {});
 }
 
-sub encode_huffman_table ($bytes) {
+sub huffman_encode ($bytes, $dict) {
+    return join('', @{$dict}{@$bytes});
+}
+
+sub huffman_decode ($bits, $hash) {
+    local $" = '|';
+    return [split(' ', $bits =~ s/(@{[sort { length($a) <=> length($b) } keys %{$hash}]})/$hash->{$1} /gr)];
+}
+
+sub create_huffman_entry ($bytes, $out_fh) {
     my %freq;
     ++$freq{$_} for @$bytes;
 
     my ($h, $rev_h) = mktree_from_freq(\%freq);
-    my $enc = join('', @{$h}{@$bytes});
+    my $enc = huffman_encode($bytes, $h);
 
     my $max_symbol = max(keys %freq) // 0;
-    my @freqs;
-    push @freqs, $freq{$_} // 0 for 0 .. $max_symbol;
 
-    my $delta_bits = delta_encode(\@freqs);
-    return ($delta_bits, $enc);
+    my @freqs;
+    foreach my $i (0 .. $max_symbol) {
+        push @freqs, $freq{$i} // 0;
+    }
+
+    print $out_fh delta_encode(\@freqs);
+    print $out_fh pack("N",  length($enc));
+    print $out_fh pack("B*", $enc);
 }
 
-sub decode_huffman_table_from_br ($br) {
-    my @freqs = @{delta_decode($br)};
-    my %freq;
-    my $num_symbols = 0;
+sub decode_huffman_entry ($fh) {
+    my @freqs = @{delta_decode($fh)};
 
+    my %freq;
     foreach my $i (0 .. $#freqs) {
         if ($freqs[$i]) {
             $freq{$i} = $freqs[$i];
-            $num_symbols += $freqs[$i];
         }
     }
-
-    return [] if $num_symbols == 0;
 
     my (undef, $rev_dict) = mktree_from_freq(\%freq);
+    my $enc_len = unpack('N', join('', map { getc($fh) // die "error" } 1 .. 4));
 
-    my $enc_len = $br->read(32);
-    return [] if !defined $enc_len;
-
-    my @symbols;
-    for (1 .. $num_symbols) {
-        my $code = '';
-        while (1) {
-            my $bit = $br->read(1);
-            die "Unexpected EOF during Huffman decoding\n" if !defined $bit;
-            $code .= $bit;
-            if (exists $rev_dict->{$code}) {
-                push @symbols, $rev_dict->{$code};
-                last;
-            }
-        }
+    if ($enc_len > 0) {
+        return huffman_decode(read_bits($fh, $enc_len), $rev_dict);
     }
 
-    return \@symbols;
+    return [];
 }
 
-sub generate_symbols_list ($literals, $distances, $lengths, $len_syms_ref, $dist_syms_ref, $LENGTH_INDICES, $DISTANCE_SYMBOLS, $LENGTH_SYMBOLS, $bw) {
-    my @offsets;
+sub deflate_encode ($size, $literals, $distances, $lengths, $out_fh) {
+    my ($DISTANCE_SYMBOLS, $LENGTH_INDICES, $LENGTH_SYMBOLS) = make_deflate_symbols($size);
+
+    my @len_symbols;
+    my @dist_symbols;
+    my $offset_bits = '';
+
     foreach my $k (0 .. $#{$literals}) {
         if ($lengths->[$k] == 0) {
-            push @$len_syms_ref, $literals->[$k];
+            push @len_symbols, $literals->[$k];
             next;
         }
 
@@ -527,84 +494,65 @@ sub generate_symbols_list ($literals, $distances, $lengths, $len_syms_ref, $dist
         {
             my $len_idx = $LENGTH_INDICES->[$len];
             my ($min, $bits) = @{$LENGTH_SYMBOLS->[$len_idx]};
-            push @$len_syms_ref, $len_idx + 256;
-            push @offsets, [$len - $min, $bits] if $bits > 0;
+
+            push @len_symbols, $len_idx + 256;
+
+            if ($bits > 0) {
+                $offset_bits .= sprintf('%0*b', $bits, $len - $min);
+            }
         }
 
         {
             my $dist_idx = find_distance_index($dist, $DISTANCE_SYMBOLS);
             my ($min, $bits) = @{$DISTANCE_SYMBOLS->[$dist_idx]};
-            push @$dist_syms_ref, $dist_idx;
-            push @offsets, [$dist - $min, $bits] if $bits > 0;
+
+            push @dist_symbols, $dist_idx;
+
+            if ($bits > 0) {
+                $offset_bits .= sprintf('%0*b', $bits, $dist - $min);
+            }
         }
     }
 
-    my ($len_delta_bits, $len_huff_bits)   = encode_huffman_table($len_syms_ref);
-    my ($dist_delta_bits, $dist_huff_bits) = encode_huffman_table($dist_syms_ref);
-
-    $bw->write_bitstring($len_delta_bits);
-    $bw->write(length($len_huff_bits), 32);
-    $bw->write_bitstring($len_huff_bits);
-
-    $bw->write_bitstring($dist_delta_bits);
-    $bw->write(length($dist_huff_bits), 32);
-    $bw->write_bitstring($dist_huff_bits);
-
-    foreach my $off (@offsets) {
-        $bw->write($off->[0], $off->[1]);
-    }
-
-    $bw->flush();
-}
-
-sub deflate_encode ($size, $literals, $distances, $lengths, $out_fh) {
-    my ($DISTANCE_SYMBOLS, $LENGTH_INDICES, $LENGTH_SYMBOLS) = make_deflate_symbols($size);
-
-    my (@len_symbols, @dist_symbols);
-    my $chunk_buf = '';
-    open my $chunk_fh, '>', \$chunk_buf;
-    my $bw = BitWriter->new($chunk_fh);
-
-    generate_symbols_list($literals, $distances, $lengths, \@len_symbols, \@dist_symbols, $LENGTH_INDICES, $DISTANCE_SYMBOLS, $LENGTH_SYMBOLS, $bw);
-    close $chunk_fh;
-
-    my $total_chunk_data = pack('N', $size) . pack('N', length($chunk_buf)) . $chunk_buf;
-    print $out_fh $total_chunk_data;
+    print $out_fh pack('N', $size);
+    create_huffman_entry(\@len_symbols,  $out_fh);
+    create_huffman_entry(\@dist_symbols, $out_fh);
+    print $out_fh pack('B*', $offset_bits);
 }
 
 sub deflate_decode ($fh) {
-    my $size_raw = '';
-    read($fh, $size_raw, 4) == 4 or return undef;
-    my $size = unpack('N', $size_raw);
-
-    my $chunk_len_raw = '';
-    read($fh, $chunk_len_raw, 4) == 4 or return undef;
-    my $chunk_len = unpack('N', $chunk_len_raw);
-
-    my $chunk_payload = '';
-    read($fh, $chunk_payload, $chunk_len) == $chunk_len or return undef;
-
+    my $size = unpack('N', join('', map { getc($fh) // return undef } 1 .. 4));
     my ($DISTANCE_SYMBOLS, $LENGTH_INDICES, $LENGTH_SYMBOLS) = make_deflate_symbols($size);
 
-    my $br = BitReader->new(\$chunk_payload);
-    my $len_symbols  = decode_huffman_table_from_br($br);
-    my $dist_symbols = decode_huffman_table_from_br($br);
+    my $len_symbols  = decode_huffman_entry($fh);
+    my $dist_symbols = decode_huffman_entry($fh);
 
-    my (@literals, @lengths, @distances);
+    my $bits_len = 0;
+
+    foreach my $i (@$dist_symbols) {
+        $bits_len += $DISTANCE_SYMBOLS->[$i][1];
+    }
+
+    foreach my $i (@$len_symbols) {
+        if ($i >= 256) {
+            $bits_len += $LENGTH_SYMBOLS->[$i - 256][1];
+        }
+    }
+
+    my $bits = read_bits($fh, $bits_len);
+
+    my @literals;
+    my @lengths;
+    my @distances;
+
     my $j = 0;
 
     foreach my $i (@$len_symbols) {
         if ($i >= 256) {
             my $dist = $dist_symbols->[$j++];
-            my $l_sym = $LENGTH_SYMBOLS->[$i - 256];
-            my $d_sym = $DISTANCE_SYMBOLS->[$dist];
-
-            my $l_val = $l_sym->[0] + ($l_sym->[1] > 0 ? $br->read($l_sym->[1]) : 0);
-            my $d_val = $d_sym->[0] + ($d_sym->[1] > 0 ? $br->read($d_sym->[1]) : 0);
-
             push @literals,  undef;
-            push @lengths,   $l_val;
-            push @distances, $d_val;
+            push @lengths,   $LENGTH_SYMBOLS->[$i - 256][0] + oct('0b' . substr($bits, 0, $LENGTH_SYMBOLS->[$i - 256][1], ''));
+            push @distances, $DISTANCE_SYMBOLS->[$dist][0] + oct('0b' . substr($bits, 0, $DISTANCE_SYMBOLS->[$dist][1], ''));
         }
         else {
             push @literals,  $i;
@@ -638,14 +586,13 @@ sub decompress_file ($input, $output) {
     open my $fh, '<:raw', $input
       or die "Can't open file <<$input>> for reading: $!";
 
-    valid_archive($fh) || die "$0: file `$input' is not a valid archive!\n";
+    valid_archive($fh) || die "$0: file `$input' is not a \U${\FORMAT}\E archive!\n";
 
     open my $out_fh, '>:raw', $output
       or die "Can't open file <<$output>> for writing: $!";
 
     while (!eof($fh)) {
         my ($literals, $distances, $lengths) = deflate_decode($fh);
-        last if !defined $literals;
         print $out_fh lz77_decompression($literals, $distances, $lengths);
     }
 
