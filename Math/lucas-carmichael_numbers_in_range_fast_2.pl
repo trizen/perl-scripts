@@ -14,18 +14,47 @@ use ntheory 0.74 qw(:all);
 sub lucas_carmichael_numbers_in_range ($A, $B, $k, $force_bits = 64, $force_count = 16) {
     die "k must be an integer >= 3\n" if ($k < 3);
 
-    $A = vecmax($A, pn_primorial($k + 1) >> 1);
     return if ($A > $B);
 
     my $max_p = sqrtint($B);
     my $max_q = subint(powint(2, $force_bits), 1);
     my @list;
 
-    # Pre-generate a list of odd primes up to $max_p
-    my @odd_primes = @{primes(3, $max_p)};
-    return if (@odd_primes < $k);
+    # First k odd primes give the absolute mathematical lower bound (3 * 5 * 7 * ...)
+    my @first_primes = @{primes(3, nth_prime($k + 1))};
 
-    my $upper_plus1 = $B + 1;
+    my @prefix_product = (1);
+    for my $i (1 .. $k) {
+        $prefix_product[$i] = $prefix_product[$i - 1] * $first_primes[$i - 1];
+    }
+
+    my $lower = vecmax($A, $prefix_product[$k]);
+    my $upper = $B;
+    return if ($lower > $upper);
+
+    # Compute the global upper bound for every non-terminal prime loop
+    my $sieve_limit = $first_primes[-1];
+    for my $depth (0 .. $k - 2) {
+        my $remaining = $k - $depth;
+        my $limit     = rootint(divint($upper, $prefix_product[$depth]), $remaining);
+        $sieve_limit = vecmax($sieve_limit, $limit);
+    }
+
+    # Extend sieve slightly beyond sieve_limit to guarantee suffix construction
+    my $sieve_max = next_prime($sieve_limit);
+
+    for (1 .. $k + 2) {
+        $sieve_max = next_prime($sieve_max);
+    }
+
+    if ($sieve_max > $max_p) {
+        $sieve_max = $max_p;
+    }
+
+    my @odd_primes  = @{primes(3, $sieve_max)};
+    my $upper_plus1 = $upper + 1;
+
+    return if (@odd_primes < $k);
 
     # Verify a candidate cofactor q and test Lucas-Carmichael's criterion
     my $test_forced_product = sub ($m, $L, $q, $rem, $lo) {
@@ -182,12 +211,23 @@ sub lucas_carmichael_numbers_in_range ($A, $B, $k, $force_bits = 64, $force_coun
     return sort { $a <=> $b } @list;
 }
 
-# Example Usage
+sub A216929($n) {
 
-my $from = 1;
-my $upto = powint(10, 12);
+    my $from  = powint(10, $n);
+    my $upto  = powint(10, $n + 1);
+    my $total = 0;
 
-foreach my $k (3 .. 7) {
-    my @arr = lucas_carmichael_numbers_in_range($from, $upto, $k);
-    say "There are: ", scalar(@arr), " Lucas-Carmichael numbers <= $upto with $k prime factors";
+    for (my $k = 3 ; ; ++$k) {
+        my @arr = lucas_carmichael_numbers_in_range($from, $upto, $k);
+        $total += scalar(@arr) || last;
+    }
+
+    return $total;
+}
+
+local $| = 1;
+my $acc = 0;
+foreach my $n (1 .. 11) {
+    $acc += A216929($n);
+    print($acc, ", ");
 }

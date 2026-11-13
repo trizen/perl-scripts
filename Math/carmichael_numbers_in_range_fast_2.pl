@@ -32,8 +32,6 @@ sub carmichael_numbers_in_range ($A, $B, $k, $force_bits = 64, $force_count = 16
     my $upper = $B;
     return if ($lower > $upper);
 
-    my $upper_plus1 = $upper + 1;
-
     # Compute the global upper bound for every non-terminal prime loop
     my $sieve_limit = $first_primes[-1];
     for my $depth (0 .. $k - 2) {
@@ -54,7 +52,9 @@ sub carmichael_numbers_in_range ($A, $B, $k, $force_bits = 64, $force_count = 16
     }
 
     my @odd_primes   = @{primes(3, $sieve_max)};
-    my $upper_minus1 = $B - 1;
+    my $upper_minus1 = $upper - 1;
+
+    return if (@odd_primes < $k);
 
     # Verify a candidate cofactor q and test Carmichael's criterion
     my $test_forced_product = sub ($m, $L, $q, $rem, $lo) {
