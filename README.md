@@ -927,6 +927,7 @@ A nice collection of day-to-day Perl scripts.
     * [Lucas-carmichael numbers from multiple](./Math/lucas-carmichael_numbers_from_multiple.pl)
     * [Lucas-carmichael numbers from multiple mpz](./Math/lucas-carmichael_numbers_from_multiple_mpz.pl)
     * [Lucas-carmichael numbers in range](./Math/lucas-carmichael_numbers_in_range.pl)
+    * [Lucas-carmichael numbers in range fast](./Math/lucas-carmichael_numbers_in_range_fast.pl)
     * [Lucas-carmichael numbers in range from prime factors](./Math/lucas-carmichael_numbers_in_range_from_prime_factors.pl)
     * [Lucas-carmichael numbers in range mpz](./Math/lucas-carmichael_numbers_in_range_mpz.pl)
     * [Lucas-carmichael numbers in range mpz fast](./Math/lucas-carmichael_numbers_in_range_mpz_fast.pl)
