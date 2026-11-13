@@ -706,6 +706,7 @@ A nice collection of day-to-day Perl scripts.
     * [Carmichael numbers generation erdos method](./Math/carmichael_numbers_generation_erdos_method.pl)
     * [Carmichael numbers generation erdos method dynamic programming](./Math/carmichael_numbers_generation_erdos_method_dynamic_programming.pl)
     * [Carmichael numbers in range](./Math/carmichael_numbers_in_range.pl)
+    * [Carmichael numbers in range fast](./Math/carmichael_numbers_in_range_fast.pl)
     * [Carmichael numbers in range from prime factors](./Math/carmichael_numbers_in_range_from_prime_factors.pl)
     * [Carmichael numbers in range mpz](./Math/carmichael_numbers_in_range_mpz.pl)
     * [Carmichael numbers in range mpz fast](./Math/carmichael_numbers_in_range_mpz_fast.pl)
