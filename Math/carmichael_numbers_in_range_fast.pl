@@ -23,13 +23,18 @@ sub carmichael_numbers_in_range ($A, $B, $k, $force_bits = 64, $force_count = 16
 
     # Verify a candidate cofactor q and test Korselt's criterion
     my $test_forced_product = sub ($m, $L, $q, $rem, $lo) {
+
+        is_omega_prime($rem, $q) || return;
+
         my @fac = factor_exp($q);
         return if (@fac != $rem);
+        return if $fac[0][0] < $lo;
+        return if $fac[-1][0] > $max_p;
 
         my $full_L = $L;
         foreach my $pair (@fac) {
             my ($p, $e) = @$pair;
-            return if ($e != 1 || $p < $lo || $p > $max_p);
+            return if ($e != 1);
             $full_L = lcm($full_L, $p - 1);
             return if ($full_L > $B - 1);
         }
