@@ -10,8 +10,6 @@
 # Usage:
 #   perl carmichael_numbers_in_range.pl [options] A B k
 #
-# With no positional arguments, run the three examples from the Sidef source.
-#
 # Options:
 #   --force-bits=N    Factor cofactors only when q_max has at most N bits
 #                    (default: 64; 0 disables forced completion)
@@ -19,11 +17,6 @@
 #                    (default: 16; 0 disables forced completion)
 #   --verbose         Print search statistics to STDERR
 #   --help            Show this help
-#
-# The interval endpoints and all search arithmetic use arbitrary-precision
-# Math::GMPz integers.  Native prime sieving is used when possible; if the
-# required bound exceeds native precision, the GMP prime backend is used.  In
-# either case, the complete prime list must fit in available memory.
 
 use v5.36;
 use strict;
@@ -32,9 +25,8 @@ use warnings;
 use Getopt::Long qw(GetOptions);
 use Time::HiRes  qw(time);
 
-use Math::GMPz             qw(:mpz);
-use Math::Prime::Util      qw(primes next_prime is_prime factor_exp);
-use Math::Prime::Util::GMP ();
+use Math::GMPz        qw(:mpz);
+use Math::Prime::Util qw(primes next_prime is_prime factor_exp);
 
 # ---------------------------------------------------------------------------
 # Small GMP helpers
