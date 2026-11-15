@@ -933,6 +933,7 @@ A nice collection of day-to-day Perl scripts.
     * [Lucas-carmichael numbers in range from prime factors](./Math/lucas-carmichael_numbers_in_range_from_prime_factors.pl)
     * [Lucas-carmichael numbers in range mpz](./Math/lucas-carmichael_numbers_in_range_mpz.pl)
     * [Lucas-carmichael numbers in range mpz fast](./Math/lucas-carmichael_numbers_in_range_mpz_fast.pl)
+    * [Lucas-carmichael numbers in range mpz fast 2](./Math/lucas-carmichael_numbers_in_range_mpz_fast_2.pl)
     * [Lucas-miller factorization method](./Math/lucas-miller_factorization_method.pl)
     * [Lucas-pocklington primality proving](./Math/lucas-pocklington_primality_proving.pl)
     * [Lucas-pratt primality proving](./Math/lucas-pratt_primality_proving.pl)
