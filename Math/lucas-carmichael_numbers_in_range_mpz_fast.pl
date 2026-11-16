@@ -176,7 +176,7 @@ sub generate_lucas_carmichael ($A_input, $B_input, $k_input, $force_bits = 64, $
 
     # Search node: m = $M[$d], L = $LL[$d]; $rem primes are still missing; they are
     # all >= $P[$i0].
-    my $search = sub ($d, $i0, $rem) {
+    sub ($d, $i0, $rem) {
 
         ++$visited_nodes;
 
@@ -197,7 +197,7 @@ sub generate_lucas_carmichael ($A_input, $B_input, $k_input, $force_bits = 64, $
 
         # Lower bound for the cofactor: lo * (lo+2) * (lo+4) * ...
         Rmpz_set_ui($qmin, $lo);
-        Rmpz_mul_ui($qmin, $qmin, $lo + 2 * $_) for 1 .. $rem - 1;
+        Rmpz_mul_ui($qmin, $qmin, $P[$i0 + $_]) for 1 .. $rem - 1;
         return if Rmpz_cmp($qmin, $qmax) > 0;
 
         if ($A_matters) {
@@ -421,9 +421,7 @@ sub generate_lucas_carmichael ($A_input, $B_input, $k_input, $force_bits = 64, $
 
         $tail_primes += $i - $i0;
         return;
-    };
-
-    $search->(0, 0, $k);
+    }->(0, 0, $k);
 
     @results = sort { Rmpz_cmp($a, $b) } @results;
 
