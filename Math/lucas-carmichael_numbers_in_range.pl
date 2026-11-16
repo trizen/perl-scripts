@@ -70,14 +70,13 @@ sub lucas_carmichael_numbers_in_range ($A, $B, $k) {
     return sort { $a <=> $b } @list;
 }
 
-# Generate all the Lucas-Carmichael numbers with 5 prime factors in the range [100, 10^8]
+my $from = 1;
+my $upto = powint(10, 12);
 
-my $k    = 5;
-my $from = 100;
-my $upto = 1e8;
+foreach my $k (3 .. 7) {
+    my @arr = lucas_carmichael_numbers_in_range($from, $upto, $k);
+    say "There are: ", scalar(@arr), " Lucas-Carmichael numbers <= $upto with $k prime factors";
+}
 
-my @arr = lucas_carmichael_numbers_in_range($from, $upto, $k);
-say join(', ', @arr);
 
-__END__
-588455, 1010735, 2276351, 2756159, 4107455, 4874639, 5669279, 6539819, 8421335, 13670855, 16184663, 16868159, 21408695, 23176439, 24685199, 25111295, 26636687, 30071327, 34347599, 34541639, 36149399, 36485015, 38999519, 39715319, 42624911, 43134959, 49412285, 49591919, 54408959, 54958799, 57872555, 57953951, 64456223, 66709019, 73019135, 77350559, 78402815, 82144799, 83618639, 86450399, 93277079, 96080039, 98803439
+
