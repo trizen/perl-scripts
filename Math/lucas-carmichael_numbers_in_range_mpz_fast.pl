@@ -317,13 +317,10 @@ sub generate_lucas_carmichael ($A_input, $B_input, $k_input, $force_bits = 64, $
         for ($i = $i0 ; ; ++$i) {
             my $p = $P[$i];
             last if $p > $hi;
-            my $pp1 = $p + 1;
 
-            next if Rmpz_gcd_ui($NULL, $m, $pp1) != 1;
-
-            Rmpz_lcm_ui($L2, $L, $pp1);
+            Rmpz_lcm_ui($L2, $L, $p + 1);
             Rmpz_mul_ui($M2, $NEGM, $p);    # -m2
-            Rmpz_invert($TT, $M2, $L2) or die "Internal error: terminal modular inverse does not exist\n";
+            Rmpz_invert($TT, $M2, $L2) or next;
 
             # common case: the residue is above the window -> no terminal prime
             Rmpz_fdiv_q_ui($H, $qmax, $p);
@@ -421,7 +418,8 @@ sub generate_lucas_carmichael ($A_input, $B_input, $k_input, $force_bits = 64, $
 
         $tail_primes += $i - $i0;
         return;
-    }->(0, 0, $k);
+      }
+      ->(0, 0, $k);
 
     @results = sort { Rmpz_cmp($a, $b) } @results;
 
@@ -455,7 +453,6 @@ Options:
                     size (0.75; 0 = use only --force-count)
   --step-div=N      Use divisors(m-1) when the terminal progression has at
                     least N steps (64; 0 disables)
-  --max-sieve=N     Refuse to build a prime list beyond N (400000000)
   --verbose         Print search statistics to STDERR
   --help            Show this help
 
