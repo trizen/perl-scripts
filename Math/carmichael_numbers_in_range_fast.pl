@@ -148,10 +148,21 @@ sub carmichael_numbers_in_range ($A, $B, $k, $force_bits = 64, $force_count = 16
     return sort { $a <=> $b } @list;
 }
 
-my $from = 1;
-my $upto = powint(10, 12);
+sub A182490($n) {
 
-foreach my $k (3 .. 7) {
-    my @arr = carmichael_numbers_in_range($from, $upto, $k);
-    say "There are: ", scalar(@arr), " Carmichael numbers <= $upto with $k prime factors";
+    my $from  = powint(2, $n);
+    my $upto  = powint(2, $n + 1);
+    my $total = 0;
+
+    for (my $k = 3 ; ; ++$k) {
+        my @arr = carmichael_numbers_in_range($from, $upto, $k);
+        $total += scalar(@arr) || last;
+    }
+
+    return $total;
+}
+
+local $| = 1;
+foreach my $n (1 .. 37) {
+    print(A182490($n), ", ");
 }

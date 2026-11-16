@@ -62,7 +62,7 @@ sub carmichael_numbers_in_range ($A, $B, $k) {
             $t += $L * cdivint($lo - $t, $L) if ($t < $lo);
             $t > $hi && return;
 
-            if (divint($hi - $t, $L) < 1_000) {
+            if (divint($hi - $t, $L) < 64) {
 
                 # Approach 1: Fast linear scan for small search spaces
                 for (my $p = $t ; $p <= $hi ; $p += $L) {
