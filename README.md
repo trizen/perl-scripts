@@ -925,6 +925,7 @@ A nice collection of day-to-day Perl scripts.
     * [Logarithmic root mpfr](./Math/logarithmic_root_mpfr.pl)
     * [Long division](./Math/long_division.pl)
     * [Long multiplication](./Math/long_multiplication.pl)
+    * [Lucas-carmichael multiples in range mpz fast](./Math/lucas-carmichael_multiples_in_range_mpz_fast.pl)
     * [Lucas-carmichael numbers from multiple](./Math/lucas-carmichael_numbers_from_multiple.pl)
     * [Lucas-carmichael numbers from multiple mpz](./Math/lucas-carmichael_numbers_from_multiple_mpz.pl)
     * [Lucas-carmichael numbers in range](./Math/lucas-carmichael_numbers_in_range.pl)
