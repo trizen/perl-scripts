@@ -263,14 +263,9 @@ sub generate_carmichael ($A_input, $B_input, $k_input, $force_bits = 64, $force_
                                 for my $pe (@f) {
                                     my ($s, $e) = @$pe;
                                     if ($e != 1) { $ok = 0; last }
-                                    if (length("$s") < 19) {
-                                        if (!Rmpz_divisible_ui_p($N1, $s - 1)) { $ok = 0; last }
-                                    }
-                                    else {
-                                        Rmpz_set_str($T3, "$s", 10);
-                                        Rmpz_sub_ui($T3, $T3, 1);
-                                        if (!Rmpz_divisible_p($N1, $T3)) { $ok = 0; last }
-                                    }
+                                    Rmpz_set_str($T3, "$s", 10);
+                                    Rmpz_sub_ui($T3, $T3, 1);
+                                    if (!Rmpz_divisible_p($N1, $T3)) { $ok = 0; last }
                                 }
                                 push @results, Rmpz_init_set($N) if $ok;
                             }
@@ -424,7 +419,8 @@ sub generate_carmichael ($A_input, $B_input, $k_input, $force_bits = 64, $force_
 
         $tail_primes += $i - $i0;
         return;
-    }->(0, 0, $k);
+      }
+      ->(0, 0, $k);
 
     @results = sort { Rmpz_cmp($a, $b) } @results;
 
