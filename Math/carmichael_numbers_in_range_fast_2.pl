@@ -69,7 +69,7 @@ use warnings;
 
 use Getopt::Long      qw(GetOptions);
 use Time::HiRes       qw(time);
-use Math::Prime::Util qw(:all);
+use Math::Prime::Util 0.74 qw(:all);
 
 use constant UV_MAX     => ~0;                       # 2^64 - 1
 use constant UV_MAX_STR => '18446744073709551615';
