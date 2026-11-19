@@ -700,6 +700,7 @@ A nice collection of day-to-day Perl scripts.
     * [Brown numbers](./Math/brown_numbers.pl)
     * [Carmichael factorization method](./Math/carmichael_factorization_method.pl)
     * [Carmichael factorization method generalized](./Math/carmichael_factorization_method_generalized.pl)
+    * [Carmichael multiples in range mpz fast](./Math/carmichael_multiples_in_range_mpz_fast.pl)
     * [Carmichael numbers from multiple](./Math/carmichael_numbers_from_multiple.pl)
     * [Carmichael numbers from multiple mpz](./Math/carmichael_numbers_from_multiple_mpz.pl)
     * [Carmichael numbers from multiple recursive mpz](./Math/carmichael_numbers_from_multiple_recursive_mpz.pl)

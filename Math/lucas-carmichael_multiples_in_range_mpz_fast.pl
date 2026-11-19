@@ -28,7 +28,6 @@
 #                     would visit) (default: 0.75; 0 = use only --force-count)
 #   --step-div=N      Use the divisors of (m-1) for the terminal prime when its
 #                     progression has at least N steps (default: 64; 0 disables)
-#   --max-sieve=N     Refuse to build a prime list beyond N (default: 400000000)
 #   --verbose         Print search statistics to STDERR
 #   --help            Show this help
 #
@@ -127,11 +126,9 @@ sub generate_lucas_carmichael_multiples ($A_input, $B_input, $k_input, $m_input 
 
     my $force_ratio = $opt{force_ratio} // 0.75;
     my $step_div    = $opt{step_div}    // 64;
-    my $max_sieve   = $opt{max_sieve}   // 400_000_000;
 
     die "--force-ratio must be a non-negative number\n" if $force_ratio !~ /\A\d+(?:\.\d+)?\z/;
-    $step_div  = parse_nonnegative_native('--step-div',  $step_div);
-    $max_sieve = parse_nonnegative_native('--max-sieve', $max_sieve);
+    $step_div = parse_nonnegative_native('--step-div', $step_div);
 
     my $started = time();
 
@@ -294,8 +291,8 @@ sub generate_lucas_carmichael_multiples ($A_input, $B_input, $k_input, $m_input 
         Rmpz_set($sieve_limit, $tmp) if Rmpz_cmp($tmp, $sieve_limit) > 0;
     }
 
-    die "Range too large: the search needs primes up to " . z_string($sieve_limit) . " (limit: --max-sieve=$max_sieve)\n"
-      if (!Rmpz_fits_ulong_p($sieve_limit) || Rmpz_get_ui($sieve_limit) > $max_sieve);
+    die "Range too large"
+      if !Rmpz_fits_ulong_p($sieve_limit);
 
     $sieve_max = Rmpz_get_ui($sieve_limit);
 
@@ -611,7 +608,6 @@ Options:
                     size (0.75; 0 = use only --force-count)
   --step-div=N      Use divisors(m-1) when the terminal progression has at
                     least N steps (64; 0 disables)
-  --max-sieve=N     Refuse to build a prime list beyond N (400000000)
   --verbose         Print search statistics to STDERR
   --help            Show this help
 
@@ -624,7 +620,6 @@ my $force_bits  = 64;
 my $force_count = 16;
 my $force_ratio = 0.75;
 my $step_div    = 64;
-my $max_sieve   = 400_000_000;
 my $verbose     = 0;
 my $help        = 0;
 
@@ -633,7 +628,6 @@ GetOptions(
            'force-count=s' => \$force_count,
            'force-ratio=s' => \$force_ratio,
            'step-div=s'    => \$step_div,
-           'max-sieve=s'   => \$max_sieve,
            'verbose!'      => \$verbose,
            'help|h'        => \$help,
           )
@@ -653,7 +647,6 @@ sub print_result ($label, $A, $B, $k, $m, $force_bits, $force_count, $verbose) {
                                                       $A, $B, $k, $m, $force_bits, $force_count, $verbose,
                                                       force_ratio => $force_ratio,
                                                       step_div    => $step_div,
-                                                      max_sieve   => $max_sieve,
                                                      );
     say '[', join(', ', map { z_string($_) } @$numbers), ']';
 }
