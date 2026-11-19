@@ -403,18 +403,10 @@ sub generate_lucas_carmichael_multiples ($A_input, $B_input, $k_input, $m_input 
                                 for my $pe (@f) {
                                     my ($s, $e) = @$pe;
                                     if ($e != 1) { $ok = 0; last }
-                                    if (length("$s") < 19) {
-
-                                        # a prime of q must not divide m_0, and (s+1) | (n+1)
-                                        if ($m_nontrivial && Rmpz_divisible_ui_p($mbase, $s)) { $ok = 0; last }
-                                        if (!Rmpz_divisible_ui_p($N1, $s + 1))                { $ok = 0; last }
-                                    }
-                                    else {
-                                        Rmpz_set_str($T3, "$s", 10);
-                                        if ($m_nontrivial && Rmpz_divisible_p($mbase, $T3)) { $ok = 0; last }
-                                        Rmpz_add_ui($T3, $T3, 1);
-                                        if (!Rmpz_divisible_p($N1, $T3)) { $ok = 0; last }
-                                    }
+                                    Rmpz_set_str($T3, "$s", 10);
+                                    if ($m_nontrivial && Rmpz_divisible_p($mbase, $T3)) { $ok = 0; last }
+                                    Rmpz_add_ui($T3, $T3, 1);
+                                    if (!Rmpz_divisible_p($N1, $T3)) { $ok = 0; last }
                                 }
                                 push @results, Rmpz_init_set($N) if $ok;
                             }
