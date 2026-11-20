@@ -2,6 +2,7 @@
 
 # Daniel "Trizen" Șuteu
 # Date: 14 March 2021
+# Edit: 20 November 2026 (faster k == 2 case)
 # https://github.com/trizen
 
 # Count the number of k-omega primes <= n.
@@ -16,7 +17,7 @@
 use 5.020;
 use warnings;
 
-use ntheory qw(:all);
+use ntheory      qw(:all);
 use experimental qw(signatures);
 
 sub omega_prime_count_rec ($n, $k = 1) {
@@ -31,44 +32,32 @@ sub omega_prime_count_rec ($n, $k = 1) {
 
         if ($k == 2) {
 
-            for (; $p <= $s ; ++$j) {
+            while ($p <= $s) {
 
                 my $r = next_prime($p);
 
                 for (my $t = mulint($m, $p) ; $t <= $n ; $t = mulint($t, $p)) {
 
                     my $w = divint($n, $t);
+                    my $e = 1;
 
-                    if ($r > $w) {
-                        last;
-                    }
-
-                    $count += prime_count($w) - $j;
-
-                    for (my $r2 = $r ; $r2 <= $w ; $r2 = next_prime($r2)) {
-
-                        my $u = vecprod($t, $r2, $r2);
-
-                        if ($u > $n) {
-                            last;
-                        }
-
-                        for (; $u <= $n ; $u = mulint($u, $r2)) {
-                            ++$count;
-                        }
+                    while ($w >= $r) {
+                        my $root = rootint($w, $e);
+                        last if ($root < $r);
+                        $count += prime_count($root) - $j;
+                        ++$e;
                     }
                 }
 
                 $p = $r;
+                ++$j;
             }
 
             return;
         }
 
         for (; $p <= $s ; ++$j) {
-
             my $r = next_prime($p);
-
             for (my $t = mulint($m, $p) ; $t <= $n ; $t = mulint($t, $p)) {
                 my $s = rootint(divint($n, $t), $k - 1);
                 last if ($r > $s);
@@ -77,7 +66,8 @@ sub omega_prime_count_rec ($n, $k = 1) {
 
             $p = $r;
         }
-    }->(1, 2, $k);
+      }
+      ->(1, 2, $k);
 
     return $count;
 }
