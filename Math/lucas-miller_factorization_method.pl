@@ -17,7 +17,7 @@ use 5.020;
 use warnings;
 
 use Math::GMPz;
-use ntheory qw(:all);
+use ntheory      qw(:all);
 use experimental qw(signatures);
 
 sub lucas_miller_factor ($n, $j = 1, $k = 100) {

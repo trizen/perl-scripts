@@ -78,5 +78,3 @@ foreach my $k (3 .. 7) {
     say "There are: ", scalar(@arr), " Lucas-Carmichael numbers <= $upto with $k prime factors";
 }
 
-
-

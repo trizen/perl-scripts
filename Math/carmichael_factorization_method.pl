@@ -21,7 +21,7 @@ use strict;
 use warnings;
 
 use experimental qw(signatures);
-use ntheory qw(lastfor forcomb);
+use ntheory      qw(lastfor forcomb);
 use Math::AnyNum qw(:overload isqrt icbrt round gcd);
 
 #<<<
@@ -70,7 +70,8 @@ sub carmichael_factorization ($n, $l = 2, $h = 23) {
 
         try_parameters($a, (+2 * $y + 1) * $x + $y, ($y + 1) * $x + ($y + 1)) and do { lastfor, return $factor };
         try_parameters($a, (-2 * $y - 1) * $x - $y, ($y + 1) * $x + ($y + 1)) and do { lastfor, return $factor };
-    } scalar(@range), 2;
+    }
+    scalar(@range), 2;
 
     return $factor;
 }

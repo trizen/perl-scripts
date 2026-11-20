@@ -24,7 +24,8 @@ sub carmichael_numbers_in_range ($A, $B, $k, $force_bits = 64, $force_count = 16
     # Verify a candidate cofactor q and test Korselt's criterion
     my $test_forced_product = sub ($m, $L, $q, $rem, $lo) {
 
-        is_omega_prime($rem, $q) || return;
+        is_rough($q, $lo)         || return;
+        is_almost_prime($rem, $q) || return;
 
         my @fac = factor_exp($q);
         return if (@fac != $rem);

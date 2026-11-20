@@ -14,7 +14,7 @@ use strict;
 use warnings;
 
 use experimental qw(signatures);
-use ntheory qw(:all);
+use ntheory      qw(:all);
 
 sub factorial_valuation ($n, $p) {
     ($n - vecsum(todigits($n, $p))) / ($p - 1);
@@ -40,7 +40,8 @@ sub modular_binomial ($n, $k, $m) {    # fast for small n
             $prod *= ($p == 1) ? ($_ % $m) : powmod($_, $p, $m);
             $prod %= $m;
         }
-    } $n;
+    }
+    $n;
 
     return $prod;
 }

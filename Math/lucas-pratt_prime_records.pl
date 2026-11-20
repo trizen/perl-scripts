@@ -13,8 +13,8 @@
 use 5.020;
 use warnings;
 
-use ntheory qw(:all);
-use Memoize qw(memoize);
+use ntheory      qw(:all);
+use Memoize      qw(memoize);
 use experimental qw(signatures);
 
 memoize('lucas_pratt_primality_tree_count');
@@ -38,12 +38,13 @@ sub lucas_pratt_prime_records ($r = -1, $upto = 1e6) {
             $max = $t;
             push @primes, $_;
         }
-    } $upto;
+    }
+    $upto;
 
     return @primes;
 }
 
-say "p-1: ", join(', ', lucas_pratt_prime_records(-1, 1e6));     # A037231
+say "p-1: ", join(', ', lucas_pratt_prime_records(-1, 1e6));    # A037231
 say "p+1: ", join(', ', lucas_pratt_prime_records(+1, 1e6));
 
 __END__

@@ -131,7 +131,7 @@ sub carmichael_numbers_in_range ($A, $B, $k) {
 }
 
 my $from = 1;
-my $upto = powint(10, 10);
+my $upto = powint(10, 11);
 
 foreach my $k (3 .. 7) {
     my @arr = carmichael_numbers_in_range($from, $upto, $k);

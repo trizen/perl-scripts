@@ -10,7 +10,7 @@
 
 use 5.020;
 use warnings;
-use ntheory qw(:all);
+use ntheory      qw(:all);
 use experimental qw(signatures);
 
 # Modular product of a list of integers
@@ -27,7 +27,7 @@ sub lambda_primes ($L) {
     grep { $L % $_ != 0 } grep { $_ > 2 and is_prime($_) } map { $_ + 1 } divisors($L);
 }
 
-sub method_1 ($L) {     # smallest numbers first
+sub method_1 ($L) {    # smallest numbers first
 
     my @P = lambda_primes($L);
 
@@ -36,23 +36,25 @@ sub method_1 ($L) {     # smallest numbers first
             if (vecprodmod([@P[@_]], $L) == 1) {
                 say vecprod(@P[@_]);
             }
-        } scalar(@P), $k;
+        }
+        scalar(@P), $k;
     }
 }
 
-sub method_2 ($L) {     # largest numbers first
+sub method_2 ($L) {    # largest numbers first
 
     my @P = lambda_primes($L);
     my $B = vecprodmod(\@P, $L);
     my $T = vecprod(@P);
 
-    foreach my $k (1 .. (@P-3)) {
+    foreach my $k (1 .. (@P - 3)) {
         forcomb {
             if (vecprodmod([@P[@_]], $L) == $B) {
                 my $S = vecprod(@P[@_]);
-                say ($T / $S) if ($T != $S);
+                say($T / $S) if ($T != $S);
             }
-        } scalar(@P), $k;
+        }
+        scalar(@P), $k;
     }
 }
 

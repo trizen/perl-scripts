@@ -71,7 +71,7 @@ use warnings;
 use Getopt::Long qw(GetOptions);
 use Time::HiRes  qw(time);
 
-use Math::GMPz        qw(:mpz);
+use Math::GMPz qw(:mpz);
 use Math::Prime::Util 0.74 qw(:all);
 
 # ---------------------------------------------------------------------------
@@ -394,7 +394,7 @@ sub generate_carmichael_multiples ($A_input, $B_input, $k_input, $m_input = 1, $
 
                         my $qs = Rmpz_fits_ulong_p($Q) ? Rmpz_get_ui($Q) : Rmpz_get_str($Q, 10);
 
-                        if (is_almost_prime($rem, $qs)) {
+                        if (is_rough($qs, $lo) and is_almost_prime($rem, $qs)) {
                             my @f = factor_exp($qs);
                             if (@f == $rem && $f[0][0] >= $lo) {
                                 my $ok = 1;

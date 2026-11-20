@@ -20,13 +20,13 @@ use 5.020;
 use warnings;
 use experimental qw(signatures);
 
-use ntheory qw(:all);
+use ntheory      qw(:all);
 use Math::AnyNum qw(prod);
 
 sub lucas_pseudoprimes ($limit, $callback, $P = 1, $Q = -1) {
 
     my %table;
-    my $D = $P*$P - 4*$Q;
+    my $D = $P * $P - 4 * $Q;
 
     forprimes {
         my $p = $_;
@@ -35,7 +35,8 @@ sub lucas_pseudoprimes ($limit, $callback, $P = 1, $Q = -1) {
                 push @{$table{$d}}, $p;
             }
         }
-    } 3, $limit;
+    }
+    3, $limit;
 
     foreach my $arr (values %table) {
 
@@ -45,14 +46,15 @@ sub lucas_pseudoprimes ($limit, $callback, $P = 1, $Q = -1) {
             forcomb {
                 my $n = prod(@{$arr}[@_]);
                 $callback->($n, @{$arr}[@_]);
-            } $l, $k;
+            }
+            $l, $k;
         }
     }
 }
 
 sub is_weak_lucas_pseudoprime ($n, $P = 1, $Q = -1) {
 
-    my $D = ($P*$P - 4*$Q);
+    my $D = ($P * $P - 4 * $Q);
     my $k = kronecker($D, $n);
 
     (lucas_sequence($n, $P, $Q, $n - $k))[0] == 0;
@@ -68,7 +70,7 @@ lucas_pseudoprimes(
 
         push @pseudoprimes, $n;
 
-        if (kronecker(5, $n) == -1 and powmod(2, $n-1, $n) == 1) {
+        if (kronecker(5, $n) == -1 and powmod(2, $n - 1, $n) == 1) {
             die "Found a BPSW counter-example: $n = prod(@f)";
         }
     }

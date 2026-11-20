@@ -18,7 +18,7 @@ use warnings;
 
 use experimental qw(signatures);
 
-use Math::AnyNum qw(:overload bit_scan1 is_power kronecker gcd prod);
+use Math::AnyNum           qw(:overload bit_scan1 is_power kronecker gcd prod);
 use Math::Prime::Util::GMP qw(lucas_sequence consecutive_integer_lcm random_nbit_prime);
 
 sub lucas_factorization ($n, $B) {
@@ -55,7 +55,7 @@ say lucas_factorization(6555457852399 * 7864885571993, 700);     #=> 65554578523
 say lucas_factorization(7553377229 * 588103349,        800);     #=> 7553377229       (p+1 is  800-smooth)
 
 # Example of a larger number that can be factorized fast with this method
-say lucas_factorization(203544696384073367670016326770637347800169508950125910682353, 19);      #=> 5741461760879844361
+say lucas_factorization(203544696384073367670016326770637347800169508950125910682353, 19);    #=> 5741461760879844361
 
 say "\n=> More tests:";
 

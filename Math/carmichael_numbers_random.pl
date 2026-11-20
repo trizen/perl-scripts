@@ -26,8 +26,8 @@ sub random_carmichael_number ($n = 20) {
     while (1) {
         my $p = Math::GMPz::Rmpz_init_set_str(random_ndigit_prime($n), 10);
         my $k = ($p - 1);
-        is_prob_prime(2*$k + 1) && is_prob_prime(3*$k + 1) or next;
-        return ($p, 2*$k + 1, 3*$k + 1);
+        is_prob_prime(2 * $k + 1) && is_prob_prime(3 * $k + 1) or next;
+        return ($p, 2 * $k + 1, 3 * $k + 1);
     }
 }
 

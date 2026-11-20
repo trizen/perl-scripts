@@ -67,8 +67,8 @@ use v5.36;
 use strict;
 use warnings;
 
-use Getopt::Long      qw(GetOptions);
-use Time::HiRes       qw(time);
+use Getopt::Long           qw(GetOptions);
+use Time::HiRes            qw(time);
 use Math::Prime::Util 0.74 qw(:all);
 
 use constant UV_MAX     => ~0;                       # 2^64 - 1
@@ -225,7 +225,7 @@ sub generate_carmichael ($A_input, $B_input, $k_input, $force_bits = 64, $force_
                 for (my $q = $first ; ; $q += $L) {
                     ++$factorizations;
 
-                    if (is_almost_prime($rem, $q)) {
+                    if (is_rough($q, $lo) and is_almost_prime($rem, $q)) {
                         my @f = factor_exp($q);
                         if (@f == $rem && $f[0][0] >= $lo) {
                             my $n  = $m * $q;

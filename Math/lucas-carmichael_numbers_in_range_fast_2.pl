@@ -63,10 +63,7 @@ use warnings;
 use Getopt::Long qw(GetOptions);
 use Time::HiRes  qw(time);
 
-use Math::Prime::Util qw(
-  primes next_prime is_prime factor_exp is_omega_prime divisors
-  gcd lcm invmod divint cdivint rootint powint
-);
+use Math::Prime::Util 0.74 qw(:all);
 
 use constant UV_MAX     => ~0;                       # 2^64 - 1
 use constant UV_MAX_STR => '18446744073709551615';
@@ -222,7 +219,7 @@ sub generate_lucas_carmichael ($A_input, $B_input, $k_input, $force_bits = 64, $
                 for (my $q = $first ; ; $q += $L) {
                     ++$factorizations;
 
-                    if (is_omega_prime($rem, $q)) {
+                    if (is_rough($q, $lo) and is_almost_prime($rem, $q)) {
                         my @f = factor_exp($q);
                         if (@f == $rem && $f[0][0] >= $lo) {
                             my $n  = $m * $q;

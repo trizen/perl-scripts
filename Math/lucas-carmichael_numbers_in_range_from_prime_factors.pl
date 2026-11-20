@@ -12,7 +12,7 @@
 
 use 5.036;
 use ntheory 0.74 qw(:all);
-use List::Util qw(uniq);
+use List::Util   qw(uniq);
 
 sub lucas_carmichael_numbers_in_range ($A, $B, $k, $primes, $callback) {
 

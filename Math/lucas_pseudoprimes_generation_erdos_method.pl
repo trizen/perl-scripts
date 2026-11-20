@@ -11,8 +11,8 @@
 use 5.020;
 use warnings;
 
-use ntheory qw(:all);
-use List::Util qw(uniq);
+use ntheory      qw(:all);
+use List::Util   qw(uniq);
 use experimental qw(signatures);
 
 sub lambda_primes ($L, $D) {
@@ -41,7 +41,8 @@ sub lucas_pseudoprimes ($L, $P = 1, $Q = -1) {
             if ((lucas_sequence($n, $P, $Q, $n - $k))[0] == 0) {
                 say $n;
             }
-        } scalar(@P), $k;
+        }
+        scalar(@P), $k;
     }
 }
 

@@ -18,7 +18,7 @@
 use 5.024;
 use warnings;
 use experimental qw(signatures);
-use ntheory qw(lastfor forcomb);
+use ntheory      qw(lastfor forcomb);
 use Math::AnyNum qw(:overload bsearch_le iroot prod gcd);
 
 sub carmichael_factorization ($n, $k = 3, $l = 2, $h = 6) {
@@ -55,7 +55,8 @@ sub carmichael_factorization ($n, $k = 3, $l = 2, $h = 6) {
                 lastfor, return @factors;
             }
         }
-    } scalar(@range), $k - 1;
+    }
+    scalar(@range), $k - 1;
 
     return @factors;
 }

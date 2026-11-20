@@ -20,14 +20,14 @@ use strict;
 use warnings;
 use experimental qw(signatures);
 
-use List::Util qw(uniq);
-use ntheory qw(is_prime is_prob_prime);
+use List::Util             qw(uniq);
+use ntheory                qw(is_prime is_prob_prime);
 use Math::Prime::Util::GMP qw(ecm_factor is_strong_pseudoprime);
 
 use Math::AnyNum qw(
   :overload prod primorial is_coprime
   irand min is_square lucasUmod gcd kronecker
-  );
+);
 
 my $primorial = primorial(10**6);
 

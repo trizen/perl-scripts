@@ -17,14 +17,14 @@ use strict;
 use warnings;
 use experimental qw(signatures);
 
-use List::Util qw(uniq);
-use ntheory qw(is_prime is_prob_prime);
+use List::Util             qw(uniq);
+use ntheory                qw(is_prime is_prob_prime);
 use Math::Prime::Util::GMP qw(ecm_factor is_strong_pseudoprime);
 
 use Math::AnyNum qw(
   :overload prod primorial is_coprime powmod
   irand min is_square lucasUmod gcd kronecker
-  );
+);
 
 my $TRIAL_LIMIT = 10**6;
 my $primorial   = primorial($TRIAL_LIMIT);
@@ -198,8 +198,7 @@ sub lucas_pocklington_primality_proving ($n, $lim = 2**64) {
     }
 }
 
-say "Is prime: ",
-  lucas_pocklington_primality_proving(115792089237316195423570985008687907853269984665640564039457584007913129603823);
+say "Is prime: ", lucas_pocklington_primality_proving(115792089237316195423570985008687907853269984665640564039457584007913129603823);
 
 __END__
 :: N+1 primality proving of: 924116845936603030416149

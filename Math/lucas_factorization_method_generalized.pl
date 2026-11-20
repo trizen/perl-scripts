@@ -18,7 +18,7 @@ use warnings;
 
 use experimental qw(signatures);
 
-use Math::AnyNum qw(:overload irand gcd prod);
+use Math::AnyNum           qw(:overload irand gcd prod);
 use Math::Prime::Util::GMP qw(lucas_sequence logint consecutive_integer_lcm random_nbit_prime);
 
 sub lucas_factorization ($n, $B = logint($n, 2)**2, $a = 1, $b = 10) {

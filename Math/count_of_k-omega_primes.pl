@@ -38,14 +38,13 @@ sub omega_prime_count_rec ($n, $k = 1) {
 
                 for (my $t = mulint($m, $p) ; $t <= $n ; $t = mulint($t, $p)) {
 
-                    my $w = divint($n, $t);
-                    my $e = 1;
+                    my $w    = divint($n, $t);
+                    my $e    = 1;
+                    my $root = $w;
 
-                    while ($w >= $r) {
-                        my $root = rootint($w, $e);
-                        last if ($root < $r);
+                    while ($root >= $r) {
                         $count += prime_count($root) - $j;
-                        ++$e;
+                        $root = rootint($w, ++$e);
                     }
                 }
 
@@ -90,7 +89,7 @@ foreach my $k (1 .. 10) {
 say '';
 
 foreach my $k (1 .. 8) {
-    say("Count of $k-omega primes for 10^n: ", join(', ', map { omega_prime_count_rec(10**$_, $k) } 0 .. 8));
+    say("Count of $k-omega primes for 10^n: ", join(', ', map { omega_prime_count_rec(10**$_, $k) } 0 .. 9));
 }
 
 __END__
