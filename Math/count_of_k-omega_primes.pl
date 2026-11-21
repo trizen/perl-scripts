@@ -30,15 +30,14 @@ sub omega_prime_count_rec ($n, $k = 1) {
 
     sub ($m, $p, $k, $s = rootint(divint($n, $m), $k), $j = 1) {
 
-        if ($k == 2) {
+        while ($p <= $s) {
+            my $r = next_prime($p);
 
-            while ($p <= $s) {
+            for (my $t = mulint($m, $p) ; $t <= $n ; $t = mulint($t, $p)) {
+                if ($k == 2) {
+                    my $w = divint($n, $t);
+                    last if $w < $r;
 
-                my $r = next_prime($p);
-
-                for (my $t = mulint($m, $p) ; $t <= $n ; $t = mulint($t, $p)) {
-
-                    my $w    = divint($n, $t);
                     my $e    = 1;
                     my $root = $w;
 
@@ -47,23 +46,15 @@ sub omega_prime_count_rec ($n, $k = 1) {
                         $root = rootint($w, ++$e);
                     }
                 }
-
-                $p = $r;
-                ++$j;
-            }
-
-            return;
-        }
-
-        for (; $p <= $s ; ++$j) {
-            my $r = next_prime($p);
-            for (my $t = mulint($m, $p) ; $t <= $n ; $t = mulint($t, $p)) {
-                my $s = rootint(divint($n, $t), $k - 1);
-                last if ($r > $s);
-                __SUB__->($t, $r, $k - 1, $s, $j + 1);
+                else {
+                    my $sub_s = rootint(divint($n, $t), $k - 1);
+                    last if $r > $sub_s;
+                    __SUB__->($t, $r, $k - 1, $sub_s, $j + 1);
+                }
             }
 
             $p = $r;
+            ++$j;
         }
       }
       ->(1, 2, $k);
