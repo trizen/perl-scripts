@@ -38,12 +38,8 @@ sub omega_prime_count_rec ($n, $k = 1) {
                     my $w = divint($n, $t);
                     last if $w < $r;
 
-                    my $e    = 1;
-                    my $root = $w;
-
-                    while ($root >= $r) {
+                    for (my ($e, $root) = (1, $w) ; $root >= $r ; $root = rootint($w, ++$e)) {
                         $count += prime_count($root) - $j;
-                        $root = rootint($w, ++$e);
                     }
                 }
                 else {
