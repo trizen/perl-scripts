@@ -1249,6 +1249,7 @@ A nice collection of day-to-day Perl scripts.
     * [Sum of prime-power exponents of product of binomials](./Math/sum_of_prime-power_exponents_of_product_of_binomials.pl)
     * [Sum of prime powers](./Math/sum_of_prime_powers.pl)
     * [Sum of primes generalized](./Math/sum_of_primes_generalized.pl)
+    * [Sum of primes generalized fast](./Math/sum_of_primes_generalized_fast.pl)
     * [Sum of sigma](./Math/sum_of_sigma.pl)
     * [Sum of sigma 2](./Math/sum_of_sigma_2.pl)
     * [Sum of the number of divisors](./Math/sum_of_the_number_of_divisors.pl)
