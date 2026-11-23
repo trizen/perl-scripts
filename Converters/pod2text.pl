@@ -61,7 +61,7 @@ sub html2text ($html, $formatter) {
 }
 
 my $left_margin  = 0;
-my $right_margin = 80;
+my $right_margin = 120;
 
 sub usage ($exit_code = 0) {
     print <<"EOT";
@@ -85,6 +85,10 @@ GetOptions(
   };
 
 my $stdin_on_tty = -t STDIN;
+
+if (@ARGV and $ARGV[0] eq '-') {
+    $stdin_on_tty = 0;
+}
 
 if (not $stdin_on_tty) {    # assume input provided via STDIN
     ## ok
