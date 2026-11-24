@@ -916,6 +916,7 @@ A nice collection of day-to-day Perl scripts.
     * [Lambert W function complex](./Math/lambert_W_function_complex.pl)
     * [Lanczos approximation](./Math/lanczos_approximation.pl)
     * [Least k such that k times k-th prime is greater than 10 to the n](./Math/least_k_such_that_k_times_k-th_prime_is_greater_than_10_to_the_n.pl)
+    * [Least lucas-carmichael number with n factors](./Math/least_lucas-carmichael_number_with_n_factors.pl)
     * [Least nonresidue](./Math/least_nonresidue.pl)
     * [Legendary question six](./Math/legendary_question_six.pl)
     * [Length of shortest addition chain](./Math/length_of_shortest_addition_chain.pl)
