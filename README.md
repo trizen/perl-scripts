@@ -1238,6 +1238,7 @@ A nice collection of day-to-day Perl scripts.
     * [Strong fermat pseudoprimes in range](./Math/strong_fermat_pseudoprimes_in_range.pl)
     * [Strong fermat pseudoprimes in range mpz](./Math/strong_fermat_pseudoprimes_in_range_mpz.pl)
     * [Strong psp base2 with k factors smallest](./Math/strong_psp_base2_with_k_factors_smallest.pl)
+    * [Strong psp base2 with k factors smallest fast](./Math/strong_psp_base2_with_k_factors_smallest_fast.pl)
     * [Sub-unit squares](./Math/sub-unit_squares.pl)
     * [Sum factorial](./Math/sum_factorial.pl)
     * [Sum of an even number of positive squares](./Math/sum_of_an_even_number_of_positive_squares.pl)
