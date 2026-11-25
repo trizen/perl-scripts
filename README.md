@@ -825,6 +825,7 @@ A nice collection of day-to-day Perl scripts.
     * [Fermat frobenius quadratic primality test](./Math/fermat_frobenius_quadratic_primality_test.pl)
     * [Fermat overpseudoprimes generation](./Math/fermat_overpseudoprimes_generation.pl)
     * [Fermat overpseudoprimes in range](./Math/fermat_overpseudoprimes_in_range.pl)
+    * [Fermat overpsp base2 with k factors smallest](./Math/fermat_overpsp_base2_with_k_factors_smallest.pl)
     * [Fermat pseudoprimes from multiple](./Math/fermat_pseudoprimes_from_multiple.pl)
     * [Fermat pseudoprimes from multiple mpz](./Math/fermat_pseudoprimes_from_multiple_mpz.pl)
     * [Fermat pseudoprimes generation](./Math/fermat_pseudoprimes_generation.pl)
