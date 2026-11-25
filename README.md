@@ -835,6 +835,7 @@ A nice collection of day-to-day Perl scripts.
     * [Fermat pseudoprimes in range mpz](./Math/fermat_pseudoprimes_in_range_mpz.pl)
     * [Fermat psp base2 with k factors smallest](./Math/fermat_psp_base2_with_k_factors_smallest.pl)
     * [Fermat superpseudoprimes generation](./Math/fermat_superpseudoprimes_generation.pl)
+    * [Fermat superpsp base2 smallest](./Math/fermat_superpsp_base2_smallest.pl)
     * [Fibonacci closed form](./Math/fibonacci_closed_form.pl)
     * [Fibonacci closed form 2](./Math/fibonacci_closed_form_2.pl)
     * [Fibonacci encoding](./Math/fibonacci_encoding.pl)
