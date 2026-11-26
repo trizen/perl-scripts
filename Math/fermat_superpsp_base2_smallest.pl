@@ -130,21 +130,27 @@ sub fermat_superpsp_base2_smallest ($k, %opt) {
 
     # Largest q (as a float) such that q*(q+s)*...*(q+(rem-1)*s) <= B / P, i.e. an upper
     # bound for the next prime of A_d when rem primes are still missing.
-    my sub next_hi ($rem, $step, $logP) {
-
-        my $target = $logB - $logP + 1e-9;
+    my sub next_hi ($rem, $step, $log_prod) {
+        my $target = $logB - $log_prod + 1e-9;
+        return 1.0              if $target <= -700;
         return exp($target) + 1 if $rem == 1;
 
-        my ($lo, $hi) = (1.0, exp($target / $rem) + 1);
+        my $lo = 1.0;
+        my $hi = exp($target / $rem) + 1;
 
-        # f(q) = sum log(q + t*s) is increasing: bisection (the progression terms are
-        # distinct and at least s apart)
-        for (1 .. 60) {
-            my $mid = ($lo + $hi) / 2;
-            my $f   = 0;
-            $f += log($mid + $_ * $step) for 0 .. $rem - 1;
-            if   ($f <= $target) { $lo = $mid }
-            else                 { $hi = $mid }
+        for (1 .. 56) {
+            my $mid = 0.5 * ($lo + $hi);
+            last if $mid == $lo || $mid == $hi;
+
+            my $sum = log($mid);
+            my $cur = $mid;
+            for (1 .. $rem - 1) {
+                $cur += $step;
+                $sum += log($cur);
+            }
+
+            if   ($sum <= $target) { $lo = $mid }
+            else                   { $hi = $mid }
         }
 
         return $hi + 1;
@@ -334,7 +340,7 @@ GetOptions(
 usage(0) if $help;
 usage(2) if @ARGV > 1;
 
-my @ns = @ARGV ? ($ARGV[0]) : (2 .. 6);
+my @ns = @ARGV ? ($ARGV[0]) : (2 .. 8);
 
 foreach my $n (@ns) {
     usage(2) if $n !~ /\A\d+\z/ || $n < 2;
