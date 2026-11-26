@@ -806,6 +806,7 @@ A nice collection of day-to-day Perl scripts.
     * [Ethiopian multiplication](./Math/ethiopian_multiplication.pl)
     * [Ethiopian multiplication binary](./Math/ethiopian_multiplication_binary.pl)
     * [Even fermat pseudoprimes in range](./Math/even_fermat_pseudoprimes_in_range.pl)
+    * [Even fermat psp base2 with k factors smallest](./Math/even_fermat_psp_base2_with_k_factors_smallest.pl)
     * [Even squarefree fermat pseudoprimes in range](./Math/even_squarefree_fermat_pseudoprimes_in_range.pl)
     * [Exponential divisors](./Math/exponential_divisors.pl)
     * [Factorial difference of prime squares](./Math/factorial_difference_of_prime_squares.pl)
