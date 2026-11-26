@@ -122,24 +122,42 @@ sub fermat_overpsp_base2_smallest ($k, %opt) {
 
     # Largest q (as a float) such that q*(q+s)*...*(q+(rem-1)*s) <= B / P, i.e. an upper
     # bound for the next prime of S_lambda when rem primes are still missing.
-    my sub next_hi ($rem, $step, $logP) {
-
-        my $target = $logB - $logP + 1e-9;
+    my sub next_hi ($rem, $step, $log_prod) {
+        my $target = $logB - $log_prod + 1e-9;
         return exp($target) + 1 if $rem == 1;
 
-        my ($lo, $hi) = (1.0, exp($target / $rem) + 1);
+        my $q = exp($target / $rem) - 0.5 * ($rem - 1) * $step;
+        $q = 1.0 if $q < 1.0;
+        my $lo = 1.0;
+        my $hi = exp($target / $rem) + 1.0;
 
-        # f(q) = sum log(q + t*s) is increasing: bisection (the progression terms are
-        # distinct and at least s apart)
-        for (1 .. 60) {
-            my $mid = ($lo + $hi) / 2;
-            my $f   = 0;
-            $f += log($mid + $_ * $step) for 0 .. $rem - 1;
-            if   ($f <= $target) { $lo = $mid }
-            else                 { $hi = $mid }
+        for (1 .. 25) {
+            my ($f, $df) = (-$target, 0.0);
+            for my $i (0 .. $rem - 1) {
+                my $term = $q + $i * $step;
+                $f  += log($term);
+                $df += 1.0 / $term;
+            }
+
+            if (abs($f) <= 1e-12) {
+                $hi = $q;
+                last;
+            }
+
+            if   ($f < 0) { $lo = $q if $q > $lo }
+            else          { $hi = $q if $q < $hi }
+
+            my $next = ($df > 0) ? ($q - $f / $df) : (0.5 * ($lo + $hi));
+            if ($next <= $lo || $next >= $hi) {
+                $next = 0.5 * ($lo + $hi);
+            }
+
+            last if abs($next - $q) <= 1e-7 * ($q > 1.0 ? $q : 1.0);
+            $q  = $next;
+            $hi = $q if $f > 0 && $q < $hi;
         }
 
-        return $hi + 1;
+        return (($hi > $q ? $hi : $q) + 1);
     }
 
     # R = Phi_lambda(2) = prod_{s | rad(lambda)} (2^(lambda/s) - 1)^mu(s), with the primes of
@@ -378,7 +396,7 @@ GetOptions(
 usage(0) if $help;
 usage(2) if @ARGV > 1;
 
-my @ns = @ARGV ? ($ARGV[0]) : (2 .. 4);
+my @ns = @ARGV ? ($ARGV[0]) : (2 .. 6);
 
 foreach my $n (@ns) {
     usage(2) if $n !~ /\A\d+\z/ || $n < 2;
