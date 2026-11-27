@@ -834,6 +834,7 @@ A nice collection of day-to-day Perl scripts.
     * [Fermat pseudoprimes generation 3](./Math/fermat_pseudoprimes_generation_3.pl)
     * [Fermat pseudoprimes in range](./Math/fermat_pseudoprimes_in_range.pl)
     * [Fermat pseudoprimes in range mpz](./Math/fermat_pseudoprimes_in_range_mpz.pl)
+    * [Fermat pseudoprimes in range mpz fast](./Math/fermat_pseudoprimes_in_range_mpz_fast.pl)
     * [Fermat psp base2 with k factors smallest](./Math/fermat_psp_base2_with_k_factors_smallest.pl)
     * [Fermat superpseudoprimes generation](./Math/fermat_superpseudoprimes_generation.pl)
     * [Fermat superpsp base2 smallest](./Math/fermat_superpsp_base2_smallest.pl)
