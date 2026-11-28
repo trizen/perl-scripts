@@ -1033,6 +1033,7 @@ A nice collection of day-to-day Perl scripts.
     * [Next palindrome from non-palindrome](./Math/next_palindrome_from_non-palindrome.pl)
     * [Next palindrome in base](./Math/next_palindrome_in_base.pl)
     * [Next power of two](./Math/next_power_of_two.pl)
+    * [Non residue pseudoprimes](./Math/non_residue_pseudoprimes.pl)
     * [Nth composite](./Math/nth_composite.pl)
     * [Nth digit of fraction](./Math/nth_digit_of_fraction.pl)
     * [Nth prime approx](./Math/nth_prime_approx.pl)
