@@ -413,8 +413,7 @@ sub nonresidue_psp ($n, %opt) {
         Rmpz_set($LL[0], $L0);
         @stack = @$base_primes;
 
-        my $node;
-        $node = sub ($d, $i0, $rem) {
+        my $node = sub ($d, $i0, $rem) {
 
             ++$visited;
             my ($m, $L, $qmax, $qmin) = ($M[$d], $LL[$d], $QM[$d], $QN[$d]);
@@ -502,7 +501,7 @@ sub nonresidue_psp ($n, %opt) {
                     mpz_mul_u64($cm, $m, $p);
                     next if Rmpz_gcd($T, $cm, $cl), Rmpz_cmp_ui($T, 1) != 0;
                     push @stack, $p;
-                    $node->($d + 1, $i + 1, $rem - 1);
+                    __SUB__->($d + 1, $i + 1, $rem - 1);
                     pop @stack;
 
                     if ($g != $gen) {
